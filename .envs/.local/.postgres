@@ -1,0 +1,7 @@
+# PostgreSQL
+# ------------------------------------------------------------------------------
+POSTGRES_HOST=postgres
+POSTGRES_PORT=5432
+POSTGRES_DB=bugbox3
+POSTGRES_USER=cfwWbPtHGmPHmURadRBFpCKOqfPstsAt
+POSTGRES_PASSWORD=4w969znp2gVV8j2aqObyc9KvoStJCja9iQ0nIiUayDo6LxFVgpqEr2djSnN3yWCl
