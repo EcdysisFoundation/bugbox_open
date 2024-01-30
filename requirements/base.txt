@@ -6,10 +6,11 @@ hiredis==2.3.2  # https://github.com/redis/hiredis-py
 celery==5.3.6  # pyup: < 6.0  # https://github.com/celery/celery
 django-celery-beat==2.5.0  # https://github.com/celery/django-celery-beat
 flower==2.0.1  # https://github.com/mher/flower
+psycopg[c]==3.1.17  # https://github.com/psycopg/psycopg
 
 # Django
 # ------------------------------------------------------------------------------
-django==4.2.9  # pyup: < 5.0  # https://www.djangoproject.com/
+django==4.2.9  # https://www.djangoproject.com/
 django-environ==0.11.2  # https://github.com/joke2k/django-environ
 django-model-utils==4.3.1  # https://github.com/jazzband/django-model-utils
 django-allauth==0.60.1  # https://github.com/pennersr/django-allauth
