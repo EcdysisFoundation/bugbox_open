@@ -34,7 +34,9 @@ services:
       - bugbox3_local_postgres_data_backups:/backups
     env_file:
       - ./.envs/.local/.postgres
-
+    ports:
+      - "5433:5432"
+  
   docs:
     image: bugbox3_local_docs
     container_name: bugbox3_local_docs
