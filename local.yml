@@ -36,22 +36,6 @@ services:
       - ./.envs/.local/.postgres
     ports:
       - "5433:5432"
-  
-  docs:
-    image: bugbox3_local_docs
-    container_name: bugbox3_local_docs
-    build:
-      context: .
-      dockerfile: ./compose/local/docs/Dockerfile
-    env_file:
-      - ./.envs/.local/.django
-    volumes:
-      - ./docs:/docs:z
-      - ./config:/app/config:z
-      - ./bugbox3:/app/bugbox3:z
-    ports:
-      - '9000:9000'
-    command: /start-docs
 
   redis:
     image: docker.io/redis:6
