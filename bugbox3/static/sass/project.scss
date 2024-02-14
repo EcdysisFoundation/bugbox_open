@@ -7,6 +7,9 @@
 // Variables //
 ///////////////
 
+/// Ecdysis colors
+$ecdysis-green: #35A103;
+
 // Alert colors
 
 $white: #fff;
@@ -33,4 +36,8 @@ $red: #b94a48;
   background-color: $pink;
   border-color: $dark-pink;
   color: $red;
+}
+
+.bg-ecdysis {
+  background-color: $ecdysis-green;
 }
