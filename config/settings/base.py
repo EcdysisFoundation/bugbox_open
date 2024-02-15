@@ -69,6 +69,7 @@ DJANGO_APPS = [
     # "django.contrib.humanize", # Handy template tags
     "django.contrib.admin",
     "django.forms",
+    "django.contrib.postgres",
     "django.contrib.gis",
 ]
 THIRD_PARTY_APPS = [
@@ -84,7 +85,8 @@ THIRD_PARTY_APPS = [
 LOCAL_APPS = [
     "bugbox3.users",
     "bugbox3.core",
-    # Your stuff: custom apps go here
+    "bugbox3.samples",
+    "bugbox3.taxonomy"
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
