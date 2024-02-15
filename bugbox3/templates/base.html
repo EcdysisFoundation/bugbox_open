@@ -10,7 +10,7 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge" />
     <title>
       {% block title %}
-      bugbox3
+      BugBox database application
     {% endblock title %}
   </title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -48,7 +48,7 @@
 </head>
 <body>
   <div class="mb-1">
-    <nav class="navbar navbar-expand-md navbar-light bg-ecdysis">
+    <nav class="navbar navbar-expand-md navbar-dark bg-ecdysis">
       <div class="container-fluid">
         <button class="navbar-toggler navbar-toggler-right"
                 type="button"
@@ -59,14 +59,14 @@
                 aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
-        <a class="navbar-brand" href="{% url 'home' %}">bugbox3</a>
+        <a class="navbar-brand" href="{% url 'about' %}"><img src="{% static 'images/logo/logo-light-51x50.png' %}" alt="logo dragonfly"/></a>
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
           <ul class="navbar-nav mr-auto">
             <li class="nav-item active">
-              <a class="nav-link" href="{% url 'home' %}">Home <span class="visually-hidden">(current)</span></a>
+              <a class="nav-link" href="{% url 'about' %}">About<span class="visually-hidden">(current)</span></a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="{% url 'about' %}">About</a>
+              <a class="nav-link" href="{% url 'my-bugbox' %}">My BugBox</a>
             </li>
             {% if request.user.is_authenticated %}
               <li class="nav-item">
@@ -107,7 +107,7 @@
       {% endfor %}
     {% endif %}
     {% block content %}
-      <p>Use this document as a way to quick start any new project.</p>
+      <p>base.html content area.</p>
     {% endblock content %}
   </div>
   <!-- /container -->
