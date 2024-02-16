@@ -70,6 +70,7 @@ DJANGO_APPS = [
     "django.contrib.admin",
     "django.forms",
     "django.contrib.gis",
+    "rest_framework",
 ]
 THIRD_PARTY_APPS = [
     "crispy_forms",
@@ -141,6 +142,11 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "allauth.account.middleware.AccountMiddleware",
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10
+}
 
 # STATIC
 # ------------------------------------------------------------------------------
