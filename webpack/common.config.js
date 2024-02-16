@@ -8,6 +8,7 @@ module.exports = {
   entry: {
     project: path.resolve(__dirname, '../bugbox3/static/js/project'),
     vendors: path.resolve(__dirname, '../bugbox3/static/js/vendors'),
+    experiments: path.resolve(__dirname, '../bugbox3/static/js/experiments'),
   },
   output: {
     path: path.resolve(

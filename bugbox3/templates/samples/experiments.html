@@ -1,9 +1,18 @@
 {% extends "base.html" %}
+{% load render_bundle from webpack_loader %}
 
 {% block title %}
     Experiments
 {% endblock title %}
 
+{% block customheadtagcontent %}
+
+{% render_bundle 'experiments' 'js' attrs='defer' %}
+
+{% endblock customheadtagcontent %}
+
+
 {% block content %}
       <p>Experiments table</p>
+      <p id="message">Hello</p>
 {% endblock content %}
