@@ -1,11 +1,20 @@
-from django.dispatch import receiver
-from django.db.models import (Model, IntegerField, CharField, ForeignKey, 
-                              FloatField, DateTimeField, DateField,
-                              CASCADE, SET_NULL)
-from django.db.models.signals import post_save
-from django.db.models.functions import Lower
-from django.core.validators import MaxValueValidator, MinValueValidator
 from django.conf import settings
+from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db.models import (
+    CASCADE,
+    SET_NULL,
+    CharField,
+    DateField,
+    DateTimeField,
+    FloatField,
+    ForeignKey,
+    IntegerField,
+    Model,
+)
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+from . import constants
 
 
 class Taxon(Model):
@@ -72,7 +81,7 @@ class Morphospecies(Model):
         verbose_name = 'Morphospecies'
         verbose_name_plural = 'Morphospecies'
         permissions = [
-            ("use_morphospecies_functions", "Can use the “Merge” button, check the “Bypass” box or change the percent threshold"),
+            (constants.PERMISSION_MORPHOSPECIES_FUNCTIONS, constants.PERMISSION_MORPHOSPECIES_FUNCTIONS_TXT),
         ]
 
 

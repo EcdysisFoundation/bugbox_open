@@ -1,5 +1,5 @@
 
-# String Definitions  
+# String Definitions
 
 TAXON_CLASS_ACARI = 'acari'
 TAXON_CLASS_ANNELIDA = 'annelida'
@@ -17,12 +17,12 @@ ACCEPTANCE_REJECTED = 2
 
 def sample_taxon_classes_default():
     return dict(
-        TAXON_CLASS_ACARI = 0,
-        TAXON_CLASS_ANNELIDA = 0,
-        TAXON_CLASS_COLLEMBOLA = 0,
-        TAXON_CLASS_GASTROPODA = 0,
-        TAXON_CLASS_NEMATODA = 0,
-        TAXON_CLASS_THYSANOPTERA = 0
+        TAXON_CLASS_ACARI=0,
+        TAXON_CLASS_ANNELIDA=0,
+        TAXON_CLASS_COLLEMBOLA=0,
+        TAXON_CLASS_GASTROPODA=0,
+        TAXON_CLASS_NEMATODA=0,
+        TAXON_CLASS_THYSANOPTERA=0
     )
 
 

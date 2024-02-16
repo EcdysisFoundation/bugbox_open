@@ -1,17 +1,18 @@
 import uuid
 
-from django.db import models
-from django.contrib.postgres.fields import ArrayField, HStoreField
 from django.conf import settings
-from django.dispatch import receiver
+from django.contrib.postgres.fields import ArrayField, HStoreField
+from django.db import models
 from django.db.models.signals import pre_save
+from django.dispatch import receiver
 
+from ..taxonomy.models import AiVersion, Morphospecies, Taxon
 from . import constants
-from ..taxonomy.models import Morphospecies, AiVersion
+
 
 class Experiment(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4, unique=True)
-    name = models.CharField(max_length=1000,unique=True)
+    name = models.CharField(max_length=1000, unique=True)
     abb = models.CharField(max_length=10, null=True, blank=True)
     from_year = models.PositiveSmallIntegerField()
     to_year = models.PositiveSmallIntegerField()
@@ -47,12 +48,13 @@ class Sample(models.Model):
     completed = models.BooleanField(default=False)
     image = models.ImageField(null=True, blank=True)
     classes = HStoreField(null=False, blank=True, default=constants.sample_taxon_classes_default)
-    
+
 
 class Specimen(models.Model):
 
     uuid = models.UUIDField(default=uuid.uuid4, unique=True)
-    classification = models.ForeignKey(Morphospecies, on_delete=models.SET_NULL, null=True, blank=True)
+    classification = models.ForeignKey(Taxon, on_delete=models.SET_NULL, null=True, blank=True)
+    morphospecies = models.ForeignKey(Morphospecies, on_delete=models.SET_NULL, null=True, blank=True)
     ai_classification = models.ForeignKey(Morphospecies, on_delete=models.SET_NULL,
                                           null=True, blank=True, related_name="ai")
     ai_version = models.ForeignKey(AiVersion, on_delete=models.SET_NULL, null=True, blank=True)
@@ -74,7 +76,7 @@ class Specimen(models.Model):
         """get the first image associated with this specimen if available"""
         try:
             return self.image_set.first().image
-        except:
+        except Exception:
             return None
 
     def save(self, *args, **kwargs):
