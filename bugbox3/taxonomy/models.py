@@ -1,5 +1,4 @@
 from django.dispatch import receiver
-from django.contrib.postgres.indexes import GinIndex, OpClass
 from django.db.models import (Model, IntegerField, CharField, ForeignKey, 
                               FloatField, DateTimeField, DateField,
                               CASCADE, SET_NULL)
@@ -32,11 +31,6 @@ class Taxon(Model):
     taxon_order = CharField(blank=True, max_length=50)
     taxon_family = CharField(blank=True, max_length=50)
     genus = CharField(blank=True, max_length=50)
-
-    class Meta:
-        indexes = [GinIndex(OpClass(Lower('canonical_name'), name='gin_trgm_ops'), name='lower_canonical_name_idx')]
-        verbose_name = 'Taxon'
-        verbose_name_plural = 'Taxa'
 
     def __str__(self):
         return str(self.canonical_name)
