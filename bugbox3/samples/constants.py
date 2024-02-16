@@ -1,5 +1,18 @@
-
 # String Definitions
+
+FIELD_UUID = 'uuid'
+FIELD_NAME = 'name'
+FIELD_ABBREVIATION = 'abbreviation'
+FIELD_FROM_YEAR = 'from_year'
+FIELD_TO_YEAR = 'to_year'
+FIELD_LEADER = 'leader'
+FIELD_NO_SITES = 'no_sites'
+FIELD_DATE_PER_SITE = 'date_per_site'
+FIELD_SAMPLE_TYPE = 'sample_type'
+FIELD_NO_PER_DATE = 'no_per_date'
+FIELD_NAME_NO_PER_TYPE = 'name_no_per_type'
+FIELD_COMPLETED = 'completed'
+FIELD_SUMMARY = 'summary'
 
 TAXON_CLASS_ACARI = 'acari'
 TAXON_CLASS_ANNELIDA = 'annelida'

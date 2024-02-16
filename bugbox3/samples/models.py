@@ -13,7 +13,7 @@ from . import constants
 class Experiment(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4, unique=True)
     name = models.CharField(max_length=1000, unique=True)
-    abb = models.CharField(max_length=10, null=True, blank=True)
+    abbreviation = models.CharField(max_length=10, null=True, blank=True)
     from_year = models.PositiveSmallIntegerField()
     to_year = models.PositiveSmallIntegerField()
     leader = models.CharField(max_length=1000)
