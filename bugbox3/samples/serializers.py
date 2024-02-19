@@ -21,8 +21,8 @@ class ExperimentsDatatablesSerializer(ModelSerializer):
     def get_sample_info(self, v):
         result = dict(
             total_samples='0',
-            not_reviewed='',
             photo_sampling='',
+            not_reviewed=''
         )
         samples = Sample.objects.filter(experiment_id=v.id)
         if not samples:

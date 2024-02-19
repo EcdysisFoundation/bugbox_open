@@ -1,10 +1,10 @@
 from django.urls import include, path
-from rest_framework import routers
+from rest_framework.routers import DefaultRouter
 
 from .views import ExperimentsView, SpecimensView, ExperimentsDatatablesViewSet
 
-router = routers.DefaultRouter()
-router.register(r'experiments-data', ExperimentsDatatablesViewSet)
+router = DefaultRouter()
+router.register(r'experiments-data', ExperimentsDatatablesViewSet, basename='experiment-data')
 
 app_name = "samples"
 urlpatterns = [

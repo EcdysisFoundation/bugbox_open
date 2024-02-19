@@ -1,9 +1,11 @@
 from django.views.generic import TemplateView
 from django.contrib.postgres.search import SearchVector
 from rest_framework.viewsets import ReadOnlyModelViewSet
-
+from rest_framework.views import APIView
+from rest_framework.reverse import reverse as api_reverse
 from rest_framework.response import Response
 
+from bugbox3.libs.utilities import get_json_context
 from .models import Experiment
 from .serializers import ExperimentsDatatablesSerializer
 from . import constants
@@ -49,6 +51,15 @@ class ExperimentsDatatablesViewSet(ReadOnlyModelViewSet):
 
 class ExperimentsView(TemplateView):
     template_name = 'samples/experiments.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        experiments_datatables_url = api_reverse('samples:experiment-data-list', 
+                                                 request=self.request, kwargs=kwargs)
+        context['json_context'] = get_json_context({
+            'experiments_datatables_url': experiments_datatables_url
+        })
+        return context
 
 class SpecimensView(TemplateView):
     template_name = 'samples/specimens.html'

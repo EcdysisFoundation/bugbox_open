@@ -8,11 +8,27 @@
 {% block customheadtagcontent %}
 
 {% render_bundle 'experiments' 'js' attrs='defer' %}
+{{ json_context|safe }}
 
 {% endblock customheadtagcontent %}
 
-
 {% block content %}
-      <p>Experiments table</p>
-      <p id="message">Hello</p>
+
+    <div class="container-fluid">
+        <div class="row pb-2">
+            <table id="experiments-table" class="table-striped table-responsive nowrap compact mx-2" width="100%">
+              <thead>
+                <tr>
+                  <th width="30%">Experiment</th>
+                  <th width="20%">Abbreviation</th>
+                  <th width="20%">Year</th>
+                  <th width="10%">Samples</th>
+                  <th width="10%">Photosampling Needed</th>
+                  <th width="10%">Reviewed Needed</th>
+                </tr>
+              </thead>
+            </table>
+        </div>
+    </div>
+
 {% endblock content %}
