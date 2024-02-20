@@ -1,7 +1,7 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from .views import ExperimentsView, SpecimensView, ExperimentsDatatablesViewSet
+from .views import ExperimentsView, SpecimensView, ExperimentsDatatablesViewSet, ExperimentCreateView
 
 router = DefaultRouter()
 router.register(r'experiments-data', ExperimentsDatatablesViewSet, basename='experiment-data')
@@ -11,4 +11,5 @@ urlpatterns = [
     path('', include(router.urls)),
     path('experiments/', ExperimentsView.as_view(), name='experiments'),
     path('specimens/', SpecimensView.as_view(), name='specimens'),
+    path('experiment-create/', ExperimentCreateView.as_view(), name='experiment-create')
 ]

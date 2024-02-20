@@ -1,13 +1,16 @@
 from django.views.generic import TemplateView
 from django.contrib.postgres.search import SearchVector
+from django.urls import reverse
+from django.views.generic.edit import CreateView, UpdateView
+from django.forms import modelform_factory
 from rest_framework.viewsets import ReadOnlyModelViewSet
-from rest_framework.views import APIView
 from rest_framework.reverse import reverse as api_reverse
 from rest_framework.response import Response
 
 from bugbox3.libs.utilities import get_json_context
 from .models import Experiment
 from .serializers import ExperimentsDatatablesSerializer
+from .forms import ExperimentForm
 from . import constants
 
 
@@ -56,10 +59,19 @@ class ExperimentsView(TemplateView):
         context = super().get_context_data(**kwargs)
         experiments_datatables_url = api_reverse('samples:experiment-data-list', 
                                                  request=self.request, kwargs=kwargs)
+        #context['experiment_create_url'] = reverse('samples:experimenent-create', kwargs=kwargs)
         context['json_context'] = get_json_context({
-            'experiments_datatables_url': experiments_datatables_url
+            'experiments_datatables_url': experiments_datatables_url,
         })
         return context
 
 class SpecimensView(TemplateView):
     template_name = 'samples/specimens.html'
+
+
+class ExperimentCreateView(CreateView):
+    template_name = 'samples/experiment_form.html'
+    action = 'create'
+
+    def get_form_class(self):
+        return modelform_factory(Experiment, ExperimentForm, constants.FORM_FIELDS_EXPERIMENT)
