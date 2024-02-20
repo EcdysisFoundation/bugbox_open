@@ -1,6 +1,10 @@
 @import 'custom_bootstrap_vars';
 @import '~bootstrap/scss/bootstrap';
 
+// datatables scss
+@import 'select.bootstrap5';
+@import 'dataTables.bootstrap5';
+
 // project specific CSS goes here
 
 ///////////////
