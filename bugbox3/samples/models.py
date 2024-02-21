@@ -2,7 +2,11 @@ import uuid
 
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField, HStoreField
-from django.db import models
+from django.db.models import (Model, CharField, PositiveSmallIntegerField, 
+                              BooleanField, PositiveIntegerField, TextField,
+                              UUIDField, ForeignKey, DecimalField, ImageField,
+                              DateField, DateTimeField, JSONField,
+                              CASCADE, SET_NULL)
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 
@@ -10,66 +14,75 @@ from ..taxonomy.models import AiVersion, Morphospecies, Taxon
 from . import constants
 
 
-class Experiment(models.Model):
-    uuid = models.UUIDField(default=uuid.uuid4, unique=True)
-    name = models.CharField(max_length=1000, unique=True)
-    abbreviation = models.CharField(max_length=10, null=True, blank=True)
-    from_year = models.PositiveSmallIntegerField()
-    to_year = models.PositiveSmallIntegerField()
-    leader = models.CharField(max_length=1000)
-    no_sites = models.PositiveIntegerField()
-    date_per_site = models.PositiveIntegerField()
-    sample_type = ArrayField(models.CharField(max_length=1000, blank=True))
-    no_per_date = ArrayField(models.CharField(max_length=1000, blank=True))
-    name_no_per_type = ArrayField(models.CharField(max_length=1000, blank=True))
-    completed = models.BooleanField(default=False)
-    summary = models.TextField(null=True, blank=True)
+class Experiment(Model):
+    uuid = UUIDField(default=uuid.uuid4, unique=True)
+    name = CharField(max_length=1000, unique=True)
+    abbreviation = CharField(max_length=10, blank=True)
+    from_year = PositiveSmallIntegerField()
+    to_year = PositiveSmallIntegerField()
+    leader = CharField(max_length=1000)
+    no_sites = PositiveIntegerField()
+    date_per_site = PositiveIntegerField()
+    completed = BooleanField(default=False)
+    summary = TextField(null=True, blank=True)
 
     def __str__(self):
         return f'{self.name}'
 
 
-class Sample(models.Model):
-    uuid = models.UUIDField(default=uuid.uuid4, unique=True)
-    experiment = models.ForeignKey(Experiment, on_delete=models.CASCADE)
-    by_user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
-    site = models.CharField(max_length=1000, blank=True)
-    country = models.CharField(max_length=1000, blank=True)
-    state = models.CharField(max_length=1000, blank=True)
-    county = models.CharField(max_length=1000, blank=True)
-    longitude = models.DecimalField(max_digits=9, decimal_places=6)
-    latitude = models.DecimalField(max_digits=9, decimal_places=6)
-    hc_type = models.CharField(max_length=1000, blank=True)
-    treatment = models.CharField(max_length=1000, blank=True)
-    date = models.DateField()
-    type = models.CharField(max_length=1000, blank=True)
-    name_no = models.CharField(max_length=1000, blank=True)
-    notes = models.TextField(max_length=1000, null=True, blank=True)
-    completed = models.BooleanField(default=False)
-    image = models.ImageField(null=True, blank=True)
+class SampleType(Model):
+    experiment = ForeignKey(Experiment, on_delete=CASCADE)
+    sample_type = CharField(max_length=100, 
+                            choices=constants.SAMPLE_TYPE_CHOICES_WO_BLANK)
+    no_per_date = PositiveSmallIntegerField(null=True)
+    name_no_per_type = CharField(max_length=100, blank=True)
+
+
+class Sample(Model):
+    uuid = UUIDField(default=uuid.uuid4, unique=True)
+    experiment = ForeignKey(Experiment, on_delete=CASCADE)
+    by_user = ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=SET_NULL)
+    site = CharField(max_length=1000, blank=True)
+    country = CharField(max_length=1000, blank=True)
+    state = CharField(max_length=1000, blank=True)
+    county = CharField(max_length=1000, blank=True)
+    longitude = DecimalField(max_digits=9, decimal_places=6)
+    latitude = DecimalField(max_digits=9, decimal_places=6)
+    habitat_type = CharField(max_length=100, blank=True)
+    treatment = CharField(max_length=100, blank=True)
+    sample_date = DateField()
+    sample_type = CharField(max_length=100, blank=True, 
+                            choices=constants.SAMPLE_TYPE_CHOICES)
+    name_no = CharField(max_length=100, blank=True)
+    notes = TextField(max_length=1000, null=True, blank=True)
+    completed = BooleanField(default=False)
+    image = ImageField(null=True, blank=True)
     classes = HStoreField(null=False, blank=True, default=constants.sample_taxon_classes_default)
 
 
-class Specimen(models.Model):
+class Specimen(Model):
 
-    uuid = models.UUIDField(default=uuid.uuid4, unique=True)
-    classification = models.ForeignKey(Taxon, on_delete=models.SET_NULL, null=True, blank=True)
-    morphospecies = models.ForeignKey(Morphospecies, on_delete=models.SET_NULL, null=True, blank=True)
-    ai_classification = models.ForeignKey(Morphospecies, on_delete=models.SET_NULL,
+    uuid = UUIDField(default=uuid.uuid4, unique=True)
+    classification = ForeignKey(Taxon, on_delete=SET_NULL, null=True, blank=True)
+    morphospecies = ForeignKey(Morphospecies, on_delete=SET_NULL, null=True, blank=True)
+    ai_classification = ForeignKey(Morphospecies, on_delete=SET_NULL,
                                           null=True, blank=True, related_name="ai")
-    ai_version = models.ForeignKey(AiVersion, on_delete=models.SET_NULL, null=True, blank=True)
-    sample = models.ForeignKey(Sample, on_delete=models.SET_NULL, null=True, blank=True)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL)
-    uploader = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="specimens_uploaded",
-                                 null=True, on_delete=models.SET_NULL)
-    partial_count = models.PositiveSmallIntegerField(blank=True, default=0, null=True)
-    date_added = models.DateTimeField(auto_now_add=True)
-    date_modified = models.DateTimeField(auto_now=True, auto_created=True)
-    confidence = models.DecimalField(max_digits=5, decimal_places=2, null=True)
-    optional_pred_one = models.JSONField(default=None, null=True, blank=True)
-    optional_pred_two = models.JSONField(default=None, null=True, blank=True)
-    tags = ArrayField(models.CharField(max_length=1000, blank=True), default=list)
-    acceptance = models.PositiveSmallIntegerField(choices=constants.ACCEPTANCE_CHOICES, blank=True, default=0)
+    ai_version = ForeignKey(AiVersion, on_delete=SET_NULL, null=True, blank=True)
+    sample = ForeignKey(Sample, on_delete=SET_NULL, null=True, blank=True)
+    user = ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=SET_NULL)
+    upload_user = ForeignKey(settings.AUTH_USER_MODEL, related_name="specimens_uploaded",
+                                 null=True, on_delete=SET_NULL)
+    partial_count = PositiveSmallIntegerField(blank=True, default=0, null=True)
+    date_added = DateTimeField(auto_now_add=True)
+    date_modified = DateTimeField(auto_now=True, auto_created=True)
+    confidence = DecimalField(max_digits=5, decimal_places=2, null=True)
+    optional_pred_one = JSONField(default=None, null=True, blank=True)
+    optional_pred_two = JSONField(default=None, null=True, blank=True)
+    tags = ArrayField(CharField(max_length=1000, blank=True), default=list)
+    acceptance = PositiveSmallIntegerField(choices=constants.ACCEPTANCE_CHOICES, blank=True, default=0)
+    archival_identifier = CharField(max_length=1000, blank=True, unique=True)
+    archival_preservation = CharField(max_length=100, blank=True)
+    archival_stored = CharField(max_length=100, blank=True)
 
     @property
     def image(self):
@@ -96,12 +109,12 @@ class Specimen(models.Model):
         return str(self.uuid)
 
 
-class SpecimenImage(models.Model):
-    specimen = models.ForeignKey(Specimen, on_delete=models.CASCADE)
-    primary = models.BooleanField(default=False)
-    image = models.ImageField()
-    date_added = models.DateTimeField(auto_now_add=True)
-    uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL)
+class SpecimenImage(Model):
+    specimen = ForeignKey(Specimen, on_delete=CASCADE)
+    primary = BooleanField(default=False)
+    image = ImageField()
+    date_added = DateTimeField(auto_now_add=True)
+    uploaded_by = ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=SET_NULL)
 
     class Meta:
         ordering = ['-primary']
@@ -117,9 +130,9 @@ def ensure_single_true_flag(sender, instance, **kwargs):
         SpecimenImage.objects.filter(specimen=instance.specimen).exclude(pk=instance.pk).update(primary=False)
 
 
-class TimelineEvent(models.Model):
-    specimen = models.ForeignKey(Specimen, on_delete=models.CASCADE)
-    event_title = models.CharField(max_length=200)
-    date_time = models.DateTimeField(auto_now_add=True, auto_created=True)
-    body = models.TextField()
-    image_url = models.CharField(max_length=500)
+class TimelineEvent(Model):
+    specimen = ForeignKey(Specimen, on_delete=CASCADE)
+    event_title = CharField(max_length=200)
+    date_time = DateTimeField(auto_now_add=True, auto_created=True)
+    body = TextField()
+    image_url = CharField(max_length=500)
