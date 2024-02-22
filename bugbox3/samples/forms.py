@@ -1,10 +1,11 @@
 from django.forms.models import ModelForm
-from django.forms import HiddenInput, ValidationError
+from django.forms import HiddenInput, ValidationError, inlineformset_factory
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Column, Field, Row, Fieldset, HTML, Submit
 from django.utils.safestring import mark_safe
 from django.conf import settings
 
+from .models import Experiment, SamplePlan
 from . import constants
 
 
@@ -41,7 +42,13 @@ class ModelFormMixin(ModelForm):
             if field_name in self.help_text_expanded:
                 field.help_text_expanded = self.help_text_expanded[field_name]
 
-        self.is_creating = kwargs['instance'] is None
+        #  if there is not an existing instance, then we are creating a new one.
+        if 'instance' in kwargs:
+            # see if it is empty or not
+            self.is_creating = kwargs['instance'] is None
+        else:
+            # handle case were instance does not apply
+            self.is_creating = None 
 
         self.helper = FormHelper(self)
         self.helper.form_method = 'post'
@@ -58,11 +65,12 @@ class ModelFormMixin(ModelForm):
     def get_submit_layout(self):
         layout = None
 
-        if (self.is_creating):
-            layout = Submit('submit', 'Create')
-        else:
-            layout = Submit('submit', 'Save')
-
+        if self.is_creating is not None:
+            if self.is_creating:
+                layout = Submit('submit', 'Create')
+            else:
+                layout = Submit('submit', 'Save')
+    
         return layout
     
     def clean(self):
@@ -92,7 +100,26 @@ class ModelFormMixin(ModelForm):
             raise ValidationError(error_message)
 
         return cleaned_data
-    
+
+class FormSetHelperMixin(FormHelper):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.form_method = 'post'
+        self.layout = Layout(
+                *self.get_layout(),
+            )
+        self.render_required_fields = True
+
+
+class SamplePlanFormSetHelper(FormSetHelperMixin):
+    def get_layout(self):
+            return [
+                Row(
+                    Column(constants.FIELD_SAMPLE_PLAN_SAMPLE_TYPE, css_class='form-control-width-medium'),
+                    Column(constants.FIELD_SAMPLE_PLAN_NO_PER_DATE, css_class='form-control-width-medium'),
+                    Column(constants.FIELD_SAMPLE_PLAN_NAME_NO_PER_TYPE, css_class='form-control-width-medium')
+                )
+            ]
 
 class ExperimentForm(ModelFormMixin):
     required_fields = [constants.FIELD_NAME, constants.FIELD_FROM_YEAR, constants.FIELD_TO_YEAR,
@@ -126,3 +153,74 @@ class ExperimentForm(ModelFormMixin):
                 Column(constants.FIELD_SUMMARY)
             )
         ]
+
+
+class ExperimentForm2(ModelFormMixin):
+
+    class Meta:
+        model = Experiment
+        fields = constants.FORM_FIELDS_EXPERIMENT
+
+    def get_layout(self):
+        return [
+            Fieldset(
+                'Experiment',
+                Field(constants.FIELD_NAME),
+                Row(
+                    Column(constants.FIELD_FROM_YEAR, css_class='form-control-width-medium'),
+                    Column(constants.FIELD_TO_YEAR, css_class='form-control-width-medium'),
+                ),
+                Field(constants.FIELD_LEADER),
+                css_class='card-body'
+            ),
+            Fieldset(
+                'Experiment Setup',
+                HTML('<p>placeholder</p>')
+            ),
+            Fieldset(
+                '',
+                Column(constants.FIELD_COMPLETED),
+                Column(constants.FIELD_SUMMARY)
+            )
+        ]
+
+
+class SamplePlanForm(ModelFormMixin):
+
+    class Meta:
+        model = SamplePlan
+        fields = constants.FORM_FIELDS_SAMPLE_PLAN
+    
+    def get_layout(self):
+        return [
+            Fieldset(
+                Row(
+                    Column(constants.FIELD_SAMPLE_PLAN_SAMPLE_TYPE, css_class='form-control-width-medium'),
+                    Column(constants.FIELD_SAMPLE_PLAN_NO_PER_DATE, css_class='form-control-width-medium'),
+                    Column(constants.FIELD_SAMPLE_PLAN_NAME_NO_PER_TYPE, css_class='form-control-width-medium')
+                )
+            )
+        ]
+
+
+SamplePlanFormSet = inlineformset_factory(
+    Experiment, SamplePlan, form=SamplePlanForm,
+    extra=1, can_delete=True, can_delete_extra=True
+)
+
+class ExperimentForm3(ModelForm):
+
+    class Meta:
+        model = Experiment
+        fields = constants.FORM_FIELDS_EXPERIMENT
+
+
+class SamplePlanForm3(ModelForm):
+
+    class Meta:
+        model = SamplePlan
+        fields = constants.FORM_FIELDS_SAMPLE_PLAN
+
+SamplePlanFormSet3 = inlineformset_factory(
+    Experiment, SamplePlan, form=SamplePlanForm3,
+    extra=2)

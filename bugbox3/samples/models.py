@@ -30,7 +30,7 @@ class Experiment(Model):
         return f'{self.name}'
 
 
-class SampleType(Model):
+class SamplePlan(Model):
     experiment = ForeignKey(Experiment, on_delete=CASCADE)
     sample_type = CharField(max_length=100, 
                             choices=constants.SAMPLE_TYPE_CHOICES_WO_BLANK)
