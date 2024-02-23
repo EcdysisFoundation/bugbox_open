@@ -107,23 +107,22 @@ class ExperimentForm(ModelFormMixin):
     """
 
     def __init__(self, *args, **kwargs):
-             super().__init__(*args, **kwargs)
-             #  use form tags in template to combine with child form
-             self.helper.form_tag = False
+        super().__init__(*args, **kwargs)
+        #  use form tags in template to combine with child form
+        self.helper.form_tag = False
 
     class Meta:
         model = Experiment
         fields = constants.FORM_FIELDS_EXPERIMENT
     
     required_fields = [constants.FIELD_NAME, constants.FIELD_FROM_YEAR, constants.FIELD_TO_YEAR,
-                       constants.FIELD_LEADER, 
-                       #  constants.FIELD_NO_SITES, constants.FIELD_DATE_PER_SITE
+                       constants.FIELD_LEADER, constants.FIELD_NO_SITES, constants.FIELD_DATE_PER_SITE
                        ]
     field_labels = {
         constants.FIELD_NAME: 'Experiment Name',
     }
     
-    def get_layout(self):
+    def get_primary_layout(self):
         return [
             Fieldset(
                 'Experiment',
@@ -138,8 +137,8 @@ class ExperimentForm(ModelFormMixin):
             Fieldset(
                 'Experiment Setup',
                 Row(
-                    Column(constants.FIELD_NO_SITES),
-                    Column(constants.FIELD_DATE_PER_SITE)
+                    Column(constants.FIELD_NO_SITES, css_class='form-control-width-medium'),
+                    Column(constants.FIELD_DATE_PER_SITE, css_class='form-control-width-medium')
                 )
             ),
             Fieldset(
@@ -156,15 +155,15 @@ class SamplePlanForm(ModelFormMixin):
     """
 
     def __init__(self, *args, **kwargs):
-             super().__init__(*args, **kwargs)
-             #  use form tags in template to combine with parent form
-             self.helper.form_tag = False
+        super().__init__(*args, **kwargs)
+        #  use form tags in template to combine with parent form
+        self.helper.form_tag = False
 
     class Meta:
         model = SamplePlan
         fields = constants.FORM_FIELDS_SAMPLE_PLAN
     
-    def get_layout(self):
+    def get_primary_layout(self):
         return [
             Fieldset(
                 '',
