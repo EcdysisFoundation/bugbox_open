@@ -126,26 +126,27 @@ class ExperimentForm(ModelFormMixin):
         return [
             Fieldset(
                 'Experiment',
-                Field(constants.FIELD_NAME),
                 Row(
-                    Column(constants.FIELD_FROM_YEAR, css_class='form-control-width-medium'),
-                    Column(constants.FIELD_TO_YEAR, css_class='form-control-width-medium'),
-                ),
-                Field(constants.FIELD_LEADER),
-                css_class='card-body'
+                    Column(
+                        Row(constants.FIELD_NAME),
+                        Row(
+                            Column(constants.FIELD_FROM_YEAR, css_class='form-control-width-medium'),
+                            Column(constants.FIELD_TO_YEAR, css_class='form-control-width-medium'),
+                        ),
+                        Row(constants.FIELD_LEADER),
+                        Row(constants.FIELD_COMPLETED),
+                    ),
+                    Column(constants.FIELD_SUMMARY)
+                )
             ),
             Fieldset(
-                'Experiment Setup',
+                'Sample Plan',
                 Row(
                     Column(constants.FIELD_NO_SITES, css_class='form-control-width-medium'),
                     Column(constants.FIELD_DATE_PER_SITE, css_class='form-control-width-medium')
                 )
             ),
-            Fieldset(
-                '',
-                Column(constants.FIELD_COMPLETED),
-                Column(constants.FIELD_SUMMARY)
-            )
+
         ]
 
 
@@ -165,12 +166,9 @@ class SamplePlanForm(ModelFormMixin):
     
     def get_primary_layout(self):
         return [
-            Fieldset(
-                '',
-                Row(
-                    Column(constants.FIELD_SAMPLE_PLAN_SAMPLE_TYPE, css_class='form-control-width-medium'),
-                    Column(constants.FIELD_SAMPLE_PLAN_NO_PER_DATE, css_class='form-control-width-medium'),
-                    Column(constants.FIELD_SAMPLE_PLAN_NAME_NO_PER_TYPE, css_class='form-control-width-medium')
-                )
+            Row(
+                Column(constants.FIELD_SAMPLE_PLAN_SAMPLE_TYPE, css_class='form-control-width-medium'),
+                Column(constants.FIELD_SAMPLE_PLAN_NO_PER_DATE, css_class='form-control-width-medium'),
+                Column(constants.FIELD_SAMPLE_PLAN_NAME_NO_PER_TYPE, css_class='form-control-width-medium')
             )
         ]
