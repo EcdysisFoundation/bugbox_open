@@ -53,9 +53,10 @@ class ModelFormMixin(ModelForm):
         self.helper = FormHelper(self)
         self.helper.form_method = 'post'
         self.helper.form_action = '.'
+        self.helper.form_tag = False # for new form
         self.helper.layout = Layout(
             *self.get_layout(),
-            self.get_submit_layout(),
+            #self.get_submit_layout(),
         )
         self.use_required_attribute = False
 
@@ -67,7 +68,9 @@ class ModelFormMixin(ModelForm):
 
         if self.is_creating is not None:
             if self.is_creating:
-                layout = Submit('submit', 'Create')
+                None
+                #self.form_tag = False
+                #layout = Submit('submit', 'Create')
             else:
                 layout = Submit('submit', 'Save')
     
@@ -101,27 +104,13 @@ class ModelFormMixin(ModelForm):
 
         return cleaned_data
 
-class FormSetHelperMixin(FormHelper):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.form_method = 'post'
-        self.layout = Layout(
-                *self.get_layout(),
-            )
-        self.render_required_fields = True
-
-
-class SamplePlanFormSetHelper(FormSetHelperMixin):
-    def get_layout(self):
-            return [
-                Row(
-                    Column(constants.FIELD_SAMPLE_PLAN_SAMPLE_TYPE, css_class='form-control-width-medium'),
-                    Column(constants.FIELD_SAMPLE_PLAN_NO_PER_DATE, css_class='form-control-width-medium'),
-                    Column(constants.FIELD_SAMPLE_PLAN_NAME_NO_PER_TYPE, css_class='form-control-width-medium')
-                )
-            ]
 
 class ExperimentForm(ModelFormMixin):
+
+    class Meta:
+        model = Experiment
+        fields = constants.FORM_FIELDS_EXPERIMENT
+    
     required_fields = [constants.FIELD_NAME, constants.FIELD_FROM_YEAR, constants.FIELD_TO_YEAR,
                        constants.FIELD_LEADER, 
                        #  constants.FIELD_NO_SITES, constants.FIELD_DATE_PER_SITE
@@ -130,7 +119,6 @@ class ExperimentForm(ModelFormMixin):
         constants.FIELD_NAME: 'Experiment Name',
     }
     
-    
     def get_layout(self):
         return [
             Fieldset(
@@ -145,37 +133,10 @@ class ExperimentForm(ModelFormMixin):
             ),
             Fieldset(
                 'Experiment Setup',
-                HTML('<p>placeholder</p>')
-            ),
-            Fieldset(
-                '',
-                Column(constants.FIELD_COMPLETED),
-                Column(constants.FIELD_SUMMARY)
-            )
-        ]
-
-
-class ExperimentForm2(ModelFormMixin):
-
-    class Meta:
-        model = Experiment
-        fields = constants.FORM_FIELDS_EXPERIMENT
-
-    def get_layout(self):
-        return [
-            Fieldset(
-                'Experiment',
-                Field(constants.FIELD_NAME),
                 Row(
-                    Column(constants.FIELD_FROM_YEAR, css_class='form-control-width-medium'),
-                    Column(constants.FIELD_TO_YEAR, css_class='form-control-width-medium'),
-                ),
-                Field(constants.FIELD_LEADER),
-                css_class='card-body'
-            ),
-            Fieldset(
-                'Experiment Setup',
-                HTML('<p>placeholder</p>')
+                    Column(constants.FIELD_NO_SITES),
+                    Column(constants.FIELD_DATE_PER_SITE)
+                )
             ),
             Fieldset(
                 '',
@@ -194,6 +155,7 @@ class SamplePlanForm(ModelFormMixin):
     def get_layout(self):
         return [
             Fieldset(
+                '',
                 Row(
                     Column(constants.FIELD_SAMPLE_PLAN_SAMPLE_TYPE, css_class='form-control-width-medium'),
                     Column(constants.FIELD_SAMPLE_PLAN_NO_PER_DATE, css_class='form-control-width-medium'),
@@ -201,26 +163,3 @@ class SamplePlanForm(ModelFormMixin):
                 )
             )
         ]
-
-
-SamplePlanFormSet = inlineformset_factory(
-    Experiment, SamplePlan, form=SamplePlanForm,
-    extra=1, can_delete=True, can_delete_extra=True
-)
-
-class ExperimentForm3(ModelForm):
-
-    class Meta:
-        model = Experiment
-        fields = constants.FORM_FIELDS_EXPERIMENT
-
-
-class SamplePlanForm3(ModelForm):
-
-    class Meta:
-        model = SamplePlan
-        fields = constants.FORM_FIELDS_SAMPLE_PLAN
-
-SamplePlanFormSet3 = inlineformset_factory(
-    Experiment, SamplePlan, form=SamplePlanForm3,
-    extra=2)

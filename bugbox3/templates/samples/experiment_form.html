@@ -6,11 +6,24 @@
 
 {% block content %}
 <div class="container">
+  <form action="{% url 'samples:experiment-sample-plan-create' %}" method="POST">
     <div class="row mb-5 p-2 text-dark">
       <div class="col-md-12 col-lg-9 bg-form p-4 mx-auto">
         {% crispy form %}
       </div>
     </div>
+    <div class="row mb-5 p-2 text-dark">
+        <div class="col-md-12 col-lg-9 bg-form p-4 mx-auto">
+          {{ sample_plans.management_form }}
+          {% for plan in sample_plans %}
+            {% crispy plan %}
+          {% endfor %}
+          <div class="form-actions">
+            <input type="submit" name="submit" value="Save" class="btn btn-primary" id="submit-save">
+        </div>
+    
+        </div>
+      </div>
   </div>
-  
+</form>
   {% endblock %}
