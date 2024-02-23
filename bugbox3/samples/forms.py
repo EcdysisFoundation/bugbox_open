@@ -42,39 +42,16 @@ class ModelFormMixin(ModelForm):
             if field_name in self.help_text_expanded:
                 field.help_text_expanded = self.help_text_expanded[field_name]
 
-        #  if there is not an existing instance, then we are creating a new one.
-        if 'instance' in kwargs:
-            # see if it is empty or not
-            self.is_creating = kwargs['instance'] is None
-        else:
-            # handle case were instance does not apply
-            self.is_creating = None 
-
         self.helper = FormHelper(self)
         self.helper.form_method = 'post'
         self.helper.form_action = '.'
-        self.helper.form_tag = False # for new form
         self.helper.layout = Layout(
             *self.get_layout(),
-            #self.get_submit_layout(),
         )
         self.use_required_attribute = False
 
     def get_primary_layout(self):
         return []
-    
-    def get_submit_layout(self):
-        layout = None
-
-        if self.is_creating is not None:
-            if self.is_creating:
-                None
-                #self.form_tag = False
-                #layout = Submit('submit', 'Create')
-            else:
-                layout = Submit('submit', 'Save')
-    
-        return layout
     
     def clean(self):
         cleaned_data = super().clean()
@@ -105,7 +82,34 @@ class ModelFormMixin(ModelForm):
         return cleaned_data
 
 
+def get_submit_layout(helper_layout, kwargs):
+        """
+        Get a submit button based on create vs edit. For example in a ModelFormMixin subclass...
+          def __init__(self, *args, **kwargs):
+             super().__init__(*args, **kwargs)
+             self.helper.layout = get_submit_layout(self.helper.layout, kwargs)
+        """
+        layout = None
+        if 'instance' in kwargs:
+            creating = kwargs['instance'] is None
+            if creating:
+                layout = Submit('submit', 'Create')
+            else:
+                layout = Submit('submit', 'Save')
+        if layout:
+            helper_layout.append(layout)
+        return helper_layout
+
+
 class ExperimentForm(ModelFormMixin):
+    """
+    Parent form for SamplePlanForm.
+    """
+
+    def __init__(self, *args, **kwargs):
+             super().__init__(*args, **kwargs)
+             #  use form tags in template to combine with child form
+             self.helper.form_tag = False
 
     class Meta:
         model = Experiment
@@ -147,6 +151,14 @@ class ExperimentForm(ModelFormMixin):
 
 
 class SamplePlanForm(ModelFormMixin):
+    """
+    Child form for ExperimentForm.
+    """
+
+    def __init__(self, *args, **kwargs):
+             super().__init__(*args, **kwargs)
+             #  use form tags in template to combine with parent form
+             self.helper.form_tag = False
 
     class Meta:
         model = SamplePlan
