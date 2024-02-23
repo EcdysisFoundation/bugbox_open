@@ -46,7 +46,7 @@ class ModelFormMixin(ModelForm):
         self.helper.form_method = 'post'
         self.helper.form_action = '.'
         self.helper.layout = Layout(
-            *self.get_layout(),
+            *self.get_primary_layout(),
         )
         self.use_required_attribute = False
 
