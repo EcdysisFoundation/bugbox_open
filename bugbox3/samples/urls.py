@@ -2,7 +2,7 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from .views import (ExperimentsView, SpecimensView, ExperimentsDatatablesViewSet, 
-                    ExperimentSamplePlanCreateView)
+                    ExperimentSamplePlanCreateView, ExperimentSamplePlanUpdateView)
 
 router = DefaultRouter()
 router.register(r'experiments-data', ExperimentsDatatablesViewSet,
@@ -13,5 +13,8 @@ urlpatterns = [
     path('', include(router.urls)),
     path('experiments/', ExperimentsView.as_view(), name='experiments'),
     path('specimens/', SpecimensView.as_view(), name='specimens'),
-    path('experiment-sample-plan-create/', ExperimentSamplePlanCreateView.as_view(), name='experiment-sample-plan-create')
+    path('experiment-sample-plan-create/',
+         ExperimentSamplePlanCreateView.as_view(), name='experiment-sample-plan-create'),
+    path('experiment-sample-plan-update/<int:experiment_id>',
+         ExperimentSamplePlanUpdateView.as_view(), name='experiment-sample-plan-update')
 ]

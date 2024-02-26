@@ -1,3 +1,4 @@
+from django.urls import reverse
 from rest_framework.serializers import ModelSerializer
 
 from .models import Experiment, Sample, Specimen
@@ -35,9 +36,14 @@ class ExperimentsDatatablesSerializer(ModelSerializer):
             if specimens:
                 result['not_reviewed'] = specimens.filter(acceptance=constants.ACCEPTANCE_PENDING)
         return result
+    
+    def get_experiment_link(self, v):
+        url = reverse('samples:experiment-sample-plan-update', kwargs={'experiment_id': v.id})
+        return '<a href="{0}">{1}</a>'.format(url, v.name)
 
     def to_representation(self, value):
         result = {
+            'experiment_link': self.get_experiment_link(value),
             constants.FIELD_UUID: value.uuid,
             constants.FIELD_NAME: value.name,
             constants.FIELD_ABBREVIATION: value.abbreviation,

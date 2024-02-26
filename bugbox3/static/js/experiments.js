@@ -19,7 +19,7 @@ $(function () {
         },
         columns: [
             {
-                data: 'name',
+                data: 'experiment_link',
             },{
                 data: 'abbreviation',
             },{

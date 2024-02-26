@@ -162,9 +162,11 @@ class SamplePlanForm(ModelFormMixin):
         fields = constants.FORM_FIELDS_SAMPLE_PLAN
     
     field_labels = constants.FORM_FIELDS_SAMPLE_PLAN_LABELS
+    hidden_fields = [constants.FIELD_SAMPLE_PLAN_ID]
     
     def get_primary_layout(self):
         return [
+            Field(constants.FIELD_SAMPLE_PLAN_ID),
             HTML("<div class='d-none' id='formsets_row_{{ forloop.counter }}'>"),
             Row(
                 Column(constants.FIELD_SAMPLE_PLAN_SAMPLE_TYPE, css_class='form-control-width-medium'),

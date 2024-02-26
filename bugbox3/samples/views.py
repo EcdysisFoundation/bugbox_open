@@ -3,7 +3,7 @@ from django.contrib.postgres.search import SearchVector
 from django.urls import reverse
 from django.views.generic.edit import CreateView, UpdateView
 from django.forms import modelform_factory, modelformset_factory, inlineformset_factory
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.db import transaction
 from rest_framework.viewsets import ReadOnlyModelViewSet
@@ -87,6 +87,7 @@ class ExperimentSamplePlanCreateView(CreateView):
         context = super(ExperimentSamplePlanCreateView, self).get_context_data(**kwargs)
         context['json_context'] = get_json_context(get_formsets_display_control_config(
                     self.formset_total, self.formset_intial))
+        context['form_action_url'] = reverse('samples:experiment-sample-plan-create')
         if self.request.POST:
             context['formsets'] = self.sample_plan_form_set(self.request.POST)
         else:
@@ -104,6 +105,52 @@ class ExperimentSamplePlanCreateView(CreateView):
             else:
                 print('ERRORS_sample_plans: ' + str(sample_plans.errors))
         return super(ExperimentSamplePlanCreateView, self).form_valid(form)
+
+    def get_success_url(self):
+        return reverse('samples:experiments')
+
+
+class ExperimentSamplePlanUpdateView(UpdateView):
+
+    form_class = ExperimentForm
+    template_name = 'samples/experiment_form.html'
+    action = 'update'
+
+    formset_total = 10
+    formset_intial = 1
+
+    sample_plan_form_set = inlineformset_factory(Experiment, SamplePlan,
+                                                 form=SamplePlanForm,
+                                                 max_num=formset_total, extra=formset_total)
+
+    def get_object(self, queryset=None):
+        experiment = Experiment.objects.all()
+        return get_object_or_404(experiment, id=self.kwargs['experiment_id'])
+    
+    def get_context_data(self, **kwargs):
+        context = super(ExperimentSamplePlanUpdateView, self).get_context_data(**kwargs)
+        context['json_context'] = get_json_context(get_formsets_display_control_config(
+                    self.formset_total, self.formset_intial))
+        context['form_action_url'] = reverse('samples:experiment-sample-plan-update',
+                                             kwargs={'experiment_id': self.kwargs['experiment_id']})
+        if self.request.POST:
+            context['formsets'] = self.sample_plan_form_set(self.request.POST, instance=self.object)
+            #context['formsets'].full_clean()
+        else:
+            context['formsets'] = self.sample_plan_form_set(instance=self.object)
+        return context
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        sample_plans = context['formsets']
+        with transaction.atomic():
+            self.object = form.save()
+            if sample_plans.is_valid():
+                sample_plans.instance = self.object
+                sample_plans.save()
+            else:
+                print('ERRORS_sample_plans: ' + str(sample_plans.errors))
+        return super(ExperimentSamplePlanUpdateView, self).form_valid(form)
 
     def get_success_url(self):
         return reverse('samples:experiments')

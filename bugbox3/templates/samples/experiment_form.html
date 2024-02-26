@@ -14,7 +14,7 @@
 
 {% block content %}
 <div class="container">
-  <form action="{% url 'samples:experiment-sample-plan-create' %}" method="POST">
+  <form action="{{ form_action_url }}" method="POST">
     <div class="row p-2 text-dark">
       <div class="col-md-12 col-lg-9 bg-form px-4 mb-0 mx-auto">
         {% crispy form %}
@@ -24,8 +24,8 @@
         <div class="col-md-12 col-lg-9 bg-form mt-0 px-4 mx-auto">
           <div class="display-formset-row-button"></div>
           {{ formsets.management_form }}
-          {% for plan in formsets %}
-            {% crispy plan %}
+          {% for form in formsets %}
+            {% crispy form %}
           {% endfor %}
         </div>
     </div>
