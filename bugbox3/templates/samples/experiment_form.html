@@ -1,8 +1,16 @@
 {% extends "base.html" %}
 {% load crispy_forms_tags %}
 {% load django_bootstrap5 %}
+{% load render_bundle from webpack_loader %}
 
 {% block title %}Experiment Form{% endblock %}
+
+{% block customheadtagcontent %}
+
+{% render_bundle 'jquery_tools' 'js' attrs='defer' %}
+{{ json_context|safe }}
+
+{% endblock customheadtagcontent %}
 
 {% block content %}
 <div class="container">
@@ -14,16 +22,19 @@
     </div>
     <div class="row mb-5 p-2 text-dark">
         <div class="col-md-12 col-lg-9 bg-form mt-0 px-4 mx-auto">
-          {{ sample_plans.management_form }}
-          {% for plan in sample_plans %}
+          <div class="display-formset-row-button"></div>
+          {{ formsets.management_form }}
+          {% for plan in formsets %}
             {% crispy plan %}
           {% endfor %}
-          <div class="form-actions">
-            <input type="submit" name="submit" value="Save" class="btn btn-primary" id="submit-save">
         </div>
-    
-        </div>
+    </div>
+    <div class="row mb-5 p-2 text-dark">
+      <div class="form-actions col-md-12 col-lg-9 bg-form mt-0 px-4 mx-auto">
+          <input type="submit" name="submit" value="Save" class="btn btn-primary" id="submit-save">
       </div>
-  </div>
-</form>
+    </div>
+  </form>
+</div>
+
   {% endblock %}

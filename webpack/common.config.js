@@ -9,6 +9,7 @@ module.exports = {
     project: path.resolve(__dirname, '../bugbox3/static/js/project'),
     vendors: path.resolve(__dirname, '../bugbox3/static/js/vendors'),
     experiments: path.resolve(__dirname, '../bugbox3/static/js/experiments'),
+    jquery_tools: path.resolve(__dirname, '../bugbox3/static/js/jquery_tools'),
   },
   output: {
     path: path.resolve(

@@ -12,6 +12,7 @@ from rest_framework.response import Response
 
 
 from bugbox3.libs.utilities import get_json_context
+from ..libs.ui_helpers import get_formsets_display_control_config
 from .models import Experiment, SamplePlan
 from .serializers import ExperimentsDatatablesSerializer
 from .forms import ExperimentForm, SamplePlanForm
@@ -63,7 +64,6 @@ class ExperimentsView(TemplateView):
         context = super().get_context_data(**kwargs)
         experiments_datatables_url = api_reverse('samples:experiment-data-list', 
                                                  request=self.request, kwargs=kwargs)
-        #context['experiment_create_url'] = reverse('samples:experimenent-create', kwargs=kwargs)
         context['json_context'] = get_json_context({
             'experiments_datatables_url': experiments_datatables_url,
         })
@@ -78,20 +78,24 @@ class ExperimentSamplePlanCreateView(CreateView):
     template_name = 'samples/experiment_form.html'
     action = 'create'
 
+    formset_total = 10
+    formset_intial = 1
 
-    sample_plan_form_set = inlineformset_factory(Experiment, SamplePlan, form=SamplePlanForm, extra=2)
+    sample_plan_form_set = inlineformset_factory(Experiment, SamplePlan, form=SamplePlanForm, max_num=formset_total, extra=formset_total)
 
     def get_context_data(self, **kwargs):
-        data = super(ExperimentSamplePlanCreateView, self).get_context_data(**kwargs)
+        context = super(ExperimentSamplePlanCreateView, self).get_context_data(**kwargs)
+        context['json_context'] = get_json_context(get_formsets_display_control_config(
+                    self.formset_total, self.formset_intial))
         if self.request.POST:
-            data['sample_plans'] = self.sample_plan_form_set(self.request.POST)
+            context['formsets'] = self.sample_plan_form_set(self.request.POST)
         else:
-            data['sample_plans'] = self.sample_plan_form_set()
-        return data
+            context['formsets'] = self.sample_plan_form_set()
+        return context
 
     def form_valid(self, form):
         context = self.get_context_data()
-        sample_plans = context['sample_plans']
+        sample_plans = context['formsets']
         with transaction.atomic():
             self.object = form.save()
             if sample_plans.is_valid():

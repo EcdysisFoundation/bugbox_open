@@ -1,7 +1,7 @@
 from django.forms.models import ModelForm
 from django.forms import HiddenInput, ValidationError, inlineformset_factory
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Column, Field, Row, Fieldset, HTML, Submit
+from crispy_forms.layout import Layout, Column, Field, Row, Fieldset, HTML, Submit, Div
 from django.utils.safestring import mark_safe
 from django.conf import settings
 
@@ -166,9 +166,12 @@ class SamplePlanForm(ModelFormMixin):
     
     def get_primary_layout(self):
         return [
+            HTML("<div class='d-none' id='formsets_row_{{ forloop.counter }}'>"),
             Row(
                 Column(constants.FIELD_SAMPLE_PLAN_SAMPLE_TYPE, css_class='form-control-width-medium'),
                 Column(constants.FIELD_SAMPLE_PLAN_NO_PER_DATE, css_class='form-control-width-medium'),
-                Column(constants.FIELD_SAMPLE_PLAN_NAME_NO_PER_TYPE, css_class='form-control-width-medium')
-            )
+                Column(constants.FIELD_SAMPLE_PLAN_NAME_NO_PER_TYPE, css_class='form-control-width-medium'),
+                css_class='my-0'
+            ),
+            HTML('</div>')
         ]
