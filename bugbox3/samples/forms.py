@@ -115,12 +115,8 @@ class ExperimentForm(ModelFormMixin):
         model = Experiment
         fields = constants.FORM_FIELDS_EXPERIMENT
     
-    required_fields = [constants.FIELD_NAME, constants.FIELD_FROM_YEAR, constants.FIELD_TO_YEAR,
-                       constants.FIELD_LEADER, constants.FIELD_NO_SITES, constants.FIELD_DATE_PER_SITE
-                       ]
-    field_labels = {
-        constants.FIELD_NAME: 'Experiment Name',
-    }
+    required_fields = constants.FORM_FIELDS_EXPERIMENT_REQUIRED
+    field_labels = constants.FORM_FIELDS_EXPERIMENT_LABELS
     
     def get_primary_layout(self):
         return [
@@ -129,6 +125,7 @@ class ExperimentForm(ModelFormMixin):
                 Row(
                     Column(
                         Row(constants.FIELD_NAME),
+                        Row(constants.FIELD_ABBREVIATION, css_class='form-control-width-medium'),
                         Row(
                             Column(constants.FIELD_FROM_YEAR, css_class='form-control-width-medium'),
                             Column(constants.FIELD_TO_YEAR, css_class='form-control-width-medium'),
@@ -163,6 +160,8 @@ class SamplePlanForm(ModelFormMixin):
     class Meta:
         model = SamplePlan
         fields = constants.FORM_FIELDS_SAMPLE_PLAN
+    
+    field_labels = constants.FORM_FIELDS_SAMPLE_PLAN_LABELS
     
     def get_primary_layout(self):
         return [

@@ -18,6 +18,12 @@ $(function () {
         // expects formsets in the view where form layout injects <div id='formsets_row_{{ forloop.counter }}'>
         // wrapper around the formset, initialy set as bootrap css 'd-none', reveal the initial rows with ability
         // to show additional formsets on the page, up to the total available.
+        // include the button to show more rows in the template, just before formsets is good
+        // <div class="display-formset-row-button"></div>
+        // {{ formsets.management_form }}
+        //  {% for form in formsets %}
+        //    {% crispy form %}
+        //  {% endfor %}
 
         // get the tool configuration
         let tool_config = json_context.formsets_display_control
