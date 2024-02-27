@@ -120,7 +120,8 @@ class ExperimentSamplePlanUpdateView(UpdateView):
 
     sample_plan_form_set = inlineformset_factory(Experiment, SamplePlan,
                                      form=SamplePlanForm,
-                                     max_num=formset_total, extra=formset_total)
+                                     max_num=formset_total, extra=formset_total,
+                                     can_delete=True)
 
     def get_object(self, queryset=None):
         experiment = Experiment.objects.all()

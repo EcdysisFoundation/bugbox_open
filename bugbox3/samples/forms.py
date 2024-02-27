@@ -172,6 +172,7 @@ class SamplePlanForm(ModelFormMixin):
                 Column(constants.FIELD_SAMPLE_PLAN_SAMPLE_TYPE, css_class='form-control-width-medium'),
                 Column(constants.FIELD_SAMPLE_PLAN_NO_PER_DATE, css_class='form-control-width-medium'),
                 Column(constants.FIELD_SAMPLE_PLAN_NAME_NO_PER_TYPE, css_class='form-control-width-medium'),
+                Column('DELETE', css_class='mt-5'),
                 css_class='my-0'
             ),
             HTML('</div>')
