@@ -117,11 +117,10 @@ class ExperimentSamplePlanUpdateView(UpdateView):
     action = 'update'
 
     formset_total = 10
-    formset_intial = 1
 
     sample_plan_form_set = inlineformset_factory(Experiment, SamplePlan,
-                                                 form=SamplePlanForm,
-                                                 max_num=formset_total, extra=formset_total)
+                                     form=SamplePlanForm,
+                                     max_num=formset_total, extra=formset_total)
 
     def get_object(self, queryset=None):
         experiment = Experiment.objects.all()
@@ -129,8 +128,11 @@ class ExperimentSamplePlanUpdateView(UpdateView):
     
     def get_context_data(self, **kwargs):
         context = super(ExperimentSamplePlanUpdateView, self).get_context_data(**kwargs)
+        sample_plan_count = SamplePlan.objects.filter(experiment_id=self.object.id).count()
+        if sample_plan_count < 1:
+            sample_plan_count = 1
         context['json_context'] = get_json_context(get_formsets_display_control_config(
-                    self.formset_total, self.formset_intial))
+                    self.formset_total, sample_plan_count))
         context['form_action_url'] = reverse('samples:experiment-sample-plan-update',
                                              kwargs={'experiment_id': self.kwargs['experiment_id']})
         if self.request.POST:
