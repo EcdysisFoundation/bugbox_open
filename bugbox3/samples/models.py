@@ -8,9 +8,12 @@ from django.db.models import (Model, CharField, PositiveSmallIntegerField,
                               DateField, DateTimeField, JSONField,
                               CASCADE, SET_NULL)
 from django.db.models.signals import pre_save
+from django.contrib.gis.db.models import PointField
 from django.dispatch import receiver
 
 from ..taxonomy.models import AiVersion, Morphospecies, Taxon
+from ..core.models import UsCountiesTigerLine
+from ..core import constants as geo_constants
 from . import constants
 
 
@@ -38,16 +41,34 @@ class SamplePlan(Model):
     name_no_per_type = CharField(max_length=100, blank=True)
 
 
+class Site(Model):
+    experiment = ForeignKey(Experiment, on_delete=CASCADE)
+    site = CharField(max_length=1000)
+    gis_point = PointField()
+    country = CharField(max_length=1000, blank=True)
+    state_region = CharField(max_length=1000, blank=True)
+    county_region = CharField(max_length=1000, blank=True)
+    us_state_county_fips = CharField(blank=True, max_length=5)
+    longitude = DecimalField(max_digits=9, decimal_places=6, null=True)
+    latitude = DecimalField(max_digits=9, decimal_places=6, null=True)
+
+    def save(self, *args, **kwargs):
+        us_county = UsCountiesTigerLine.objects.filter(geom__contains=self.gis_point)
+        if len(us_county) == 1:
+            self.country = geo_constants.UNITED_STATES
+            us_county = us_county[0]
+            fips = us_county.statefp + us_county.countyfp
+            if us_county.statefp in geo_constants.FIPS_STATE:
+                self.state_region = geo_constants.FIPS_STATE[us_county.statefp]
+            self.county_region = us_county.name
+            self.us_state_county_fips = fips
+        super().save(*args, **kwargs)
+
+
 class Sample(Model):
     uuid = UUIDField(default=uuid.uuid4, unique=True)
-    experiment = ForeignKey(Experiment, on_delete=CASCADE)
+    site = ForeignKey(Site, on_delete=CASCADE)
     by_user = ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=SET_NULL)
-    site = CharField(max_length=1000, blank=True)
-    country = CharField(max_length=1000, blank=True)
-    state = CharField(max_length=1000, blank=True)
-    county = CharField(max_length=1000, blank=True)
-    longitude = DecimalField(max_digits=9, decimal_places=6)
-    latitude = DecimalField(max_digits=9, decimal_places=6)
     habitat_type = CharField(max_length=100, blank=True)
     treatment = CharField(max_length=100, blank=True)
     sample_date = DateField()

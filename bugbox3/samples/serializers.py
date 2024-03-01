@@ -25,7 +25,7 @@ class ExperimentsDatatablesSerializer(ModelSerializer):
             photo_sampling='',
             not_reviewed=''
         )
-        samples = Sample.objects.filter(experiment_id=v.id)
+        samples = Sample.objects.filter(site__experiment_id=v.id)
         if not samples:
             return result
         sample_ids = [s.id for s in samples]
