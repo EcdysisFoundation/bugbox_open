@@ -281,3 +281,6 @@ webpack-stats.json
 .env
 .envs/*
 !.envs/.local/
+
+### local misc
+local_files/
