@@ -43,7 +43,7 @@ class SamplePlan(Model):
 
 class Site(Model):
     experiment = ForeignKey(Experiment, on_delete=CASCADE)
-    site = CharField(max_length=1000)
+    site_name = CharField(max_length=1000)
     gis_point = PointField()
     country = CharField(max_length=1000, blank=True)
     state_region = CharField(max_length=1000, blank=True)

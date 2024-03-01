@@ -5,7 +5,7 @@ from crispy_forms.layout import Layout, Column, Field, Row, Fieldset, HTML, Subm
 from django.utils.safestring import mark_safe
 from django.conf import settings
 
-from .models import Experiment, SamplePlan
+from .models import Experiment, SamplePlan, Site, Sample
 from . import constants
 
 
@@ -177,3 +177,24 @@ class SamplePlanForm(ModelFormMixin):
             ),
             HTML('</div>')
         ]
+
+class SiteForm(ModelFormMixin):
+    """
+    Parent form for SampleForm.
+
+    Plan here is to make formsets form similar to ExperimentForm.
+    In this case, the displayed formsets are based on the sample plan for experiment.
+    Although, only give one form per date.
+    Then if the one form comes in valid to the view, there create the additional samples
+    based from the plan.
+
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        #  use form tags in template to combine with child form
+        self.helper.form_tag = False
+
+    class Meta:
+        model = Site
+        fields = constants.FORM_FIELDS_SITE_CREATE

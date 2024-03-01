@@ -18,6 +18,17 @@ FIELD_SAMPLE_PLAN_SAMPLE_TYPE = 'sample_type'
 FIELD_SAMPLE_PLAN_NO_PER_DATE = 'no_per_date'
 FIELD_SAMPLE_PLAN_NAME_NO_PER_TYPE = 'name_no_per_type'
 
+FIELD_SITE_ID = 'id'
+FIELD_SITE_SITE_NAME = 'site_name'
+FIELD_SITE_GIS_POINT = 'gis_point'
+FIELD_SITE_COUNTRY = 'country'
+FIELD_SITE_STATE_REGION = 'state_region'
+FIELD_SITE_COUNTY_REGION = 'county_region'
+FIELD_SITE_US_STATE_COUNTY_FIPS = 'us_state_county_fips'
+FIELD_SITE_LONGITUDE = 'longitude'
+FIELD_SITE_LATITUDE = 'latitude'
+
+FIELD_SAMPLE
 # Model Defaults
 
 TAXON_CLASS_ACARI = 'acari'
@@ -104,6 +115,13 @@ FORM_FIELDS_SAMPLE_PLAN = [
     FIELD_SAMPLE_PLAN_SAMPLE_TYPE,
     FIELD_SAMPLE_PLAN_NO_PER_DATE,
     FIELD_SAMPLE_PLAN_NAME_NO_PER_TYPE
+]
+
+FORM_FIELDS_SITE_CREATE = [
+    FIELD_SITE_SITE_NAME,
+    # FIELD_SITE_GIS_POINT, temporarialy use seperate fields, populate in view
+    FIELD_SITE_LONGITUDE,
+    FIELD_SITE_LATITUDE,
 ]
 
 # Required Fields
