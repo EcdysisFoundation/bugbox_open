@@ -18,6 +18,17 @@ FIELD_SAMPLE_PLAN_SAMPLE_TYPE = 'sample_type'
 FIELD_SAMPLE_PLAN_NO_PER_DATE = 'no_per_date'
 FIELD_SAMPLE_PLAN_NAME_NO_PER_TYPE = 'name_no_per_type'
 
+FIELD_SITE_SITE_NAME = 'site_name'
+FIELD_SITE_HABITAT_TYPE = 'habitat_type'
+FIELD_SITE_TREATMENT = 'treatment'
+FIELD_SITE_LONGITUDE = 'longitude'
+FIELD_SITE_LATITUDE = 'latitude'
+
+FIELD_SAMPLE_ID = 'id'
+FIELD_SAMPLE_DATE = 'sample_date'
+FIELD_SAMPLE_TYPE = 'sample_type'
+
+
 # Model Defaults
 
 TAXON_CLASS_ACARI = 'acari'
@@ -26,6 +37,7 @@ TAXON_CLASS_COLLEMBOLA = 'collembola'
 TAXON_CLASS_GASTROPODA = 'gastropoda'
 TAXON_CLASS_NEMATODA = 'nematoda'
 TAXON_CLASS_THYSANOPTERA = 'thysanoptera'
+
 
 def sample_taxon_classes_default():
     return dict(
@@ -104,6 +116,19 @@ FORM_FIELDS_SAMPLE_PLAN = [
     FIELD_SAMPLE_PLAN_SAMPLE_TYPE,
     FIELD_SAMPLE_PLAN_NO_PER_DATE,
     FIELD_SAMPLE_PLAN_NAME_NO_PER_TYPE
+]
+
+FORM_FIELDS_SITE = [
+    FIELD_SITE_SITE_NAME,
+    FIELD_SITE_HABITAT_TYPE,
+    FIELD_SITE_TREATMENT,
+    FIELD_SITE_LONGITUDE,
+    FIELD_SITE_LATITUDE
+]
+
+FORM_FIELDS_SAMPLE = [
+    FIELD_SAMPLE_DATE,
+    FIELD_SAMPLE_TYPE
 ]
 
 # Required Fields

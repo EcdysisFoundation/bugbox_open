@@ -5,7 +5,7 @@ from crispy_forms.layout import Layout, Column, Field, Row, Fieldset, HTML, Subm
 from django.utils.safestring import mark_safe
 from django.conf import settings
 
-from .models import Experiment, SamplePlan
+from .models import Experiment, SamplePlan, Site, Sample
 from . import constants
 
 
@@ -172,6 +172,57 @@ class SamplePlanForm(ModelFormMixin):
                 Column(constants.FIELD_SAMPLE_PLAN_SAMPLE_TYPE, css_class='form-control-width-medium'),
                 Column(constants.FIELD_SAMPLE_PLAN_NO_PER_DATE, css_class='form-control-width-medium'),
                 Column(constants.FIELD_SAMPLE_PLAN_NAME_NO_PER_TYPE, css_class='form-control-width-medium'),
+                Column('DELETE', css_class='mt-5'),
+                css_class='my-0'
+            ),
+            HTML('</div>')
+        ]
+
+
+class SiteForm(ModelFormMixin):
+    """
+    Parent form for Sample
+    """
+
+    class Meta:
+        model = Site
+        fields = constants.FORM_FIELDS_SITE
+
+    def get_primary_layout(self):
+        return [
+            Field(constants.FIELD_SITE_SITE_NAME),
+            Field(constants.FIELD_SITE_HABITAT_TYPE),
+            Field(constants.FIELD_SITE_TREATMENT),
+            Row(
+                Column(constants.FIELD_SITE_LONGITUDE, css_class='form-control-width-medium'),
+                Column(constants.FIELD_SITE_LATITUDE, css_class='form-control-width-medium'),
+            ),
+        ]
+
+
+class SampleForm(ModelFormMixin):
+    """
+    Child form for SiteForm.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        #  use form tags in template to combine with parent form
+        self.helper.form_tag = False
+
+    class Meta:
+        model = Sample
+        fields = constants.FORM_FIELDS_SAMPLE
+
+    hidden_fields = [constants.FIELD_SAMPLE_ID]
+
+    def get_primary_layout(self):
+        return [
+            Field(constants.FIELD_SAMPLE_ID),
+            HTML("<div class='d-none' id='formsets_row_{{ forloop.counter }}'>"),
+            Row(
+                Column(constants.FIELD_SAMPLE_DATE, css_class='form-control-width-medium'),
+                Column(constants.FIELD_SAMPLE_TYPE, css_class='form-control-width-medium'),
                 Column('DELETE', css_class='mt-5'),
                 css_class='my-0'
             ),

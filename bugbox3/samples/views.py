@@ -11,11 +11,11 @@ from rest_framework.reverse import reverse as api_reverse
 from rest_framework.response import Response
 
 
-from bugbox3.libs.utilities import get_json_context
+from ..libs.utilities import get_json_context
 from ..libs.ui_helpers import get_formsets_display_control_config
-from .models import Experiment, SamplePlan
+from .models import Experiment, SamplePlan, Site, Sample
 from .serializers import ExperimentsDatatablesSerializer
-from .forms import ExperimentForm, SamplePlanForm
+from .forms import ExperimentForm, SamplePlanForm, SiteForm, SampleForm
 from . import constants
 
 
@@ -57,6 +57,7 @@ class ExperimentsDatatablesViewSet(ReadOnlyModelViewSet):
         }
         return Response(response)
 
+
 class ExperimentsView(TemplateView):
     template_name = 'samples/experiments.html'
     
@@ -69,8 +70,10 @@ class ExperimentsView(TemplateView):
         })
         return context
 
+
 class SpecimensView(TemplateView):
     template_name = 'samples/specimens.html'
+
 
 class ExperimentSamplePlanCreateView(CreateView):
 
@@ -96,14 +99,14 @@ class ExperimentSamplePlanCreateView(CreateView):
 
     def form_valid(self, form):
         context = self.get_context_data()
-        sample_plans = context['formsets']
+        formsets = context['formsets']
         with transaction.atomic():
             self.object = form.save()
-            if sample_plans.is_valid():
-                sample_plans.instance = self.object
-                sample_plans.save()
+            if formsets.is_valid():
+                formsets.instance = self.object
+                formsets.save()
             else:
-                print('ERRORS_sample_plans: ' + str(sample_plans.errors))
+                print('ERRORS_formsets: ' + str(formsets.errors))
         return super(ExperimentSamplePlanCreateView, self).form_valid(form)
 
     def get_success_url(self):
@@ -145,15 +148,60 @@ class ExperimentSamplePlanUpdateView(UpdateView):
 
     def form_valid(self, form):
         context = self.get_context_data()
-        sample_plans = context['formsets']
+        formsets = context['formsets']
         with transaction.atomic():
             self.object = form.save()
-            if sample_plans.is_valid():
-                sample_plans.instance = self.object
-                sample_plans.save()
+            if formsets.is_valid():
+                formsets.instance = self.object
+                formsets.save()
             else:
-                print('ERRORS_sample_plans: ' + str(sample_plans.errors))
+                print('ERRORS_formsets: ' + str(formsets.errors))
         return super(ExperimentSamplePlanUpdateView, self).form_valid(form)
+
+    def get_success_url(self):
+        return reverse('samples:experiments')
+
+
+class SiteCreateView(CreateView):
+    form_class = SiteForm
+    template_name = 'samples/site_form.html'
+    action = 'create'
+
+    formset_total = 10
+
+    sample_form_set = inlineformset_factory(Site, Sample, form=SampleForm, max_num=formset_total, extra=formset_total)
+
+    def get_context_data(self, **kwargs):
+        context = super(SiteCreateView, self).get_context_data(**kwargs)
+        # kwargs syntax, which is it?
+        plans = SamplePlan.objects.filter(experiment_id=kwargs.experiment_id).count
+        experiment = get_object_or_404(Experiment, id=kwargs['experiment_id'])
+        date_per_site = experiment.date_per_site
+        number_plans = 1
+        if plans:
+            number_plans = len(plans)
+            # set initial data
+        formset_inital = date_per_site * number_plans
+        context['json_context'] = get_json_context(get_formsets_display_control_config(
+                    self.formset_total, formset_inital))
+        context['form_action_url'] = reverse('samples:site-create')
+        if self.request.POST:
+            context['formsets'] = self.form_set(self.request.POST)
+        else:
+            context['formsets'] = self.form_set()
+        return context
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        formsets = context['formsets']
+        with transaction.atomic():
+            self.object = form.save()
+            if formsets.is_valid():
+                formsets.instance = self.object
+                formsets.save()
+            else:
+                print('ERRORS_formsets: ' + str(formsets.errors))
+        return super(SiteCreateView, self).form_valid(form)
 
     def get_success_url(self):
         return reverse('samples:experiments')

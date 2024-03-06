@@ -43,7 +43,9 @@ class SamplePlan(Model):
 
 class Site(Model):
     experiment = ForeignKey(Experiment, on_delete=CASCADE)
-    site = CharField(max_length=1000)
+    site_name = CharField(max_length=1000)
+    habitat_type = CharField(max_length=100, blank=True)
+    treatment = CharField(max_length=100, blank=True)
     gis_point = PointField()
     country = CharField(max_length=1000, blank=True)
     state_region = CharField(max_length=1000, blank=True)
@@ -69,8 +71,6 @@ class Sample(Model):
     uuid = UUIDField(default=uuid.uuid4, unique=True)
     site = ForeignKey(Site, on_delete=CASCADE)
     by_user = ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=SET_NULL)
-    habitat_type = CharField(max_length=100, blank=True)
-    treatment = CharField(max_length=100, blank=True)
     sample_date = DateField()
     sample_type = CharField(max_length=100, blank=True, 
                             choices=constants.SAMPLE_TYPE_CHOICES)
@@ -87,12 +87,12 @@ class Specimen(Model):
     classification = ForeignKey(Taxon, on_delete=SET_NULL, null=True, blank=True)
     morphospecies = ForeignKey(Morphospecies, on_delete=SET_NULL, null=True, blank=True)
     ai_classification = ForeignKey(Morphospecies, on_delete=SET_NULL,
-                                          null=True, blank=True, related_name="ai")
+                                   null=True, blank=True, related_name="ai")
     ai_version = ForeignKey(AiVersion, on_delete=SET_NULL, null=True, blank=True)
     sample = ForeignKey(Sample, on_delete=SET_NULL, null=True, blank=True)
     user = ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=SET_NULL)
     upload_user = ForeignKey(settings.AUTH_USER_MODEL, related_name="specimens_uploaded",
-                                 null=True, on_delete=SET_NULL)
+                             null=True, on_delete=SET_NULL)
     partial_count = PositiveSmallIntegerField(blank=True, default=0, null=True)
     date_added = DateTimeField(auto_now_add=True)
     date_modified = DateTimeField(auto_now=True, auto_created=True)
