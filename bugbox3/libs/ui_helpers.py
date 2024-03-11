@@ -8,7 +8,7 @@ def get_numeric_dropdown(length, button_label):
              aria-expanded="false">{}</button> \
              <ul class="dropdown-menu">'.format(button_label)
     for x in range(length):
-        result += '<li><a class="dropdown-item" value="x">{}</a></li>'.format(x, x)
+        result += '<li><a class="dropdown-item" value="x">{}</a></li>'.format(x)
     result += '</ul></div>'
     return result
 
@@ -21,10 +21,10 @@ def get_formsets_display_control_config(formset_total, formset_intial, formset_r
     display_none_class = 'd-none'
     total_list_ids = []
     total_count = 1
-    
+
     def get_formset_row(the_count):
         return '#{}{}'.format(str(formset_row_prefix), str(the_count))
-        
+
     while total_count <= formset_total:
         formset_row = get_formset_row(total_count)
         total_list_ids.append(formset_row)

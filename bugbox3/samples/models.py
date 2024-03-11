@@ -1,19 +1,31 @@
 import uuid
 
 from django.conf import settings
-from django.contrib.postgres.fields import ArrayField, HStoreField
-from django.db.models import (Model, CharField, PositiveSmallIntegerField, 
-                              BooleanField, PositiveIntegerField, TextField,
-                              UUIDField, ForeignKey, DecimalField, ImageField,
-                              DateField, DateTimeField, JSONField,
-                              CASCADE, SET_NULL)
-from django.db.models.signals import pre_save
 from django.contrib.gis.db.models import PointField
+from django.contrib.postgres.fields import ArrayField, HStoreField
+from django.db.models import (
+    CASCADE,
+    SET_NULL,
+    BooleanField,
+    CharField,
+    DateField,
+    DateTimeField,
+    DecimalField,
+    ForeignKey,
+    ImageField,
+    JSONField,
+    Model,
+    PositiveIntegerField,
+    PositiveSmallIntegerField,
+    TextField,
+    UUIDField,
+)
+from django.db.models.signals import pre_save
 from django.dispatch import receiver
 
-from ..taxonomy.models import AiVersion, Morphospecies, Taxon
-from ..core.models import UsCountiesTigerLine
 from ..core import constants as geo_constants
+from ..core.models import UsCountiesTigerLine
+from ..taxonomy.models import AiVersion, Morphospecies, Taxon
 from . import constants
 
 
@@ -35,7 +47,7 @@ class Experiment(Model):
 
 class SamplePlan(Model):
     experiment = ForeignKey(Experiment, on_delete=CASCADE)
-    sample_type = CharField(max_length=100, 
+    sample_type = CharField(max_length=100,
                             choices=constants.SAMPLE_TYPE_CHOICES_WO_BLANK)
     no_per_date = PositiveSmallIntegerField(null=True)
     name_no_per_type = CharField(max_length=100, blank=True)
@@ -72,7 +84,7 @@ class Sample(Model):
     site = ForeignKey(Site, on_delete=CASCADE)
     by_user = ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=SET_NULL)
     sample_date = DateField()
-    sample_type = CharField(max_length=100, blank=True, 
+    sample_type = CharField(max_length=100, blank=True,
                             choices=constants.SAMPLE_TYPE_CHOICES)
     name_no = CharField(max_length=100, blank=True)
     notes = TextField(max_length=1000, null=True, blank=True)

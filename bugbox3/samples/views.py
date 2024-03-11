@@ -1,29 +1,27 @@
-from django.views.generic import TemplateView
 from django.contrib.postgres.search import SearchVector
-from django.urls import reverse
-from django.views.generic.edit import CreateView, UpdateView
-from django.forms import modelform_factory, modelformset_factory, inlineformset_factory
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib import messages
 from django.db import transaction
-from rest_framework.viewsets import ReadOnlyModelViewSet
-from rest_framework.reverse import reverse as api_reverse
+from django.forms import inlineformset_factory
+from django.shortcuts import get_object_or_404
+from django.urls import reverse
+from django.views.generic import TemplateView
+from django.views.generic.edit import CreateView, UpdateView
 from rest_framework.response import Response
+from rest_framework.reverse import reverse as api_reverse
+from rest_framework.viewsets import ReadOnlyModelViewSet
 
-
-from ..libs.utilities import get_json_context
 from ..libs.ui_helpers import get_formsets_display_control_config
-from .models import Experiment, SamplePlan, Site, Sample
-from .serializers import ExperimentsDatatablesSerializer
-from .forms import ExperimentForm, SamplePlanForm, SiteForm, SampleForm
+from ..libs.utilities import get_json_context
 from . import constants
+from .forms import ExperimentForm, SampleForm, SamplePlanForm, SiteForm
+from .models import Experiment, Sample, SamplePlan, Site
+from .serializers import ExperimentsDatatablesSerializer
 
 
 class ExperimentsDatatablesViewSet(ReadOnlyModelViewSet):
     serializer_class = ExperimentsDatatablesSerializer
 
     queryset = Experiment.objects.all().order_by(constants.FIELD_NAME)
-    
+
     def filter_for_datatable(self, queryset):
         # filtering
         search_vector = [constants.FIELD_NAME, constants.FIELD_ABBREVIATION]
@@ -41,11 +39,11 @@ class ExperimentsDatatablesViewSet(ReadOnlyModelViewSet):
         filtered_queryset = self.filter_for_datatable(queryset)
         try:
             start = int(request.query_params.get('start'))
-        except:
+        except ValueError:
             start = 0
         try:
             length = int(request.query_params.get('length'))
-        except:
+        except ValueError:
             length = 10
         end = length + start
         serializer = self.get_serializer(filtered_queryset[start:end], many=True)
@@ -60,10 +58,10 @@ class ExperimentsDatatablesViewSet(ReadOnlyModelViewSet):
 
 class ExperimentsView(TemplateView):
     template_name = 'samples/experiments.html'
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        experiments_datatables_url = api_reverse('samples:experiment-data-list', 
+        experiments_datatables_url = api_reverse('samples:experiment-data-list',
                                                  request=self.request, kwargs=kwargs)
         context['json_context'] = get_json_context({
             'experiments_datatables_url': experiments_datatables_url,
@@ -84,7 +82,8 @@ class ExperimentSamplePlanCreateView(CreateView):
     formset_total = 10
     formset_intial = 1
 
-    sample_plan_form_set = inlineformset_factory(Experiment, SamplePlan, form=SamplePlanForm, max_num=formset_total, extra=formset_total)
+    sample_plan_form_set = inlineformset_factory(
+        Experiment, SamplePlan, form=SamplePlanForm, max_num=formset_total, extra=formset_total)
 
     def get_context_data(self, **kwargs):
         context = super(ExperimentSamplePlanCreateView, self).get_context_data(**kwargs)
@@ -121,15 +120,14 @@ class ExperimentSamplePlanUpdateView(UpdateView):
 
     formset_total = 10
 
-    sample_plan_form_set = inlineformset_factory(Experiment, SamplePlan,
-                                     form=SamplePlanForm,
-                                     max_num=formset_total, extra=formset_total,
-                                     can_delete=True)
+    sample_plan_form_set = inlineformset_factory(
+        Experiment, SamplePlan, form=SamplePlanForm, max_num=formset_total, extra=formset_total,
+        can_delete=True)
 
     def get_object(self, queryset=None):
         experiment = Experiment.objects.all()
         return get_object_or_404(experiment, id=self.kwargs['experiment_id'])
-    
+
     def get_context_data(self, **kwargs):
         context = super(ExperimentSamplePlanUpdateView, self).get_context_data(**kwargs)
         sample_plan_count = SamplePlan.objects.filter(experiment_id=self.object.id).count()
@@ -141,7 +139,7 @@ class ExperimentSamplePlanUpdateView(UpdateView):
                                              kwargs={'experiment_id': self.kwargs['experiment_id']})
         if self.request.POST:
             context['formsets'] = self.sample_plan_form_set(self.request.POST, instance=self.object)
-            #context['formsets'].full_clean()
+            # context['formsets'].full_clean()
         else:
             context['formsets'] = self.sample_plan_form_set(instance=self.object)
         return context

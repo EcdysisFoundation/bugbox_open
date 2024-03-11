@@ -1,4 +1,4 @@
-from django.contrib.gis.db.models import Model, CharField, BigIntegerField, MultiPolygonField
+from django.contrib.gis.db.models import BigIntegerField, CharField, Model, MultiPolygonField
 
 
 class UsCounties(Model):

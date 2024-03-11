@@ -42,6 +42,7 @@ TAXON_CLASS_GASTROPODA = 'gastropoda'
 TAXON_CLASS_NEMATODA = 'nematoda'
 TAXON_CLASS_THYSANOPTERA = 'thysanoptera'
 
+
 def sample_taxon_classes_default():
     return dict(
         TAXON_CLASS_ACARI=0,
@@ -51,6 +52,7 @@ def sample_taxon_classes_default():
         TAXON_CLASS_NEMATODA=0,
         TAXON_CLASS_THYSANOPTERA=0
     )
+
 
 #  Model Choices
 

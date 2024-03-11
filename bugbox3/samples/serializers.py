@@ -1,24 +1,24 @@
 from django.urls import reverse
 from rest_framework.serializers import ModelSerializer
 
-from .models import Experiment, Sample, Specimen
 from . import constants
+from .models import Experiment, Sample, Specimen
 
 
 class ExperimentsDatatablesSerializer(ModelSerializer):
-    
+
     class Meta:
         model = Experiment
         fields = [constants.FIELD_UUID, constants.FIELD_NAME,
                   constants.FIELD_ABBREVIATION, constants.FIELD_FROM_YEAR,
                   constants.FIELD_TO_YEAR]
-        
+
     def get_years(self, v):
         if v.from_year == v.to_year:
             return str(v.from_year)
         else:
             return str(v.from_year) + ' - ' + str(v.to_year)
-    
+
     def get_sample_info(self, v):
         result = dict(
             total_samples='0',
@@ -36,7 +36,7 @@ class ExperimentsDatatablesSerializer(ModelSerializer):
             if specimens:
                 result['not_reviewed'] = specimens.filter(acceptance=constants.ACCEPTANCE_PENDING)
         return result
-    
+
     def get_experiment_link(self, v):
         url = reverse('samples:experiment-sample-plan-update', kwargs={'experiment_id': v.id})
         return '<a href="{0}" class="link-secondary">{1}</a>'.format(url, v.name)

@@ -1,12 +1,12 @@
-from django.forms.models import ModelForm
-from django.forms import HiddenInput, ValidationError, inlineformset_factory
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Column, Field, Row, Fieldset, HTML, Submit, Div
-from django.utils.safestring import mark_safe
+from crispy_forms.layout import HTML, Column, Field, Fieldset, Layout, Row, Submit
 from django.conf import settings
+from django.forms import HiddenInput, ValidationError
+from django.forms.models import ModelForm
+from django.utils.safestring import mark_safe
 
-from .models import Experiment, SamplePlan, Site, Sample
 from . import constants
+from .models import Experiment, Sample, SamplePlan, Site
 
 
 class ModelFormMixin(ModelForm):
@@ -27,7 +27,7 @@ class ModelFormMixin(ModelForm):
 
             if field_name in self.hidden_fields:
                 field.widget = HiddenInput()
-            
+
             if field_name in self.field_labels:
                 field.label = self.field_labels[field_name]
 
@@ -52,7 +52,7 @@ class ModelFormMixin(ModelForm):
 
     def get_primary_layout(self):
         return []
-    
+
     def clean(self):
         cleaned_data = super().clean()
         error_messages = []  # Accumulate error messages here
@@ -62,8 +62,8 @@ class ModelFormMixin(ModelForm):
             if not cleaned_data.get(field_name):
                 # Some .labels are "None" so using "or (field_name...", replacing "_" and capitalizing first word.
                 field_label = (
-                    self.fields[field_name].label 
-                    or (field_name.replace('_', ' ').capitalize() 
+                    self.fields[field_name].label
+                    or (field_name.replace('_', ' ').capitalize()
                         if not settings.DEBUG  # Do not replace when in DEBUG mode.
                         else f"{field_name} (DEBUG: field.label is 'None'!)")
                 )
@@ -75,7 +75,7 @@ class ModelFormMixin(ModelForm):
             for message in error_messages:
                 error_message_list += f"<li>{message}</li>"
             error_message_list += "</ul>"
-            
+
             error_message = mark_safe(f"Please fill out these required fields: {error_message_list}")
             raise ValidationError(error_message)
 
@@ -83,22 +83,22 @@ class ModelFormMixin(ModelForm):
 
 
 def get_submit_layout(helper_layout, kwargs):
-        """
-        Get a submit button based on create vs edit. For example in a ModelFormMixin subclass...
-          def __init__(self, *args, **kwargs):
-             super().__init__(*args, **kwargs)
-             self.helper.layout = get_submit_layout(self.helper.layout, kwargs)
-        """
-        layout = None
-        if 'instance' in kwargs:
-            creating = kwargs['instance'] is None
-            if creating:
-                layout = Submit('submit', 'Create')
-            else:
-                layout = Submit('submit', 'Save')
-        if layout:
-            helper_layout.append(layout)
-        return helper_layout
+    """
+    Get a submit button based on create vs edit. For example in a ModelFormMixin subclass...
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.helper.layout = get_submit_layout(self.helper.layout, kwargs)
+    """
+    layout = None
+    if 'instance' in kwargs:
+        creating = kwargs['instance'] is None
+        if creating:
+            layout = Submit('submit', 'Create')
+        else:
+            layout = Submit('submit', 'Save')
+    if layout:
+        helper_layout.append(layout)
+    return helper_layout
 
 
 class ExperimentForm(ModelFormMixin):
@@ -114,10 +114,10 @@ class ExperimentForm(ModelFormMixin):
     class Meta:
         model = Experiment
         fields = constants.FORM_FIELDS_EXPERIMENT
-    
+
     required_fields = constants.FORM_FIELDS_EXPERIMENT_REQUIRED
     field_labels = constants.FORM_FIELDS_EXPERIMENT_LABELS
-    
+
     def get_primary_layout(self):
         return [
             Fieldset(
@@ -160,10 +160,10 @@ class SamplePlanForm(ModelFormMixin):
     class Meta:
         model = SamplePlan
         fields = constants.FORM_FIELDS_SAMPLE_PLAN
-    
+
     field_labels = constants.FORM_FIELDS_SAMPLE_PLAN_LABELS
     hidden_fields = [constants.FIELD_SAMPLE_PLAN_ID]
-    
+
     def get_primary_layout(self):
         return [
             Field(constants.FIELD_SAMPLE_PLAN_ID),
@@ -233,5 +233,3 @@ class SampleForm(ModelFormMixin):
             ),
             HTML('</div>')
         ]
-
-

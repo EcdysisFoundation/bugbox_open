@@ -1,12 +1,13 @@
 from django.contrib.admin import ModelAdmin, site
 
-from . models import Experiment, SamplePlan
+from .models import Experiment, SamplePlan
 
 
 class ExperimentAdmin(ModelAdmin):
     search_fields = ('name',)
     ordering = ['name']
     list_display = ['name']
+
 
 class SamplePlanAdmin(ModelAdmin):
     search_fields = ('sample_type',)
