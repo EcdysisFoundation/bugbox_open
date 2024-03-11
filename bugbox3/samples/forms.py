@@ -202,7 +202,12 @@ class SiteForm(ModelFormMixin):
 
 class SampleForm(ModelFormMixin):
     """
-    Child form for SiteForm.
+    Plan here is to make formsets form similar to ExperimentForm.
+    In this case, the displayed formsets are based on the sample plan for experiment.
+    Although, only give one form per date.
+    Then if the one form comes in valid to the view, there create the additional samples
+    based from the plan.
+
     """
 
     def __init__(self, *args, **kwargs):
@@ -228,3 +233,5 @@ class SampleForm(ModelFormMixin):
             ),
             HTML('</div>')
         ]
+
+
