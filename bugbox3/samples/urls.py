@@ -6,6 +6,7 @@ from .views import (
     ExperimentSamplePlanUpdateView,
     ExperimentsDatatablesViewSet,
     ExperimentsView,
+    ExperimentView,
     SiteCreateView,
     SpecimensView,
 )
@@ -18,6 +19,7 @@ app_name = "samples"
 urlpatterns = [
     path('', include(router.urls)),
     path('experiments/', ExperimentsView.as_view(), name='experiments'),
+    path('experiment/<int:experiment_id>', ExperimentView.as_view(), name='experiment'),
     path('specimens/', SpecimensView.as_view(), name='specimens'),
     path('experiment-sample-plan-create/',
          ExperimentSamplePlanCreateView.as_view(), name='experiment-sample-plan-create'),

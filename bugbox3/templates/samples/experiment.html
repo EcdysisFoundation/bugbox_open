@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% load render_bundle from webpack_loader %}
+
+{% block title %}
+    Experiment
+{% endblock title %}
+
+{% block customheadtagcontent %}
+
+
+{% endblock customheadtagcontent %}
+
+{% block content %}
+
+<div class="container">
+    
+    <div class="row">
+        <div class="col-12 mb-3 p-0">
+            <div class="card">
+                <div class="card-header align-items-center bg-ecdysis text-white d-flex justify-content-between">
+                    <h5>Experiment: {{experiment.name}} </h5>
+                    <a href="{% url 'samples:experiment-sample-plan-update' experiment.id %}" class="btn btn-light">
+                        Edit Experiment
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <p class="card-text"><b>UUID:</b> {{ experiment.uuid }}</p>
+                            <p class="card-text"><b>Year(s):</b> {{ years }}</p>
+                            <p class="card-text"><b>Experiment Setup:</b></p>
+                            <ul>
+                                <p class="card-text">{{ experiment.no_sites }} sample sites</p>
+                                <p class="card-text">{{ experiment.date_per_site }} sample dates per site</p>
+                                {% for plan in sample_plan_descriptions %}
+                                <p class="card-text">{{ plan }}</p>
+                                {% endfor %}
+                            </ul>
+                            <p class="card-text"><b>Leader:</b> {{experiment.leader}} </p>
+                        </div>
+                        {% if experiment.summary %}
+                            <div class="col-md-4 mt-2">
+                                <p class="card-text"><b>Summary</b></p>
+                                {{experiment.summary|default:''}}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+    </div>
+
+    <div class="row">
+        <h5 class="bg-ecdysis text-white col-12 p-3">Samples from this Experiment</h5>
+    </div>
+
+</div>
+
+{% endblock content %}

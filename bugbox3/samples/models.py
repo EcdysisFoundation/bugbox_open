@@ -14,6 +14,7 @@ from django.db.models import (
     ForeignKey,
     ImageField,
     JSONField,
+    Manager,
     Model,
     PositiveIntegerField,
     PositiveSmallIntegerField,

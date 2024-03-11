@@ -14,6 +14,7 @@ from ..libs.utilities import get_json_context
 from . import constants
 from .forms import ExperimentForm, SampleForm, SamplePlanForm, SiteForm
 from .models import Experiment, Sample, SamplePlan, Site
+from .models_query import get_sample_plan_descriptions
 from .serializers import ExperimentsDatatablesSerializer
 
 
@@ -65,6 +66,24 @@ class ExperimentsView(TemplateView):
                                                  request=self.request, kwargs=kwargs)
         context['json_context'] = get_json_context({
             'experiments_datatables_url': experiments_datatables_url,
+        })
+        return context
+
+
+class ExperimentView(TemplateView):
+    template_name = 'samples/experiment.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        experiment = get_object_or_404(Experiment.objects.all(), id=kwargs['experiment_id'])
+        if experiment.from_year == experiment.to_year:
+            years = str(experiment.from_year)
+        else:
+            years = str(experiment.from_year) + ' - ' + str(experiment.to_year)
+        context.update({
+            'experiment': experiment,
+            'years': years,
+            'sample_plan_descriptions': get_sample_plan_descriptions(experiment.id)
         })
         return context
 

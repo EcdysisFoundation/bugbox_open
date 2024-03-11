@@ -38,7 +38,7 @@ class ExperimentsDatatablesSerializer(ModelSerializer):
         return result
 
     def get_experiment_link(self, v):
-        url = reverse('samples:experiment-sample-plan-update', kwargs={'experiment_id': v.id})
+        url = reverse('samples:experiment', kwargs={'experiment_id': v.id})
         return '<a href="{0}" class="link-secondary">{1}</a>'.format(url, v.name)
 
     def to_representation(self, value):
