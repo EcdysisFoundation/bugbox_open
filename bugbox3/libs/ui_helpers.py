@@ -20,9 +20,8 @@ def get_formsets_display_control_config(formset_total, formset_intial, formset_r
     """
     display_none_class = 'd-none'
     total_list_ids = []
-    #initial_list_ids = []
     total_count = 1
-    #initial_count = 1
+    
     def get_formset_row(the_count):
         return '#{}{}'.format(str(formset_row_prefix), str(the_count))
         
@@ -30,17 +29,11 @@ def get_formsets_display_control_config(formset_total, formset_intial, formset_r
         formset_row = get_formset_row(total_count)
         total_list_ids.append(formset_row)
         total_count += 1
-    #while initial_count <= formset_intial:
-    #    formset_row = get_formset_row(initial_count)
-    #    initial_list_ids.append(formset_row)
-    #    initial_count += 1
+
     return {
         'formsets_display_control': {
-            #'formset_row_prefix': formset_row_prefix,
-            #'formset_total': formset_total,
             'formset_intial': formset_intial,
             'total_list_ids': total_list_ids,
-            #'initial_list_ids': initial_list_ids,
             'display_none_class': display_none_class
         }
     }

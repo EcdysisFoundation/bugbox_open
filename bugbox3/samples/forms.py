@@ -178,10 +178,30 @@ class SamplePlanForm(ModelFormMixin):
             HTML('</div>')
         ]
 
+
 class SiteForm(ModelFormMixin):
     """
-    Parent form for SampleForm.
+    Parent form for Sample
+    """
 
+    class Meta:
+        model = Site
+        fields = constants.FORM_FIELDS_SITE
+
+    def get_primary_layout(self):
+        return [
+            Field(constants.FIELD_SITE_SITE_NAME),
+            Field(constants.FIELD_SITE_HABITAT_TYPE),
+            Field(constants.FIELD_SITE_TREATMENT),
+            Row(
+                Column(constants.FIELD_SITE_LONGITUDE, css_class='form-control-width-medium'),
+                Column(constants.FIELD_SITE_LATITUDE, css_class='form-control-width-medium'),
+            ),
+        ]
+
+
+class SampleForm(ModelFormMixin):
+    """
     Plan here is to make formsets form similar to ExperimentForm.
     In this case, the displayed formsets are based on the sample plan for experiment.
     Although, only give one form per date.
@@ -192,9 +212,26 @@ class SiteForm(ModelFormMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        #  use form tags in template to combine with child form
+        #  use form tags in template to combine with parent form
         self.helper.form_tag = False
 
     class Meta:
-        model = Site
-        fields = constants.FORM_FIELDS_SITE_CREATE
+        model = Sample
+        fields = constants.FORM_FIELDS_SAMPLE
+
+    hidden_fields = [constants.FIELD_SAMPLE_ID]
+
+    def get_primary_layout(self):
+        return [
+            Field(constants.FIELD_SAMPLE_ID),
+            HTML("<div class='d-none' id='formsets_row_{{ forloop.counter }}'>"),
+            Row(
+                Column(constants.FIELD_SAMPLE_DATE, css_class='form-control-width-medium'),
+                Column(constants.FIELD_SAMPLE_TYPE, css_class='form-control-width-medium'),
+                Column('DELETE', css_class='mt-5'),
+                css_class='my-0'
+            ),
+            HTML('</div>')
+        ]
+
+
