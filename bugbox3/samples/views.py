@@ -182,10 +182,9 @@ class ExperimentSamplePlanUpdateView(UpdateView):
 
 class SiteCreateView(CreateView):
     
-    # Change all this to an UpdateView for existing records and make new plan for create
-    # because we dont want to have to enter details for every mutliple.
-    # or go more normal, seperate model for date and type then sample name last
+    # This isnt going to work efficiently because the models still not normalized enough
     # new model could be sample event type scenario, intersection of date and site
+    # site - sample-event(inc. date) - sample(inc. sample type) - specimens - images
     
     form_class = SiteForm
     template_name = 'samples/site_form.html'
