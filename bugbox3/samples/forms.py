@@ -198,8 +198,8 @@ class SiteForm(ModelFormMixin):
         return [
             Field(constants.FIELD_SITE_SITE_NAME, css_class='form-control-width-medium'),
             Row(
-                Column(constants.FIELD_SITE_LONGITUDE, css_class='form-control-width-medium'),
                 Column(constants.FIELD_SITE_LATITUDE, css_class='form-control-width-medium'),
+                Column(constants.FIELD_SITE_LONGITUDE, css_class='form-control-width-medium'),
             ),
             Row(
                 Column(constants.FIELD_SITE_TREATMENT, css_class='form-control-width-medium'),
@@ -246,7 +246,7 @@ class SampleForm(ModelFormMixin):
             HTML("<div class='d-none' id='formsets_row_{{ forloop.counter }}'>"),
             Row(
                 Column(constants.FIELD_SAMPLE_DATE),
-                Column(constants.FIELD_SAMPLE_TYPE, css_class='form-control-width-medium'),
+                # Column(constants.FIELD_SAMPLE_TYPE, css_class='form-control-width-medium'),
                 Column('DELETE', css_class='mt-5'),
                 css_class='my-0'
             ),

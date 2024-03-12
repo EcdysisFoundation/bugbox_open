@@ -80,10 +80,11 @@ class ExperimentView(TemplateView):
             years = str(experiment.from_year)
         else:
             years = str(experiment.from_year) + ' - ' + str(experiment.to_year)
+        description = [v['description'] for v in get_sample_plan_descriptions(experiment.id)]
         context.update({
             'experiment': experiment,
             'years': years,
-            'sample_plan_descriptions': get_sample_plan_descriptions(experiment.id)
+            'sample_plan_descriptions': description
         })
         return context
 
@@ -190,17 +191,26 @@ class SiteCreateView(CreateView):
 
     def get_context_data(self, **kwargs):
         context = super(SiteCreateView, self).get_context_data(**kwargs)
-        # kwargs syntax, which is it?
-        plans = SamplePlan.objects.filter(experiment_id=self.kwargs['experiment_id']).count()
+        plans = SamplePlan.objects.filter(experiment_id=self.kwargs['experiment_id'])
         experiment = get_object_or_404(Experiment, id=self.kwargs['experiment_id'])
-        date_per_site = experiment.date_per_site
-        number_plans = 1
-        if plans:
-            number_plans = plans
-            # set initial data
-        formset_inital = date_per_site * number_plans
+        #date_per_site = experiment.date_per_site
+        context['experiment_details'] = {
+            'experiment': experiment,
+            'plans': get_sample_plan_descriptions(experiment.id)
+        }
+        initial_data = []
+        #if plans:
+        #    for plan in plans:
+        #        i = date_per_site
+        #        while i > 0:
+        #3            initial_data.append({
+        #               constants.FIELD_SAMPLE_TYPE: plan.sample_type,
+        #            })
+        #            i -= 1
+        #number_plans =  len(initial_data) if initial_data else 1
+        #formset_inital = date_per_site * number_plans
         context['json_context'] = get_json_context(get_formsets_display_control_config(
-                    self.formset_total, formset_inital))
+                    self.formset_total, experiment.date_per_site))
         context['form_action_url'] = reverse('samples:site-create', kwargs={'experiment_id': self.kwargs['experiment_id']})
         if self.request.POST:
             context['formsets'] = self.form_set(self.request.POST)

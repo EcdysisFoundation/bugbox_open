@@ -13,9 +13,8 @@
 {% block content %}
 
 <div class="container">
-    
     <div class="row">
-        <div class="col-12 mb-3 p-0">
+        <div class="col-12 mb-3 mt-2 p-0">
             <div class="card">
                 <div class="card-header align-items-center bg-ecdysis text-white d-flex justify-content-between">
                     <h5>Experiment: {{experiment.name}} </h5>
@@ -33,7 +32,7 @@
                                 <p class="card-text">{{ experiment.no_sites }} sample sites</p>
                                 <p class="card-text">{{ experiment.date_per_site }} sample dates per site</p>
                                 {% for plan in sample_plan_descriptions %}
-                                <p class="card-text">{{ plan }}</p>
+                                <p class="card-text">{{ plan }} per site</p>
                                 {% endfor %}
                             </ul>
                             <p class="card-text"><b>Leader:</b> {{experiment.leader}} </p>

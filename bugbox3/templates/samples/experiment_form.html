@@ -22,7 +22,7 @@
     </div>
     <div class="row mb-5 p-2 text-dark">
         <div class="col-md-12 col-lg-9 bg-form mt-0 px-4 mx-auto">
-          <div class="display-formset-row-button"></div>
+          <button type="button" id="displayFormsetRow" class="btn btn-link btn-small">Add Sample Type </button>
           {{ formsets.management_form }}
           {% for form in formsets %}
             {% crispy form %}

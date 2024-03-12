@@ -38,7 +38,9 @@ $(function () {
         }
 
         // button to show more rows
-        let $displayFormsetRowButton = $('<button type="button" id="displayFormsetRow" class="btn btn-link btn-small">Add Sample Type </button>')
+        // html form must have button with id="displayFormsetRow"
+        // example <button type="button" id="displayFormsetRow" class="btn btn-link btn-small">Add Sample Type </button>
+        let $displayFormsetRowButton = $('#displayFormsetRow')
         $('.display-formset-row-button').append($displayFormsetRowButton)
         $displayFormsetRowButton.on('click', function() {
             if (tool_config.total_list_ids.length > 0) {

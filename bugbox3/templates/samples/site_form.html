@@ -15,23 +15,51 @@
 {% block content %}
 <div class="container">
   <form action="{{ form_action_url }}" method="POST">
-    <div class="row p-2 text-dark">
-      <div class="col-md-12 col-lg-9 bg-form px-4 mb-0 mx-auto">
-        {% crispy form %}
+    <div class="row">
+      <div class="col-12 mb-3 mt-2 p-0 bg-form">
+        <div class="card">
+          <div class="card-header align-items-center bg-ecdysis text-white d-flex justify-content-between">
+            <h5>Create Site for Experiment: {{ experiment_details.experiment.name }}</h5>
+            <a href="{% url 'samples:experiment' experiment_details.experiment.id %}" class="btn btn-light">
+              View Experiment
+            </a>
+          </div>
+          <div class="card-body">
+          {% crispy form %}
+          </div>
+        </div>
       </div>
     </div>
-    <div class="row mb-5 p-2 text-dark">
-        <div class="col-md-12 col-lg-9 bg-form mt-0 px-4 mx-auto">
-          <div class="display-formset-row-button"></div>
-          {{ formsets.management_form }}
-          {% for form in formsets %}
-            {% crispy form %}
-          {% endfor %}
+    <div class="row">
+      <div class="col-12 mb-3 mt-2 p-0 bg-form">
+        <div class="card">
+          <div class="card-header align-items-center bg-ecdysis text-white d-flex justify-content-between">
+            <h4>Sample Dates, {{ experiment_details.experiment.date_per_site }} are planned</h4>
+            <button type="button" id="displayFormsetRow" class="btn btn-light btn-small">Add Sample Date</button>
+            </div>
+            <div class="card-body">
+              {% if experiment_details.plans %}
+                <p class="card-text">Enter sample dates to create samples<br/>
+                  <ul>
+                  {% for plan in experiment_details.plans %}
+                  <li>{{ plan.description }}</li> 
+                  {% endfor %}
+                  </ul>
+                </p>
+              {% else %}
+                This experiment has no plans
+              {% endif %}
+              {{ formsets.management_form }}
+              {% for form in formsets %}
+                {% crispy form %}
+              {% endfor %}
+            </div>
+          </div>
         </div>
     </div>
     <div class="row mb-5 p-2 text-dark">
-      <div class="form-actions col-md-12 col-lg-9 bg-form mt-0 px-4 mx-auto">
-          <input type="submit" name="submit" value="Save" class="btn btn-primary" id="submit-save">
+      <div class="form-actions col-12 bg-form mt-0 px-4 mx-auto">
+          <input type="submit" name="submit" value="Save Form" class="btn btn-primary" id="submit-save">
       </div>
     </div>
   </form>

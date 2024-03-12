@@ -11,13 +11,15 @@ def describe_sample_plan(sample_plan):
         names.append(name_no_per_type + str(i))
         i -= 1
     names.sort()
-    print(no_per_date)
-    print()
-    print()
-    return '{0} {1} ({2}) per sample date per site'.format(
-        no_per_date,
-        constants.SAMPLE_TYPE_CHOICES_DICT[getattr(sample_plan, constants.FIELD_SAMPLE_PLAN_SAMPLE_TYPE)],
-        ', '.join(names))
+    names_string = ', '.join(names)
+    sample_type = constants.SAMPLE_TYPE_CHOICES_DICT[getattr(sample_plan, constants.FIELD_SAMPLE_PLAN_SAMPLE_TYPE)]
+    return {'description': '{0} {1} ({2}) per sample date'.format(no_per_date, sample_type, names_string),
+        'no_per_date': no_per_date,
+        'name_no_per_type': name_no_per_type,
+        'names': names,
+        'sample_type': sample_type,
+        'names_string': names_string
+    }
 
 
 def get_sample_plan_descriptions(experiment_id):
