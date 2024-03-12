@@ -1,7 +1,9 @@
 import uuid
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.contrib.gis.db.models import PointField
+from django.contrib.gis.geos import Point
 from django.contrib.postgres.fields import ArrayField, HStoreField
 from django.db.models import (
     CASCADE,
@@ -68,15 +70,27 @@ class Site(Model):
     latitude = DecimalField(max_digits=9, decimal_places=6, null=True)
 
     def save(self, *args, **kwargs):
-        us_county = UsCountiesTigerLine.objects.filter(geom__contains=self.gis_point)
-        if len(us_county) == 1:
-            self.country = geo_constants.UNITED_STATES
-            us_county = us_county[0]
-            fips = us_county.statefp + us_county.countyfp
-            if us_county.statefp in geo_constants.FIPS_STATE:
-                self.state_region = geo_constants.FIPS_STATE[us_county.statefp]
-            self.county_region = us_county.name
-            self.us_state_county_fips = fips
+        point = self.gis_point
+        if not point:
+            if self.longitude and self.latitude:
+                try:
+                    longitude = float(self.longitude)
+                    latitude = float(self.latitude)
+                    point = Point(longitude, latitude, srid=4326)
+                except:
+                    raise ValidationError('Longitude and Latitude are not correctly formatted')
+        if point:
+            us_county = UsCountiesTigerLine.objects.filter(geom__contains=point)
+            if len(us_county) == 1:
+                self.country = geo_constants.UNITED_STATES
+                us_county = us_county[0]
+                fips = us_county.statefp + us_county.countyfp
+                if us_county.statefp in geo_constants.FIPS_STATE:
+                    self.state_region = geo_constants.FIPS_STATE[us_county.statefp]
+                self.county_region = us_county.name
+                self.us_state_county_fips = fips
+        if not self.gis_point and point:
+            self.gis_point = point
         super().save(*args, **kwargs)
 
 
