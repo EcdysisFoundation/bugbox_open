@@ -1,12 +1,18 @@
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Column, Field, Fieldset, Layout, Row, Submit
 from django.conf import settings
-from django.forms import HiddenInput, ValidationError, Select, ChoiceField
+from django.forms import HiddenInput, ValidationError, Select, ChoiceField, DateField, DateInput
 from django.forms.models import ModelForm
 from django.utils.safestring import mark_safe
 
 from . import constants
 from .models import Experiment, Sample, SamplePlan, Site
+
+class Html5DateInput(DateInput):
+    """
+    HTML5 enabled date widget.
+    """
+    input_type = 'date'
 
 
 class ModelFormMixin(ModelForm):
@@ -190,7 +196,7 @@ class SiteForm(ModelFormMixin):
 
     def get_primary_layout(self):
         return [
-            Field(constants.FIELD_SITE_SITE_NAME),
+            Field(constants.FIELD_SITE_SITE_NAME, css_class='form-control-width-medium'),
             Row(
                 Column(constants.FIELD_SITE_LONGITUDE, css_class='form-control-width-medium'),
                 Column(constants.FIELD_SITE_LATITUDE, css_class='form-control-width-medium'),
@@ -239,10 +245,14 @@ class SampleForm(ModelFormMixin):
             Field(constants.FIELD_SAMPLE_ID),
             HTML("<div class='d-none' id='formsets_row_{{ forloop.counter }}'>"),
             Row(
-                Column(constants.FIELD_SAMPLE_DATE, css_class='form-control-width-medium'),
+                Column(constants.FIELD_SAMPLE_DATE),
                 Column(constants.FIELD_SAMPLE_TYPE, css_class='form-control-width-medium'),
                 Column('DELETE', css_class='mt-5'),
                 css_class='my-0'
             ),
             HTML('</div>')
         ]
+    
+    sample_date = DateField(
+        widget=Html5DateInput
+    )
