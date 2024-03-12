@@ -25,5 +25,5 @@ urlpatterns = [
          ExperimentSamplePlanCreateView.as_view(), name='experiment-sample-plan-create'),
     path('experiment-sample-plan-update/<int:experiment_id>',
          ExperimentSamplePlanUpdateView.as_view(), name='experiment-sample-plan-update'),
-    path('site-create/<int:experiment_id>', SiteCreateView.as_view(), name='site-create')
+    path('site-create/<int:experiment_id>', SiteCreateView.as_view(), name='site-create'),
 ]

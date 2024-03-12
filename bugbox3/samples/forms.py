@@ -1,7 +1,7 @@
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Column, Field, Fieldset, Layout, Row, Submit
 from django.conf import settings
-from django.forms import HiddenInput, ValidationError
+from django.forms import HiddenInput, ValidationError, Select, ChoiceField
 from django.forms.models import ModelForm
 from django.utils.safestring import mark_safe
 
@@ -191,13 +191,26 @@ class SiteForm(ModelFormMixin):
     def get_primary_layout(self):
         return [
             Field(constants.FIELD_SITE_SITE_NAME),
-            Field(constants.FIELD_SITE_HABITAT_TYPE),
-            Field(constants.FIELD_SITE_TREATMENT),
             Row(
                 Column(constants.FIELD_SITE_LONGITUDE, css_class='form-control-width-medium'),
                 Column(constants.FIELD_SITE_LATITUDE, css_class='form-control-width-medium'),
             ),
+            Row(
+                Column(constants.FIELD_SITE_TREATMENT, css_class='form-control-width-medium'),
+                Column(constants.FIELD_SITE_HABITAT_TYPE, css_class='form-control-width-medium'),
+            )
         ]
+    
+    treatment = ChoiceField(
+        widget=Select,
+        choices=constants.SITE_TREATMENT_CHOICES_W_BLANK
+    )
+
+    habitat_type = ChoiceField(
+        widget=Select,
+        choices=constants.SITE_HABITAT_TYPE_CHOICES_W_BLANK
+    )
+    
 
 
 class SampleForm(ModelFormMixin):

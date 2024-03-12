@@ -186,22 +186,22 @@ class SiteCreateView(CreateView):
 
     formset_total = 10
 
-    sample_form_set = inlineformset_factory(Site, Sample, form=SampleForm, max_num=formset_total, extra=formset_total)
+    form_set = inlineformset_factory(Site, Sample, form=SampleForm, max_num=formset_total, extra=formset_total)
 
     def get_context_data(self, **kwargs):
         context = super(SiteCreateView, self).get_context_data(**kwargs)
         # kwargs syntax, which is it?
-        plans = SamplePlan.objects.filter(experiment_id=kwargs.experiment_id).count
-        experiment = get_object_or_404(Experiment, id=kwargs['experiment_id'])
+        plans = SamplePlan.objects.filter(experiment_id=self.kwargs['experiment_id']).count()
+        experiment = get_object_or_404(Experiment, id=self.kwargs['experiment_id'])
         date_per_site = experiment.date_per_site
         number_plans = 1
         if plans:
-            number_plans = len(plans)
+            number_plans = plans
             # set initial data
         formset_inital = date_per_site * number_plans
         context['json_context'] = get_json_context(get_formsets_display_control_config(
                     self.formset_total, formset_inital))
-        context['form_action_url'] = reverse('samples:site-create')
+        context['form_action_url'] = reverse('samples:site-create', kwargs={'experiment_id': self.kwargs['experiment_id']})
         if self.request.POST:
             context['formsets'] = self.form_set(self.request.POST)
         else:

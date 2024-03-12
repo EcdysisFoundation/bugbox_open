@@ -1,3 +1,5 @@
+from itertools import chain
+
 from django.db.models.fields import BLANK_CHOICE_DASH
 
 # Fields
@@ -103,6 +105,69 @@ SAMPLE_TYPE_CHOICES = (
 SAMPLE_TYPE_CHOICES_WO_BLANK = (v for v in SAMPLE_TYPE_CHOICES if v != BLANK_CHOICE_DASH[0])
 
 SAMPLE_TYPE_CHOICES_DICT = {v[0]: v[1] for v in SAMPLE_TYPE_CHOICES}
+
+SITE_HABITAT_TYPES = [
+    'alfalfa',
+    'almonds',
+    'apples',
+    'bare',
+    'barley',
+    'barn',
+    'berries',
+    'bison',
+    'canola',
+    'cattle',
+    'cherries',
+    'corn',
+    'cover crop',
+    'dairy',
+    'flax',
+    'goat',
+    'green beans',
+    'hay',
+    'kernza',
+    'lentils',
+    'livestock',
+    'milo',
+    'n/a',
+    'native praire',
+    'not in list',
+    'oats',
+    'pasture',
+    'peas',
+    'pig',
+    'prairie',
+    'rangeland',
+    'rye',
+    'sheep',
+    'silvopasture',
+    'sorghum',
+    'soybeans',
+    'sunflower',
+    'unknown',
+    'vegetable',
+    'vineyard',
+    'wetland',
+    'wheat',
+    'winter wheat',
+    'woods',
+]
+
+SITE_HABITAT_TYPE_CHOICES = ((v, v.capitalize()) for v in SITE_HABITAT_TYPES)
+
+SITE_HABITAT_TYPE_CHOICES_W_BLANK = tuple(chain((BLANK_CHOICE_DASH[0],), SITE_HABITAT_TYPE_CHOICES))
+
+SITE_TREATMENT_TYPES = (
+    'conventional',
+    'regenerative',
+    'transitional',
+    'unknown',
+    'not in list',
+)
+
+SITE_TREATMENT_CHOICES = ((v, v.capitalize()) for v in SITE_TREATMENT_TYPES)
+
+SITE_TREATMENT_CHOICES_W_BLANK = tuple(chain((BLANK_CHOICE_DASH[0],), SITE_TREATMENT_CHOICES))
 
 #  Form Fields
 
