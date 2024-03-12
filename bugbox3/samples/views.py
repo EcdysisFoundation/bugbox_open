@@ -181,6 +181,12 @@ class ExperimentSamplePlanUpdateView(UpdateView):
 
 
 class SiteCreateView(CreateView):
+    
+    # Change all this to an UpdateView for existing records and make new plan for create
+    # because we dont want to have to enter details for every mutliple.
+    # or go more normal, seperate model for date and type then sample name last
+    # new model could be sample event type scenario, intersection of date and site
+    
     form_class = SiteForm
     template_name = 'samples/site_form.html'
     action = 'create'
@@ -191,14 +197,15 @@ class SiteCreateView(CreateView):
 
     def get_context_data(self, **kwargs):
         context = super(SiteCreateView, self).get_context_data(**kwargs)
-        plans = SamplePlan.objects.filter(experiment_id=self.kwargs['experiment_id'])
+        #plans = SamplePlan.objects.filter(experiment_id=self.kwargs['experiment_id'])
         experiment = get_object_or_404(Experiment, id=self.kwargs['experiment_id'])
         #date_per_site = experiment.date_per_site
+        #context['experiment_id'] = experiment.id
         context['experiment_details'] = {
             'experiment': experiment,
             'plans': get_sample_plan_descriptions(experiment.id)
         }
-        initial_data = []
+        #initial_data = []
         #if plans:
         #    for plan in plans:
         #        i = date_per_site
@@ -220,6 +227,9 @@ class SiteCreateView(CreateView):
 
     def form_valid(self, form):
         context = self.get_context_data()
+        #experiment = get_object_or_404(Experiment, id=self.kwargs['experiment_id'])
+        #form.instance.experiment = experiment
+        #print(form.instance)
         formsets = context['formsets']
         with transaction.atomic():
             self.object = form.save()

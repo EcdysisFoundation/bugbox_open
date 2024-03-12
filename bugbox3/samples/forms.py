@@ -190,9 +190,22 @@ class SiteForm(ModelFormMixin):
     Parent form for Sample
     """
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        #  use form tags in template to combine with child form
+        self.helper.form_tag = False
+
     class Meta:
         model = Site
         fields = constants.FORM_FIELDS_SITE
+
+    required_fields = [
+        constants.FIELD_SITE_SITE_NAME,
+        constants.FIELD_SITE_LATITUDE,
+        constants.FIELD_SITE_LONGITUDE,
+        constants.FIELD_SITE_TREATMENT,
+        constants.FIELD_SITE_HABITAT_TYPE
+    ]
 
     def get_primary_layout(self):
         return [

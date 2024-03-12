@@ -20,6 +20,7 @@ FIELD_SAMPLE_PLAN_SAMPLE_TYPE = 'sample_type'
 FIELD_SAMPLE_PLAN_NO_PER_DATE = 'no_per_date'
 FIELD_SAMPLE_PLAN_NAME_NO_PER_TYPE = 'name_no_per_type'
 
+FIELD_SITE_EXPERIMENT_ID = 'experiment'
 FIELD_SITE_SITE_NAME = 'site_name'
 FIELD_SITE_HABITAT_TYPE = 'habitat_type'
 FIELD_SITE_TREATMENT = 'treatment'
