@@ -6,7 +6,7 @@ from django.forms.models import ModelForm
 from django.utils.safestring import mark_safe
 
 from . import constants
-from .models import Experiment, Sample, SamplePlan, Site
+from .models import Experiment, SamplePlan, Site, SiteVisit
 
 class Html5DateInput(DateInput):
     """
@@ -187,7 +187,7 @@ class SamplePlanForm(ModelFormMixin):
 
 class SiteForm(ModelFormMixin):
     """
-    Parent form for Sample
+    Parent form for SiteVisit
     """
 
     def __init__(self, *args, **kwargs):
@@ -232,14 +232,9 @@ class SiteForm(ModelFormMixin):
     
 
 
-class SampleForm(ModelFormMixin):
+class SiteVisitForm(ModelFormMixin):
     """
-    Plan here is to make formsets form similar to ExperimentForm.
-    In this case, the displayed formsets are based on the sample plan for experiment.
-    Although, only give one form per date.
-    Then if the one form comes in valid to the view, there create the additional samples
-    based from the plan.
-
+    Child form for SiteForm
     """
 
     def __init__(self, *args, **kwargs):
@@ -248,24 +243,23 @@ class SampleForm(ModelFormMixin):
         self.helper.form_tag = False
 
     class Meta:
-        model = Sample
-        fields = constants.FORM_FIELDS_SAMPLE
+        model = SiteVisit
+        fields = constants.FORM_FIELDS_SITE_VISIT
 
-    hidden_fields = [constants.FIELD_SAMPLE_ID]
+    hidden_fields = [constants.FIELD_SITE_VISIT_ID]
 
     def get_primary_layout(self):
         return [
             Field(constants.FIELD_SAMPLE_ID),
             HTML("<div class='d-none' id='formsets_row_{{ forloop.counter }}'>"),
             Row(
-                Column(constants.FIELD_SAMPLE_DATE),
-                # Column(constants.FIELD_SAMPLE_TYPE, css_class='form-control-width-medium'),
+                Column(constants.FIELD_SITE_VISIT_DATE),
                 Column('DELETE', css_class='mt-5'),
                 css_class='my-0'
             ),
             HTML('</div>')
         ]
     
-    sample_date = DateField(
+    visit_date = DateField(
         widget=Html5DateInput
     )

@@ -94,15 +94,22 @@ class Site(Model):
         super().save(*args, **kwargs)
 
 
-class Sample(Model):
+class SiteVisit(Model):
     uuid = UUIDField(default=uuid.uuid4, unique=True)
     site = ForeignKey(Site, on_delete=CASCADE)
+    visit_date = DateField()
     by_user = ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=SET_NULL)
-    sample_date = DateField()
+    sample_with_plan = BooleanField(default=True)
+    notes = CharField(max_length=1000, blank=True)
+
+
+class Sample(Model):
+    uuid = UUIDField(default=uuid.uuid4, unique=True)
+    site_visit = ForeignKey(SiteVisit, on_delete=CASCADE)
     sample_type = CharField(max_length=100, blank=True,
                             choices=constants.SAMPLE_TYPE_CHOICES)
     name_no = CharField(max_length=100, blank=True)
-    notes = TextField(max_length=1000, null=True, blank=True)
+    notes = CharField(max_length=1000, blank=True)
     completed = BooleanField(default=False)
     image = ImageField(null=True, blank=True)
     classes = HStoreField(null=False, blank=True, default=constants.sample_taxon_classes_default)

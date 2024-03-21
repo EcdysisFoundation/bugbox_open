@@ -12,8 +12,8 @@ from rest_framework.viewsets import ReadOnlyModelViewSet
 from ..libs.ui_helpers import get_formsets_display_control_config
 from ..libs.utilities import get_json_context
 from . import constants
-from .forms import ExperimentForm, SampleForm, SamplePlanForm, SiteForm
-from .models import Experiment, Sample, SamplePlan, Site
+from .forms import ExperimentForm, SamplePlanForm, SiteForm, SiteVisitForm
+from .models import Experiment, SamplePlan, Site, SiteVisit
 from .models_query import get_sample_plan_descriptions
 from .serializers import ExperimentsDatatablesSerializer
 
@@ -181,40 +181,22 @@ class ExperimentSamplePlanUpdateView(UpdateView):
 
 
 class SiteCreateView(CreateView):
-    
-    # This isnt going to work efficiently because the models still not normalized enough
-    # new model could be sample event type scenario, intersection of date and site
-    # site - sample-event(inc. date) - sample(inc. sample type) - specimens - images
-    
+
     form_class = SiteForm
     template_name = 'samples/site_form.html'
     action = 'create'
 
     formset_total = 10
 
-    form_set = inlineformset_factory(Site, Sample, form=SampleForm, max_num=formset_total, extra=formset_total)
+    form_set = inlineformset_factory(Site, SiteVisit, form=SiteVisitForm, max_num=formset_total, extra=formset_total)
 
     def get_context_data(self, **kwargs):
         context = super(SiteCreateView, self).get_context_data(**kwargs)
-        #plans = SamplePlan.objects.filter(experiment_id=self.kwargs['experiment_id'])
         experiment = get_object_or_404(Experiment, id=self.kwargs['experiment_id'])
-        #date_per_site = experiment.date_per_site
-        #context['experiment_id'] = experiment.id
         context['experiment_details'] = {
             'experiment': experiment,
             'plans': get_sample_plan_descriptions(experiment.id)
         }
-        #initial_data = []
-        #if plans:
-        #    for plan in plans:
-        #        i = date_per_site
-        #        while i > 0:
-        #3            initial_data.append({
-        #               constants.FIELD_SAMPLE_TYPE: plan.sample_type,
-        #            })
-        #            i -= 1
-        #number_plans =  len(initial_data) if initial_data else 1
-        #formset_inital = date_per_site * number_plans
         context['json_context'] = get_json_context(get_formsets_display_control_config(
                     self.formset_total, experiment.date_per_site))
         context['form_action_url'] = reverse('samples:site-create', kwargs={'experiment_id': self.kwargs['experiment_id']})
@@ -226,9 +208,6 @@ class SiteCreateView(CreateView):
 
     def form_valid(self, form):
         context = self.get_context_data()
-        #experiment = get_object_or_404(Experiment, id=self.kwargs['experiment_id'])
-        #form.instance.experiment = experiment
-        #print(form.instance)
         formsets = context['formsets']
         with transaction.atomic():
             self.object = form.save()
@@ -240,4 +219,4 @@ class SiteCreateView(CreateView):
         return super(SiteCreateView, self).form_valid(form)
 
     def get_success_url(self):
-        return reverse('samples:experiments')
+        return reverse('samples:experiment', kwargs={'experiment_id': self.kwargs['experiment_id']})
