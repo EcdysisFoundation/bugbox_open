@@ -199,7 +199,9 @@ class SiteCreateView(CreateView):
         }
         context['json_context'] = get_json_context(get_formsets_display_control_config(
                     self.formset_total, experiment.date_per_site))
-        context['form_action_url'] = reverse('samples:site-create', kwargs={'experiment_id': self.kwargs['experiment_id']})
+        context['form_action_url'] = reverse(
+            'samples:site-create', kwargs={'experiment_id': self.kwargs['experiment_id']})
+        self.experiment = experiment
         if self.request.POST:
             context['formsets'] = self.form_set(self.request.POST)
         else:
@@ -208,6 +210,7 @@ class SiteCreateView(CreateView):
 
     def form_valid(self, form):
         context = self.get_context_data()
+        form.instance.experiment_id = context['experiment_details']['experiment'].id
         formsets = context['formsets']
         with transaction.atomic():
             self.object = form.save()

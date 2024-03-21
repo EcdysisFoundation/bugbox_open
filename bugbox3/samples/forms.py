@@ -1,12 +1,13 @@
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Column, Field, Fieldset, Layout, Row, Submit
 from django.conf import settings
-from django.forms import HiddenInput, ValidationError, Select, ChoiceField, DateField, DateInput
+from django.forms import ChoiceField, DateField, DateInput, HiddenInput, Select, ValidationError
 from django.forms.models import ModelForm
 from django.utils.safestring import mark_safe
 
 from . import constants
 from .models import Experiment, SamplePlan, Site, SiteVisit
+
 
 class Html5DateInput(DateInput):
     """
@@ -207,8 +208,13 @@ class SiteForm(ModelFormMixin):
         constants.FIELD_SITE_HABITAT_TYPE
     ]
 
+    hidden_fields = [
+        constants.FIELD_SITE_EXPERIMENT_ID
+    ]
+
     def get_primary_layout(self):
         return [
+            Field(constants.FIELD_SITE_EXPERIMENT_ID),
             Field(constants.FIELD_SITE_SITE_NAME, css_class='form-control-width-medium'),
             Row(
                 Column(constants.FIELD_SITE_LATITUDE, css_class='form-control-width-medium'),
@@ -219,7 +225,7 @@ class SiteForm(ModelFormMixin):
                 Column(constants.FIELD_SITE_HABITAT_TYPE, css_class='form-control-width-medium'),
             )
         ]
-    
+
     treatment = ChoiceField(
         widget=Select,
         choices=constants.SITE_TREATMENT_CHOICES_W_BLANK
@@ -229,7 +235,6 @@ class SiteForm(ModelFormMixin):
         widget=Select,
         choices=constants.SITE_HABITAT_TYPE_CHOICES_W_BLANK
     )
-    
 
 
 class SiteVisitForm(ModelFormMixin):
@@ -250,16 +255,16 @@ class SiteVisitForm(ModelFormMixin):
 
     def get_primary_layout(self):
         return [
-            Field(constants.FIELD_SAMPLE_ID),
+            Field(constants.FIELD_SITE_VISIT_ID),
             HTML("<div class='d-none' id='formsets_row_{{ forloop.counter }}'>"),
             Row(
-                Column(constants.FIELD_SITE_VISIT_DATE),
+                Column(constants.FIELD_SITE_VISIT_DATE, css_class='form-control-width-medium'),
                 Column('DELETE', css_class='mt-5'),
                 css_class='my-0'
             ),
             HTML('</div>')
         ]
-    
+
     visit_date = DateField(
         widget=Html5DateInput
     )

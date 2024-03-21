@@ -1,10 +1,11 @@
 import uuid
 
 from django.conf import settings
-from django.core.exceptions import ValidationError
 from django.contrib.gis.db.models import PointField
 from django.contrib.gis.geos import Point
 from django.contrib.postgres.fields import ArrayField, HStoreField
+from django.core.exceptions import ValidationError
+from django.core.validators import MaxValueValidator
 from django.db.models import (
     CASCADE,
     SET_NULL,
@@ -16,7 +17,6 @@ from django.db.models import (
     ForeignKey,
     ImageField,
     JSONField,
-    Manager,
     Model,
     PositiveIntegerField,
     PositiveSmallIntegerField,
@@ -30,6 +30,10 @@ from ..core import constants as geo_constants
 from ..core.models import UsCountiesTigerLine
 from ..taxonomy.models import AiVersion, Morphospecies, Taxon
 from . import constants
+
+
+def classes_default():
+    return {'acari': 0, 'annelida': 0, 'collembola': 0, 'gastropoda': 0, 'nematoda': 0, 'thysanoptera': 0}
 
 
 class Experiment(Model):
@@ -52,7 +56,7 @@ class SamplePlan(Model):
     experiment = ForeignKey(Experiment, on_delete=CASCADE)
     sample_type = CharField(max_length=100,
                             choices=constants.SAMPLE_TYPE_CHOICES_WO_BLANK)
-    no_per_date = PositiveSmallIntegerField(null=True)
+    no_per_date = PositiveSmallIntegerField(null=True, validators=[MaxValueValidator(100)])
     name_no_per_type = CharField(max_length=100, blank=True)
 
 
@@ -77,7 +81,7 @@ class Site(Model):
                     longitude = float(self.longitude)
                     latitude = float(self.latitude)
                     point = Point(longitude, latitude, srid=4326)
-                except:
+                except Exception:
                     raise ValidationError('Longitude and Latitude are not correctly formatted')
         if point:
             us_county = UsCountiesTigerLine.objects.filter(geom__contains=point)
@@ -91,7 +95,7 @@ class Site(Model):
                 self.us_state_county_fips = fips
         if not self.gis_point and point:
             self.gis_point = point
-        super().save(*args, **kwargs)
+        super(Site, self).save(*args, **kwargs)
 
 
 class SiteVisit(Model):
@@ -101,6 +105,24 @@ class SiteVisit(Model):
     by_user = ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=SET_NULL)
     sample_with_plan = BooleanField(default=True)
     notes = CharField(max_length=1000, blank=True)
+
+    def save(self, *args, **kwargs):
+        is_create = False
+        if self.pk is None:
+            is_create = True
+        super(SiteVisit, self).save(*args, **kwargs)
+        if is_create and self.sample_with_plan:
+            # include samples according to plan
+            plans = SamplePlan.objects.filter(experiment_id=self.site.experiment.id)
+            for plan in plans:
+                n = plan.no_per_date
+                while n:
+                    name = str(plan.name_no_per_type) + str(n)
+                    Sample.objects.create(
+                        site_visit_id=self.id,
+                        sample_type=plan.sample_type,
+                        name_no=name)
+                    n = n - 1
 
 
 class Sample(Model):
@@ -112,7 +134,7 @@ class Sample(Model):
     notes = CharField(max_length=1000, blank=True)
     completed = BooleanField(default=False)
     image = ImageField(null=True, blank=True)
-    classes = HStoreField(null=False, blank=True, default=constants.sample_taxon_classes_default)
+    classes = HStoreField(null=True, blank=True)
 
 
 class Specimen(Model):

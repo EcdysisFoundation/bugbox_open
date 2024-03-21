@@ -1,6 +1,6 @@
 from django.contrib.admin import ModelAdmin, site
 
-from .models import Experiment, SamplePlan, Site, Sample
+from .models import Experiment, Sample, SamplePlan, Site
 
 
 class ExperimentAdmin(ModelAdmin):

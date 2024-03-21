@@ -3,8 +3,10 @@ from .models import SamplePlan
 
 
 def describe_sample_plan(sample_plan):
-    no_per_date = getattr(sample_plan, constants.FIELD_SAMPLE_PLAN_NO_PER_DATE)
-    name_no_per_type = getattr(sample_plan, constants.FIELD_SAMPLE_PLAN_NAME_NO_PER_TYPE)
+    no_per_date = getattr(
+        sample_plan, constants.FIELD_SAMPLE_PLAN_NO_PER_DATE)
+    name_no_per_type = getattr(
+        sample_plan, constants.FIELD_SAMPLE_PLAN_NAME_NO_PER_TYPE)
     names = []
     i = no_per_date
     while i:
@@ -12,8 +14,10 @@ def describe_sample_plan(sample_plan):
         i -= 1
     names.sort()
     names_string = ', '.join(names)
-    sample_type = constants.SAMPLE_TYPE_CHOICES_DICT[getattr(sample_plan, constants.FIELD_SAMPLE_PLAN_SAMPLE_TYPE)]
-    return {'description': '{0} {1} ({2}) per sample date'.format(no_per_date, sample_type, names_string),
+    sample_type = constants.SAMPLE_TYPE_CHOICES_DICT[getattr(
+        sample_plan, constants.FIELD_SAMPLE_PLAN_SAMPLE_TYPE)]
+    return {'description': '{0} {1} ({2}) per sample date'.format(
+        no_per_date, sample_type, names_string),
         'no_per_date': no_per_date,
         'name_no_per_type': name_no_per_type,
         'names': names,
