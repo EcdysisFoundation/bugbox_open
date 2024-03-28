@@ -20,6 +20,7 @@ from django.db.models import (
     Model,
     PositiveIntegerField,
     PositiveSmallIntegerField,
+    SlugField,
     TextField,
     UUIDField,
 )
@@ -39,7 +40,7 @@ def classes_default():
 class Experiment(Model):
     uuid = UUIDField(default=uuid.uuid4, unique=True)
     name = CharField(max_length=1000, unique=True)
-    abbreviation = CharField(max_length=10, blank=True)
+    abbreviation = SlugField(max_length=20, unique=True)
     from_year = PositiveSmallIntegerField()
     to_year = PositiveSmallIntegerField()
     leader = CharField(max_length=1000)

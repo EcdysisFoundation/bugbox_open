@@ -31,6 +31,22 @@ Check other Flake8 issues
 
     $ docker compose -f local.yml exec -T django flake8 bugbox3
 
+### Database backups
+
+    Database backups are configured with Cookie cutter methods. In our case it is expanded to the local version to aid in development. Seperate AWS IAM users are configured for different envirionments
+
+    use bugbox-local user access keys for local.yml use cases, whle bugbox-local-server is for local-server.yml cases. These .yml files should reference a .secrets file in the repo .env directory that defines the 
+    environment variables and is gitignored to keep it secret.
+
+    Initiate a backup in docker
+    $ docker compose -f local.yml exec postgres backup   
+
+    Upload backups to S3
+    $ docker compose -f local.yml run --rm awscli upload
+
+    Download a specific backup
+    $ docker compose -f local.yml run --rm awscli download backup_2018_03_13T09_05_07.sql.gz
+
 ### Type checks
 
 Running type checks with mypy:
