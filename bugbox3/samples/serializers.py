@@ -38,6 +38,7 @@ class ExperimentsDatatablesSerializer(ModelSerializer):
         return result
 
     def get_experiment_link(self, v):
+        return ''
         url = reverse('samples:experiment', kwargs={'experiment_id': v.id})
         return '<a href="{0}" class="link-secondary">{1}</a>'.format(url, v.name)
 
@@ -50,4 +51,19 @@ class ExperimentsDatatablesSerializer(ModelSerializer):
             'year_span': self.get_years(value)
         }
         result.update(self.get_sample_info(value))
+        return result
+
+
+class SamplesDatatablesSerializer(ModelSerializer):
+
+    class Meta:
+        model = Sample
+        fields = ['sample_type']
+
+    def to_representation(self, value):
+        result = {
+            'sample_type': value.sample_type,
+            'visit_date': value.site_visit.visit_date,
+            'site_name': value.site_visit.site.site_name
+        }
         return result

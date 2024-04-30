@@ -13,9 +13,9 @@ from ..libs.ui_helpers import get_formsets_display_control_config
 from ..libs.utilities import get_json_context
 from . import constants
 from .forms import ExperimentForm, SamplePlanForm, SiteForm, SiteVisitForm
-from .models import Experiment, SamplePlan, Site, SiteVisit
+from .models import Experiment, SamplePlan, Site, SiteVisit, Sample
 from .models_query import get_sample_plan_descriptions
-from .serializers import ExperimentsDatatablesSerializer
+from .serializers import ExperimentsDatatablesSerializer, SamplesDatatablesSerializer
 
 
 class ExperimentsDatatablesViewSet(ReadOnlyModelViewSet):
@@ -33,6 +33,50 @@ class ExperimentsDatatablesViewSet(ReadOnlyModelViewSet):
             ).filter(search=search_query)
         return queryset
 
+    def list(self, request, *args, **kwargs):
+        draw = request.query_params.get('draw')
+        queryset = self.filter_queryset(self.get_queryset())
+        recordsTotal = queryset.count()
+        filtered_queryset = self.filter_for_datatable(queryset)
+        try:
+            start = int(request.query_params.get('start'))
+        except ValueError:
+            start = 0
+        try:
+            length = int(request.query_params.get('length'))
+        except ValueError:
+            length = 10
+        end = length + start
+        serializer = self.get_serializer(filtered_queryset[start:end], many=True)
+        response = {
+            'draw': draw,
+            'recordsTotal': recordsTotal,
+            'recordsFiltered': filtered_queryset.count(),
+            'data': serializer.data
+        }
+        return Response(response)
+
+
+class SamplesDatatablesViewSet(ReadOnlyModelViewSet):
+    serializer_class = SamplesDatatablesSerializer
+
+    def get_queryset(self):
+        experiment_id = int(self.kwargs['experiment_id'])
+        return Sample.objects.filter(site_visit__site__experiment_id=experiment_id)
+    #queryset = Sample.objects.all().order_by('sample_type')
+    #lookup_url_kwarg = 'experiment_id'
+    #lookup_field = 'site_visit__site__experiment_id'
+
+    def filter_for_datatable(self, queryset):
+        # filtering
+        search_vector = ['sample_type']
+        search_query = self.request.query_params.get('search[value]')
+        if search_query:
+            queryset = queryset.annotate(
+                search=SearchVector(*search_vector)
+            ).filter(search=search_query)
+        return queryset
+    
     def list(self, request, *args, **kwargs):
         draw = request.query_params.get('draw')
         queryset = self.filter_queryset(self.get_queryset())
@@ -85,6 +129,11 @@ class ExperimentView(TemplateView):
             'experiment': experiment,
             'years': years,
             'sample_plan_descriptions': description
+        })
+        samples_datatables_url = api_reverse('samples:sample-data-list',
+                                                 request=self.request, kwargs=kwargs)
+        context['json_context'] = get_json_context({
+            'samples_datatables_url': samples_datatables_url,
         })
         return context
 
