@@ -2,7 +2,7 @@ import $ from 'jquery';
 import DataTable from 'datatables.net-bs5';
 
 function getDetail( row ) {
-    return row.sample_type
+    return 'my details here'
 }
 
 
@@ -35,12 +35,8 @@ $(function () {
                 data: null,
                 defaultContent: '',
             },{
-                data: 'sample_type',
-            },{
-                data: 'visit_date',
-            },{
-                data: 'site_name',
-            },
+                data: 'data_row',
+            }
         ]
     });
 

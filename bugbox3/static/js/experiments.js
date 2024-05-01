@@ -19,18 +19,8 @@ $(function () {
         },
         columns: [
             {
-                data: 'experiment_link',
-            },{
-                data: 'abbreviation',
-            },{
-                data: 'year_span',
-            },{
-                data: 'total_samples',
-            },{
-                data: 'photo_sampling',
-            },{
-                data: 'not_reviewed'
-            },
+                data: 'data_row',
+            }
         ]
     });
 

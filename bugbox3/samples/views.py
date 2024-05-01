@@ -9,6 +9,8 @@ from rest_framework.response import Response
 from rest_framework.reverse import reverse as api_reverse
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
+from bugbox3.libs.ui_helpers import get_datatables_container, get_datatables_row
+
 from ..libs.ui_helpers import get_formsets_display_control_config
 from ..libs.utilities import get_json_context
 from . import constants
@@ -108,8 +110,17 @@ class ExperimentsView(TemplateView):
         context = super().get_context_data(**kwargs)
         experiments_datatables_url = api_reverse('samples:experiment-data-list',
                                                  request=self.request, kwargs=kwargs)
-        context['json_context'] = get_json_context({
-            'experiments_datatables_url': experiments_datatables_url,
+        context.update({'json_context': get_json_context({
+            'experiments_datatables_url': experiments_datatables_url}),
+            'container_row_header': get_datatables_container(
+                get_datatables_row([
+                    'Experiment',
+                    'Abbreviation',
+                    'Year/s',
+                    'Samples',
+                    'Photosampling Needed',
+                    'Reviewed Needed'
+                ])),
         })
         return context
 
@@ -125,15 +136,20 @@ class ExperimentView(TemplateView):
         else:
             years = str(experiment.from_year) + ' - ' + str(experiment.to_year)
         description = [v['description'] for v in get_sample_plan_descriptions(experiment.id)]
+        samples_datatables_url = api_reverse(
+            'samples:sample-data-list', request=self.request, kwargs=kwargs)
         context.update({
             'experiment': experiment,
             'years': years,
-            'sample_plan_descriptions': description
-        })
-        samples_datatables_url = api_reverse('samples:sample-data-list',
-                                                 request=self.request, kwargs=kwargs)
-        context['json_context'] = get_json_context({
-            'samples_datatables_url': samples_datatables_url,
+            'sample_plan_descriptions': description,
+            'container_row_header': get_datatables_container(
+                get_datatables_row([
+                    'Sample Type',
+                    'Visit Date',
+                    'Site Name'
+                ])),
+            'json_context': get_json_context(
+                {'samples_datatables_url': samples_datatables_url})
         })
         return context
 

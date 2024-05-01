@@ -1,6 +1,8 @@
 from django.urls import reverse
 from rest_framework.serializers import ModelSerializer
 
+from bugbox3.libs.ui_helpers import get_datatables_container, get_datatables_row
+
 from . import constants
 from .models import Experiment, Sample, Specimen
 
@@ -40,17 +42,24 @@ class ExperimentsDatatablesSerializer(ModelSerializer):
     def get_experiment_link(self, v):
         url = reverse('samples:experiment', kwargs={'experiment_id': v.id})
         return '<a href="{0}" class="link-secondary">{1}</a>'.format(url, v.name)
+    
+    def get_data_row(self, value):
+        sample_info = self.get_sample_info(value)
+        columns = [
+            self.get_experiment_link(value),
+            value.abbreviation,
+            self.get_years(value),
+            sample_info['total_samples'],
+            sample_info['photo_sampling'],
+            sample_info['not_reviewed'],
+            
+        ]
+        return get_datatables_container(get_datatables_row(columns))
 
     def to_representation(self, value):
-        result = {
-            'experiment_link': self.get_experiment_link(value),
-            constants.FIELD_UUID: value.uuid,
-            constants.FIELD_NAME: value.name,
-            constants.FIELD_ABBREVIATION: value.abbreviation,
-            'year_span': self.get_years(value)
+        return {
+            'data_row': self.get_data_row(value)
         }
-        result.update(self.get_sample_info(value))
-        return result
 
 
 class SamplesDatatablesSerializer(ModelSerializer):
@@ -59,10 +68,15 @@ class SamplesDatatablesSerializer(ModelSerializer):
         model = Sample
         fields = ['sample_type']
 
+    def get_data_row(self, value):
+        columns = [value.sample_type, value.site_visit.visit_date, value.site_visit.site.site_name]
+        return get_datatables_container(get_datatables_row(columns))
+
     def to_representation(self, value):
         result = {
-            'sample_type': value.sample_type,
-            'visit_date': value.site_visit.visit_date,
-            'site_name': value.site_visit.site.site_name
+            'data_row': self.get_data_row(value),
+            #'sample_type': value.sample_type,
+            #'visit_date': value.site_visit.visit_date,
+            #'site_name': value.site_visit.site.site_name
         }
         return result
