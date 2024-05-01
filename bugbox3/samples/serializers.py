@@ -103,7 +103,7 @@ class SitesDatatablesSerializer(ModelSerializer):
     
     def get_sample_data(self, value):
         samples = Sample.objects.filter(
-            site_visit__site__experiment_id=value.experiment_id)
+            site_visit__site_id=value.id)
         rows = get_datatables_row([
             'Date',
             'Sample Type',
@@ -113,9 +113,13 @@ class SitesDatatablesSerializer(ModelSerializer):
             'Entered by'
         ])
         for s in samples:
+            if s.sample_type in constants.SAMPLE_TYPE_CHOICES_DICT.keys():
+                sample_type = constants.SAMPLE_TYPE_CHOICES_DICT[s.sample_type]
+            else:
+                sample_type = s.sample_type
             rows += get_datatables_row([
                 s.site_visit.visit_date,
-                s.sample_type,
+                sample_type,
                 s.name_no,
                 self.get_observations(s.id),
                 self.get_reviewed(s.id),
@@ -125,8 +129,9 @@ class SitesDatatablesSerializer(ModelSerializer):
 
     
     def get_data_row(self, value):
+        site_url = reverse('samples:site-update', kwargs={'site_id': value.id})
         columns = [
-            value.site_name,
+            '<a href="{0}">{1}</a>'.format(site_url, value.site_name),
             value.state_region,
             value.county_region,
             value.habitat_type,

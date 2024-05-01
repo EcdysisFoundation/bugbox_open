@@ -75,15 +75,17 @@ class Site(Model):
     latitude = DecimalField(max_digits=9, decimal_places=6, null=True)
 
     def save(self, *args, **kwargs):
+        """
+        Save a gis_point from the latitude, longitude since currently only these fields are in UI.
+        """
         point = self.gis_point
-        if not point:
-            if self.longitude and self.latitude:
-                try:
-                    longitude = float(self.longitude)
-                    latitude = float(self.latitude)
-                    point = Point(longitude, latitude, srid=4326)
-                except Exception:
-                    raise ValidationError('Longitude and Latitude are not correctly formatted')
+        if self.longitude and self.latitude:
+            try:
+                longitude = float(self.longitude)
+                latitude = float(self.latitude)
+                point = Point(longitude, latitude, srid=4326)
+            except Exception:
+                raise ValidationError('Longitude and Latitude are not correctly formatted')
         if point:
             us_county = UsCountiesTigerLine.objects.filter(geom__contains=point)
             if len(us_county) == 1:
@@ -94,8 +96,7 @@ class Site(Model):
                     self.state_region = geo_constants.FIPS_STATE[us_county.statefp]
                 self.county_region = us_county.name
                 self.us_state_county_fips = fips
-        if not self.gis_point and point:
-            self.gis_point = point
+        self.gis_point = point
         super(Site, self).save(*args, **kwargs)
 
 

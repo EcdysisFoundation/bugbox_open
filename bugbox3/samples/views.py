@@ -189,7 +189,7 @@ class ExperimentView(TemplateView):
                 get_datatables_row([
                     'Site Name',
                     'State Region',
-                    'Conty Region',
+                    'County Region',
                     'Habitat',
                     'Treatment'
                 ])),
@@ -255,8 +255,7 @@ class ExperimentSamplePlanUpdateView(UpdateView):
         can_delete=True)
 
     def get_object(self, queryset=None):
-        experiment = Experiment.objects.all()
-        return get_object_or_404(experiment, id=self.kwargs['experiment_id'])
+        return get_object_or_404(Experiment, id=self.kwargs['experiment_id'])
 
     def get_context_data(self, **kwargs):
         context = super(ExperimentSamplePlanUpdateView, self).get_context_data(**kwargs)
@@ -333,3 +332,53 @@ class SiteCreateView(CreateView):
 
     def get_success_url(self):
         return reverse('samples:experiment', kwargs={'experiment_id': self.kwargs['experiment_id']})
+
+
+class SiteUpdateView(UpdateView):
+    form_class = SiteForm
+    template_name = 'samples/site_form.html'
+    action = 'update'
+
+    formset_total = 10
+
+    form_set = inlineformset_factory(Site, SiteVisit, form=SiteVisitForm, max_num=formset_total, extra=formset_total)
+
+    def get_object(self, queryset=None):
+        return get_object_or_404(Site, id=self.kwargs['site_id'])
+    
+    def get_context_data(self, **kwargs):
+        context = super(SiteUpdateView, self).get_context_data(**kwargs)
+        experiment = get_object_or_404(Experiment, id=self.object.experiment_id)
+        self.experiment = experiment
+        context['experiment_details'] = {
+            'experiment': experiment,
+            'plans': get_sample_plan_descriptions(experiment.id)
+        }
+        site_visit_count = SiteVisit.objects.filter(site_id=self.object.id).count()
+        if site_visit_count < 1:
+            site_visit_count = 1
+        context['json_context'] = get_json_context(get_formsets_display_control_config(
+                    self.formset_total, site_visit_count))
+        context['form_action_url'] = reverse(
+            'samples:site-update', kwargs={'site_id': self.kwargs['site_id']})
+        self.experiment = experiment
+        if self.request.POST:
+            context['formsets'] = self.form_set(self.request.POST, instance=self.object)
+        else:
+            context['formsets'] = self.form_set(instance=self.object)
+        return context
+    
+    def form_valid(self, form):
+        context = self.get_context_data()
+        formsets = context['formsets']
+        with transaction.atomic():
+            self.object = form.save()
+            if formsets.is_valid():
+                formsets.instance = self.object
+                formsets.save()
+            else:
+                print('ERRORS_formsets: ' + str(formsets.errors))
+        return super(SiteUpdateView, self).form_valid(form)
+
+    def get_success_url(self):
+        return reverse('samples:experiment', kwargs={'experiment_id': self.experiment.id})
