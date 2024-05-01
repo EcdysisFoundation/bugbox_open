@@ -4,7 +4,7 @@ from rest_framework.serializers import ModelSerializer
 from bugbox3.libs.ui_helpers import get_datatables_container, get_datatables_row
 
 from . import constants
-from .models import Experiment, Sample, Specimen
+from .models import Experiment, Sample, Specimen, Site
 
 
 class ExperimentsDatatablesSerializer(ModelSerializer):
@@ -66,17 +66,77 @@ class SamplesDatatablesSerializer(ModelSerializer):
 
     class Meta:
         model = Sample
-        fields = ['sample_type']
+        fields = [constants.FIELD_SAMPLE_TYPE]
 
     def get_data_row(self, value):
-        columns = [value.sample_type, value.site_visit.visit_date, value.site_visit.site.site_name]
+        columns = [
+            value.sample_type,
+            value.site_visit.visit_date,
+            value.site_visit.site.site_name
+        ]
         return get_datatables_container(get_datatables_row(columns))
 
     def to_representation(self, value):
         result = {
             'data_row': self.get_data_row(value),
-            #'sample_type': value.sample_type,
-            #'visit_date': value.site_visit.visit_date,
-            #'site_name': value.site_visit.site.site_name
+        }
+        return result
+
+
+class SitesDatatablesSerializer(ModelSerializer):
+
+    class Meta:
+        model = Site
+        fields = [
+            constants.FIELD_SITE_SITE_NAME,
+            constants.FIELD_SITE_STATE_REGION,
+            constants.FIELD_SITE_COUNTY_REGION,
+            constants.FIELD_SITE_HABITAT_TYPE,
+            constants.FIELD_SITE_TREATMENT,
+        ]
+    
+    def get_observations(self, id):
+        return Specimen.objects.filter(sample_id=id).count()
+    
+    def get_reviewed(self, id):
+        return Specimen.objects.filter(sample_id=id, acceptance__gt=0).count()
+    
+    def get_sample_data(self, value):
+        samples = Sample.objects.filter(
+            site_visit__site__experiment_id=value.experiment_id)
+        rows = get_datatables_row([
+            'Date',
+            'Sample Type',
+            'Sample Name',
+            'Observations',
+            'Reviewed',
+            'Entered by'
+        ])
+        for s in samples:
+            rows += get_datatables_row([
+                s.site_visit.visit_date,
+                s.sample_type,
+                s.name_no,
+                self.get_observations(s.id),
+                self.get_reviewed(s.id),
+                'P. Laceholder' # add field to model and populate at create
+            ])
+        return get_datatables_container(rows)
+
+    
+    def get_data_row(self, value):
+        columns = [
+            value.site_name,
+            value.state_region,
+            value.county_region,
+            value.habitat_type,
+            value.treatment
+        ]
+        return get_datatables_container(get_datatables_row(columns))
+
+    def to_representation(self, value):
+        result = {
+            'data_row': self.get_data_row(value),
+            'detail_row': self.get_sample_data(value)
         }
         return result

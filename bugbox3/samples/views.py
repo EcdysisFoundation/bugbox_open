@@ -17,7 +17,7 @@ from . import constants
 from .forms import ExperimentForm, SamplePlanForm, SiteForm, SiteVisitForm
 from .models import Experiment, SamplePlan, Site, SiteVisit, Sample
 from .models_query import get_sample_plan_descriptions
-from .serializers import ExperimentsDatatablesSerializer, SamplesDatatablesSerializer
+from .serializers import ExperimentsDatatablesSerializer, SamplesDatatablesSerializer, SitesDatatablesSerializer
 
 
 class ExperimentsDatatablesViewSet(ReadOnlyModelViewSet):
@@ -65,13 +65,56 @@ class SamplesDatatablesViewSet(ReadOnlyModelViewSet):
     def get_queryset(self):
         experiment_id = int(self.kwargs['experiment_id'])
         return Sample.objects.filter(site_visit__site__experiment_id=experiment_id)
-    #queryset = Sample.objects.all().order_by('sample_type')
-    #lookup_url_kwarg = 'experiment_id'
-    #lookup_field = 'site_visit__site__experiment_id'
 
     def filter_for_datatable(self, queryset):
         # filtering
-        search_vector = ['sample_type']
+        search_vector = [constants.FIELD_SAMPLE_TYPE]
+        search_query = self.request.query_params.get('search[value]')
+        if search_query:
+            queryset = queryset.annotate(
+                search=SearchVector(*search_vector)
+            ).filter(search=search_query)
+        return queryset
+    
+    def list(self, request, *args, **kwargs):
+        draw = request.query_params.get('draw')
+        queryset = self.filter_queryset(self.get_queryset())
+        recordsTotal = queryset.count()
+        filtered_queryset = self.filter_for_datatable(queryset)
+        try:
+            start = int(request.query_params.get('start'))
+        except ValueError:
+            start = 0
+        try:
+            length = int(request.query_params.get('length'))
+        except ValueError:
+            length = 10
+        end = length + start
+        serializer = self.get_serializer(filtered_queryset[start:end], many=True)
+        response = {
+            'draw': draw,
+            'recordsTotal': recordsTotal,
+            'recordsFiltered': filtered_queryset.count(),
+            'data': serializer.data
+        }
+        return Response(response)
+
+
+class SitesDatatablesViewSet(ReadOnlyModelViewSet):
+    serializer_class = SitesDatatablesSerializer
+
+    def get_queryset(self):
+        experiment_id = int(self.kwargs['experiment_id'])
+        return Site.objects.filter(experiment_id=experiment_id)
+
+    def filter_for_datatable(self, queryset):
+        # filtering
+        search_vector = [
+            constants.FIELD_SITE_SITE_NAME,
+            constants.FIELD_SITE_STATE_REGION,
+            constants.FIELD_SITE_HABITAT_TYPE,
+            constants.FIELD_SITE_TREATMENT
+        ]
         search_query = self.request.query_params.get('search[value]')
         if search_query:
             queryset = queryset.annotate(
@@ -136,20 +179,22 @@ class ExperimentView(TemplateView):
         else:
             years = str(experiment.from_year) + ' - ' + str(experiment.to_year)
         description = [v['description'] for v in get_sample_plan_descriptions(experiment.id)]
-        samples_datatables_url = api_reverse(
-            'samples:sample-data-list', request=self.request, kwargs=kwargs)
+        sites_datatables_url = api_reverse(
+            'samples:site-data-list', request=self.request, kwargs=kwargs)
         context.update({
             'experiment': experiment,
             'years': years,
             'sample_plan_descriptions': description,
             'container_row_header': get_datatables_container(
                 get_datatables_row([
-                    'Sample Type',
-                    'Visit Date',
-                    'Site Name'
+                    'Site Name',
+                    'State Region',
+                    'Conty Region',
+                    'Habitat',
+                    'Treatment'
                 ])),
             'json_context': get_json_context(
-                {'samples_datatables_url': samples_datatables_url})
+                {'sites_datatables_url': sites_datatables_url})
         })
         return context
 

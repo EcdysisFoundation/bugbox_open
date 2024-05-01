@@ -136,6 +136,7 @@ class Sample(Model):
     completed = BooleanField(default=False)
     image = ImageField(null=True, blank=True)
     classes = HStoreField(null=True, blank=True)
+    # entered_by = ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=SET_NULL)
 
 
 class Specimen(Model):

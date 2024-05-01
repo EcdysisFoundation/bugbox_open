@@ -2,20 +2,20 @@ import $ from 'jquery';
 import DataTable from 'datatables.net-bs5';
 
 function getDetail( row ) {
-    return 'my details here'
+    return row.detail_row
 }
 
 
 $(function () {
     const json_context = JSON.parse(document.getElementById('json_context').textContent)
-
+    console.log(json_context)
     var samples_table = $('#samples-table').DataTable({
         order: [[1, 'desc']],
         ordering: false,
         processing: false,
         serverSide: true,
         ajax: {
-            url: json_context.samples_datatables_url,
+            url: json_context.sites_datatables_url,
             dataSrc: 'data'
         },
         language: {

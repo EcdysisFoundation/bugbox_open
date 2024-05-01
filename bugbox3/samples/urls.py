@@ -9,7 +9,8 @@ from .views import (
     ExperimentView,
     SiteCreateView,
     SpecimensView,
-    SamplesDatatablesViewSet
+    SamplesDatatablesViewSet,
+    SitesDatatablesViewSet
 )
 
 router = DefaultRouter()
@@ -17,6 +18,8 @@ router.register(r'experiments-data', ExperimentsDatatablesViewSet,
                 basename='experiment-data')
 router.register(r'samples-data/(?P<experiment_id>[^/]+)', SamplesDatatablesViewSet,
                 basename='sample-data')
+router.register(r'sites-data/(?P<experiment_id>[^/]+)', SitesDatatablesViewSet,
+                basename='site-data')
 
 app_name = "samples"
 urlpatterns = [
