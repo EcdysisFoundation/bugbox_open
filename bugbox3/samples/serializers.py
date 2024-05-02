@@ -117,9 +117,10 @@ class SitesDatatablesSerializer(ModelSerializer):
                 sample_type = constants.SAMPLE_TYPE_CHOICES_DICT[s.sample_type]
             else:
                 sample_type = s.sample_type
+            sample_url = reverse('samples:sample', kwargs={'sample_id': s.id})
             rows += get_datatables_row([
                 s.site_visit.visit_date,
-                sample_type,
+                '<a href="{0}" class="link-success">{1} <i class="bi bi-bug-fill"></i></a>'.format(sample_url, sample_type),
                 s.name_no,
                 self.get_observations(s.id),
                 self.get_reviewed(s.id),
@@ -131,7 +132,7 @@ class SitesDatatablesSerializer(ModelSerializer):
     def get_data_row(self, value):
         site_url = reverse('samples:site-update', kwargs={'site_id': value.id})
         columns = [
-            '<a href="{0}">{1}</a>'.format(site_url, value.site_name),
+            '<a href="{0}" class="link-dark">{1} &nbsp;&nbsp;<i class="bi bi-pencil"></i></a>'.format(site_url, value.site_name),
             value.state_region,
             value.county_region,
             value.habitat_type,
@@ -145,3 +146,34 @@ class SitesDatatablesSerializer(ModelSerializer):
             'detail_row': self.get_sample_data(value)
         }
         return result
+    
+
+class SpecimenDatatablesSerializer(ModelSerializer):
+
+    class Meta:
+        model = Specimen
+        fields = [
+            constants.FIELD_SPECIMEN_PARTIAL_COUNT,
+            constants.FIELD_SPECIMEN_ACCEPTANCE,
+            constants.FIELD_SPECIMEN_CONFIDENCE,
+            constants.FIELD_SPECIMEN_ARCHIVAL_IDENTIFIER
+        ]
+    
+    def get_id_checkbox(self, value):
+        return '<input type="checkbox" name="specimen_id" value="{0}" />'.format(value.id)
+    
+    def get_data_row(self, value):
+        columns = [
+            #value.image.url,
+            value.partial_count,
+            #value.ai_classification.name,
+            'Pending', # replace with value.confidence and value.ai_version.version
+            #self.get_id_checkbox(value),
+        ]
+        return get_datatables_container(get_datatables_row(columns)) 
+    
+    def to_representation(self, value):
+        return {
+            'data_row': self.get_data_row(value),
+            #'classification': value.ai_classification.name,
+        }

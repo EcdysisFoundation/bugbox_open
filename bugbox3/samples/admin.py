@@ -1,6 +1,6 @@
 from django.contrib.admin import ModelAdmin, site
 
-from .models import Experiment, Sample, SamplePlan, Site
+from .models import Experiment, Sample, SamplePlan, Site, Specimen
 
 
 class ExperimentAdmin(ModelAdmin):
@@ -27,7 +27,14 @@ class SampleAdmin(ModelAdmin):
     list_display = ['uuid']
 
 
+class SpecimenAdmin(ModelAdmin):
+    search_fields = ('uuid',)
+    ordering = ['uuid']
+    list_display = ['uuid']
+
+
 site.register(Experiment, ExperimentAdmin)
 site.register(SamplePlan, SamplePlanAdmin)
 site.register(Site, SiteAdmin)
 site.register(Sample, SampleAdmin)
+site.register(Specimen, SpecimenAdmin)

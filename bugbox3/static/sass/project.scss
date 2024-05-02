@@ -52,9 +52,9 @@ $red: #b94a48;
 
 // custom styles for DataTables usage
 td.details-control {
-  background: url('../images/square-plus-solid.svg') no-repeat center center;
+  background: url('../images/svgs/caret-down-square-fill.svg') no-repeat center center;
   cursor: pointer;
 }
 tr.details td.details-control {
-  background: url('../images/square-minus-solid.svg') no-repeat center center;
+  background: url('../images/svgs/caret-up-square.svg') no-repeat center center;
 }

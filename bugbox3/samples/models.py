@@ -155,7 +155,7 @@ class Specimen(Model):
     partial_count = PositiveSmallIntegerField(blank=True, default=0, null=True)
     date_added = DateTimeField(auto_now_add=True)
     date_modified = DateTimeField(auto_now=True, auto_created=True)
-    confidence = DecimalField(max_digits=5, decimal_places=2, null=True)
+    confidence = DecimalField(max_digits=5, decimal_places=2, null=True) # change to probability
     optional_pred_one = JSONField(default=None, null=True, blank=True)
     optional_pred_two = JSONField(default=None, null=True, blank=True)
     tags = ArrayField(CharField(max_length=1000, blank=True), default=list)

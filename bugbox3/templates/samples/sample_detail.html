@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% load render_bundle from webpack_loader %}
+
+{% block title %}
+    Sample
+{% endblock title %}
+
+{% block customheadtagcontent %}
+
+{% render_bundle 'sample_detail' 'js' attrs='defer' %}
+{{ json_context|safe }}
+
+{% endblock customheadtagcontent %}
+
+{% block content %}
+
+<div class="container">
+    <div class="row">
+        <div class="col">
+            {{ sample }}
+            {{ sample.id }}
+            <table id="specimens-table" class="table table-striped table-responsive nowrap compact" width="100%">
+                <thead>
+                    <tr>
+                    <th>{{ container_row_header|safe }}</th>
+                    </tr>
+                </thead>
+                </table>
+        </div>
+    </div>
+</div>
+
+
+{% endblock content %}

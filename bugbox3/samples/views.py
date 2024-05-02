@@ -10,14 +10,16 @@ from rest_framework.reverse import reverse as api_reverse
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
 from bugbox3.libs.ui_helpers import get_datatables_container, get_datatables_row
+#from bugbox3.core.views import DatatablesReadOnlyModelViewSetMixin
 
 from ..libs.ui_helpers import get_formsets_display_control_config
 from ..libs.utilities import get_json_context
 from . import constants
 from .forms import ExperimentForm, SamplePlanForm, SiteForm, SiteVisitForm
-from .models import Experiment, SamplePlan, Site, SiteVisit, Sample
+from .models import Experiment, SamplePlan, Site, SiteVisit, Sample, Specimen
 from .models_query import get_sample_plan_descriptions
-from .serializers import ExperimentsDatatablesSerializer, SamplesDatatablesSerializer, SitesDatatablesSerializer
+from .serializers import (ExperimentsDatatablesSerializer, 
+    SamplesDatatablesSerializer, SitesDatatablesSerializer, SpecimenDatatablesSerializer)
 
 
 class ExperimentsDatatablesViewSet(ReadOnlyModelViewSet):
@@ -120,6 +122,47 @@ class SitesDatatablesViewSet(ReadOnlyModelViewSet):
             queryset = queryset.annotate(
                 search=SearchVector(*search_vector)
             ).filter(search=search_query)
+        return queryset
+    
+    def list(self, request, *args, **kwargs):
+        draw = request.query_params.get('draw')
+        queryset = self.filter_queryset(self.get_queryset())
+        recordsTotal = queryset.count()
+        filtered_queryset = self.filter_for_datatable(queryset)
+        try:
+            start = int(request.query_params.get('start'))
+        except ValueError:
+            start = 0
+        try:
+            length = int(request.query_params.get('length'))
+        except ValueError:
+            length = 10
+        end = length + start
+        serializer = self.get_serializer(filtered_queryset[start:end], many=True)
+        response = {
+            'draw': draw,
+            'recordsTotal': recordsTotal,
+            'recordsFiltered': filtered_queryset.count(),
+            'data': serializer.data
+        }
+        return Response(response)
+    
+class SpecimenDatatablesViewSet(ReadOnlyModelViewSet):
+    serializer_class = SpecimenDatatablesSerializer
+
+    def get_queryset(self):
+        sample_id = int(self.kwargs['sample_id'])
+        return Specimen.objects.filter(sample_id=sample_id)
+    
+    def filter_for_datatable(self, queryset):
+        # filtering
+        search_vector = ['partial_count']
+        search_query = self.request.query_params.get('search[value]')
+        if search_query:
+            queryset = queryset.annotate(
+                search=SearchVector(*search_vector)
+            ).filter(search=search_query)
+        print(search_vector)
         return queryset
     
     def list(self, request, *args, **kwargs):
@@ -382,3 +425,28 @@ class SiteUpdateView(UpdateView):
 
     def get_success_url(self):
         return reverse('samples:experiment', kwargs={'experiment_id': self.experiment.id})
+
+
+class SampleView(TemplateView):
+    template_name = 'samples/sample_detail.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        sample = get_object_or_404(Sample, id=kwargs['sample_id'])
+        
+        specimen_datatables_url = api_reverse(
+            'samples:specimen-data-list', request=self.request, kwargs=kwargs)
+        context.update({
+            'sample': sample,
+            'container_row_header': get_datatables_container(
+                get_datatables_row([
+                    #'Image',
+                    'Partial Count',
+                    #'Classification',
+                    'Probability<br/>(Model)',
+                    #''
+                ])),
+            'json_context': get_json_context(
+                {'specimen_datatables_url': specimen_datatables_url})
+        })
+        return context

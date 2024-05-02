@@ -39,6 +39,19 @@ FIELD_SITE_VISIT_DATE = 'visit_date'
 FIELD_SAMPLE_ID = 'id'
 FIELD_SAMPLE_TYPE = 'sample_type'
 
+FIELD_SPECIMEN_UUID = 'uuid'
+FIELD_SPECIMEN_PARTIAL_COUNT = 'partial_count'
+FIELD_SPECIMEN_DATE_ADDED = 'date_added'
+FIELD_SPECIMEN_DATE_MODIFIED = 'date_modified'
+FIELD_SPECIMEN_CONFIDENCE = 'confidence'
+FIELD_SPECIMEN_OPTIONAL_PRED_ONE = 'optional_pred_one'
+FIELD_SPECIMEN_OPTIONAL_PRED_TWO = 'optional_pred_two'
+FIELD_SPECIMEN_TAGS = 'tags'
+FIELD_SPECIMEN_ACCEPTANCE = 'acceptance'
+FIELD_SPECIMEN_ARCHIVAL_IDENTIFIER = 'archival_identifier'
+FIELD_SPECIMEN_ARCHIVAL_PRESERVATION = 'archival_preservation'
+FIELD_SPECIMEN_ARCHIVAL_STORED = 'archival_stored'
+
 # Model Defaults
 
 TAXON_CLASS_ACARI = 'acari'

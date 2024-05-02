@@ -8,7 +8,6 @@ function getDetail( row ) {
 
 $(function () {
     const json_context = JSON.parse(document.getElementById('json_context').textContent)
-    console.log(json_context)
     var samples_table = $('#samples-table').DataTable({
         order: [[1, 'desc']],
         ordering: false,
