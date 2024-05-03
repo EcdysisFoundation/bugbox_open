@@ -7,12 +7,12 @@ from .views import (
     ExperimentsDatatablesViewSet,
     ExperimentsView,
     ExperimentView,
-    SiteCreateView,
     SamplesDatatablesViewSet,
+    SampleView,
+    SiteCreateView,
     SitesDatatablesViewSet,
-    SpecimenDatatablesViewSet,
     SiteUpdateView,
-    SampleView
+    SpecimenDatatablesViewSet,
 )
 
 router = DefaultRouter()
@@ -30,7 +30,6 @@ urlpatterns = [
     path('', include(router.urls)),
     path('experiments/', ExperimentsView.as_view(), name='experiments'),
     path('experiment/<int:experiment_id>', ExperimentView.as_view(), name='experiment'),
-    #path('specimens/', SpecimensView.as_view(), name='specimens'),
     path('experiment-sample-plan-create/',
          ExperimentSamplePlanCreateView.as_view(), name='experiment-sample-plan-create'),
     path('experiment-sample-plan-update/<int:experiment_id>',

@@ -19,7 +19,7 @@ class DatatablesModelViewSetMixin:
                     search=SearchVector(*self.search_vector)
                 ).filter(search=search_query)
         return queryset
-    
+
     def list(self, request, *args, **kwargs):
         draw = request.query_params.get('draw')
         queryset = self.filter_queryset(self.get_queryset())

@@ -4,7 +4,7 @@ from rest_framework.serializers import ModelSerializer
 from bugbox3.libs.ui_helpers import get_datatables_container, get_datatables_row
 
 from . import constants
-from .models import Experiment, Sample, Specimen, Site
+from .models import Experiment, Sample, Site, Specimen
 
 
 class ExperimentsDatatablesSerializer(ModelSerializer):
@@ -42,7 +42,7 @@ class ExperimentsDatatablesSerializer(ModelSerializer):
     def get_experiment_link(self, v):
         url = reverse('samples:experiment', kwargs={'experiment_id': v.id})
         return '<a href="{0}" class="link-secondary">{1}</a>'.format(url, v.name)
-    
+
     def get_data_row(self, value):
         sample_info = self.get_sample_info(value)
         columns = [
@@ -52,7 +52,7 @@ class ExperimentsDatatablesSerializer(ModelSerializer):
             sample_info['total_samples'],
             sample_info['photo_sampling'],
             sample_info['not_reviewed'],
-            
+
         ]
         return get_datatables_container(get_datatables_row(columns))
 
@@ -94,13 +94,13 @@ class SitesDatatablesSerializer(ModelSerializer):
             constants.FIELD_SITE_HABITAT_TYPE,
             constants.FIELD_SITE_TREATMENT,
         ]
-    
+
     def get_observations(self, id):
         return Specimen.objects.filter(sample_id=id).count()
-    
+
     def get_reviewed(self, id):
         return Specimen.objects.filter(sample_id=id, acceptance__gt=0).count()
-    
+
     def get_sample_data(self, value):
         samples = Sample.objects.filter(
             site_visit__site_id=value.id)
@@ -120,19 +120,20 @@ class SitesDatatablesSerializer(ModelSerializer):
             sample_url = reverse('samples:sample', kwargs={'sample_id': s.id})
             rows += get_datatables_row([
                 s.site_visit.visit_date,
-                '<a href="{0}" class="link-success">{1} <i class="bi bi-bug-fill"></i></a>'.format(sample_url, sample_type),
+                '<a href="{0}" class="link-success">{1} <i class="bi bi-bug-fill"></i></a>'.format(
+                    sample_url, sample_type),
                 s.name_no,
                 self.get_observations(s.id),
                 self.get_reviewed(s.id),
-                'P. Laceholder' # add field to model and populate at create
+                'P. Laceholder'  # add field to model and populate at create
             ])
         return get_datatables_container(rows)
 
-    
     def get_data_row(self, value):
         site_url = reverse('samples:site-update', kwargs={'site_id': value.id})
         columns = [
-            '<a href="{0}" class="link-dark">{1} &nbsp;&nbsp;<i class="bi bi-pencil"></i></a>'.format(site_url, value.site_name),
+            '<a href="{0}" class="link-dark">{1} &nbsp;&nbsp;<i class="bi bi-pencil"></i></a>'.format(
+                site_url, value.site_name),
             value.state_region,
             value.county_region,
             value.habitat_type,
@@ -146,7 +147,7 @@ class SitesDatatablesSerializer(ModelSerializer):
             'detail_row': self.get_sample_data(value)
         }
         return result
-    
+
 
 class SpecimenDatatablesSerializer(ModelSerializer):
 
@@ -158,22 +159,22 @@ class SpecimenDatatablesSerializer(ModelSerializer):
             constants.FIELD_SPECIMEN_CONFIDENCE,
             constants.FIELD_SPECIMEN_ARCHIVAL_IDENTIFIER
         ]
-    
+
     def get_id_checkbox(self, value):
         return '<input type="checkbox" name="specimen_id" value="{0}" />'.format(value.id)
-    
+
     def get_data_row(self, value):
         columns = [
-            #value.image.url,
+            # value.image.url,
             value.partial_count,
-            #value.ai_classification.name,
-            'Pending', # replace with value.confidence and value.ai_version.version
-            #self.get_id_checkbox(value),
+            # value.ai_classification.name,
+            'Pending',  # replace with value.confidence and value.ai_version.version
+            # self.get_id_checkbox(value),
         ]
-        return get_datatables_container(get_datatables_row(columns)) 
-    
+        return get_datatables_container(get_datatables_row(columns))
+
     def to_representation(self, value):
         return {
             'data_row': self.get_data_row(value),
-            #'classification': value.ai_classification.name,
+            # 'classification': value.ai_classification.name,
         }

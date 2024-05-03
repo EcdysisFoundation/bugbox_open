@@ -38,6 +38,7 @@ def get_formsets_display_control_config(formset_total, formset_intial, formset_r
         }
     }
 
+
 def get_datatables_container(rows, container_styles=None):
     """
     Put rows in a container for display in a datatables row.
@@ -66,6 +67,6 @@ def get_datatables_row(columns, row_styles=None, col_styles=None):
             row_style += ' {0}'.format(style)
     result = '<div class="row{0}">'.format(row_style)
     for c in columns:
-       result += '<div class="col{0}">{1}</div>'.format(col_style, c)
+        result += '<div class="col{0}">{1}</div>'.format(col_style, c)
     result += '</div></div>'
     return result

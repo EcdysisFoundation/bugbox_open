@@ -134,7 +134,7 @@ class Sample(Model):
                             choices=constants.SAMPLE_TYPE_CHOICES)
     name_no = CharField(max_length=100, blank=True)
     notes = CharField(max_length=1000, blank=True)
-    completed = BooleanField(default=False) # for photosampling? ExperimentsDatatablesSerializer
+    completed = BooleanField(default=False)  # for photosampling? ExperimentsDatatablesSerializer
     image = ImageField(null=True, blank=True)
     classes = HStoreField(null=True, blank=True)
     # entered_by = ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=SET_NULL)
@@ -155,7 +155,7 @@ class Specimen(Model):
     partial_count = PositiveSmallIntegerField(blank=True, default=0, null=True)
     date_added = DateTimeField(auto_now_add=True)
     date_modified = DateTimeField(auto_now=True, auto_created=True)
-    confidence = DecimalField(max_digits=5, decimal_places=2, null=True) # change to probability
+    confidence = DecimalField(max_digits=5, decimal_places=2, null=True)  # change to probability
     optional_pred_one = JSONField(default=None, null=True, blank=True)
     optional_pred_two = JSONField(default=None, null=True, blank=True)
     tags = ArrayField(CharField(max_length=1000, blank=True), default=list)

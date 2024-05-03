@@ -1,36 +1,38 @@
-from django.contrib.postgres.search import SearchVector
 from django.db import transaction
 from django.forms import inlineformset_factory
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.views.generic import TemplateView
 from django.views.generic.edit import CreateView, UpdateView
-from rest_framework.response import Response
 from rest_framework.reverse import reverse as api_reverse
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
-from bugbox3.libs.ui_helpers import get_datatables_container, get_datatables_row
 from bugbox3.core.views import DatatablesModelViewSetMixin
+from bugbox3.libs.ui_helpers import get_datatables_container, get_datatables_row
 
 from ..libs.ui_helpers import get_formsets_display_control_config
 from ..libs.utilities import get_json_context
 from . import constants
 from .forms import ExperimentForm, SamplePlanForm, SiteForm, SiteVisitForm
-from .models import Experiment, SamplePlan, Site, SiteVisit, Sample, Specimen
+from .models import Experiment, Sample, SamplePlan, Site, SiteVisit, Specimen
 from .models_query import get_sample_plan_descriptions
-from .serializers import (ExperimentsDatatablesSerializer, 
-    SamplesDatatablesSerializer, SitesDatatablesSerializer, SpecimenDatatablesSerializer)
+from .serializers import (
+    ExperimentsDatatablesSerializer,
+    SamplesDatatablesSerializer,
+    SitesDatatablesSerializer,
+    SpecimenDatatablesSerializer,
+)
 
 
 class ExperimentsDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
-    
+
     serializer_class = ExperimentsDatatablesSerializer
     queryset = Experiment.objects.all().order_by(constants.FIELD_NAME)
     search_vector = [constants.FIELD_NAME, constants.FIELD_ABBREVIATION]
 
 
 class SamplesDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
-    
+
     serializer_class = SamplesDatatablesSerializer
     search_vector = [constants.FIELD_SAMPLE_TYPE]
 
@@ -40,7 +42,7 @@ class SamplesDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelViewSet
 
 
 class SitesDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
-    
+
     serializer_class = SitesDatatablesSerializer
     search_vector = [
             constants.FIELD_SITE_SITE_NAME,
@@ -52,10 +54,10 @@ class SitesDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
     def get_queryset(self):
         experiment_id = int(self.kwargs['experiment_id'])
         return Site.objects.filter(experiment_id=experiment_id)
-    
+
 
 class SpecimenDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
-    
+
     serializer_class = SpecimenDatatablesSerializer
     search_vector = [constants.FIELD_SPECIMEN_PARTIAL_COUNT]
 
@@ -186,7 +188,6 @@ class ExperimentSamplePlanUpdateView(UpdateView):
                                              kwargs={'experiment_id': self.kwargs['experiment_id']})
         if self.request.POST:
             context['formsets'] = self.sample_plan_form_set(self.request.POST, instance=self.object)
-            # context['formsets'].full_clean()
         else:
             context['formsets'] = self.sample_plan_form_set(instance=self.object)
         return context
@@ -263,7 +264,7 @@ class SiteUpdateView(UpdateView):
 
     def get_object(self, queryset=None):
         return get_object_or_404(Site, id=self.kwargs['site_id'])
-    
+
     def get_context_data(self, **kwargs):
         context = super(SiteUpdateView, self).get_context_data(**kwargs)
         experiment = get_object_or_404(Experiment, id=self.object.experiment_id)
@@ -285,7 +286,7 @@ class SiteUpdateView(UpdateView):
         else:
             context['formsets'] = self.form_set(instance=self.object)
         return context
-    
+
     def form_valid(self, form):
         context = self.get_context_data()
         formsets = context['formsets']
@@ -308,18 +309,18 @@ class SampleView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         sample = get_object_or_404(Sample, id=kwargs['sample_id'])
-        
+
         specimen_datatables_url = api_reverse(
             'samples:specimen-data-list', request=self.request, kwargs=kwargs)
         context.update({
             'sample': sample,
             'container_row_header': get_datatables_container(
                 get_datatables_row([
-                    #'Image',
+                    # 'Image',
                     'Partial Count',
-                    #'Classification',
+                    # 'Classification',
                     'Probability<br/>(Model)',
-                    #''
+                    # ''
                 ])),
             'json_context': get_json_context(
                 {'specimen_datatables_url': specimen_datatables_url})
