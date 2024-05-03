@@ -7,7 +7,7 @@ function getDetail( row ) {
 
 
 $(function () {
-    const json_context = JSON.parse(document.getElementById('json_context').textContent)
+    const json_context = JSON.parse(document.getElementById('json_context').textContent);
     var samples_table = $('#samples-table').DataTable({
         order: [[1, 'desc']],
         ordering: false,

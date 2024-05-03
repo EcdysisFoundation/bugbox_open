@@ -36,7 +36,7 @@ class ExperimentsDatatablesSerializer(ModelSerializer):
             result['photo_sampling'] = str(samples.filter(completed=False).count())
             specimens = Specimen.objects.filter(sample_id__in=sample_ids)
             if specimens:
-                result['not_reviewed'] = specimens.filter(acceptance=constants.ACCEPTANCE_PENDING)
+                result['not_reviewed'] = specimens.filter(acceptance=constants.ACCEPTANCE_PENDING).count()
         return result
 
     def get_experiment_link(self, v):

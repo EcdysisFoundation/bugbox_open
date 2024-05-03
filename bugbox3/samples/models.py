@@ -134,7 +134,7 @@ class Sample(Model):
                             choices=constants.SAMPLE_TYPE_CHOICES)
     name_no = CharField(max_length=100, blank=True)
     notes = CharField(max_length=1000, blank=True)
-    completed = BooleanField(default=False)
+    completed = BooleanField(default=False) # for photosampling? ExperimentsDatatablesSerializer
     image = ImageField(null=True, blank=True)
     classes = HStoreField(null=True, blank=True)
     # entered_by = ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=SET_NULL)

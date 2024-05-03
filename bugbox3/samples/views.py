@@ -10,7 +10,7 @@ from rest_framework.reverse import reverse as api_reverse
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
 from bugbox3.libs.ui_helpers import get_datatables_container, get_datatables_row
-#from bugbox3.core.views import DatatablesReadOnlyModelViewSetMixin
+# from bugbox3.core.views import DatatablesReadOnlyModelViewSetMixin
 
 from ..libs.ui_helpers import get_formsets_display_control_config
 from ..libs.utilities import get_json_context
