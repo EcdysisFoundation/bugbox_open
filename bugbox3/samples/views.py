@@ -10,7 +10,7 @@ from rest_framework.reverse import reverse as api_reverse
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
 from bugbox3.libs.ui_helpers import get_datatables_container, get_datatables_row
-# from bugbox3.core.views import DatatablesReadOnlyModelViewSetMixin
+from bugbox3.core.views import DatatablesModelViewSetMixin
 
 from ..libs.ui_helpers import get_formsets_display_control_config
 from ..libs.utilities import get_json_context
@@ -22,171 +22,46 @@ from .serializers import (ExperimentsDatatablesSerializer,
     SamplesDatatablesSerializer, SitesDatatablesSerializer, SpecimenDatatablesSerializer)
 
 
-class ExperimentsDatatablesViewSet(ReadOnlyModelViewSet):
+class ExperimentsDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
+    
     serializer_class = ExperimentsDatatablesSerializer
-
     queryset = Experiment.objects.all().order_by(constants.FIELD_NAME)
-
-    def filter_for_datatable(self, queryset):
-        # filtering
-        search_vector = [constants.FIELD_NAME, constants.FIELD_ABBREVIATION]
-        search_query = self.request.query_params.get('search[value]')
-        if search_query:
-            queryset = queryset.annotate(
-                search=SearchVector(*search_vector)
-            ).filter(search=search_query)
-        return queryset
-
-    def list(self, request, *args, **kwargs):
-        draw = request.query_params.get('draw')
-        queryset = self.filter_queryset(self.get_queryset())
-        recordsTotal = queryset.count()
-        filtered_queryset = self.filter_for_datatable(queryset)
-        try:
-            start = int(request.query_params.get('start'))
-        except ValueError:
-            start = 0
-        try:
-            length = int(request.query_params.get('length'))
-        except ValueError:
-            length = 10
-        end = length + start
-        serializer = self.get_serializer(filtered_queryset[start:end], many=True)
-        response = {
-            'draw': draw,
-            'recordsTotal': recordsTotal,
-            'recordsFiltered': filtered_queryset.count(),
-            'data': serializer.data
-        }
-        return Response(response)
+    search_vector = [constants.FIELD_NAME, constants.FIELD_ABBREVIATION]
 
 
-class SamplesDatatablesViewSet(ReadOnlyModelViewSet):
+class SamplesDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
+    
     serializer_class = SamplesDatatablesSerializer
+    search_vector = [constants.FIELD_SAMPLE_TYPE]
 
     def get_queryset(self):
         experiment_id = int(self.kwargs['experiment_id'])
         return Sample.objects.filter(site_visit__site__experiment_id=experiment_id)
 
-    def filter_for_datatable(self, queryset):
-        # filtering
-        search_vector = [constants.FIELD_SAMPLE_TYPE]
-        search_query = self.request.query_params.get('search[value]')
-        if search_query:
-            queryset = queryset.annotate(
-                search=SearchVector(*search_vector)
-            ).filter(search=search_query)
-        return queryset
+
+class SitesDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
     
-    def list(self, request, *args, **kwargs):
-        draw = request.query_params.get('draw')
-        queryset = self.filter_queryset(self.get_queryset())
-        recordsTotal = queryset.count()
-        filtered_queryset = self.filter_for_datatable(queryset)
-        try:
-            start = int(request.query_params.get('start'))
-        except ValueError:
-            start = 0
-        try:
-            length = int(request.query_params.get('length'))
-        except ValueError:
-            length = 10
-        end = length + start
-        serializer = self.get_serializer(filtered_queryset[start:end], many=True)
-        response = {
-            'draw': draw,
-            'recordsTotal': recordsTotal,
-            'recordsFiltered': filtered_queryset.count(),
-            'data': serializer.data
-        }
-        return Response(response)
-
-
-class SitesDatatablesViewSet(ReadOnlyModelViewSet):
     serializer_class = SitesDatatablesSerializer
-
-    def get_queryset(self):
-        experiment_id = int(self.kwargs['experiment_id'])
-        return Site.objects.filter(experiment_id=experiment_id)
-
-    def filter_for_datatable(self, queryset):
-        # filtering
-        search_vector = [
+    search_vector = [
             constants.FIELD_SITE_SITE_NAME,
             constants.FIELD_SITE_STATE_REGION,
             constants.FIELD_SITE_HABITAT_TYPE,
             constants.FIELD_SITE_TREATMENT
         ]
-        search_query = self.request.query_params.get('search[value]')
-        if search_query:
-            queryset = queryset.annotate(
-                search=SearchVector(*search_vector)
-            ).filter(search=search_query)
-        return queryset
+
+    def get_queryset(self):
+        experiment_id = int(self.kwargs['experiment_id'])
+        return Site.objects.filter(experiment_id=experiment_id)
     
-    def list(self, request, *args, **kwargs):
-        draw = request.query_params.get('draw')
-        queryset = self.filter_queryset(self.get_queryset())
-        recordsTotal = queryset.count()
-        filtered_queryset = self.filter_for_datatable(queryset)
-        try:
-            start = int(request.query_params.get('start'))
-        except ValueError:
-            start = 0
-        try:
-            length = int(request.query_params.get('length'))
-        except ValueError:
-            length = 10
-        end = length + start
-        serializer = self.get_serializer(filtered_queryset[start:end], many=True)
-        response = {
-            'draw': draw,
-            'recordsTotal': recordsTotal,
-            'recordsFiltered': filtered_queryset.count(),
-            'data': serializer.data
-        }
-        return Response(response)
+
+class SpecimenDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
     
-class SpecimenDatatablesViewSet(ReadOnlyModelViewSet):
     serializer_class = SpecimenDatatablesSerializer
+    search_vector = [constants.FIELD_SPECIMEN_PARTIAL_COUNT]
 
     def get_queryset(self):
         sample_id = int(self.kwargs['sample_id'])
         return Specimen.objects.filter(sample_id=sample_id)
-    
-    def filter_for_datatable(self, queryset):
-        # filtering
-        search_vector = ['partial_count']
-        search_query = self.request.query_params.get('search[value]')
-        if search_query:
-            queryset = queryset.annotate(
-                search=SearchVector(*search_vector)
-            ).filter(search=search_query)
-        print(search_vector)
-        return queryset
-    
-    def list(self, request, *args, **kwargs):
-        draw = request.query_params.get('draw')
-        queryset = self.filter_queryset(self.get_queryset())
-        recordsTotal = queryset.count()
-        filtered_queryset = self.filter_for_datatable(queryset)
-        try:
-            start = int(request.query_params.get('start'))
-        except ValueError:
-            start = 0
-        try:
-            length = int(request.query_params.get('length'))
-        except ValueError:
-            length = 10
-        end = length + start
-        serializer = self.get_serializer(filtered_queryset[start:end], many=True)
-        response = {
-            'draw': draw,
-            'recordsTotal': recordsTotal,
-            'recordsFiltered': filtered_queryset.count(),
-            'data': serializer.data
-        }
-        return Response(response)
 
 
 class ExperimentsView(TemplateView):
