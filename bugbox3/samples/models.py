@@ -3,7 +3,7 @@ import uuid
 from django.conf import settings
 from django.contrib.gis.db.models import PointField
 from django.contrib.gis.geos import Point
-from django.contrib.postgres.fields import ArrayField, HStoreField
+from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator
 from django.db.models import (
@@ -29,12 +29,9 @@ from django.dispatch import receiver
 
 from ..core import constants as geo_constants
 from ..core.models import UsCountiesTigerLine
+from ..libs.utilities import resized_thumbnail
 from ..taxonomy.models import AiVersion, Morphospecies, Taxon
 from . import constants
-
-
-def classes_default():
-    return {'acari': 0, 'annelida': 0, 'collembola': 0, 'gastropoda': 0, 'nematoda': 0, 'thysanoptera': 0}
 
 
 class Experiment(Model):
@@ -126,6 +123,7 @@ class SiteVisit(Model):
                         name_no=name)
                     n = n - 1
 
+SAMPLE_IMAGE_THUMBSIZE = 250
 
 class Sample(Model):
     uuid = UUIDField(default=uuid.uuid4, unique=True)
@@ -135,9 +133,29 @@ class Sample(Model):
     name_no = CharField(max_length=100, blank=True)
     notes = CharField(max_length=1000, blank=True)
     completed = BooleanField(default=False)  # for photosampling? ExperimentsDatatablesSerializer
-    image = ImageField(null=True, blank=True)
-    classes = HStoreField(null=True, blank=True)
-    # entered_by = ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=SET_NULL)
+    image = ImageField(null=True, blank=True, upload_to='sample_images')
+    image_thumbnail = ImageField(null=True, blank=True, upload_to='sample_images')
+    entered_by = ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=SET_NULL)
+
+
+@receiver(pre_save, sender=Sample)
+def save_thumbnail(sender, instance, **kwargs):
+    """
+    Signal receiver to save a thumbnail if there was a change.
+    """
+    needs_thumbnail = False
+    try:
+        obj = sender.objects.get(pk=instance.pk)
+    except sender.DoesNotExist:
+        # new record
+        needs_thumbnail = True
+    else:
+        if not obj.image == instance.image:
+             # Field has changed
+             needs_thumbnail = True
+    if needs_thumbnail:
+        instance.image_thumbnail = resized_thumbnail(
+            instance.image, SAMPLE_IMAGE_THUMBSIZE, SAMPLE_IMAGE_THUMBSIZE)
 
 
 class Specimen(Model):

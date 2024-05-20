@@ -1,12 +1,12 @@
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Column, Field, Fieldset, Layout, Row, Submit
 from django.conf import settings
-from django.forms import ChoiceField, DateField, DateInput, HiddenInput, Select, ValidationError
+from django.forms import ChoiceField, DateField, DateInput, HiddenInput, CharField, Textarea, Select, ValidationError
 from django.forms.models import ModelForm
 from django.utils.safestring import mark_safe
 
 from . import constants
-from .models import Experiment, SamplePlan, Site, SiteVisit
+from .models import Experiment, SamplePlan, Site, SiteVisit, Sample
 
 
 class Html5DateInput(DateInput):
@@ -268,3 +268,28 @@ class SiteVisitForm(ModelFormMixin):
     visit_date = DateField(
         widget=Html5DateInput
     )
+
+
+class SampleForm(ModelFormMixin):
+
+    def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.helper.layout = get_submit_layout(self.helper.layout, kwargs)
+
+    class Meta:
+        model = Sample
+        fields = constants.FORM_FIELDS_SAMPLE
+
+    def get_primary_layout(self):
+        return [
+            Field(constants.FIELD_SAMPLE_TYPE, css_class='form-control-width-medium'),
+            Field(constants.FIELD_SAMPLE_NAME_NO, css_class='form-control-width-medium'),
+            Field(constants.FIELD_SAMPLE_COMPLETED),
+            Field(constants.FIELD_SAMPLE_IMAGE),
+            Field(constants.FIELD_SAMPLE_NOTES),
+        ]
+
+    notes = CharField(
+        widget=Textarea
+    )
+

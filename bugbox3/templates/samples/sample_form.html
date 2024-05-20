@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% load django_bootstrap5 %}
+
+{% block title %}Sample Form{% endblock %}
+
+{% block content %}
+<div class="container">
+  <form enctype="multipart/form-data" action="{{ form_action_url }}" method="POST">
+    <div class="row p-2 text-dark">
+      <div class="col-md-12 col-lg-9 bg-form px-4 mb-0 mx-auto">
+        {% crispy form %}
+      </div>
+    </div>
+  </form>
+</div>
+
+  {% endblock %}

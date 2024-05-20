@@ -15,17 +15,86 @@
 {% block content %}
 
 <div class="container">
+
     <div class="row">
-        <div class="col">
-            {{ sample }}
-            {{ sample.id }}
-            <table id="specimens-table" class="table table-striped table-responsive nowrap compact" width="100%">
-                <thead>
-                    <tr>
-                    <th>{{ container_row_header|safe }}</th>
-                    </tr>
-                </thead>
-                </table>
+        <div class="col-12 mb-3 mt-2 p-0">
+            <div class="card">
+                <div class="card-header align-items-center bg-ecdysis text-white d-flex justify-content-between">
+                    <div class="col-md-8">
+                        <h5>{{ sample_info.site }} - {{ sample_info.visit_date }} - {{ sample_info.sample_type }} {{ sample_info.name_no }}</h5>
+                    </div>
+                    <div class="col">
+                        <a href="{% url 'samples:sample-update' sample_info.sample_id %}" class="btn btn-light">
+                            Edit Sample
+                        </a>
+                    </div>
+                    <div class="col">
+                        <a href="{% url 'samples:experiment' sample_info.experiment_id %}" class="btn btn-light">
+                            Back to Experiment
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <p class="card-text"><b>UUID:</b> {{ sample_info.uuid }}</p>
+                            <p class="card-text"><b>Site:</b> {{ sample_info.site }}</p>
+                            <p class="card-text"><b>Country:</b> {{ sample_info.country }}</p>
+                            <p class="card-text"><b>State:</b> {{ sample_info.state }}</p>
+                            <p class="card-text"><b>County:</b> {{ sample_info.county }}</p>
+                            <p class="card-text"><b>Date:</b> {{ sample_info.visit_date }}</p>
+                            <p class="card-text"><b>Type:</b> {{ sample_info.sample_type }}</p>
+                            <p class="card-text"><b>Name/NO:</b> {{ sample_info.name_no }}</p>
+                            <p class="card-text"><b>Entered By:</b> {{ sample_info.entered_by }}</p>
+                            <p class="card-text"><b>Notes:</b> {{ sample_info.notes }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <p class="card-text mt-5"><b>Sample Image:</b>
+                                {% if sample_info.img_thumbnail %}
+
+                                </br>
+                                <img src="{{sample_info.img_thumbnail.path}}" width="{{ sample_info.img_thumbnail.width }}" height="{{ sample_info.img_thumbnail.height }}"></a>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12 mb-3 mt-2 p-0">
+            <div class="card">
+                <div class="card-header align-items-center bg-ecdysis text-white d-flex justify-content-between">
+                    <div class="col">
+                        <h5>Observations</h5>
+                    </div>
+                    <div class="col">
+                        <a href="" class="btn btn-light">
+                            button1
+                        </a>
+                    </div>
+                    <div class="col">
+                        <a href="" class="btn btn-light">
+                            button2
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col">
+                            <table id="specimens-table" class="table table-striped table-responsive nowrap compact" width="100%">
+                                <thead>
+                                    <tr>
+                                    <th>{{ container_row_header|safe }}</th>
+                                    </tr>
+                                </thead>
+                                </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>

@@ -13,8 +13,8 @@ from bugbox3.libs.ui_helpers import get_datatables_container, get_datatables_row
 from ..libs.ui_helpers import get_formsets_display_control_config
 from ..libs.utilities import get_json_context
 from . import constants
-from .forms import ExperimentForm, SamplePlanForm, SiteForm, SiteVisitForm
-from .models import Experiment, Sample, SamplePlan, Site, SiteVisit, Specimen
+from .forms import ExperimentForm, SamplePlanForm, SiteForm, SiteVisitForm, SampleForm
+from .models import Experiment, Sample, SamplePlan, Site, SiteVisit, Specimen, SAMPLE_IMAGE_THUMBSIZE
 from .models_query import get_sample_plan_descriptions
 from .serializers import (
     ExperimentsDatatablesSerializer,
@@ -312,8 +312,35 @@ class SampleView(TemplateView):
 
         specimen_datatables_url = api_reverse(
             'samples:specimen-data-list', request=self.request, kwargs=kwargs)
+        img_thumbnail = None
+        if sample.image_thumbnail:
+            img_thumbnail  = {
+                'path': sample.image_thumbnail.url,
+                'height': sample.image_thumbnail.height,
+                'width': sample.image_thumbnail.width
+            }
+        elif sample.image:
+            img_thumbnail  = {
+                'path': sample.image.url,
+                'height': SAMPLE_IMAGE_THUMBSIZE * (sample.image.height / sample.image.width),
+                'width': SAMPLE_IMAGE_THUMBSIZE
+            }
         context.update({
-            'sample': sample,
+            'sample_info': {
+                'sample_id': sample.id,
+                'experiment_id': sample.site_visit.site.experiment_id,
+                'uuid': sample.uuid,
+                'site': sample.site_visit.site.site_name,
+                'country': sample.site_visit.site.country,
+                'state': sample.site_visit.site.state_region,
+                'county': sample.site_visit.site.county_region,
+                'visit_date': sample.site_visit.visit_date,
+                'sample_type': constants.SAMPLE_TYPE_CHOICES_DICT[ sample.sample_type],
+                'name_no': sample.name_no,
+                'entered_by': 'P. Laceholder',
+                'notes': sample.notes,
+                'img_thumbnail': img_thumbnail
+            },
             'container_row_header': get_datatables_container(
                 get_datatables_row([
                     # 'Image',
@@ -326,3 +353,20 @@ class SampleView(TemplateView):
                 {'specimen_datatables_url': specimen_datatables_url})
         })
         return context
+
+
+class SampleUpdateView(UpdateView):
+    form_class = SampleForm
+    template_name = 'samples/sample_form.html'
+    action = 'update'
+
+    def get_object(self, queryset=None):
+        return get_object_or_404(Sample, id=self.kwargs['sample_id'])
+
+    def get_context_data(self, **kwargs):
+        context = super(SampleUpdateView, self).get_context_data(**kwargs)
+        context['form_action_url'] = reverse('samples:sample-update', kwargs={'sample_id': self.kwargs['sample_id']})
+        return context
+
+    def get_success_url(self):
+        return reverse('samples:sample', kwargs={'sample_id':  self.kwargs['sample_id']})
