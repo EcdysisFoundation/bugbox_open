@@ -1,15 +1,19 @@
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Column, Field, Fieldset, Layout, Row, Submit
 from django.conf import settings
-from django.forms import ChoiceField, DateField, DateInput, HiddenInput, CharField, Textarea, Select, ValidationError
+from django.forms import (ChoiceField, DateField, DateInput, HiddenInput,
+                          CharField, Textarea, Select, ValidationError, Form)
 from django.forms.models import ModelForm
 from django.utils.safestring import mark_safe
+
+from ..core.forms import MultipleFileField
 
 from . import constants
 from .models import Experiment, SamplePlan, Site, SiteVisit, Sample
 
 
 class Html5DateInput(DateInput):
+    # move to core
     """
     HTML5 enabled date widget.
     """
@@ -17,6 +21,7 @@ class Html5DateInput(DateInput):
 
 
 class ModelFormMixin(ModelForm):
+    # move to core
     required_fields = []
     hidden_fields = []
     field_labels = {}
@@ -90,6 +95,7 @@ class ModelFormMixin(ModelForm):
 
 
 def get_submit_layout(helper_layout, kwargs):
+    # move to core
     """
     Get a submit button based on create vs edit. For example in a ModelFormMixin subclass...
         def __init__(self, *args, **kwargs):
@@ -293,3 +299,6 @@ class SampleForm(ModelFormMixin):
         widget=Textarea
     )
 
+class NewSpecimenImageForm(Form):
+
+        image = MultipleFileField()

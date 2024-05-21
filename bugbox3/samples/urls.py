@@ -13,7 +13,8 @@ from .views import (
     SitesDatatablesViewSet,
     SiteUpdateView,
     SpecimenDatatablesViewSet,
-    SampleUpdateView
+    SampleUpdateView,
+    NewSpecimenImageFormView
 )
 
 router = DefaultRouter()
@@ -38,5 +39,6 @@ urlpatterns = [
     path('site-create/<int:experiment_id>', SiteCreateView.as_view(), name='site-create'),
     path('site-update/<int:site_id>', SiteUpdateView.as_view(), name='site-update'),
     path('sample/<int:sample_id>', SampleView.as_view(), name='sample'),
-    path('sample-update/<int:sample_id>', SampleUpdateView.as_view(), name='sample-update')
+    path('sample-update/<int:sample_id>', SampleUpdateView.as_view(), name='sample-update'),
+    path('new-specimen-image/<int:sample_id>', NewSpecimenImageFormView.as_view(), name='new-specimen-image')
 ]

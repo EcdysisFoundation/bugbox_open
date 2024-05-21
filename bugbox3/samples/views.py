@@ -6,15 +6,18 @@ from django.views.generic import TemplateView
 from django.views.generic.edit import CreateView, UpdateView
 from rest_framework.reverse import reverse as api_reverse
 from rest_framework.viewsets import ReadOnlyModelViewSet
+from django.views.generic.edit import FormView
 
-from bugbox3.core.views import DatatablesModelViewSetMixin
-from bugbox3.libs.ui_helpers import get_datatables_container, get_datatables_row
-
-from ..libs.ui_helpers import get_formsets_display_control_config
+from ..core.views import DatatablesModelViewSetMixin
+from ..libs.ui_helpers import (get_datatables_container, get_datatables_row,
+                               get_formsets_display_control_config)
 from ..libs.utilities import get_json_context
+
 from . import constants
-from .forms import ExperimentForm, SamplePlanForm, SiteForm, SiteVisitForm, SampleForm
-from .models import Experiment, Sample, SamplePlan, Site, SiteVisit, Specimen, SAMPLE_IMAGE_THUMBSIZE
+from .forms import (ExperimentForm, SamplePlanForm, SiteForm, SiteVisitForm,
+                    SampleForm, NewSpecimenImageForm)
+from .models import (Experiment, Sample, SamplePlan, Site, SiteVisit, Specimen,
+                     SpecimenImage, SAMPLE_IMAGE_THUMBSIZE)
 from .models_query import get_sample_plan_descriptions
 from .serializers import (
     ExperimentsDatatablesSerializer,
@@ -370,3 +373,44 @@ class SampleUpdateView(UpdateView):
 
     def get_success_url(self):
         return reverse('samples:sample', kwargs={'sample_id':  self.kwargs['sample_id']})
+
+
+class NewSpecimenImageFormView(FormView):
+    form_class = NewSpecimenImageForm
+    template_name = "samples/new_spcimen_image.html"
+
+    def get_context_data(self, **kwargs):
+        context = super(NewSpecimenImageFormView, self).get_context_data(**kwargs)
+        sample = get_object_or_404(Sample, id=self.kwargs['sample_id'])
+        context = {
+            'sample_details': {
+                'sample_type': sample.sample_type,
+                'name_no': sample.name_no
+            },
+            'sample_id': sample.id,
+            'form_action_url': reverse(
+                'samples:new-specimen-image', kwargs={'sample_id': sample.id})
+        }
+        self.sample = sample
+        return context
+
+    def form_invalid(self, form):
+        #  function to print form errors during development
+        print('!!!!!!!!!!!!!FORM INVALID!!!!!!!!!!!!!!!!!!!!!!!!!')
+        print(form.errors)
+        response = super().form_invalid(form)
+        return response
+
+    def form_valid(self, form):
+        files = form.cleaned_data['image']
+        sample = get_object_or_404(Sample, id=self.kwargs['sample_id'])
+        for f in files:
+            specimen = Specimen.objects.create(sample=sample)
+            SpecimenImage.objects.create(
+                specimen=specimen,
+                image = f
+            )
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse('samples:sample', kwargs={'sample_id': self.kwargs['sample_id']})

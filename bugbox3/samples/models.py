@@ -143,6 +143,7 @@ def save_thumbnail(sender, instance, **kwargs):
     """
     Signal receiver to save a thumbnail if there was a change.
     """
+    # Ok to change to only save a thumbnail for this field.
     needs_thumbnail = False
     try:
         obj = sender.objects.get(pk=instance.pk)
@@ -168,6 +169,7 @@ class Specimen(Model):
     ai_version = ForeignKey(AiVersion, on_delete=SET_NULL, null=True, blank=True)
     sample = ForeignKey(Sample, on_delete=SET_NULL, null=True, blank=True)
     user = ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=SET_NULL)
+    # but the image is what is uploaded, so this captures the first person to upload an image.
     upload_user = ForeignKey(settings.AUTH_USER_MODEL, related_name="specimens_uploaded",
                              null=True, on_delete=SET_NULL)
     partial_count = PositiveSmallIntegerField(blank=True, default=0, null=True)
@@ -178,7 +180,7 @@ class Specimen(Model):
     optional_pred_two = JSONField(default=None, null=True, blank=True)
     tags = ArrayField(CharField(max_length=1000, blank=True), default=list)
     acceptance = PositiveSmallIntegerField(choices=constants.ACCEPTANCE_CHOICES, blank=True, default=0)
-    archival_identifier = CharField(max_length=1000, blank=True, unique=True)
+    archival_identifier = CharField(max_length=1000, null=True, unique=True, default=None)
     archival_preservation = CharField(max_length=100, blank=True)
     archival_stored = CharField(max_length=100, blank=True)
 
@@ -198,10 +200,10 @@ class Specimen(Model):
         super(Specimen, self).save(*args, **kwargs)
 
         if new_specimen:
-            TimelineEvent.objects.create(specimen=self,
-                                         event_title=self.user.name,
-                                         body=self.user.name + " submitted this observation."
-                                         )
+            if self.user:
+                TimelineEvent.objects.create(specimen=self,
+                    event_title=self.user.name,
+                    body=self.user.name + " submitted this observation.")
 
     def __str__(self):
         return str(self.uuid)
@@ -210,7 +212,8 @@ class Specimen(Model):
 class SpecimenImage(Model):
     specimen = ForeignKey(Specimen, on_delete=CASCADE)
     primary = BooleanField(default=False)
-    image = ImageField()
+    image = ImageField(upload_to='cms_app/images/') # change to specimen_images
+    image_thumbnail = ImageField(null=True, blank=True, upload_to='cms_app/images/') # change to specimen_images
     date_added = DateTimeField(auto_now_add=True)
     uploaded_by = ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=SET_NULL)
 
@@ -226,6 +229,26 @@ def ensure_single_true_flag(sender, instance, **kwargs):
     if instance.primary:
         # If flag is set to True, set flag to False for other instances
         SpecimenImage.objects.filter(specimen=instance.specimen).exclude(pk=instance.pk).update(primary=False)
+
+
+@receiver(pre_save, sender=SpecimenImage)
+def save_thumbnail(sender, instance, **kwargs):
+    """
+    Signal receiver to save a thumbnail if there was a change.
+    """
+    needs_thumbnail = False
+    try:
+        obj = sender.objects.get(pk=instance.pk)
+    except sender.DoesNotExist:
+        # new record
+        needs_thumbnail = True
+    else:
+        if not obj.image == instance.image:
+             # Field has changed
+             needs_thumbnail = True
+    if needs_thumbnail:
+        instance.image_thumbnail = resized_thumbnail(
+            instance.image, 50, 50)
 
 
 class TimelineEvent(Model):
