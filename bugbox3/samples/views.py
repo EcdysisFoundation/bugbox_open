@@ -307,15 +307,16 @@ class SiteUpdateView(UpdateView):
         return reverse('samples:experiment', kwargs={'experiment_id': self.experiment.id})
 
 
-class SampleView(TemplateView):
+class SampleView(FormView):
+    form_class = NewSpecimenImageForm
     template_name = 'samples/sample_detail.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        sample = get_object_or_404(Sample, id=kwargs['sample_id'])
+        sample = get_object_or_404(Sample, id=self.kwargs['sample_id'])
 
         specimen_datatables_url = api_reverse(
-            'samples:specimen-data-list', request=self.request, kwargs=kwargs)
+            'samples:specimen-data-list', request=self.request, kwargs=self.kwargs)
         img_thumbnail = None
         if sample.image_thumbnail:
             img_thumbnail  = {
@@ -354,9 +355,35 @@ class SampleView(TemplateView):
                     # ''
                 ])),
             'json_context': get_json_context(
-                {'specimen_datatables_url': specimen_datatables_url})
+                {'specimen_datatables_url': specimen_datatables_url}),
+            'form_action_url': reverse(
+                'samples:sample', kwargs={'sample_id': sample.id})
         })
         return context
+
+    def form_valid(self, form):
+        files = form.cleaned_data['image']
+        sample = get_object_or_404(Sample, id=self.kwargs['sample_id'])
+        created_images = 0
+        try:
+            for f in files:
+                specimen = Specimen.objects.create(sample=sample)
+                SpecimenImage.objects.create(
+                    specimen=specimen,
+                    image = f
+                )
+                created_images += 1
+        except Exception:
+            messages.add_message(
+                self.request,
+                messages.ERROR,
+                'Error: An unsupported file may have been selected, please use .jpg or .png')
+            created_images = 0
+        messages.success(self.request, 'Succesfully added {0} new specimens'.format(created_images))
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse('samples:sample', kwargs={'sample_id': self.kwargs['sample_id']})
 
 
 class SampleUpdateView(UpdateView):
@@ -374,50 +401,3 @@ class SampleUpdateView(UpdateView):
 
     def get_success_url(self):
         return reverse('samples:sample', kwargs={'sample_id':  self.kwargs['sample_id']})
-
-
-class NewSpecimenImageFormView(FormView):
-    form_class = NewSpecimenImageForm
-    template_name = "samples/new_spcimen_image.html"
-
-    def get_context_data(self, **kwargs):
-        context = super(NewSpecimenImageFormView, self).get_context_data(**kwargs)
-        sample = get_object_or_404(Sample, id=self.kwargs['sample_id'])
-        context = {
-            'sample_details': {
-                'sample_type': sample.sample_type,
-                'name_no': sample.name_no
-            },
-            'sample_id': sample.id,
-            'form_action_url': reverse(
-                'samples:new-specimen-image', kwargs={'sample_id': sample.id})
-        }
-        self.sample = sample
-        return context
-
-    def form_invalid(self, form):
-        #  function to print form errors during development
-        print('!!!!!!!!!!!!!FORM INVALID!!!!!!!!!!!!!!!!!!!!!!!!!')
-        print(form.errors)
-        response = super().form_invalid(form)
-        return response
-
-    def form_valid(self, form):
-        files = form.cleaned_data['image']
-        sample = get_object_or_404(Sample, id=self.kwargs['sample_id'])
-        try:
-            for f in files:
-                specimen = Specimen.objects.create(sample=sample)
-                SpecimenImage.objects.create(
-                    specimen=specimen,
-                    image = f
-                )
-        except Exception:
-            messages.add_message(
-                self.request,
-                messages.ERROR,
-                'Error: An unsupported file may have been selected, please use .jpg or .png')
-        return super().form_valid(form)
-
-    def get_success_url(self):
-        return reverse('samples:sample', kwargs={'sample_id': self.kwargs['sample_id']})

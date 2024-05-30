@@ -71,14 +71,14 @@
                         <h5>Specimens</h5>
                     </div>
                     <div class="col">
-                        <a href="{% url 'samples:new-specimen-image' sample_id %}" class="btn btn-light">
-                            Add new
-                        </a>
+                        <form enctype="multipart/form-data" action="{{ form_action_url }}" method="POST">
+                            {% csrf_token %}
+                            <label for="id_image" class="form-label">Add Specimens</label>
+                                <input type="file" name="image" accept=".jpg, .png, .jpeg" class="form-control" multiple required id="id_image">
                     </div>
                     <div class="col">
-                        <a href="" class="btn btn-light">
-                            button2
-                        </a>
+                                <input type="submit" value="Submit" class="btn btn-light mt-4 ms-3">
+                            </form>
                     </div>
                 </div>
                 <div class="card-body">
