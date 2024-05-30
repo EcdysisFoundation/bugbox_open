@@ -7,6 +7,7 @@ from django.views.generic.edit import CreateView, UpdateView
 from rest_framework.reverse import reverse as api_reverse
 from rest_framework.viewsets import ReadOnlyModelViewSet
 from django.views.generic.edit import FormView
+from django.contrib import messages
 
 from ..core.views import DatatablesModelViewSetMixin
 from ..libs.ui_helpers import (get_datatables_container, get_datatables_row,
@@ -404,12 +405,18 @@ class NewSpecimenImageFormView(FormView):
     def form_valid(self, form):
         files = form.cleaned_data['image']
         sample = get_object_or_404(Sample, id=self.kwargs['sample_id'])
-        for f in files:
-            specimen = Specimen.objects.create(sample=sample)
-            SpecimenImage.objects.create(
-                specimen=specimen,
-                image = f
-            )
+        try:
+            for f in files:
+                specimen = Specimen.objects.create(sample=sample)
+                SpecimenImage.objects.create(
+                    specimen=specimen,
+                    image = f
+                )
+        except Exception:
+            messages.add_message(
+                self.request,
+                messages.ERROR,
+                'Error: An unsupported file may have been selected, please use .jpg or .png')
         return super().form_valid(form)
 
     def get_success_url(self):

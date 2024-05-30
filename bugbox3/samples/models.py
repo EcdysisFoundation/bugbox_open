@@ -184,14 +184,6 @@ class Specimen(Model):
     archival_preservation = CharField(max_length=100, blank=True)
     archival_stored = CharField(max_length=100, blank=True)
 
-    @property
-    def image(self):
-        """get the first image associated with this specimen if available"""
-        try:
-            return self.image_set.first().image
-        except Exception:
-            return None
-
     def save(self, *args, **kwargs):
         new_specimen = False
         if self.pk is None:

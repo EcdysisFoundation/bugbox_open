@@ -53,7 +53,7 @@
                                 {% if sample_info.img_thumbnail %}
 
                                 </br>
-                                <img src="{{sample_info.img_thumbnail.path}}" width="{{ sample_info.img_thumbnail.width }}" height="{{ sample_info.img_thumbnail.height }}"></a>
+                                <img src="{{sample_info.img_thumbnail.path}}" width="{{ sample_info.img_thumbnail.width }}" height="{{ sample_info.img_thumbnail.height }}">
                                 {% endif %}
                             </p>
                         </div>
@@ -68,7 +68,7 @@
             <div class="card">
                 <div class="card-header align-items-center bg-ecdysis text-white d-flex justify-content-between">
                     <div class="col">
-                        <h5>Observations</h5>
+                        <h5>Specimens</h5>
                     </div>
                     <div class="col">
                         <a href="{% url 'samples:new-specimen-image' sample_id %}" class="btn btn-light">

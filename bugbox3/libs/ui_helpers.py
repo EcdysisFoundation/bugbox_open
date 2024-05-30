@@ -70,3 +70,38 @@ def get_datatables_row(columns, row_styles=None, col_styles=None):
         result += '<div class="col{0}">{1}</div>'.format(col_style, c)
     result += '</div></div>'
     return result
+
+
+def get_img_src(img_field, resize_width=None, styles=None):
+    """
+    Get an html img tag formated from an ImageField.
+    Styes should be a string of styes, exampe 'c-1 c-2'
+    """
+    def img_src(path, width, height, styles):
+        return '<img src="{0}" width="{1}" height="{2}" style="{3}">'.format(
+            path,
+            width,
+            height,
+            str(styles)
+        )
+    if img_field and not resize_width:
+        return img_src(
+            img_field.url,
+            img_field.width,
+            img_field.height,
+            str(styles)
+        )
+    elif img_field and resize_width:
+        return img_src(
+            img_field.url,
+            int(resize_width),
+            int(resize_width) * (img_field.height / img_field.width),
+            str(styles)
+        )
+    else:
+        return img_src(
+                '',
+                '',
+                '',
+                str(styles)
+            )

@@ -23,9 +23,6 @@ IMAGE_TYPES = {
     "jpg": "JPEG",
     "jpeg": "JPEG",
     "png": "PNG",
-    "gif": "GIF",
-    "tif": "TIFF",
-    "tiff": "TIFF",
 }
 
 def resized_thumbnail(image, width, height):
@@ -40,7 +37,7 @@ def resized_thumbnail(image, width, height):
         img_suffix = Path(image.file.name).name.split(".")[-1]
         new_filename = str(img_filename[:-len(img_suffix)-1]) + '_thumbnail.' + str(img_suffix)
         # Use the file extension to determine the file type from the image_types dictionary
-        img_format = IMAGE_TYPES[img_suffix]
+        img_format = IMAGE_TYPES[img_suffix.lower()]
         # Save the resized image into the buffer, noting the correct file type
         buffer = BytesIO()
         img.save(buffer, format=img_format)
