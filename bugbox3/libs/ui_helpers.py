@@ -99,9 +99,4 @@ def get_img_src(img_field, resize_width=None, styles=None):
             str(styles)
         )
     else:
-        return img_src(
-                '',
-                '',
-                '',
-                str(styles)
-            )
+        return '<i class="bi bi-bug"></i>'

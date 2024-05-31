@@ -290,9 +290,9 @@ class SampleForm(ModelFormMixin):
         return [
             Field(constants.FIELD_SAMPLE_TYPE, css_class='form-control-width-medium'),
             Field(constants.FIELD_SAMPLE_NAME_NO, css_class='form-control-width-medium'),
-            Field(constants.FIELD_SAMPLE_COMPLETED),
             Field(constants.FIELD_SAMPLE_IMAGE),
             Field(constants.FIELD_SAMPLE_NOTES),
+            Field(constants.FIELD_SAMPLE_COMPLETED),
         ]
 
     notes = CharField(

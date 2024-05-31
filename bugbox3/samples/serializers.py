@@ -176,7 +176,7 @@ class SpecimenDatatablesSerializer(ModelSerializer):
         columns = [
             img_thumbnail,
             value.partial_count,
-            # value.ai_classification.name,
+            'ai_classification', # value.ai_classification.name,
             'Pending',  # replace with value.confidence and value.ai_version.version
             # self.get_id_checkbox(value),
         ]

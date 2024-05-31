@@ -47,6 +47,7 @@
                             <p class="card-text"><b>Name/NO:</b> {{ sample_info.name_no }}</p>
                             <p class="card-text"><b>Entered By:</b> {{ sample_info.entered_by }}</p>
                             <p class="card-text"><b>Notes:</b> {{ sample_info.notes }}</p>
+                            <p class="card-text"><b>Completed:</b> {{ sample_info.completed }}</p>
                         </div>
                         <div class="col-md-4">
                             <p class="card-text mt-5"><b>Sample Image:</b>
@@ -73,11 +74,15 @@
                     <div class="col">
                         <form enctype="multipart/form-data" action="{{ form_action_url }}" method="POST">
                             {% csrf_token %}
-                            <label for="id_image" class="form-label">Add Specimens</label>
-                                <input type="file" name="image" accept=".jpg, .png, .jpeg" class="form-control" multiple required id="id_image">
+                            <label for="id_image" class="form-label">
+                                {% if sample_info.completed %}Sample completed, edit sample to enable{% else %}Add Specimens{% endif %}
+                            </label>
+                                <input type="file" name="image" accept=".jpg, .png, .jpeg"
+                                    class="Disabled form-control"
+                                    multiple required id="id_image" {% if sample_info.completed %} disabled{% endif %}>
                     </div>
                     <div class="col">
-                                <input type="submit" value="Submit" class="btn btn-light mt-4 ms-3">
+                                <input type="submit" value="Submit" class="btn btn-light mt-4 ms-3" {% if sample_info.completed %} disabled{% endif %}>
                             </form>
                     </div>
                 </div>

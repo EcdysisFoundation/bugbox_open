@@ -344,13 +344,14 @@ class SampleView(FormView):
                 'name_no': sample.name_no,
                 'entered_by': 'P. Laceholder',
                 'notes': sample.notes,
+                'completed': sample.completed,
                 'img_thumbnail': img_thumbnail
             },
             'container_row_header': get_datatables_container(
                 get_datatables_row([
-                    # 'Image',
+                    'Image',
                     'Partial Count',
-                    # 'Classification',
+                    'Classification',
                     'Probability<br/>(Model)',
                     # ''
                 ])),
