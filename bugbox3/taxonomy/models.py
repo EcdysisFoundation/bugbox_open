@@ -11,64 +11,25 @@ from django.db.models import (
     IntegerField,
     Model,
 )
-from django.db.models.signals import post_save
-from django.dispatch import receiver
 
 from . import constants
 
 
-class Taxon(Model):
-    """from the GBIF backbone-current 'Taxon.tsv' """
-    taxon_id = IntegerField(primary_key=True)
-    dataset_id = CharField(blank=True, max_length=50)
-    parent_name_usage = ForeignKey('Taxon', on_delete=CASCADE, null=True)
-    accepted_name_usage_id = IntegerField(null=True, blank=True)
-    original_name_usage_id = IntegerField(null=True, blank=True)
-    scientific_name = CharField(blank=True, max_length=300)
-    scientific_name_authorship = CharField(blank=True, max_length=300)
-    canonical_name = CharField(blank=True, max_length=100)
-    generic_name = CharField(blank=True, max_length=100)
-    specific_epithet = CharField(blank=True, max_length=100)
-    infraspecific_epithet = CharField(blank=True, max_length=100)
-    taxon_rank = CharField(blank=True, max_length=50)
-    name_published_in = CharField(blank=True, max_length=1000)
-    taxonomic_status = CharField(blank=True, max_length=50)
-    taxon_remarks = CharField(blank=True, max_length=200)
-    kingdom = CharField(blank=True, max_length=50)
-    phylum = CharField(blank=True, max_length=50)
-    taxon_class = CharField(blank=True, max_length=50)
-    taxon_order = CharField(blank=True, max_length=50)
-    taxon_family = CharField(blank=True, max_length=50)
-    genus = CharField(blank=True, max_length=50)
-
-    def __str__(self):
-        return str(self.canonical_name)
-
-    def ancestor_list(self):
-        ancestor_list = list()
-
-        def get_parent(node, ancestor_list):
-            if node.parent_name_usage is not None:
-                parent = node.parent_name_usage
-                ancestor_list.append(parent)
-                get_parent(parent, ancestor_list)
-
-        get_parent(self, ancestor_list)
-        return ancestor_list
-
-
 class Morphospecies(Model):
     name = CharField(max_length=64, unique=True)
-    taxon = ForeignKey(Taxon, on_delete=CASCADE, null=True, blank=True)
     defunt_user = ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=SET_NULL)
     defunt_morpho = ForeignKey("self", null=True, on_delete=SET_NULL)
     defunt_date = DateTimeField(null=True)
-    taxon_class = CharField(max_length=64, null=True, blank=True)
-    order = CharField(max_length=64, null=True, blank=True)
-    family = CharField(max_length=64, null=True, blank=True)
-    subfamily = CharField(max_length=64, null=True, blank=True)
-    genus = CharField(max_length=64, null=True, blank=True)
-    species = CharField(max_length=64, null=True, blank=True)
+    gbif_key = IntegerField(null=True, blank=True)
+    gbif_class = CharField(max_length=64, blank=True)
+    gbif_order = CharField(max_length=64, blank=True)
+    gbif_family = CharField(max_length=64, blank=True)
+    gbif_genus = CharField(max_length=64, blank=True)
+    gbif_scientific_name = CharField(max_length=300, blank=True)
+    gbif_canonical_name = CharField(max_length=300, blank=True)
+    gbif_rank = CharField(max_length=50, blank=True)
+    gbif_status = CharField(max_length=50, blank=True)
+    subfamily = CharField(max_length=64, blank=True)
     bypass = FloatField(default=0, null=False, validators=[MaxValueValidator(100), MinValueValidator(0)])
     date_added = DateTimeField(auto_now_add=True)
     date_modified = DateTimeField(auto_now=True, auto_created=True)
@@ -83,15 +44,6 @@ class Morphospecies(Model):
         permissions = [
             (constants.PERMISSION_MORPHOSPECIES_FUNCTIONS, constants.PERMISSION_MORPHOSPECIES_FUNCTIONS_TXT),
         ]
-
-
-@receiver(post_save, sender=Morphospecies)
-def ensure_single_true_flag(sender, instance, **kwargs):
-    """
-    Signal receiver to update classification to the new classification.
-    """
-
-    instance.specimen_set.update(classification_id=instance.taxon_id)
 
 
 class AiVersion(Model):

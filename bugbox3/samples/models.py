@@ -30,7 +30,7 @@ from django.dispatch import receiver
 from ..core import constants as geo_constants
 from ..core.models import UsCountiesTigerLine
 from ..libs.utilities import resized_thumbnail
-from ..taxonomy.models import AiVersion, Morphospecies, Taxon
+from ..taxonomy.models import AiVersion, Morphospecies
 from . import constants
 
 
@@ -162,8 +162,7 @@ def save_thumbnail(sender, instance, **kwargs):
 class Specimen(Model):
 
     uuid = UUIDField(default=uuid.uuid4, unique=True)
-    classification = ForeignKey(Taxon, on_delete=SET_NULL, null=True, blank=True)
-    morphospecies = ForeignKey(Morphospecies, on_delete=SET_NULL, null=True, blank=True)
+    classification = ForeignKey(Morphospecies, on_delete=SET_NULL, null=True, blank=True)
     ai_classification = ForeignKey(Morphospecies, on_delete=SET_NULL,
                                    null=True, blank=True, related_name="ai")
     ai_version = ForeignKey(AiVersion, on_delete=SET_NULL, null=True, blank=True)
