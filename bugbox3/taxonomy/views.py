@@ -9,11 +9,20 @@ from ..libs.ui_helpers import (get_datatables_container, get_datatables_row)
 from .models import Morphospecies
 from .serializers import MorphospeciesDatatablesSerializer
 
+from . import constants
+
 
 class MorphospeciesDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
     serializer_class = MorphospeciesDatatablesSerializer
-    queryset = Morphospecies.objects.all().order_by('name')
-    search_vector = ['name']
+    search_vector = (constants.FIELD_MORPHO_NAME,
+            constants.FIELD_MORPHO_GBIF_CANONICAL_NAME)
+
+    def get_queryset(self):
+        if self.request.query_params.get('first_filter'):
+            gbif_rank = self.request.query_params.get('first_filter')
+            if gbif_rank in constants.GBIF_RANK_VALUES:
+                return Morphospecies.objects.filter(gbif_rank=gbif_rank).order_by(constants.FIELD_MORPHO_NAME)
+        return Morphospecies.objects.all().order_by(constants.FIELD_MORPHO_NAME)
 
 class MophospeciesView(TemplateView):
     template_name = 'taxonomy/morphospecies.html'
@@ -23,11 +32,16 @@ class MophospeciesView(TemplateView):
         datatables_url = api_reverse('taxonomy:morphospecies-data-list',
                                         request=self.request, kwargs=kwargs)
         context.update({
-            'json_context': get_json_context({'datatables_url': datatables_url}),
-            'lendata': lendata,
+            'json_context': get_json_context({
+                'datatables_url': datatables_url,
+                'first_picker_choices': constants.GBIF_RANK_CHOICES_WO_BLANK_LIST,
+                'first_picker_name': 'rank'
+            }),
             'container_row_header': get_datatables_container(
                 get_datatables_row([
                     'Name',
+                    'Canonical Name',
+                    'Rank'
                 ])),
         })
         return context
