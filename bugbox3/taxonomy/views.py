@@ -35,7 +35,7 @@ class MophospeciesView(TemplateView):
             'json_context': get_json_context({
                 'datatables_url': datatables_url,
                 'first_picker_choices': constants.GBIF_RANK_CHOICES_WO_BLANK_LIST,
-                'first_picker_name': 'rank'
+                'first_picker_text': 'any rank'
             }),
             'container_row_header': get_datatables_container(
                 get_datatables_row([
