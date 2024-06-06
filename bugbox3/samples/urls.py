@@ -8,12 +8,12 @@ from .views import (
     ExperimentsView,
     ExperimentView,
     SamplesDatatablesViewSet,
+    SampleUpdateView,
     SampleView,
     SiteCreateView,
     SitesDatatablesViewSet,
     SiteUpdateView,
     SpecimenDatatablesViewSet,
-    SampleUpdateView,
 )
 
 router = DefaultRouter()

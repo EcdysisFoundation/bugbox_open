@@ -1,27 +1,25 @@
-from random import randint
-
-from django.db.models import Count, Q, F
+from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView
 from rest_framework.reverse import reverse as api_reverse
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
 from ..core.views import DatatablesModelViewSetMixin
+from ..libs.ui_helpers import calc_image_height, get_datatables_container, get_datatables_row
 from ..libs.utilities import get_json_context
-from ..libs.ui_helpers import (get_datatables_container, get_datatables_row, calc_image_height)
-from ..samples.models import SpecimenImage, Specimen
 from ..samples import constants as samples_constants
-
-from .models import Morphospecies, AiTraining
-from .serializers import MorphospeciesDatatablesSerializer
-
+from ..samples.models import Specimen, SpecimenImage
 from . import constants
+from .models import AiTraining, Morphospecies
+from .serializers import MorphospeciesDatatablesSerializer
 
 
 class MorphospeciesDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
     serializer_class = MorphospeciesDatatablesSerializer
-    search_vector = (constants.FIELD_MORPHO_NAME,
-            constants.FIELD_MORPHO_GBIF_CANONICAL_NAME)
+    search_vector = (
+        constants.FIELD_MORPHO_NAME,
+        constants.FIELD_MORPHO_GBIF_CANONICAL_NAME
+    )
 
     def get_queryset(self):
         if self.request.query_params.get('first_filter'):
@@ -30,12 +28,14 @@ class MorphospeciesDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelV
                 return Morphospecies.objects.filter(gbif_rank=gbif_rank).order_by(constants.FIELD_MORPHO_NAME)
         return Morphospecies.objects.all().order_by(constants.FIELD_MORPHO_NAME)
 
+
 class MophospeciesView(TemplateView):
     template_name = 'taxonomy/morphospecies.html'
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         datatables_url = api_reverse('taxonomy:morphospecies-data-list',
-                                        request=self.request, kwargs=kwargs)
+                                     request=self.request, kwargs=kwargs)
         context.update({
             'json_context': get_json_context({
                 'datatables_url': datatables_url,
@@ -51,8 +51,10 @@ class MophospeciesView(TemplateView):
         })
         return context
 
+
 class MophospeciesDetailView(TemplateView):
     template_name = 'taxonomy/morphospecies_detail.html'
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         morphospecies = get_object_or_404(
@@ -63,7 +65,10 @@ class MophospeciesDetailView(TemplateView):
         else:
             display_name = morphospecies.name
         image_count = SpecimenImage.objects.filter(specimen__classification=morphospecies).aggregate(
-            reviewed=Count('pk', distinct=True, filter=~Q(specimen__acceptance=samples_constants.ACCEPTANCE_PENDING)), pending=Count('pk', distinct=True, filter=Q(specimen__acceptance=samples_constants.ACCEPTANCE_PENDING)))
+            reviewed=Count(
+                'pk', distinct=True, filter=~Q(
+                    specimen__acceptance=samples_constants.ACCEPTANCE_PENDING)), pending=Count(
+                        'pk', distinct=True, filter=Q(specimen__acceptance=samples_constants.ACCEPTANCE_PENDING)))
         sum_image_count = image_count['reviewed'] + image_count['pending']
         if sum_image_count:
             s_images = SpecimenImage.objects.filter(specimen__classification=morphospecies).order_by(
@@ -87,7 +92,7 @@ class MophospeciesDetailView(TemplateView):
             'precision': [[a.model.entered_date, a.precision] for a in ai],
             'f1': [[a.model.entered_date, a.f1] for a in ai],
             'recall': [[a.model.entered_date, a.recall] for a in ai],
-            'train': [[a.model.entered_date, a.train] for a in ai]
+            'train': [a.train for a in ai]
         }
         context.update({
             'display_name': display_name,
@@ -98,8 +103,8 @@ class MophospeciesDetailView(TemplateView):
             'specimen_count': Specimen.objects.filter(classification=morphospecies).aggregate(
                 reviewed=Count(
                     'pk', distinct=True,
-                    filter=~Q(acceptance=samples_constants.ACCEPTANCE_PENDING)),
-                    pending=Count('pk', distinct=True, filter=Q(acceptance=samples_constants.ACCEPTANCE_PENDING))),
+                    filter=~Q(acceptance=samples_constants.ACCEPTANCE_PENDING)), pending=Count(
+                        'pk', distinct=True, filter=Q(acceptance=samples_constants.ACCEPTANCE_PENDING))),
             'json_context': get_json_context({
                 'ai_accuracy_over_time': ai_accuracy_over_time
             })

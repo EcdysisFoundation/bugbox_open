@@ -1,10 +1,10 @@
 import json
-from pathlib import Path
-from PIL import Image
 from io import BytesIO
+from pathlib import Path
 
-from django.core.serializers.json import DjangoJSONEncoder
 from django.core.files import File
+from django.core.serializers.json import DjangoJSONEncoder
+from PIL import Image
 
 
 def encode_json(data):
@@ -24,6 +24,7 @@ IMAGE_TYPES = {
     "jpeg": "JPEG",
     "png": "PNG",
 }
+
 
 def resized_thumbnail(image, width, height, thumbname='thumbnail'):
     # Open the image using Pillow

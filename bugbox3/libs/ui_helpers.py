@@ -101,5 +101,6 @@ def get_img_src(img_field, resize_width=None, styles=None):
     else:
         return '<i class="bi bi-bug"></i>'
 
+
 def calc_image_height(size, height, width):
     return size * (height / width)

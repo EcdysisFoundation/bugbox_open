@@ -35,6 +35,14 @@
                                 <li class="list-group-item d-flex justify-content-between align-items-start"><b>Genus:</b> {{ morphospecies.gbif_genus }}</li>
                                 <li class="list-group-item d-flex justify-content-between align-items-start"><b>Species:</b> {{ morphospecies.gbif_species }}</li>
                                 <li class="list-group-item d-flex justify-content-between align-items-start"><b>Note:</b> {{ morphospecies.note }}</li>
+                                <hr/>
+                                    <li class="list-group-item"><b>specimens</b></li>
+                                <li class="list-group-item">
+                                    reviewed: {{specimen_count.reviewed}} (images: {{image_count.reviewed}})
+                                </li>
+                                <li class="list-group-item">
+                                    pending: {{specimen_count.pending}}  (images: {{image_count.pending}})
+                                </li>
                                 {% if ai_last_train %}
                                     <hr/>
                                     <li class="list-group-item"><b>AI Training</b></li>
@@ -51,23 +59,23 @@
                                             <img src="{{i.path}}" width="{{ i.width }}" height="{{ i.height }}">
                                         </li>
                                     {% endfor %}
-                                    <li class="list-group-item">
-                                        {{specimen_count.reviewed}} reviewed specimens ({{image_count.reviewed}} total images)
-                                    </li>
-                                    <li class="list-group-item">
-                                        {{specimen_count.pending}} pending specimens ({{image_count.pending}} total images)
-                                    </li>
-
                                 </ul>
                             </div>
                         {% endif %}
                     </div>
                 </div>
             </div>
+
+            {% if ai_last_train %}
             <br/>
+            <h5 class="ms-3">AI Accuracy Over Time</h5>
             <div class="card">
+            {% endif %}
                 <div id="ai_accuracy_over_time"></div>
+            {% if ai_last_train %}
             </div>
+            {% endif %}
+
         </div>
     </div>
 

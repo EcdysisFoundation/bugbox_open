@@ -123,6 +123,7 @@ class SiteVisit(Model):
                         name_no=name)
                     n = n - 1
 
+
 class Sample(Model):
     uuid = UUIDField(default=uuid.uuid4, unique=True)
     site_visit = ForeignKey(SiteVisit, on_delete=CASCADE)
@@ -137,7 +138,7 @@ class Sample(Model):
 
 
 @receiver(pre_save, sender=Sample)
-def save_thumbnail(sender, instance, **kwargs):
+def save_sample_thumbnail(sender, instance, **kwargs):
     """
     Signal receiver to save a thumbnail if there was a change.
     """
@@ -150,8 +151,8 @@ def save_thumbnail(sender, instance, **kwargs):
         needs_thumbnail = True
     else:
         if not obj.image == instance.image:
-             # Field has changed
-             needs_thumbnail = True
+            # Field has changed
+            needs_thumbnail = True
     if needs_thumbnail:
         instance.image_thumbnail = resized_thumbnail(
             instance.image,
@@ -194,7 +195,8 @@ class Specimen(Model):
 
         if new_specimen:
             if self.user:
-                TimelineEvent.objects.create(specimen=self,
+                TimelineEvent.objects.create(
+                    specimen=self,
                     event_title=self.user.name,
                     body=self.user.name + " submitted this observation.")
 
@@ -205,9 +207,9 @@ class Specimen(Model):
 class SpecimenImage(Model):
     specimen = ForeignKey(Specimen, on_delete=CASCADE)
     primary = BooleanField(default=False)
-    image = ImageField(upload_to='cms_app/images/') # change to specimen_images
-    image_thumbnail = ImageField(null=True, blank=True, upload_to='cms_app/images/') # change to specimen_images
-    image_thumbnail_medium = ImageField(null=True, blank=True, upload_to='specimen_images') # change to specimen_images
+    image = ImageField(upload_to='cms_app/images/')  # change to specimen_images
+    image_thumbnail = ImageField(null=True, blank=True, upload_to='cms_app/images/')  # change to specimen_images
+    image_thumbnail_medium = ImageField(null=True, blank=True, upload_to='specimen_images')
     date_added = DateTimeField(auto_now_add=True)
     uploaded_by = ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=SET_NULL)
 
@@ -226,7 +228,7 @@ def ensure_single_true_flag(sender, instance, **kwargs):
 
 
 @receiver(pre_save, sender=SpecimenImage)
-def save_thumbnail(sender, instance, **kwargs):
+def save_specimen_image_thumbnail(sender, instance, **kwargs):
     """
     Signal receiver to save a thumbnail if there was a change.
     """
@@ -238,8 +240,8 @@ def save_thumbnail(sender, instance, **kwargs):
         needs_thumbnail = True
     else:
         if not obj.image == instance.image:
-             # Field has changed
-             needs_thumbnail = True
+            # Field has changed
+            needs_thumbnail = True
     if needs_thumbnail:
         instance.image_thumbnail = resized_thumbnail(
             instance.image,

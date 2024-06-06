@@ -1,25 +1,24 @@
+from django.contrib import messages
 from django.db import transaction
 from django.forms import inlineformset_factory
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.views.generic import TemplateView
-from django.views.generic.edit import CreateView, UpdateView
+from django.views.generic.edit import CreateView, FormView, UpdateView
 from rest_framework.reverse import reverse as api_reverse
 from rest_framework.viewsets import ReadOnlyModelViewSet
-from django.views.generic.edit import FormView
-from django.contrib import messages
 
 from ..core.views import DatatablesModelViewSetMixin
-from ..libs.ui_helpers import (get_datatables_container, get_datatables_row,
-                               get_formsets_display_control_config,
-                               calc_image_height)
+from ..libs.ui_helpers import (
+    calc_image_height,
+    get_datatables_container,
+    get_datatables_row,
+    get_formsets_display_control_config,
+)
 from ..libs.utilities import get_json_context
-
 from . import constants
-from .forms import (ExperimentForm, SamplePlanForm, SiteForm, SiteVisitForm,
-                    SampleForm, NewSpecimenImageForm)
-from .models import (Experiment, Sample, SamplePlan, Site, SiteVisit, Specimen,
-                     SpecimenImage)
+from .forms import ExperimentForm, NewSpecimenImageForm, SampleForm, SamplePlanForm, SiteForm, SiteVisitForm
+from .models import Experiment, Sample, SamplePlan, Site, SiteVisit, Specimen, SpecimenImage
 from .models_query import get_sample_plan_descriptions
 from .serializers import (
     ExperimentsDatatablesSerializer,
@@ -320,13 +319,13 @@ class SampleView(FormView):
             'samples:specimen-data-list', request=self.request, kwargs=self.kwargs)
         img_thumbnail = None
         if sample.image_thumbnail:
-            img_thumbnail  = {
+            img_thumbnail = {
                 'path': sample.image_thumbnail.url,
                 'height': sample.image_thumbnail.height,
                 'width': sample.image_thumbnail.width
             }
         elif sample.image:
-            img_thumbnail  = {
+            img_thumbnail = {
                 'path': sample.image.url,
                 'height': calc_image_height(constants.SAMPLE_IMAGE_THUMBSIZE, sample.image.height, sample.image.width),
                 'width': constants.SAMPLE_IMAGE_THUMBSIZE
@@ -341,7 +340,7 @@ class SampleView(FormView):
                 'state': sample.site_visit.site.state_region,
                 'county': sample.site_visit.site.county_region,
                 'visit_date': sample.site_visit.visit_date,
-                'sample_type': constants.SAMPLE_TYPE_CHOICES_DICT[ sample.sample_type],
+                'sample_type': constants.SAMPLE_TYPE_CHOICES_DICT[sample.sample_type],
                 'name_no': sample.name_no,
                 'entered_by': 'P. Laceholder',
                 'notes': sample.notes,
@@ -372,7 +371,7 @@ class SampleView(FormView):
                 specimen = Specimen.objects.create(sample=sample)
                 SpecimenImage.objects.create(
                     specimen=specimen,
-                    image = f
+                    image=f
                 )
                 created_images += 1
         except Exception:
