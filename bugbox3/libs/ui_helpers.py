@@ -63,8 +63,8 @@ def get_datatables_row(columns, row_styles=None, col_styles=None):
         for style in row_styles:
             row_style += ' {0}'.format(style)
     if col_styles:
-        for style in row_styles:
-            row_style += ' {0}'.format(style)
+        for style in col_styles:
+            col_styles += ' {0}'.format(style)
     result = '<div class="row{0}">'.format(row_style)
     for c in columns:
         result += '<div class="col{0}">{1}</div>'.format(col_style, c)
@@ -100,3 +100,6 @@ def get_img_src(img_field, resize_width=None, styles=None):
         )
     else:
         return '<i class="bi bi-bug"></i>'
+
+def calc_image_height(size, height, width):
+    return size * (height / width)

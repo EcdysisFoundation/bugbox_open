@@ -123,8 +123,6 @@ class SiteVisit(Model):
                         name_no=name)
                     n = n - 1
 
-SAMPLE_IMAGE_THUMBSIZE = 250
-
 class Sample(Model):
     uuid = UUIDField(default=uuid.uuid4, unique=True)
     site_visit = ForeignKey(SiteVisit, on_delete=CASCADE)
@@ -156,7 +154,10 @@ def save_thumbnail(sender, instance, **kwargs):
              needs_thumbnail = True
     if needs_thumbnail:
         instance.image_thumbnail = resized_thumbnail(
-            instance.image, SAMPLE_IMAGE_THUMBSIZE, SAMPLE_IMAGE_THUMBSIZE)
+            instance.image,
+            constants.SAMPLE_IMAGE_THUMBSIZE,
+            constants.SAMPLE_IMAGE_THUMBSIZE,
+            'thumbnail_medium')
 
 
 class Specimen(Model):
@@ -206,6 +207,7 @@ class SpecimenImage(Model):
     primary = BooleanField(default=False)
     image = ImageField(upload_to='cms_app/images/') # change to specimen_images
     image_thumbnail = ImageField(null=True, blank=True, upload_to='cms_app/images/') # change to specimen_images
+    image_thumbnail_medium = ImageField(null=True, blank=True, upload_to='specimen_images') # change to specimen_images
     date_added = DateTimeField(auto_now_add=True)
     uploaded_by = ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=SET_NULL)
 
@@ -240,7 +242,23 @@ def save_thumbnail(sender, instance, **kwargs):
              needs_thumbnail = True
     if needs_thumbnail:
         instance.image_thumbnail = resized_thumbnail(
-            instance.image, 50, 50)
+            instance.image,
+            constants.SPECIMEN_IMAGE_THUMBSIZE,
+            constants.SPECIMEN_IMAGE_THUMBSIZE)
+        instance.image_thumbnail_medium = resized_thumbnail(
+            instance.image,
+            constants.SPECIMEN_IMAGE_THUMBSIZE_MEDIUM,
+            constants.SPECIMEN_IMAGE_THUMBSIZE_MEDIUM)
+    if not instance.image_thumbnail:
+        instance.image_thumbnail = resized_thumbnail(
+            instance.image,
+            constants.SPECIMEN_IMAGE_THUMBSIZE,
+            constants.SPECIMEN_IMAGE_THUMBSIZE)
+    if not instance.image_thumbnail_medium:
+        instance.image_thumbnail_medium = resized_thumbnail(
+            instance.image,
+            constants.SPECIMEN_IMAGE_THUMBSIZE_MEDIUM,
+            constants.SPECIMEN_IMAGE_THUMBSIZE_MEDIUM)
 
 
 class TimelineEvent(Model):

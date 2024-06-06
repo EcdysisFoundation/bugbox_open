@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Morphospecies Detail
+{% endblock title %}
+
+{% block content %}
+
+<div class="container">
+
+    <div class="row">
+        <div class="col-12 mb-3 mt-2 p-0">
+            <div class="card">
+                <div class="card-header align-items-center bg-ecdysis text-white d-flex justify-content-between">
+                    <h2 class="text-light mt-1">{{ display_name }}</h2>
+                    <a href="{% url 'taxonomy:morphospecies' %}" class="btn btn-light btn-small" role="button">Morphospecies</a>
+                    <a href="{% url 'taxonomy:morphospecies' %}" class="btn btn-light btn-small" role="button">Edit</a>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-4">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between align-items-start"><b>Class:</b> {{ morphospecies.gbif_class }}</li>
+                                <li class="list-group-item d-flex justify-content-between align-items-start"><b>Order:</b> {{ morphospecies.gbif_order }}</li>
+                                <li class="list-group-item d-flex justify-content-between align-items-start"><b>Family:</b> {{ morphospecies.gbif_family }}</li>
+                                <li class="list-group-item d-flex justify-content-between align-items-start"><b>Subfamily:</b> {{ morphospecies.subfamily }}</li>
+                                <li class="list-group-item d-flex justify-content-between align-items-start"><b>Genus:</b> {{ morphospecies.gbif_genus }}</li>
+                                <li class="list-group-item d-flex justify-content-between align-items-start"><b>Species:</b> {{ morphospecies.gbif_species }}</li>
+                                <li class="list-group-item d-flex justify-content-between align-items-start"><b>Note:</b> {{ morphospecies.note }}</li>
+                                {% if ai %}
+                                    <hr/>
+                                    <li class="list-group-item"><b>AI Training</b></li>
+                                    <li class="list-group-item">{{ ai|yesno:'Yes,No' }} ({{ ai.last.train }} photos)</li>
+                                    <li class="list-group-item">Bypass when probability is at least {{ morphospecies.bypass }}%</li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                        {% if image_set %}
+                            <div class="col-8 align-items-start d-flex justify-content-end">
+                                <ul class="list-group list-group-flush">
+                                    {% for i in image_set %}
+                                        <li class="list-group-item">
+                                            <img src="{{i.path}}" width="{{ i.width }}" height="{{ i.height }}">
+                                        </li>
+                                    {% endfor %}
+                                    <li class="list-group-item">
+                                        {{specimen_count.reviewed}} reviewed specimens ({{image_count.reviewed}} total images)
+                                    </li>
+                                    <li class="list-group-item">
+                                        {{specimen_count.pending}} pending specimens ({{image_count.pending}} total images)
+                                    </li>
+
+                                </ul>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock content %}

@@ -1,5 +1,6 @@
 from django.db.models.fields import BLANK_CHOICE_DASH
 
+FIELD_MORPHO_ID = 'id'
 FIELD_MORPHO_NAME = 'name'
 FIELD_MORPHO_DEFUNT_DATE = 'defunt_date'
 FIELD_MORPHO_GBIF_KEY = 'gbif_key'

@@ -1,12 +1,18 @@
+from random import randint
+
+from django.db.models import Count, Q, F
+from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView
 from rest_framework.reverse import reverse as api_reverse
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
 from ..core.views import DatatablesModelViewSetMixin
 from ..libs.utilities import get_json_context
-from ..libs.ui_helpers import (get_datatables_container, get_datatables_row)
+from ..libs.ui_helpers import (get_datatables_container, get_datatables_row, calc_image_height)
+from ..samples.models import SpecimenImage, Specimen
+from ..samples import constants as samples_constants
 
-from .models import Morphospecies
+from .models import Morphospecies, AiTraining
 from .serializers import MorphospeciesDatatablesSerializer
 
 from . import constants
@@ -28,7 +34,6 @@ class MophospeciesView(TemplateView):
     template_name = 'taxonomy/morphospecies.html'
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        lendata = Morphospecies.objects.all().count()
         datatables_url = api_reverse('taxonomy:morphospecies-data-list',
                                         request=self.request, kwargs=kwargs)
         context.update({
@@ -43,5 +48,48 @@ class MophospeciesView(TemplateView):
                     'Canonical Name',
                     'Rank'
                 ])),
+        })
+        return context
+
+class MophospeciesDetailView(TemplateView):
+    template_name = 'taxonomy/morphospecies_detail.html'
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        morphospecies = get_object_or_404(
+            Morphospecies.objects.all(), id=kwargs['id'])
+        image_set = []
+        if morphospecies.gbif_rank == constants.GBIF_RANK_SPECIES and morphospecies.gbif_canonical_name:
+            display_name = morphospecies.gbif_canonical_name
+        else:
+            display_name = morphospecies.name
+        image_count = SpecimenImage.objects.filter(specimen__classification=morphospecies).aggregate(
+            reviewed=Count('pk', distinct=True, filter=~Q(specimen__acceptance=samples_constants.ACCEPTANCE_PENDING)), pending=Count('pk', distinct=True, filter=Q(specimen__acceptance=samples_constants.ACCEPTANCE_PENDING)))
+        sum_image_count = image_count['reviewed'] + image_count['pending']
+        if sum_image_count:
+            s_images = SpecimenImage.objects.filter(specimen__classification=morphospecies).order_by(
+                'specimen__archival_identifier').all()[:2]
+            max_width = samples_constants.SPECIMEN_IMAGE_THUMBSIZE_MEDIUM
+            for s in s_images:
+                if s.image_thumbnail_medium:
+                    i = s.image_thumbnail_medium
+                elif s.image_thumbnail:
+                    i = s.image_thumbnail
+                else:
+                    i = s.image
+                image_set.append({
+                    'path': i.url,
+                    'width': i.width if i.width <= max_width else max_width,
+                    'height': i.height if i.width <= max_width else calc_image_height(max_width, i.height, i.width)
+                })
+
+        context.update({
+            'display_name': display_name,
+            'morphospecies': morphospecies,
+            'ai': AiTraining.objects.filter(morphospecies=morphospecies).select_related('model').all(),
+            'image_set': image_set,
+            'image_count': image_count,
+            'specimen_count': Specimen.objects.filter(classification=morphospecies).aggregate(
+            reviewed=Count('pk', distinct=True, filter=~Q(acceptance=samples_constants.ACCEPTANCE_PENDING)), pending=Count('pk', distinct=True, filter=Q(acceptance=samples_constants.ACCEPTANCE_PENDING)))
+
         })
         return context

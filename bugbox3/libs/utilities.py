@@ -25,7 +25,7 @@ IMAGE_TYPES = {
     "png": "PNG",
 }
 
-def resized_thumbnail(image, width, height):
+def resized_thumbnail(image, width, height, thumbname='thumbnail'):
     # Open the image using Pillow
     with Image.open(image) as img:
         output_size = (width, height)
@@ -35,7 +35,7 @@ def resized_thumbnail(image, width, height):
         img_filename = Path(image.file.name).name
         # Spilt the filename on “.” to get the file extension only
         img_suffix = Path(image.file.name).name.split(".")[-1]
-        new_filename = str(img_filename[:-len(img_suffix)-1]) + '_thumbnail.' + str(img_suffix)
+        new_filename = '{0}_{1}.{2}'.format(str(img_filename[:-len(img_suffix)-1]), str(thumbname), str(img_suffix))
         # Use the file extension to determine the file type from the image_types dictionary
         img_format = IMAGE_TYPES[img_suffix.lower()]
         # Save the resized image into the buffer, noting the correct file type

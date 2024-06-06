@@ -11,14 +11,15 @@ from django.contrib import messages
 
 from ..core.views import DatatablesModelViewSetMixin
 from ..libs.ui_helpers import (get_datatables_container, get_datatables_row,
-                               get_formsets_display_control_config)
+                               get_formsets_display_control_config,
+                               calc_image_height)
 from ..libs.utilities import get_json_context
 
 from . import constants
 from .forms import (ExperimentForm, SamplePlanForm, SiteForm, SiteVisitForm,
                     SampleForm, NewSpecimenImageForm)
 from .models import (Experiment, Sample, SamplePlan, Site, SiteVisit, Specimen,
-                     SpecimenImage, SAMPLE_IMAGE_THUMBSIZE)
+                     SpecimenImage)
 from .models_query import get_sample_plan_descriptions
 from .serializers import (
     ExperimentsDatatablesSerializer,
@@ -327,8 +328,8 @@ class SampleView(FormView):
         elif sample.image:
             img_thumbnail  = {
                 'path': sample.image.url,
-                'height': SAMPLE_IMAGE_THUMBSIZE * (sample.image.height / sample.image.width),
-                'width': SAMPLE_IMAGE_THUMBSIZE
+                'height': calc_image_height(constants.SAMPLE_IMAGE_THUMBSIZE, sample.image.height, sample.image.width),
+                'width': constants.SAMPLE_IMAGE_THUMBSIZE
             }
         context.update({
             'sample_info': {

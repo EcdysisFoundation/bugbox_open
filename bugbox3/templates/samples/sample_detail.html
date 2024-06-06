@@ -24,13 +24,13 @@
                         <h5>{{ sample_info.site }} - {{ sample_info.visit_date }} - {{ sample_info.sample_type }} {{ sample_info.name_no }}</h5>
                     </div>
                     <div class="col">
-                        <a href="{% url 'samples:sample-update' sample_info.sample_id %}" class="btn btn-light">
-                            Edit Sample
+                        <a href="{% url 'samples:experiment' sample_info.experiment_id %}" class="btn btn-light">
+                            Experiment
                         </a>
                     </div>
                     <div class="col">
-                        <a href="{% url 'samples:experiment' sample_info.experiment_id %}" class="btn btn-light">
-                            Back to Experiment
+                        <a href="{% url 'samples:sample-update' sample_info.sample_id %}" class="btn btn-light">
+                            Edit Sample
                         </a>
                     </div>
                 </div>

@@ -56,26 +56,9 @@ FIELD_SPECIMEN_ARCHIVAL_IDENTIFIER = 'archival_identifier'
 FIELD_SPECIMEN_ARCHIVAL_PRESERVATION = 'archival_preservation'
 FIELD_SPECIMEN_ARCHIVAL_STORED = 'archival_stored'
 
-# Model Defaults
-
-TAXON_CLASS_ACARI = 'acari'
-TAXON_CLASS_ANNELIDA = 'annelida'
-TAXON_CLASS_COLLEMBOLA = 'collembola'
-TAXON_CLASS_GASTROPODA = 'gastropoda'
-TAXON_CLASS_NEMATODA = 'nematoda'
-TAXON_CLASS_THYSANOPTERA = 'thysanoptera'
-
-
-def sample_taxon_classes_default():
-    return dict(
-        TAXON_CLASS_ACARI=0,
-        TAXON_CLASS_ANNELIDA=0,
-        TAXON_CLASS_COLLEMBOLA=0,
-        TAXON_CLASS_GASTROPODA=0,
-        TAXON_CLASS_NEMATODA=0,
-        TAXON_CLASS_THYSANOPTERA=0
-    )
-
+SAMPLE_IMAGE_THUMBSIZE = 250
+SPECIMEN_IMAGE_THUMBSIZE = 50
+SPECIMEN_IMAGE_THUMBSIZE_MEDIUM = 350
 
 #  Model Choices
 
