@@ -164,6 +164,33 @@ class SpecimenDatatablesSerializer(ModelSerializer):
     def get_id_checkbox(self, value):
         return '<input type="checkbox" name="specimen_id" value="{0}" />'.format(value.id)
 
+    def get_classifcation(self, value):
+        if value.acceptance and value.classification:
+            v = value.classification.gbif_canonical_name
+            return v if v else value.classification.name
+        elif value.ai_classification:
+            v = value.ai_classification.gbif_canonical_name
+            return v if v else value.ai_classification.name
+        else:
+            return 'Pending'
+
+    def get_probability(self, value):
+        if value.acceptance == constants.ACCEPTANCE_REJECTED:
+            return '<span class="badge text-bg-success">{0}</span>'.format(value.user)
+        else:
+            if value.confidence and value.ai_version:
+                bg_class = 'bg-danger'
+                if value.confidence >= 60:
+                    bg_class = 'bg-success'
+                elif value.confidence >= 30:
+                    bg_class = 'bg-warning'
+                return """<div class="progress">
+                          <div class="progress-bar {0}" role="progressbar"
+                          aria-label="Success example" style="width: {1}%"
+                          aria-valuenow="{1}" aria-valuemin="0" aria-valuemax="100">{1}%</div>
+                          </div><p>{2}</p>""".format(bg_class, value.confidence, value.ai_version.version)
+        return 'Pending'
+
     def get_data_row(self, value):
         if value.specimenimage_set.first():
             specimen_image = value.specimenimage_set.first()
@@ -176,14 +203,12 @@ class SpecimenDatatablesSerializer(ModelSerializer):
         columns = [
             img_thumbnail,
             value.partial_count,
-            'ai_classification',  # value.ai_classification.name,
-            'Pending',  # replace with value.confidence and value.ai_version.version
-            # self.get_id_checkbox(value),
+            self.get_classifcation(value),
+            self.get_probability(value)
         ]
         return get_datatables_container(get_datatables_row(columns))
 
     def to_representation(self, value):
         return {
             'data_row': self.get_data_row(value),
-            # 'classification': value.ai_classification.name,
         }

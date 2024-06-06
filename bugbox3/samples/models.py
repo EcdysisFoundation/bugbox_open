@@ -169,7 +169,7 @@ class Specimen(Model):
                                    null=True, blank=True, related_name="ai")
     ai_version = ForeignKey(AiVersion, on_delete=SET_NULL, null=True, blank=True)
     sample = ForeignKey(Sample, on_delete=SET_NULL, null=True, blank=True)
-    # how is this different than upload_user?
+    # change to reviewer_user / determiner_user
     user = ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=SET_NULL)
     # but the image is what is uploaded, so this captures the first person to upload an image.
     upload_user = ForeignKey(settings.AUTH_USER_MODEL, related_name="specimens_uploaded",

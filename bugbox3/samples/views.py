@@ -67,7 +67,7 @@ class SpecimenDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelViewSe
 
     def get_queryset(self):
         sample_id = int(self.kwargs['sample_id'])
-        return Specimen.objects.filter(sample_id=sample_id)
+        return Specimen.objects.filter(sample_id=sample_id).order_by('-id')
 
 
 class ExperimentsView(TemplateView):
