@@ -82,14 +82,26 @@ class MophospeciesDetailView(TemplateView):
                     'height': i.height if i.width <= max_width else calc_image_height(max_width, i.height, i.width)
                 })
 
+        ai = AiTraining.objects.filter(morphospecies=morphospecies).select_related('model').order_by('id').all()
+        ai_accuracy_over_time = {
+            'precision': [[a.model.entered_date, a.precision] for a in ai],
+            'f1': [[a.model.entered_date, a.f1] for a in ai],
+            'recall': [[a.model.entered_date, a.recall] for a in ai],
+            'train': [[a.model.entered_date, a.train] for a in ai]
+        }
         context.update({
             'display_name': display_name,
             'morphospecies': morphospecies,
-            'ai': AiTraining.objects.filter(morphospecies=morphospecies).select_related('model').all(),
+            'ai_last_train': ai_accuracy_over_time['train'][-1] if ai_accuracy_over_time['train'] else 0,
             'image_set': image_set,
             'image_count': image_count,
             'specimen_count': Specimen.objects.filter(classification=morphospecies).aggregate(
-            reviewed=Count('pk', distinct=True, filter=~Q(acceptance=samples_constants.ACCEPTANCE_PENDING)), pending=Count('pk', distinct=True, filter=Q(acceptance=samples_constants.ACCEPTANCE_PENDING)))
-
+                reviewed=Count(
+                    'pk', distinct=True,
+                    filter=~Q(acceptance=samples_constants.ACCEPTANCE_PENDING)),
+                    pending=Count('pk', distinct=True, filter=Q(acceptance=samples_constants.ACCEPTANCE_PENDING))),
+            'json_context': get_json_context({
+                'ai_accuracy_over_time': ai_accuracy_over_time
+            })
         })
         return context

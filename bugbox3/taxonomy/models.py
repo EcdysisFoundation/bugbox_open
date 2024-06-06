@@ -49,7 +49,7 @@ class Morphospecies(Model):
 
 class AiVersion(Model):
     version = CharField(max_length=64, unique=True)
-    date = DateField(auto_now_add=True)
+    entered_date = DateField(auto_now_add=True)
 
 
 class AiTraining(Model):

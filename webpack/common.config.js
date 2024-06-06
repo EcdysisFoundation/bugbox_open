@@ -13,6 +13,7 @@ module.exports = {
     experiments: path.resolve(__dirname, '../bugbox3/static/js/experiments'),
     samples: path.resolve(__dirname, '../bugbox3/static/js/samples'),
     sample_detail: path.resolve(__dirname, '../bugbox3/static/js/sample_detail'),
+    apexcharts_config: path.resolve(__dirname, '../bugbox3/static/js/apexcharts_config'),
   },
   output: {
     path: path.resolve(

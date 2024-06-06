@@ -1,8 +1,16 @@
 {% extends "base.html" %}
+{% load render_bundle from webpack_loader %}
 
 {% block title %}
     Morphospecies Detail
 {% endblock title %}
+
+{% block customheadtagcontent %}
+
+{% render_bundle 'apexcharts_config' 'js' attrs='defer' %}
+{{ json_context|safe }}
+
+{% endblock customheadtagcontent %}
 
 {% block content %}
 
@@ -27,10 +35,10 @@
                                 <li class="list-group-item d-flex justify-content-between align-items-start"><b>Genus:</b> {{ morphospecies.gbif_genus }}</li>
                                 <li class="list-group-item d-flex justify-content-between align-items-start"><b>Species:</b> {{ morphospecies.gbif_species }}</li>
                                 <li class="list-group-item d-flex justify-content-between align-items-start"><b>Note:</b> {{ morphospecies.note }}</li>
-                                {% if ai %}
+                                {% if ai_last_train %}
                                     <hr/>
                                     <li class="list-group-item"><b>AI Training</b></li>
-                                    <li class="list-group-item">{{ ai|yesno:'Yes,No' }} ({{ ai.last.train }} photos)</li>
+                                    <li class="list-group-item">Yes ({{ ai_last_train }} photos)</li>
                                     <li class="list-group-item">Bypass when probability is at least {{ morphospecies.bypass }}%</li>
                                 {% endif %}
                             </ul>
@@ -55,6 +63,10 @@
                         {% endif %}
                     </div>
                 </div>
+            </div>
+            <br/>
+            <div class="card">
+                <div id="ai_accuracy_over_time"></div>
             </div>
         </div>
     </div>
