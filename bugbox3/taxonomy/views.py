@@ -74,8 +74,9 @@ class MophospeciesDetailView(TemplateView):
                         'pk', distinct=True, filter=Q(specimen__acceptance=samples_constants.ACCEPTANCE_PENDING)))
         sum_image_count = image_count['reviewed'] + image_count['pending']
         if sum_image_count:
+            archive = 'specimen__' + samples_constants.FIELD_SPECIMEN_ARCHIVAL_IDENTIFIER
             s_images = SpecimenImage.objects.filter(specimen__classification=morphospecies).order_by(
-                'specimen__archival_identifier').all()[:2]
+                archive, samples_constants.SPECIMEN_IMAGE_PRIMARY)[:2]
             max_width = samples_constants.SPECIMEN_IMAGE_THUMBSIZE_MEDIUM
             for s in s_images:
                 if s.image_thumbnail_medium:

@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Specimen
+{% endblock title %}
+
+{% block content %}
+
+<div class="container">
+
+    <div class="row">
+        <div class="col-12 mb-3 mt-2 p-0">
+            <div class="card">
+                <div class="card-header align-items-center bg-ecdysis text-white d-flex justify-content-between">
+                    <div class="col-md-8">
+                        <h5>{{ specimen.id }}</h5>
+                    </div>
+                    <div class="col">
+                        <a href="{% url 'samples:sample' specimen.sample_id %}" class="btn btn-light">
+                            Sample
+                        </a>
+                    </div>
+                    <div class="col">
+                        <a href="{% url 'samples:sample' specimen.sample_id %}" class="btn btn-light">
+                            Edit Specimen
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col">
+                            <div id="carouselControls" class="carousel slide" data-bs-ride="carousel">
+                                <div class="carousel-inner">
+                                    {% for i in image_set_large %}
+                                        <div class="carousel-item{% if forloop.first %} active{% endif %}" data-bs-interval="1000000">
+                                            <img src="{{ i.path }}" class="d-block w-100" alt="insect">
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                                <button class="carousel-control-prev" type="button" data-bs-target="#carouselControls" data-bs-slide="prev">
+                                  <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                  <span class="visually-hidden">Previous</span>
+                                </button>
+                                <button class="carousel-control-next" type="button" data-bs-target="#carouselControls" data-bs-slide="next">
+                                  <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                  <span class="visually-hidden">Next</span>
+                                </button>
+                              </div>
+
+                              <hr/>
+                            {% for i in image_set_small %}
+                                <img src="{{i.path}}" width="{{ i.width }}" height="{{ i.height }}">
+                            {% endfor %}
+
+                            <form enctype="multipart/form-data" action="{{ form_action_url }}" method="POST">
+                                {% csrf_token %}
+                                <label for="id_image" class="form-label">
+                                    Add Specimen Images
+                                </label>
+                                <input type="file" name="image" accept=".jpg, .png, .jpeg"
+                                    class="form-control"
+                                    multiple required id="id_image">
+                                <input type="submit" value="Submit" class="btn btn-light mt-4 ms-3">
+                            </form>
+                        </div>
+                        <div class="col">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item">Collector</li>
+                                <hr/>
+                                <li class="list-group-item">Specimen information</li>
+                                <li class="list-group-item">Name if not species</li>
+                                <li class="list-group-item">Class</li>
+                                <li class="list-group-item">Order</li>
+                                <li class="list-group-item">Family</li>
+                                <li class="list-group-item">Genus</li>
+                                <li class="list-group-item">Species</li>
+                                <li class="list-group-item">Determined by</li>
+                                <hr/>
+                                <li class="list-group-item">Primary prediction</li>
+                                <li class="list-group-item">Secondary prediction</li>
+                                <li class="list-group-item">Tertiary prediction</li>
+                                <hr/>
+                                <li class="list-group-item">Sample link</li>
+                                <li class="list-group-item">Experiment link</li>
+                                <li class="list-group-item">Location real name link</li>
+                                <li class="list-group-item">Site code</li>
+                                <li class="list-group-item">Date</li>
+                                <li class="list-group-item">Entered by</li>
+                                <hr/>
+                                <li class="list-group-item">Collection information</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

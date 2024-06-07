@@ -201,8 +201,9 @@ class SpecimenDatatablesSerializer(ModelSerializer):
                 img_thumbnail = get_img_src(specimen_image.image)
         else:
             img_thumbnail = get_img_src(img_exists)
+        link = reverse('samples:specimen', kwargs={'id': value.id})
         columns = [
-            img_thumbnail,
+            '<a href="{0}">{1}</a>'.format(link, img_thumbnail),
             value.partial_count if value.partial_count else '',
             self.get_classifcation(value),
             self.get_probability(value),

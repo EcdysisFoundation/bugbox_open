@@ -210,6 +210,7 @@ class SpecimenImage(Model):
     image = ImageField(upload_to='cms_app/images/')  # change to specimen_images
     image_thumbnail = ImageField(null=True, blank=True, upload_to='cms_app/images/')  # change to specimen_images
     image_thumbnail_medium = ImageField(null=True, blank=True, upload_to='specimen_images')
+    image_thumbnail_large = ImageField(null=True, blank=True, upload_to='specimen_images')
     date_added = DateTimeField(auto_now_add=True)
     uploaded_by = ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=SET_NULL)
 
@@ -250,18 +251,13 @@ def save_specimen_image_thumbnail(sender, instance, **kwargs):
         instance.image_thumbnail_medium = resized_thumbnail(
             instance.image,
             constants.SPECIMEN_IMAGE_THUMBSIZE_MEDIUM,
-            constants.SPECIMEN_IMAGE_THUMBSIZE_MEDIUM)
-    if not instance.image_thumbnail:
-        instance.image_thumbnail = resized_thumbnail(
-            instance.image,
-            constants.SPECIMEN_IMAGE_THUMBSIZE,
-            constants.SPECIMEN_IMAGE_THUMBSIZE)
-    if not instance.image_thumbnail_medium:
-        instance.image_thumbnail_medium = resized_thumbnail(
-            instance.image,
             constants.SPECIMEN_IMAGE_THUMBSIZE_MEDIUM,
-            constants.SPECIMEN_IMAGE_THUMBSIZE_MEDIUM)
-
+            'thumbnail_medium')
+        instance.image_thumbnail_large = resized_thumbnail(
+            instance.image,
+            constants.SPECIMEN_IMAGE_THUMBSIZE_LARGE,
+            constants.SPECIMEN_IMAGE_THUMBSIZE_LARGE,
+            'thumbnail_large')
 
 class TimelineEvent(Model):
     specimen = ForeignKey(Specimen, on_delete=CASCADE)
