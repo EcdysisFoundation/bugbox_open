@@ -1,3 +1,5 @@
+from django.urls import reverse
+
 
 def get_numeric_dropdown(length, button_label):
     """
@@ -104,3 +106,15 @@ def get_img_src(img_field, resize_width=None, styles=None):
 
 def calc_image_height(size, height, width):
     return size * (height / width)
+
+
+def classify_specimen_button(specimen, img_exists):
+    if not img_exists:
+        return ''
+    disabled = ' disabled' if specimen.acceptance > 0 else ''
+    href = 'href="{0}" '.format(
+        reverse('taxonomy:classify-specimen', kwargs={'id': specimen.id})) if not disabled else ''
+    aria_disabled = ' aria-disabled="true"' if disabled else ''
+
+    return '<a {0}role="button"{1}'.format(href, aria_disabled) + \
+           'class="btn btn-sm btn-outline-danger{0}">Classify</a>'.format(disabled)

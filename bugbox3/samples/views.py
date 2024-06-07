@@ -350,10 +350,11 @@ class SampleView(FormView):
             'container_row_header': get_datatables_container(
                 get_datatables_row([
                     'Image',
-                    'Partial Count',
+                    'Partial<br/>Count',
                     'Classification',
                     'Probability<br/>(Model)',
-                    # ''
+                    '<a href="{0}" class="btn btn-sm btn-outline-danger" role="button">Classify All</a>'.format(
+                        reverse('taxonomy:classify-sample', kwargs={'id': sample.id}))
                 ])),
             'json_context': get_json_context(
                 {'specimen_datatables_url': specimen_datatables_url}),

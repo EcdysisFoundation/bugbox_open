@@ -1,5 +1,7 @@
+from time import sleep
+
 from django.db.models import Count, Q
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django.views.generic import TemplateView
 from rest_framework.reverse import reverse as api_reverse
 from rest_framework.viewsets import ReadOnlyModelViewSet
@@ -8,10 +10,11 @@ from ..core.views import DatatablesModelViewSetMixin
 from ..libs.ui_helpers import calc_image_height, get_datatables_container, get_datatables_row
 from ..libs.utilities import get_json_context
 from ..samples import constants as samples_constants
-from ..samples.models import Specimen, SpecimenImage
+from ..samples.models import Sample, Specimen, SpecimenImage
 from . import constants
 from .models import AiTraining, Morphospecies
 from .serializers import MorphospeciesDatatablesSerializer
+from .tasks import id_image
 
 
 class MorphospeciesDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
@@ -110,3 +113,18 @@ class MophospeciesDetailView(TemplateView):
             })
         })
         return context
+
+
+def classify_specimen(request, id):
+    id_image.delay(id)
+    sleep(2)
+    return redirect(request.META['HTTP_REFERER'])
+
+
+def classify_sample(request, id):
+    sample = get_object_or_404(Sample, id=id)
+    specimen = Specimen.objects.filter(sample=sample, acceptance=0)
+    for s in specimen:
+        id_image.delay(s.id)
+    sleep(3)
+    return redirect(request.META['HTTP_REFERER'])

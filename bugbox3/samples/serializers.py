@@ -3,6 +3,7 @@ from rest_framework.serializers import ModelSerializer
 
 from bugbox3.libs.ui_helpers import get_datatables_container, get_datatables_row, get_img_src
 
+from ..libs.ui_helpers import classify_specimen_button
 from . import constants
 from .models import Experiment, Sample, Site, Specimen
 
@@ -51,8 +52,7 @@ class ExperimentsDatatablesSerializer(ModelSerializer):
             self.get_years(value),
             sample_info['total_samples'],
             sample_info['photo_sampling'],
-            sample_info['not_reviewed'],
-
+            sample_info['not_reviewed']
         ]
         return get_datatables_container(get_datatables_row(columns))
 
@@ -157,8 +157,7 @@ class SpecimenDatatablesSerializer(ModelSerializer):
             constants.FIELD_SPECIMEN_PARTIAL_COUNT,
             constants.FIELD_SPECIMEN_ACCEPTANCE,
             constants.FIELD_SPECIMEN_CONFIDENCE,
-            constants.FIELD_SPECIMEN_ARCHIVAL_IDENTIFIER,
-            'specimen_image'
+            constants.FIELD_SPECIMEN_ARCHIVAL_IDENTIFIER
         ]
 
     def get_id_checkbox(self, value):
@@ -192,19 +191,22 @@ class SpecimenDatatablesSerializer(ModelSerializer):
         return 'Pending'
 
     def get_data_row(self, value):
+        img_exists = False
         if value.specimenimage_set.first():
+            img_exists = True
             specimen_image = value.specimenimage_set.first()
             if specimen_image.image_thumbnail:
                 img_thumbnail = get_img_src(specimen_image.image_thumbnail)
             else:
                 img_thumbnail = get_img_src(specimen_image.image)
         else:
-            img_thumbnail = get_img_src(None)
+            img_thumbnail = get_img_src(img_exists)
         columns = [
             img_thumbnail,
-            value.partial_count,
+            value.partial_count if value.partial_count else '',
             self.get_classifcation(value),
-            self.get_probability(value)
+            self.get_probability(value),
+            classify_specimen_button(value, img_exists)
         ]
         return get_datatables_container(get_datatables_row(columns))
 
