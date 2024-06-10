@@ -6,6 +6,47 @@
 
 {% block content %}
 
+  <!-- Modal -->
+  <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form enctype="multipart/form-data" action="{{ form_action_url }}" method="POST">
+            {% csrf_token %}
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="exampleModalLabel">Select primary image</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+
+            <div class="row">
+                {% for i in image_set_small %}
+                <div class="col-lg-6">
+                  <label class="option">
+                    <span class="option-control">
+                      <span class="radio">
+                        <input type="radio" name="primary_picker" id="primary_picker" value="{{i.id}}" />
+                      </span>
+                    </span>
+                    <span class="option-label">
+
+                      <span class="option-body">
+                        <img src="{{i.path}}" class="mw-100" />
+                      </span>
+                    </span>
+                  </label>
+                </div>
+                {% endfor %}
+              </div>
+        </div>
+        <div class="modal-footer">
+          <input type="submit" value="Submit" class="btn btn-light mt-4 ms-3">
+        </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+
 <div class="container">
 
     <div class="row">
@@ -28,7 +69,7 @@
                 </div>
                 <div class="card-body">
                     <div class="row">
-                        <div class="col">
+                        <div class="col-7">
                             <div id="carouselControls" class="carousel slide" data-bs-ride="carousel">
                                 <div class="carousel-inner">
                                     {% for i in image_set_large %}
@@ -49,21 +90,28 @@
 
                               <hr/>
                             {% for i in image_set_small %}
-                                <img src="{{i.path}}" width="{{ i.width }}" height="{{ i.height }}">
+                                <img src="{{i.path}}" width="{{ i.width }}" height="{{ i.height }}" class="mb-2">
                             {% endfor %}
 
                             <form enctype="multipart/form-data" action="{{ form_action_url }}" method="POST">
                                 {% csrf_token %}
-                                <label for="id_image" class="form-label">
+                                <label for="image_files" class="form-label">
                                     Add Specimen Images
                                 </label>
-                                <input type="file" name="image" accept=".jpg, .png, .jpeg"
+                                <input type="file" name="image_files" accept=".jpg, .png, .jpeg"
                                     class="form-control"
-                                    multiple required id="id_image">
-                                <input type="submit" value="Submit" class="btn btn-light mt-4 ms-3">
+                                    multiple id="image_files">
+                                <input type="submit" value="Submit" class="btn btn-secondary mt-2 ms-3">
                             </form>
+                                {% if image_set_small %}
+                                    <!-- Button trigger modal -->
+                                    <button type="button" class="btn btn-info mt-3" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                                        Set Primary Image
+                                    </button>
+                                {% endif %}
+
                         </div>
-                        <div class="col">
+                        <div class="col-5">
                             <ul class="list-group list-group-flush">
                                 <li class="list-group-item">Collector</li>
                                 <hr/>

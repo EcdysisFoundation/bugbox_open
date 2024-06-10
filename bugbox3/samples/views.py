@@ -17,7 +17,10 @@ from ..libs.ui_helpers import (
 )
 from ..libs.utilities import get_json_context
 from . import constants
-from .forms import ExperimentForm, NewSpecimenImageForm, SampleForm, SamplePlanForm, SiteForm, SiteVisitForm
+from .forms import (
+    ExperimentForm, NewSpecimenImageForm, SampleForm,
+    SamplePlanForm, SiteForm, SiteVisitForm,
+    SpecimenViewForm)
 from .models import Experiment, Sample, SamplePlan, Site, SiteVisit, Specimen, SpecimenImage
 from .models_query import get_sample_plan_descriptions
 from .serializers import (
@@ -406,53 +409,75 @@ class SampleUpdateView(UpdateView):
 
 
 class SpecimenView(FormView):
-    form_class = NewSpecimenImageForm
+    form_class = SpecimenViewForm
     template_name = 'samples/specimen_detail.html'
+
+    """
+    Inststead of NewSpecimenImageForm use another with an integer field in addition to.
+    Then to set primary image,
+     try an addtional form in the template for modal similar to old bugbox,
+    but dont use javascript, just handle one or the other form request in form_valid.
+    if files empty with files = form.cleaned_data['image'] how about the integer field?
+    Wont have both at the same time in legit usage.
+    """
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         specimen = get_object_or_404(Specimen, id=self.kwargs['id'])
         s_images = SpecimenImage.objects.filter(
-            specimen=specimen).order_by(constants.SPECIMEN_IMAGE_PRIMARY)
-        image_set_small = [
-            {'path': i.image_thumbnail.url,
-             'width': i.image_thumbnail.width,
-             'height': i.image_thumbnail.height} for i in s_images if i.image_thumbnail
-        ]
-        image_set_large = [
-            {'path': i.image_thumbnail_large.url} for i in s_images if i.image_thumbnail_large
-        ]
-        if not image_set_large:
-            image_set_large = [{
-                'path': s_images[0].image.url,
-            }]
+            specimen=specimen)
+        if s_images:
+            image_set_large = [
+                {'path': i.image_thumbnail_large.url, 'id': i.id} for i in s_images if i.image_thumbnail_large
+            ]
+            if not image_set_large:
+                image_set_large = [{
+                    'path': s_images[0].image.url,
+                }]
+            image_set_small = [
+                {'path': i.image_thumbnail_medium.url,
+                'width': i.image_thumbnail_medium.width * 0.5,
+                'height': i.image_thumbnail_medium.height * 0.5,
+                'id': i.id} for i in s_images if i.image_thumbnail_medium if i.id != image_set_large[0]['id']
+            ]
+
+            context.update({
+                'specimen': specimen,
+                'image_set_small': image_set_small,
+                'image_set_large': image_set_large,
+            })
         context.update({
             'specimen': specimen,
-            'image_set_small': image_set_small,
-            'image_set_large': image_set_large,
             'form_action_url': reverse(
-                'samples:specimen', kwargs={'id': specimen.id})
+                    'samples:specimen', kwargs={'id': specimen.id})
         })
         return context
 
     def form_valid(self, form):
-        files = form.cleaned_data['image']
-        specimen = get_object_or_404(Specimen, id=self.kwargs['id'])
-        created_images = 0
-        try:
-            for f in files:
-                SpecimenImage.objects.create(
-                    specimen=specimen,
-                    image=f
-                )
-                created_images += 1
-        except Exception:
-            messages.add_message(
-                self.request,
-                messages.ERROR,
-                'Error: An unsupported file may have been selected, please use .jpg or .png')
+        files = form.cleaned_data['image_files']
+        primary_pick = form.cleaned_data['primary_picker']
+        if files:
+            specimen = get_object_or_404(Specimen, id=self.kwargs['id'])
             created_images = 0
-        messages.success(self.request, 'Succesfully added {0} new specimen images'.format(created_images))
+            try:
+                for f in files:
+                    SpecimenImage.objects.create(
+                        specimen=specimen,
+                        image=f
+                    )
+                    created_images += 1
+            except Exception:
+                messages.add_message(
+                    self.request,
+                    messages.ERROR,
+                    'Error: An unsupported file may have been selected, please use .jpg or .png')
+                created_images = 0
+            messages.success(self.request, 'Succesfully added {0} new specimen images'.format(created_images))
+        elif primary_pick:
+            image = get_object_or_404(SpecimenImage, id=primary_pick)
+            image.primary_image = True
+            image.save()
+            messages.success(self.request, 'Succesfully set primary image')
         return super().form_valid(form)
 
     def get_success_url(self):

@@ -1,5 +1,5 @@
 from crispy_forms.layout import HTML, Column, Field, Fieldset, Row
-from django.forms import CharField, ChoiceField, DateField, Form, Select, Textarea
+from django.forms import CharField, ChoiceField, DateField, Form, IntegerField, Select, Textarea
 
 from ..core.forms import Html5DateInput, ModelFormMixin, MultipleFileField, get_submit_layout
 from . import constants
@@ -195,3 +195,9 @@ class SampleForm(ModelFormMixin):
 class NewSpecimenImageForm(Form):
 
     image = MultipleFileField()
+
+
+class SpecimenViewForm(Form):
+
+    image_files = MultipleFileField(required=False)
+    primary_picker = IntegerField(required=False)

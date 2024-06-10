@@ -206,7 +206,7 @@ class Specimen(Model):
 
 class SpecimenImage(Model):
     specimen = ForeignKey(Specimen, on_delete=CASCADE)
-    primary = BooleanField(default=False)
+    primary_image = BooleanField(default=False)
     image = ImageField(upload_to='cms_app/images/')  # change to specimen_images
     image_thumbnail = ImageField(null=True, blank=True, upload_to='cms_app/images/')  # change to specimen_images
     image_thumbnail_medium = ImageField(null=True, blank=True, upload_to='specimen_images')
@@ -215,7 +215,7 @@ class SpecimenImage(Model):
     uploaded_by = ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=SET_NULL)
 
     class Meta:
-        ordering = ['-primary']
+        ordering = ['-primary_image']
 
 
 @receiver(pre_save, sender=SpecimenImage)
@@ -223,9 +223,9 @@ def ensure_single_true_flag(sender, instance, **kwargs):
     """
     Signal receiver to ensure only one MyModel instance has flag set to True.
     """
-    if instance.primary:
+    if instance.primary_image:
         # If flag is set to True, set flag to False for other instances
-        SpecimenImage.objects.filter(specimen=instance.specimen).exclude(pk=instance.pk).update(primary=False)
+        SpecimenImage.objects.filter(specimen=instance.specimen).exclude(pk=instance.pk).update(primary_image=False)
 
 
 @receiver(pre_save, sender=SpecimenImage)
