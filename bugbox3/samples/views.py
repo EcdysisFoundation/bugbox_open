@@ -16,6 +16,7 @@ from ..libs.ui_helpers import (
     get_formsets_display_control_config,
 )
 from ..libs.utilities import get_json_context
+from ..taxonomy.constants import GBIF_RANK_SPECIES
 from . import constants
 from .forms import (
     ExperimentForm, NewSpecimenImageForm, SampleForm,
@@ -442,12 +443,13 @@ class SpecimenView(FormView):
             ]
 
             context.update({
-                'specimen': specimen,
                 'image_set_small': image_set_small,
                 'image_set_large': image_set_large,
             })
         context.update({
             'specimen': specimen,
+            'classification': specimen.ai_classification if specimen.ai_classification and specimen.acceptance == 0 else specimen.classification,
+            'rank_species': GBIF_RANK_SPECIES,
             'form_action_url': reverse(
                     'samples:specimen', kwargs={'id': specimen.id})
         })

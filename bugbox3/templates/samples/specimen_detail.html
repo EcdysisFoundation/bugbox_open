@@ -53,16 +53,17 @@
         <div class="col-12 mb-3 mt-2 p-0">
             <div class="card">
                 <div class="card-header align-items-center bg-ecdysis text-white d-flex justify-content-between">
-                    <div class="col-md-8">
-                        <h5>{{ specimen.id }}</h5>
+                    <div class="col-md-10">
+                        <h5><a href="{% url 'samples:experiment' specimen.sample.site_visit.site.experiment.id %}" class="link-light">
+                            {{ specimen.sample.site_visit.site.experiment}}</a> -
+                            Site: <a href="{% url 'samples:site-update' specimen.sample.site_visit.site.id %}" class="link-light">
+                            {{ specimen.sample.site_visit.site.site_name }}</a> -
+                            {{ specimen.sample.site_visit.visit_date }}
+                            Sample: <a href="{% url 'samples:sample' specimen.sample.id %}" class="link-light">{{ specimen.sample.name_no }}</a>
+                        </h5>
                     </div>
                     <div class="col">
-                        <a href="{% url 'samples:sample' specimen.sample_id %}" class="btn btn-light">
-                            Sample
-                        </a>
-                    </div>
-                    <div class="col">
-                        <a href="{% url 'samples:sample' specimen.sample_id %}" class="btn btn-light">
+                        <a href="{% url 'samples:specimen' specimen.id %}" class="btn btn-light">
                             Edit Specimen
                         </a>
                     </div>
@@ -105,7 +106,7 @@
                             </form>
                                 {% if image_set_small %}
                                     <!-- Button trigger modal -->
-                                    <button type="button" class="btn btn-info mt-3" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                                    <button type="button" class="btn btn-info mt-3 mb-5" data-bs-toggle="modal" data-bs-target="#exampleModal">
                                         Set Primary Image
                                     </button>
                                 {% endif %}
@@ -116,24 +117,29 @@
                                 <li class="list-group-item">Collector</li>
                                 <hr/>
                                 <li class="list-group-item">Specimen information</li>
-                                <li class="list-group-item">Name if not species</li>
-                                <li class="list-group-item">Class</li>
-                                <li class="list-group-item">Order</li>
-                                <li class="list-group-item">Family</li>
-                                <li class="list-group-item">Genus</li>
-                                <li class="list-group-item">Species</li>
-                                <li class="list-group-item">Determined by</li>
+                                <li class="list-group-item">
+                                    {% if classification.gbif_rank == rank_species %}
+                                    <b>Species:</b> {{ classification.gbif_canonical_name }}
+                                    {% else %}
+                                    <b>Name:</b> {{ classification.name }}
+                                    {% endif %}
+                                </li>
+                                <li class="list-group-item"><b>Class:</b> {{ classification.gbif_class }}</li>
+                                <li class="list-group-item"><b>Order:</b> {{ classification.gbif_order }}</li>
+                                <li class="list-group-item"><b>Family:</b> {{ classification.gbif_family }}</li>
+                                <li class="list-group-item"><b>Genus:</b> {{ classification.gbif_genus }}</li>
+                                <li class="list-group-item"><b>Species:</b> {{ classification.gbif_species }}</li>
+                                <li class="list-group-item"><b>Determined by:</b> </li>
                                 <hr/>
-                                <li class="list-group-item">Primary prediction</li>
-                                <li class="list-group-item">Secondary prediction</li>
-                                <li class="list-group-item">Tertiary prediction</li>
+                                <li class="list-group-item"><b>Primary prediction</b> </li>
+                                <li class="list-group-item"><b>Secondary prediction</b> </li>
+                                <li class="list-group-item"><b>Tertiary prediction</b></li>
                                 <hr/>
-                                <li class="list-group-item">Sample link</li>
                                 <li class="list-group-item">Experiment link</li>
                                 <li class="list-group-item">Location real name link</li>
-                                <li class="list-group-item">Site code</li>
-                                <li class="list-group-item">Date</li>
-                                <li class="list-group-item">Entered by</li>
+                                <li class="list-group-item"><b>Site code</b></li>
+                                <li class="list-group-item"><b>Date</b></li>
+                                <li class="list-group-item"><b>Entered by</b></li>
                                 <hr/>
                                 <li class="list-group-item">Collection information</li>
                             </ul>
