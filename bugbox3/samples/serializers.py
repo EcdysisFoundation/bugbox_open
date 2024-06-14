@@ -3,7 +3,7 @@ from rest_framework.serializers import ModelSerializer
 
 from bugbox3.libs.ui_helpers import get_datatables_container, get_datatables_row, get_img_src
 
-from ..libs.ui_helpers import classify_specimen_button
+from ..libs.ui_helpers import classify_specimen_button, get_classifcation, get_probability
 from . import constants
 from .models import Experiment, Sample, Site, Specimen
 
@@ -163,32 +163,12 @@ class SpecimenDatatablesSerializer(ModelSerializer):
     def get_id_checkbox(self, value):
         return '<input type="checkbox" name="specimen_id" value="{0}" />'.format(value.id)
 
-    def get_classifcation(self, value):
-        if value.acceptance and value.classification:
-            v = value.classification.gbif_canonical_name
-            return v if v else value.classification.name
-        elif value.ai_classification:
-            v = value.ai_classification.gbif_canonical_name
-            return v if v else value.ai_classification.name
-        else:
-            return 'Pending'
-
-    def get_probability(self, value):
+    def probability(self, value):
         if value.acceptance == constants.ACCEPTANCE_REJECTED:
             return '<span class="badge text-bg-success">{0}</span>'.format(value.user)
         else:
-            if value.confidence and value.ai_version:
-                bg_class = 'bg-danger'
-                if value.confidence >= 60:
-                    bg_class = 'bg-success'
-                elif value.confidence >= 30:
-                    bg_class = 'bg-warning'
-                return """<div class="progress">
-                          <div class="progress-bar {0}" role="progressbar"
-                          aria-label="Success example" style="width: {1}%"
-                          aria-valuenow="{1}" aria-valuemin="0" aria-valuemax="100">{1}%</div>
-                          </div><p>{2}</p>""".format(bg_class, value.confidence, value.ai_version.version)
-        return 'Pending'
+            version = '<p>{0}</p>'.format(value.ai_version.version) if value.ai_version else ''
+            return '{0}{1}'.format(get_probability(value), version)
 
     def get_data_row(self, value):
         img_exists = False
@@ -205,8 +185,8 @@ class SpecimenDatatablesSerializer(ModelSerializer):
         columns = [
             '<a href="{0}">{1}</a>'.format(link, img_thumbnail),
             value.partial_count if value.partial_count else '',
-            self.get_classifcation(value),
-            self.get_probability(value),
+            get_classifcation(value),
+            self.probability(value),
             classify_specimen_button(value, img_exists)
         ]
         return get_datatables_container(get_datatables_row(columns))

@@ -129,19 +129,35 @@
                                 <li class="list-group-item"><b>Family:</b> {{ classification.gbif_family }}</li>
                                 <li class="list-group-item"><b>Genus:</b> {{ classification.gbif_genus }}</li>
                                 <li class="list-group-item"><b>Species:</b> {{ classification.gbif_species }}</li>
-                                <li class="list-group-item"><b>Determined by:</b> </li>
+                                <li class="list-group-item"><b>Determined by:</b>
+                                    {% if specimen.acceptance == 0 and specimen.ai_classification %}
+                                    BugBox
+                                    {% elif specimen.user %}
+                                    {{ specimen.user }}
+                                    {% endif %}
+
+                                </li>
                                 <hr/>
-                                <li class="list-group-item"><b>Primary prediction</b> </li>
-                                <li class="list-group-item"><b>Secondary prediction</b> </li>
-                                <li class="list-group-item"><b>Tertiary prediction</b></li>
+                                <li class="list-group-item">AI Predictions</li>
+                                <li class="list-group-item"><b>Primary prediction:</b>
+                                    {% if classification.gbif_rank == rank_species %}
+                                    {{ classification.gbif_canonical_name }}
+                                    {% else %}
+                                    {{ classification.name }}
+                                    {% endif %}
+                                </li>
+                                <li class="list-group-item">{{ probability|safe }}</li>
+                                <li class="list-group-item"><b>Secondary prediction:</b> {{ specimen.optional_pred_one.class_op }} </li>
+                                <li class="list-group-item"><b>Tertiary prediction:</b> {{ specimen.optional_pred_two.class_op }}</li>
                                 <hr/>
-                                <li class="list-group-item">Experiment link</li>
-                                <li class="list-group-item">Location real name link</li>
-                                <li class="list-group-item"><b>Site code</b></li>
-                                <li class="list-group-item"><b>Date</b></li>
                                 <li class="list-group-item"><b>Entered by</b></li>
-                                <hr/>
-                                <li class="list-group-item">Collection information</li>
+                                {% if archival_identifier %}
+                                    <hr/>
+                                    <li class="list-group-item">Collection information:</li>
+                                    <li class="list-group-item">{{ archival_identifier }}</li>
+                                    <li class="list-group-item">{{ archival_preservation }}</li>
+                                    <li class="list-group-item">{{ archival_stored }}</li>
+                                {% endif %}
                             </ul>
                         </div>
                     </div>

@@ -14,6 +14,7 @@ from ..libs.ui_helpers import (
     get_datatables_container,
     get_datatables_row,
     get_formsets_display_control_config,
+    get_probability
 )
 from ..libs.utilities import get_json_context
 from ..taxonomy.constants import GBIF_RANK_SPECIES
@@ -450,8 +451,9 @@ class SpecimenView(FormView):
             'specimen': specimen,
             'classification': specimen.ai_classification if specimen.ai_classification and specimen.acceptance == 0 else specimen.classification,
             'rank_species': GBIF_RANK_SPECIES,
+            'probability': get_probability(specimen),
             'form_action_url': reverse(
-                    'samples:specimen', kwargs={'id': specimen.id})
+            'samples:specimen', kwargs={'id': specimen.id})
         })
         return context
 
