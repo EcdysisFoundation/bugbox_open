@@ -2,7 +2,8 @@ from time import sleep
 
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect
-from django.views.generic import TemplateView
+from django.urls import reverse
+from django.views.generic import CreateView, TemplateView
 from rest_framework.reverse import reverse as api_reverse
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
@@ -12,6 +13,7 @@ from ..libs.utilities import get_json_context
 from ..samples import constants as samples_constants
 from ..samples.models import Sample, Specimen, SpecimenImage
 from . import constants
+from .forms import MorphospeciesForm
 from .models import AiTraining, Morphospecies
 from .serializers import MorphospeciesDatatablesSerializer
 from .tasks import id_image
@@ -55,7 +57,7 @@ class MophospeciesView(TemplateView):
         return context
 
 
-class MophospeciesDetailView(TemplateView):
+class MorphospeciesDetailView(TemplateView):
     template_name = 'taxonomy/morphospecies_detail.html'
 
     def get_context_data(self, **kwargs):
@@ -114,6 +116,31 @@ class MophospeciesDetailView(TemplateView):
             })
         })
         return context
+
+
+class MorphospeciesCreateView(CreateView):
+
+    form_class = MorphospeciesForm
+    template_name = 'taxonomy/morphospecies_form.html'
+    action = 'create'
+
+    def get_context_data(self, **kwargs):
+        context = super(MorphospeciesCreateView, self).get_context_data(**kwargs)
+        context.update({
+            'gbif': 'Search GBIF',
+            'json_context': {
+                'GBIF_DATASET': 'd7dddbf4-2cf0-4f39-9b2a-bb099caae36c',
+                'query_params': ['q']
+            }
+        })
+        return context
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        return super(MorphospeciesCreateView, self).form_valid(form)
+
+    def get_success_url(self):
+        return reverse('taxonomy:morphospecies')
 
 
 def classify_specimen(request, id):

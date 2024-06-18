@@ -20,7 +20,7 @@
         <div class="col-12 mb-3 mt-2 p-0">
             <div class="card">
                 <div class="card-header align-items-center bg-ecdysis text-white d-flex justify-content-between">
-                    <h2 class="text-light mt-1">{{ display_name }}</h2>
+                    <h2 class="text-light mt-1">{{ morphospecies.name }}</h2>
                     <a href="{% url 'taxonomy:morphospecies' %}" class="btn btn-light btn-small" role="button">Morphospecies</a>
                     <a href="{% url 'taxonomy:morphospecies' %}" class="btn btn-light btn-small" role="button">Edit</a>
                 </div>
@@ -28,6 +28,9 @@
                     <div class="row">
                         <div class="col-4">
                             <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between align-items-start"><b>Canonical Name:</b> {{ morphospecies.gbif_canonical_name }}</li>
+                                <li class="list-group-item d-flex justify-content-between align-items-start"><b>Rank:</b> {{ morphospecies.gbif_rank }}</li>
+                                <hr/>
                                 <li class="list-group-item d-flex justify-content-between align-items-start"><b>Class:</b> {{ morphospecies.gbif_class }}</li>
                                 <li class="list-group-item d-flex justify-content-between align-items-start"><b>Order:</b> {{ morphospecies.gbif_order }}</li>
                                 <li class="list-group-item d-flex justify-content-between align-items-start"><b>Family:</b> {{ morphospecies.gbif_family }}</li>

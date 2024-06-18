@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% load render_bundle from webpack_loader %}
+
+{% block title %}
+    Specimen
+{% endblock title %}
+
+{% block customheadtagcontent %}
+{% render_bundle 'gbif_api' 'js' attrs='defer' %}
+{{ gbif_api|safe }}
+{% endblock customheadtagcontent %}
+
+
+
+{% block content %}
+
+{{ gbif }}
+
+<input type="text" class="form-control" id="gbif-input" name="gbif-input">
+<div class="search-button"></div>
+
+<div class="container" id="gbif-results-rows">my content
+</div>
+
+
+
+{% endblock %}
