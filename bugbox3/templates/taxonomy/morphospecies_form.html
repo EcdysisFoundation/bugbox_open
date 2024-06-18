@@ -14,13 +14,38 @@
 
 {% block content %}
 
-{{ gbif }}
 
-<input type="text" class="form-control" id="gbif-input" name="gbif-input">
-<div class="search-button"></div>
+<div class="container">
 
-<div class="container" id="gbif-results-rows">my content
+    <div class="row bg-ecdysis mt-3 mb-4">
+        <div class="col">
+            <div class="align-items-center bg-ecdysis text-white d-flex justify-content-between">
+                <h2 class="text-light mt-1">Add Morphospecies</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-2">
+        <div class="col">
+            <input type="text" class="form-control" id="gbif-input" name="gbif-input">
+        </div>
+        <div class="col">
+            <div class="search-button"></div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-4">
+            <div class="list-group" id="gbif-list" role="tablist"></div>
+        </div>
+        <div class="col-8">
+            <div class="tab-content" id="gbif-nav-tabContent">
+            </div>
+        </div>
+    </div>
+
 </div>
+
 
 
 
