@@ -124,11 +124,11 @@ $selectGbifButton.on('click', function(event) {
   id_name.value = v.canonicalName;
   id_gbif_key.value = v.key;
   id_gbif_canonical_name.value = v.canonicalName;
-  id_gbif_class.value = v.class;
-  id_gbif_order.value = v.order;
-  id_gbif_family.value = v.family;
-  id_gbif_genus.value = v.genus;
-  id_gbif_species.value = v.species;
+  if (v.class) { id_gbif_class.value = v.class; };
+  if (v.order) { id_gbif_order.value = v.order; };
+  if (v.family) { id_gbif_family.value = v.family; };
+  if (v.genus) { id_gbif_genus.value = v.genus; };
+  if (v.species) { id_gbif_species.value = v.species; };
   id_gbif_scientific_name.value = v.scientificName;
   id_gbif_status.value = v.taxonomicStatus;
   id_gbif_rank.value = v.rank;

@@ -31,6 +31,7 @@ class Morphospecies(Model):
     gbif_canonical_name = CharField(max_length=300, blank=True)
     gbif_rank = CharField(max_length=50, blank=True)
     gbif_status = CharField(max_length=50, blank=True)
+    # remove bypass, all current entries are zero
     bypass = FloatField(default=0, null=False, validators=[MaxValueValidator(100), MinValueValidator(0)])
     date_added = DateTimeField(auto_now_add=True)
     date_modified = DateTimeField(auto_now=True, auto_created=True)

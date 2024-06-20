@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
-from django.views.generic import CreateView, TemplateView
+from django.views.generic import CreateView, TemplateView, UpdateView
 from rest_framework.reverse import reverse as api_reverse
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
@@ -14,7 +14,7 @@ from ..libs.utilities import get_json_context
 from ..samples import constants as samples_constants
 from ..samples.models import Sample, Specimen, SpecimenImage
 from . import constants
-from .forms import MorphospeciesForm
+from .forms import MorphospeciesForm, MorphospeciesUpdateForm
 from .models import AiTraining, Morphospecies
 from .serializers import MorphospeciesDatatablesSerializer
 from .tasks import id_image
@@ -127,18 +127,31 @@ class MorphospeciesCreateView(CreateView):
 
     def get_context_data(self, **kwargs):
         context = super(MorphospeciesCreateView, self).get_context_data(**kwargs)
-        context.update({
-            'gbif': 'Search GBIF',
-            'json_context': {
-                'GBIF_DATASET': 'd7dddbf4-2cf0-4f39-9b2a-bb099caae36c',
-                'query_params': ['q']
-            }
-        })
         return context
 
     def form_valid(self, form):
         messages.success(self.request, 'Succesfully created a Morphospecies')
         return super(MorphospeciesCreateView, self).form_valid(form)
+
+    def get_success_url(self):
+        return reverse('taxonomy:morphospecies-detail', kwargs={'id': self.object.id})
+
+
+class MorphospeciesUpdateView(UpdateView):
+    form_class = MorphospeciesUpdateForm
+    template_name = 'taxonomy/morphospecies_form_update.html'
+    action = 'update'
+
+    def get_object(self, queryset=None):
+        return get_object_or_404(Morphospecies, id=self.kwargs['id'])
+
+    def get_context_data(self, **kwargs):
+        context = super(MorphospeciesUpdateView, self).get_context_data(**kwargs)
+        return context
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Succesfully updated a Morphospecies')
+        return super(MorphospeciesUpdateView, self).form_valid(form)
 
     def get_success_url(self):
         return reverse('taxonomy:morphospecies-detail', kwargs={'id': self.object.id})
