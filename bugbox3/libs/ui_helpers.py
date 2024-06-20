@@ -121,26 +121,26 @@ def classify_specimen_button(specimen, img_exists):
 
 
 def get_classifcation(specimen):
-        if specimen.acceptance and specimen.classification:
-            v = specimen.classification.gbif_canonical_name
-            return v if v else specimen.classification.name
-        elif specimen.ai_classification:
-            v = specimen.ai_classification.gbif_canonical_name
-            return v if v else specimen.ai_classification.name
-        else:
-            return 'Pending'
+    if specimen.acceptance and specimen.classification:
+        v = specimen.classification.gbif_canonical_name
+        return v if v else specimen.classification.name
+    elif specimen.ai_classification:
+        v = specimen.ai_classification.gbif_canonical_name
+        return v if v else specimen.ai_classification.name
+    else:
+        return 'Pending'
 
 
 def get_probability(specimen):
-        if specimen.confidence and specimen.ai_version:
-            bg_class = 'bg-danger'
-            if specimen.confidence >= 60:
-                bg_class = 'bg-success'
-            elif specimen.confidence >= 30:
-                bg_class = 'bg-warning'
-            return """<div class="progress">
-                        <div class="progress-bar {0}" role="progressbar"
-                        aria-label="Success example" style="width: {1}%"
-                        aria-valuenow="{1}" aria-valuemin="0" aria-valuemax="100">{1}%</div>
-                        </div>""".format(bg_class, specimen.confidence)
-        return 'Pending'
+    if specimen.confidence and specimen.ai_version:
+        bg_class = 'bg-danger'
+        if specimen.confidence >= 60:
+            bg_class = 'bg-success'
+        elif specimen.confidence >= 30:
+            bg_class = 'bg-warning'
+        return """<div class="progress">
+                    <div class="progress-bar {0}" role="progressbar"
+                    aria-label="Success example" style="width: {1}%"
+                    aria-valuenow="{1}" aria-valuemin="0" aria-valuemax="100">{1}%</div>
+                    </div>""".format(bg_class, specimen.confidence)
+    return 'Pending'

@@ -14,15 +14,20 @@ from ..libs.ui_helpers import (
     get_datatables_container,
     get_datatables_row,
     get_formsets_display_control_config,
-    get_probability
+    get_probability,
 )
 from ..libs.utilities import get_json_context
 from ..taxonomy.constants import GBIF_RANK_SPECIES
 from . import constants
 from .forms import (
-    ExperimentForm, NewSpecimenImageForm, SampleForm,
-    SamplePlanForm, SiteForm, SiteVisitForm,
-    SpecimenViewForm)
+    ExperimentForm,
+    NewSpecimenImageForm,
+    SampleForm,
+    SamplePlanForm,
+    SiteForm,
+    SiteVisitForm,
+    SpecimenViewForm,
+)
 from .models import Experiment, Sample, SamplePlan, Site, SiteVisit, Specimen, SpecimenImage
 from .models_query import get_sample_plan_descriptions
 from .serializers import (
@@ -437,10 +442,12 @@ class SpecimenView(FormView):
                     'path': s_images[0].image.url,
                 }]
             image_set_small = [
-                {'path': i.image_thumbnail_medium.url,
-                'width': i.image_thumbnail_medium.width * 0.5,
-                'height': i.image_thumbnail_medium.height * 0.5,
-                'id': i.id} for i in s_images if i.image_thumbnail_medium if i.id != image_set_large[0]['id']
+                {
+                    'path': i.image_thumbnail_medium.url,
+                    'width': i.image_thumbnail_medium.width * 0.5,
+                    'height': i.image_thumbnail_medium.height * 0.5,
+                    'id': i.id
+                } for i in s_images if i.image_thumbnail_medium if i.id != image_set_large[0]['id']
             ]
 
             context.update({
@@ -449,11 +456,12 @@ class SpecimenView(FormView):
             })
         context.update({
             'specimen': specimen,
-            'classification': specimen.ai_classification if specimen.ai_classification and specimen.acceptance == 0 else specimen.classification,
+            'classification':
+                specimen.ai_classification if specimen.ai_classification and specimen.acceptance == 0
+                else specimen.classification,
             'rank_species': GBIF_RANK_SPECIES,
             'probability': get_probability(specimen),
-            'form_action_url': reverse(
-            'samples:specimen', kwargs={'id': specimen.id})
+            'form_action_url': reverse('samples:specimen', kwargs={'id': specimen.id})
         })
         return context
 

@@ -2,10 +2,10 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from .views import (
-    MorphospeciesDetailView,
     MophospeciesView,
-    MorphospeciesDatatablesViewSet,
     MorphospeciesCreateView,
+    MorphospeciesDatatablesViewSet,
+    MorphospeciesDetailView,
     classify_sample,
     classify_specimen,
 )

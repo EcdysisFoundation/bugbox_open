@@ -259,6 +259,7 @@ def save_specimen_image_thumbnail(sender, instance, **kwargs):
             constants.SPECIMEN_IMAGE_THUMBSIZE_LARGE,
             'thumbnail_large')
 
+
 class TimelineEvent(Model):
     specimen = ForeignKey(Specimen, on_delete=CASCADE)
     event_title = CharField(max_length=200)

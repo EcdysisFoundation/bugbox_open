@@ -1,5 +1,6 @@
 from time import sleep
 
+from django.contrib import messages
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
@@ -136,11 +137,11 @@ class MorphospeciesCreateView(CreateView):
         return context
 
     def form_valid(self, form):
-        context = self.get_context_data()
+        messages.success(self.request, 'Succesfully created a Morphospecies')
         return super(MorphospeciesCreateView, self).form_valid(form)
 
     def get_success_url(self):
-        return reverse('taxonomy:morphospecies')
+        return reverse('taxonomy:morphospecies-detail', kwargs={'id': self.object.id})
 
 
 def classify_specimen(request, id):

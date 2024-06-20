@@ -1,8 +1,10 @@
 {% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% load django_bootstrap5 %}
 {% load render_bundle from webpack_loader %}
 
 {% block title %}
-    Specimen
+    Morphospecies Form
 {% endblock title %}
 
 {% block customheadtagcontent %}
@@ -10,18 +12,25 @@
 {{ gbif_api|safe }}
 {% endblock customheadtagcontent %}
 
-
-
 {% block content %}
-
-
 <div class="container">
 
     <div class="row bg-ecdysis mt-3 mb-4">
         <div class="col">
             <div class="align-items-center bg-ecdysis text-white d-flex justify-content-between">
                 <h2 class="text-light mt-1">Add Morphospecies</h2>
+                <a href="{% url 'taxonomy:morphospecies' %}" class="btn btn-light btn-small" role="button">Morphospecies</a>
             </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <p>
+                Search the <a href="https://techdocs.gbif.org/en/openapi/">Global Biodiversity Information Facility</a>
+                 (GBIF). After doing a search, select and view taxa, then "Select GBIF Taxon", and "Create" a new taxon with the data from GBIF. Names
+                 must be unique. You may edit the name to be unique.
+            </p>
         </div>
     </div>
 
@@ -34,7 +43,18 @@
         </div>
     </div>
 
-    <div class="row">
+    <div class="row mb-2">
+        <div class="col">
+            <form action="{{ form_action_url }}" method="POST">
+            {% crispy form %}
+            </form>
+        </div>
+        <div class="col">
+            <div class="select-gbif-button mt-4"></div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
         <div class="col-4">
             <div class="list-group" id="gbif-list" role="tablist"></div>
         </div>

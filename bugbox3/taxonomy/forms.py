@@ -1,12 +1,22 @@
-from django.forms import ModelForm, IntegerField
+from crispy_forms.layout import Field
 
+from ..core.forms import ModelFormMixin, get_submit_layout
+from . import constants
 from .models import Morphospecies
 
 
-class MorphospeciesForm(ModelForm):
+class MorphospeciesForm(ModelFormMixin):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper.layout = get_submit_layout(self.helper.layout, kwargs)
 
     class Meta:
         model = Morphospecies
-        fields = ('gbif_key',)
+        fields = constants.FORM_FIELDS_MORPHO
 
-    gbif_key = IntegerField(required=False)
+    hidden_fields = constants.FORM_FIELDS_MORPHO_HIDDEN
+    required_fields = constants.FORM_FIELDS_MORPHO_REQUIRED
+
+    def get_primary_layout(self):
+        return [Field(v) for v in constants.FORM_FIELDS_MORPHO]
