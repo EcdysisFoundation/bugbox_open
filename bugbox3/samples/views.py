@@ -27,6 +27,7 @@ from .forms import (
     SiteForm,
     SiteVisitForm,
     SpecimenViewForm,
+    SpecimenUpdateForm
 )
 from .models import Experiment, Sample, SamplePlan, Site, SiteVisit, Specimen, SpecimenImage
 from .models_query import get_sample_plan_descriptions
@@ -415,6 +416,39 @@ class SampleUpdateView(UpdateView):
         return reverse('samples:sample', kwargs={'sample_id':  self.kwargs['sample_id']})
 
 
+def specimen_view_context(specimen):
+    context = {
+        'specimen': specimen,
+        'classification':
+            specimen.ai_classification if specimen.ai_classification and specimen.acceptance == 0
+            else specimen.classification,
+        'probability': get_probability(specimen)
+    }
+    s_images = SpecimenImage.objects.filter(specimen=specimen)
+    if s_images:
+        image_set_large = [
+            {'path': i.image_thumbnail_large.url, 'id': i.id} for i in s_images if i.image_thumbnail_large
+        ]
+        if not image_set_large:
+            image_set_large = [{
+                'path': s_images[0].image.url,
+            }]
+        image_set_small = [
+            {
+                'path': i.image_thumbnail_medium.url,
+                'width': i.image_thumbnail_medium.width * 0.5,
+                'height': i.image_thumbnail_medium.height * 0.5,
+                'id': i.id
+            } for i in s_images if i.image_thumbnail_medium if i.id != image_set_large[0]['id']
+        ]
+
+        context.update({
+            'image_set_small': image_set_small,
+            'image_set_large': image_set_large,
+        })
+    return context
+
+
 class SpecimenView(FormView):
     form_class = SpecimenViewForm
     template_name = 'samples/specimen_detail.html'
@@ -422,36 +456,8 @@ class SpecimenView(FormView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         specimen = get_object_or_404(Specimen, id=self.kwargs['id'])
-        s_images = SpecimenImage.objects.filter(
-            specimen=specimen)
-        if s_images:
-            image_set_large = [
-                {'path': i.image_thumbnail_large.url, 'id': i.id} for i in s_images if i.image_thumbnail_large
-            ]
-            if not image_set_large:
-                image_set_large = [{
-                    'path': s_images[0].image.url,
-                }]
-            image_set_small = [
-                {
-                    'path': i.image_thumbnail_medium.url,
-                    'width': i.image_thumbnail_medium.width * 0.5,
-                    'height': i.image_thumbnail_medium.height * 0.5,
-                    'id': i.id
-                } for i in s_images if i.image_thumbnail_medium if i.id != image_set_large[0]['id']
-            ]
-
-            context.update({
-                'image_set_small': image_set_small,
-                'image_set_large': image_set_large,
-            })
+        context.update(specimen_view_context(specimen))
         context.update({
-            'specimen': specimen,
-            'classification':
-                specimen.ai_classification if specimen.ai_classification and specimen.acceptance == 0
-                else specimen.classification,
-            'rank_species': GBIF_RANK_SPECIES,
-            'probability': get_probability(specimen),
             'form_action_url': reverse('samples:specimen', kwargs={'id': specimen.id})
         })
         return context
@@ -486,6 +492,24 @@ class SpecimenView(FormView):
             SpecimenImage.objects.filter(id=delete_pick).delete()
             messages.success(self.request, 'Succesfully deleted image')
         return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse('samples:specimen', kwargs={'id':  self.kwargs['id']})
+
+
+class SpecimenUpdateView(UpdateView):
+    form_class = SpecimenUpdateForm
+    template_name = 'samples/specimen_update.html'
+    action = 'update'
+
+    def get_object(self, queryset=None):
+        return get_object_or_404(Specimen, id=self.kwargs['id'])
+
+    def get_context_data(self, **kwargs):
+        context = super(SpecimenUpdateView, self).get_context_data(**kwargs)
+        context.update(specimen_view_context(self.object))
+        context['form_action_url'] = reverse('samples:specimen-update', kwargs={'id': self.kwargs['id']})
+        return context
 
     def get_success_url(self):
         return reverse('samples:specimen', kwargs={'id':  self.kwargs['id']})

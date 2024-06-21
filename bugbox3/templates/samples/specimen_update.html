@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% load django_bootstrap5 %}
+
+{% block title %}
+    Specimen Update
+{% endblock title %}
+
+{% block content %}
+
+<div class="container">
+
+    <div class="row">
+        <div class="col-12 mb-3 mt-2 p-0">
+            <div class="card">
+                <div class="card-header align-items-center bg-ecdysis text-white d-flex justify-content-between">
+                    <div class="col-md-10">
+                        <h5><a href="{% url 'samples:experiment' specimen.sample.site_visit.site.experiment.id %}" class="link-light">
+                            {{ specimen.sample.site_visit.site.experiment}}</a> -
+                            Site: <a href="{% url 'samples:site-update' specimen.sample.site_visit.site.id %}" class="link-light">
+                            {{ specimen.sample.site_visit.site.site_name }}</a> -
+                            {{ specimen.sample.site_visit.visit_date }}
+                            Sample: <a href="{% url 'samples:sample' specimen.sample.id %}" class="link-light">{{ specimen.sample.name_no }}</a>
+                        </h5>
+                    </div>
+                    <div class="col">
+                        <a href="{% url 'samples:specimen' specimen.id %}" class="btn btn-light">
+                            Specimen
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col">
+                            <form action="{{ form_action_url }}" method="POST">
+                                {% crispy form %}
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <div id="carouselControls" class="carousel slide" data-bs-ride="carousel">
+                <div class="carousel-inner">
+                    {% for i in image_set_large %}
+                        <div class="carousel-item{% if forloop.first %} active{% endif %}" data-bs-interval="1000000">
+                            <img src="{{ i.path }}" class="d-block w-100" alt="insect">
+                        </div>
+                    {% endfor %}
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#carouselControls" data-bs-slide="prev">
+                  <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                  <span class="visually-hidden">Previous</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#carouselControls" data-bs-slide="next">
+                  <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                  <span class="visually-hidden">Next</span>
+                </button>
+              </div>
+
+              <hr/>
+            {% for i in image_set_small %}
+                <img src="{{i.path}}" width="{{ i.width }}" height="{{ i.height }}" class="mb-2">
+            {% endfor %}
+
+        </div>
+        <div class="col">
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item">Collector</li>
+                <hr/>
+                <li class="list-group-item">
+                    <b>Name:</b> {{ classification.name }}
+                </li>
+                <li class="list-group-item"><b>Class:</b> {{ classification.gbif_class }}</li>
+                <li class="list-group-item"><b>Order:</b> {{ classification.gbif_order }}</li>
+                <li class="list-group-item"><b>Family:</b> {{ classification.gbif_family }}</li>
+                <li class="list-group-item"><b>Genus:</b> {{ classification.gbif_genus }}</li>
+                <li class="list-group-item"><b>Species:</b> {{ classification.gbif_species }}</li>
+                <li class="list-group-item"><b>Determined by:</b>
+                    {% if specimen.acceptance == 0 and specimen.ai_classification %}
+                    BugBox
+                    {% elif specimen.user %}
+                    {{ specimen.user }}
+                    {% endif %}
+
+                </li>
+                <hr/>
+                <li class="list-group-item">AI Predictions</li>
+                <li class="list-group-item"><b>Primary prediction:</b>
+                    {{ classification.name }}
+                </li>
+                <li class="list-group-item">{{ probability|safe }}</li>
+                <li class="list-group-item"><b>Secondary prediction:</b> {{ specimen.optional_pred_one.class_op }} </li>
+                <li class="list-group-item"><b>Tertiary prediction:</b> {{ specimen.optional_pred_two.class_op }}</li>
+                <hr/>
+                <li class="list-group-item"><b>Entered by</b></li>
+            </ul>
+        </div>
+    </div>
+
+{% endblock %}

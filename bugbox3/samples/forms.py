@@ -3,7 +3,7 @@ from django.forms import CharField, ChoiceField, DateField, Form, IntegerField, 
 
 from ..core.forms import Html5DateInput, ModelFormMixin, MultipleFileField, get_submit_layout
 from . import constants
-from .models import Experiment, Sample, SamplePlan, Site, SiteVisit
+from .models import Experiment, Sample, SamplePlan, Site, SiteVisit, Specimen
 
 
 class ExperimentForm(ModelFormMixin):
@@ -202,3 +202,28 @@ class SpecimenViewForm(Form):
     image_files = MultipleFileField(required=False)
     primary_picker = IntegerField(required=False)
     delete_picker = IntegerField(required=False)
+
+
+class SpecimenUpdateForm(ModelFormMixin):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper.layout = get_submit_layout(self.helper.layout, kwargs)
+
+    class Meta:
+        model = Specimen
+        fields = constants.FORM_FIELDS_SPECIMEN
+
+    hidden_fields = constants.FORM_FIELDS_SPECIMEN_HIDDEN
+
+    def get_primary_layout(self):
+        return [
+            Row(
+                Column(constants.FIELD_SPECIMEN_PARTIAL_COUNT, css_class='form-control-width-medium'),
+                Column(constants.FIELD_SPECIMEN_TAGS, css_class='form-control-width-medium'),
+            ),
+            Row(
+                Column(constants.FIELD_SPECIMEN_ARCHIVAL_IDENTIFIER, css_class='form-control-width-medium'),
+                Column(constants.FIELD_SPECIMEN_ARCHIVAL_PRESERVATION, css_class='form-control-width-medium'),
+                Column(constants.FIELD_SPECIMEN_ARCHIVAL_STORED, css_class='form-control-width-medium'),
+            ),
+        ]

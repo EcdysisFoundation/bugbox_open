@@ -102,7 +102,7 @@
                         </h5>
                     </div>
                     <div class="col">
-                        <a href="{% url 'samples:specimen' specimen.id %}" class="btn btn-light">
+                        <a href="{% url 'samples:specimen-update' specimen.id %}" class="btn btn-light">
                             Edit Specimen
                         </a>
                     </div>
@@ -157,13 +157,8 @@
                             <ul class="list-group list-group-flush">
                                 <li class="list-group-item">Collector</li>
                                 <hr/>
-                                <li class="list-group-item">Specimen information</li>
                                 <li class="list-group-item">
-                                    {% if classification.gbif_rank == rank_species %}
-                                    <b>Species:</b> {{ classification.gbif_canonical_name }}
-                                    {% else %}
                                     <b>Name:</b> {{ classification.name }}
-                                    {% endif %}
                                 </li>
                                 <li class="list-group-item"><b>Class:</b> {{ classification.gbif_class }}</li>
                                 <li class="list-group-item"><b>Order:</b> {{ classification.gbif_order }}</li>
@@ -176,28 +171,25 @@
                                     {% elif specimen.user %}
                                     {{ specimen.user }}
                                     {% endif %}
-
                                 </li>
                                 <hr/>
                                 <li class="list-group-item">AI Predictions</li>
                                 <li class="list-group-item"><b>Primary prediction:</b>
-                                    {% if classification.gbif_rank == rank_species %}
-                                    {{ classification.gbif_canonical_name }}
-                                    {% else %}
                                     {{ classification.name }}
-                                    {% endif %}
                                 </li>
                                 <li class="list-group-item">{{ probability|safe }}</li>
                                 <li class="list-group-item"><b>Secondary prediction:</b> {{ specimen.optional_pred_one.class_op }} </li>
                                 <li class="list-group-item"><b>Tertiary prediction:</b> {{ specimen.optional_pred_two.class_op }}</li>
                                 <hr/>
                                 <li class="list-group-item"><b>Entered by</b></li>
-                                {% if archival_identifier %}
+                                <li class="list-group-item"><b>Partial count:</b> {{ specimen.partial_count }}</li>
+                                <li class="list-group-item"><b>Tags:</b> {{ specimen.tags }}</li>
+                                {% if specimen.archival_identifier %}
                                     <hr/>
                                     <li class="list-group-item">Collection information:</li>
-                                    <li class="list-group-item">{{ archival_identifier }}</li>
-                                    <li class="list-group-item">{{ archival_preservation }}</li>
-                                    <li class="list-group-item">{{ archival_stored }}</li>
+                                    <li class="list-group-item"><b>Archival identifier:</b> {{ specimen.archival_identifier }}</li>
+                                    <li class="list-group-item"><b>Archival preservation:</b> {{ specimen.archival_preservation }}</li>
+                                    <li class="list-group-item"><b>Archival stored:</b> {{ specimen.archival_stored }}</li>
                                 {% endif %}
                             </ul>
                         </div>
