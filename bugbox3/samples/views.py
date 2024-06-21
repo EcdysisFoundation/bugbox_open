@@ -17,7 +17,7 @@ from ..libs.ui_helpers import (
     get_probability,
 )
 from ..libs.utilities import get_json_context
-from ..taxonomy.constants import GBIF_RANK_SPECIES
+from ..taxonomy.constants import GBIF_RANK_CHOICES_WO_BLANK_LIST
 from . import constants
 from .forms import (
     ExperimentForm,
@@ -422,6 +422,7 @@ def specimen_view_context(specimen):
         'classification':
             specimen.ai_classification if specimen.ai_classification and specimen.acceptance == 0
             else specimen.classification,
+        'verified_classification': '' if specimen.acceptance == 0 else specimen.classification,
         'probability': get_probability(specimen)
     }
     s_images = SpecimenImage.objects.filter(specimen=specimen)
@@ -508,8 +509,30 @@ class SpecimenUpdateView(UpdateView):
     def get_context_data(self, **kwargs):
         context = super(SpecimenUpdateView, self).get_context_data(**kwargs)
         context.update(specimen_view_context(self.object))
-        context['form_action_url'] = reverse('samples:specimen-update', kwargs={'id': self.kwargs['id']})
+        context.update({
+            'form_action_url': reverse('samples:specimen-update', kwargs={'id': self.kwargs['id']}),
+        })
+        context.update({
+            'json_context': get_json_context({
+                'datatables_url': api_reverse('taxonomy:morphospecies-picker-list',
+                                     request=self.request, kwargs=kwargs),
+                'first_picker_choices': GBIF_RANK_CHOICES_WO_BLANK_LIST,
+                'first_picker_text': 'any rank',
+                'ACCEPTANCE_VALUE_LOOKUP': constants.ACCEPTANCE_VALUE_LOOKUP
+            }),
+            'container_row_header': get_datatables_container(
+                get_datatables_row([
+                    'Name',
+                    'Canonical Name',
+                    'Rank'
+                ]))})
         return context
 
+    def form_invalid(self, form):
+        print('!!!!!!!!!!!!!FORM INVALID!!!!!!!!!!!!!!!!!!!!!!!!!')
+        print(form.errors)
+        response = super().form_invalid(form)
+        return response
+
     def get_success_url(self):
-        return reverse('samples:specimen', kwargs={'id':  self.kwargs['id']})
+        return reverse('samples:specimen', kwargs={'id': self.kwargs['id']})

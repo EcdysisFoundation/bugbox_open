@@ -2,9 +2,16 @@
 {% load crispy_forms_tags %}
 {% load django_bootstrap5 %}
 
+{% load render_bundle from webpack_loader %}
+
 {% block title %}
     Specimen Update
 {% endblock title %}
+
+{% block customheadtagcontent %}
+{% render_bundle 'morphospecies_select' 'js' attrs='defer' %}
+{{ json_context|safe }}
+{% endblock customheadtagcontent %}
 
 {% block content %}
 
@@ -31,10 +38,16 @@
                 </div>
                 <div class="card-body">
                     <div class="row">
-                        <div class="col">
+                        <div class="col-9">
                             <form action="{{ form_action_url }}" method="POST">
                                 {% crispy form %}
                             </form>
+                        </div>
+                        <div class="col-3">
+                            <label for="dis_classification" class="form-label">Verified classification</label>
+                            <input type="text" id="dis_classification" class="form-control" name="dis_classification" value="{{ verified_classification }}" disabled><br/>
+                                <button type="button" class="btn btn-small btn-info">Select New</button>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -99,6 +112,23 @@
                 <hr/>
                 <li class="list-group-item"><b>Entered by</b></li>
             </ul>
+        </div>
+    </div>
+
+    <div class="row bg-light rounded pt-2 pb-1 mb-1" id="searchToolbar">
+        <div class="col-3">
+          <div class="first-picker"></div>
+        </div>
+      </div>
+    <div class="row pb-2 mt-2">
+        <div class="col">
+            <table id="data-table" class="table table-responsive nowrap compact table-hover" width="100%">
+            <thead>
+                <tr>
+                <th>{{ container_row_header|safe }}</th>
+                </tr>
+            </thead>
+            </table>
         </div>
     </div>
 

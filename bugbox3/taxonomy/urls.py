@@ -5,6 +5,7 @@ from .views import (
     MophospeciesView,
     MorphospeciesCreateView,
     MorphospeciesDatatablesViewSet,
+    MorphospeciesPickerViewSet,
     MorphospeciesDetailView,
     MorphospeciesUpdateView,
     classify_sample,
@@ -14,6 +15,8 @@ from .views import (
 router = DefaultRouter()
 router.register(r'morphospecies-data', MorphospeciesDatatablesViewSet,
                 basename='morphospecies-data')
+router.register(r'morphospecies-picker', MorphospeciesPickerViewSet,
+                basename='morphospecies-picker')
 
 app_name = "taxonomy"
 urlpatterns = [

@@ -10,6 +10,7 @@ module.exports = {
     vendors: path.resolve(__dirname, '../bugbox3/static/js/vendors'),
     jquery_tools: path.resolve(__dirname, '../bugbox3/static/js/jquery_tools'),
     simple_datatable: path.resolve(__dirname, '../bugbox3/static/js/simple_datatable'),
+    morphospecies_select: path.resolve(__dirname, '../bugbox3/static/js/morphospecies_select'),
     experiments: path.resolve(__dirname, '../bugbox3/static/js/experiments'),
     samples: path.resolve(__dirname, '../bugbox3/static/js/samples'),
     sample_detail: path.resolve(__dirname, '../bugbox3/static/js/sample_detail'),

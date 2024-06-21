@@ -86,12 +86,13 @@ FORM_MORPHO_HELP_TEXT = {
 
 
 # Choices
+# These need to be changed to all upper case and in database, thats what GBIF uses.
 
-GBIF_RANK_KINGDOM = 'kingdom'
-GBIF_RANK_ORDER = 'order'
-GBIF_RANK_FAMILY = 'family'
-GBIF_RANK_GENUS = 'genus'
-GBIF_RANK_SPECIES = 'species'
+GBIF_RANK_KINGDOM = 'KINGDOM'
+GBIF_RANK_ORDER = 'ORDER'
+GBIF_RANK_FAMILY = 'FAMILY'
+GBIF_RANK_GENUS = 'GENUS'
+GBIF_RANK_SPECIES = 'SPECIES'
 
 GBIF_RANK_CHOICES = (
     BLANK_CHOICE_DASH[0],

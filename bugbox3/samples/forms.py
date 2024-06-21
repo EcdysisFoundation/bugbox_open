@@ -214,14 +214,14 @@ class SpecimenUpdateForm(ModelFormMixin):
         fields = constants.FORM_FIELDS_SPECIMEN
 
     hidden_fields = constants.FORM_FIELDS_SPECIMEN_HIDDEN
+    field_labels = constants.FORM_FIELDS_SPECIMEN_LABELS
 
     def get_primary_layout(self):
         return [
+            Field(constants.FIELD_SPECIMEN_CLASSIFICATION),
+            Field(constants.FIELD_SPECIMEN_ACCEPTANCE),
             Row(
                 Column(constants.FIELD_SPECIMEN_PARTIAL_COUNT, css_class='form-control-width-medium'),
-                Column(constants.FIELD_SPECIMEN_TAGS, css_class='form-control-width-medium'),
-            ),
-            Row(
                 Column(constants.FIELD_SPECIMEN_ARCHIVAL_IDENTIFIER, css_class='form-control-width-medium'),
                 Column(constants.FIELD_SPECIMEN_ARCHIVAL_PRESERVATION, css_class='form-control-width-medium'),
                 Column(constants.FIELD_SPECIMEN_ARCHIVAL_STORED, css_class='form-control-width-medium'),

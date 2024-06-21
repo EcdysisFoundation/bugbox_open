@@ -7,10 +7,8 @@
 {% endblock title %}
 
 {% block customheadtagcontent %}
-
 {% render_bundle 'simple_datatable' 'js' attrs='defer' %}
 {{ json_context|safe }}
-
 {% endblock customheadtagcontent %}
 
 {% block content %}

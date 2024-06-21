@@ -6,8 +6,7 @@ from . import constants
 from .models import Morphospecies
 
 
-class MorphospeciesDatatablesSerializer(ModelSerializer):
-
+class MorphospeciesDatatablesSerializerMixin(ModelSerializer):
     class Meta:
         model = Morphospecies
         fields = (
@@ -21,9 +20,12 @@ class MorphospeciesDatatablesSerializer(ModelSerializer):
         columns = [
             value.name,
             value.gbif_canonical_name,
-            value.gbif_rank
+            value.gbif_rank.upper()
         ]
         return get_datatables_container(get_datatables_row(columns))
+
+
+class MorphospeciesDatatablesSerializer(MorphospeciesDatatablesSerializerMixin):
 
     def to_representation(self, value):
         link = reverse('taxonomy:morphospecies-detail', kwargs={'id': value.id})
@@ -31,4 +33,13 @@ class MorphospeciesDatatablesSerializer(ModelSerializer):
             link, self.get_data_row(value))
         return {
             'data_row': data_row
+        }
+
+class MorphospeciesPickerSerializer(MorphospeciesDatatablesSerializerMixin):
+
+    def to_representation(self, value):
+        return {
+            'data_row': self.get_data_row(value),
+            'id': value.id,
+            'name': value.name
         }
