@@ -419,15 +419,6 @@ class SpecimenView(FormView):
     form_class = SpecimenViewForm
     template_name = 'samples/specimen_detail.html'
 
-    """
-    Inststead of NewSpecimenImageForm use another with an integer field in addition to.
-    Then to set primary image,
-     try an addtional form in the template for modal similar to old bugbox,
-    but dont use javascript, just handle one or the other form request in form_valid.
-    if files empty with files = form.cleaned_data['image'] how about the integer field?
-    Wont have both at the same time in legit usage.
-    """
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         specimen = get_object_or_404(Specimen, id=self.kwargs['id'])
@@ -468,6 +459,7 @@ class SpecimenView(FormView):
     def form_valid(self, form):
         files = form.cleaned_data['image_files']
         primary_pick = form.cleaned_data['primary_picker']
+        delete_pick = form.cleaned_data['delete_picker']
         if files:
             specimen = get_object_or_404(Specimen, id=self.kwargs['id'])
             created_images = 0
@@ -490,6 +482,9 @@ class SpecimenView(FormView):
             image.primary_image = True
             image.save()
             messages.success(self.request, 'Succesfully set primary image')
+        elif delete_pick:
+            SpecimenImage.objects.filter(id=delete_pick).delete()
+            messages.success(self.request, 'Succesfully deleted image')
         return super().form_valid(form)
 
     def get_success_url(self):

@@ -7,13 +7,13 @@
 {% block content %}
 
   <!-- Modal -->
-  <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal fade" id="setPrimaryModal" tabindex="-1" aria-labelledby="setPrimaryModal" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
         <form enctype="multipart/form-data" action="{{ form_action_url }}" method="POST">
             {% csrf_token %}
         <div class="modal-header">
-          <h1 class="modal-title fs-5" id="exampleModalLabel">Select primary image</h1>
+          <h1 class="modal-title fs-5" id="setPrimaryModal">Select primary image</h1>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
@@ -39,7 +39,46 @@
               </div>
         </div>
         <div class="modal-footer">
-          <input type="submit" value="Submit" class="btn btn-light mt-4 ms-3">
+          <input type="submit" value="Submit" class="btn btn-primary mt-4 ms-3">
+        </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModal" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form enctype="multipart/form-data" action="{{ form_action_url }}" method="POST">
+            {% csrf_token %}
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="deleteModal">Delete an image</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+
+            <div class="row">
+                {% for i in image_set_small %}
+                <div class="col-lg-6">
+                  <label class="option">
+                    <span class="option-control">
+                      <span class="radio">
+                        <input type="radio" name="delete_picker" id="delete_picker" value="{{i.id}}" />
+                      </span>
+                    </span>
+                    <span class="option-label">
+
+                      <span class="option-body">
+                        <img src="{{i.path}}" class="mw-100" />
+                      </span>
+                    </span>
+                  </label>
+                </div>
+                {% endfor %}
+              </div>
+        </div>
+        <div class="modal-footer">
+          <input type="submit" value="Delete" class="btn btn-danger mt-4 ms-3">
         </div>
         </form>
       </div>
@@ -105,10 +144,12 @@
                                 <input type="submit" value="Submit" class="btn btn-secondary mt-2 ms-3">
                             </form>
                                 {% if image_set_small %}
-                                    <!-- Button trigger modal -->
-                                    <button type="button" class="btn btn-info mt-3 mb-5" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                                    <button type="button" class="btn btn-info mt-3 mb-5" data-bs-toggle="modal" data-bs-target="#setPrimaryModal">
                                         Set Primary Image
                                     </button>
+                                    <button type="button" class="btn btn-warning mt-3 mb-5" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                                      Delete Image
+                                  </button>
                                 {% endif %}
 
                         </div>
