@@ -85,6 +85,50 @@
     </div>
   </div>
 
+  <!-- #confirmRejectModal -->
+  <div class="modal fade" id="confirmRejectModal" tabindex="-1" aria-labelledby="confirmRejectModal" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form enctype="multipart/form-data" action="{{ form_action_url }}" method="POST">
+            {% csrf_token %}
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="confirmRejectModal">Confirm or Reject AI Prediction</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+
+            <div class="row">
+              <div class="col">
+              {% for i in acceptance_choices %}
+
+                  <label class="option">
+                    <span class="option-control">
+                      <span class="radio">
+                        <input type="radio" name="determin_picker" id="determin_picker" value="{{ i.0 }}" />
+                      </span>
+                    </span>
+                    <span class="option-label">
+
+                      <span class="option-body">
+                        {{ i.1 }}
+                      </span>
+                    </span>
+                  </label>
+                  <br/>
+
+                {% endfor %}
+              </div>
+              </div>
+        </div>
+        <div class="modal-footer">
+          <input type="submit" value="Submit determination" class="btn btn-primary mt-4 ms-3">
+        </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+
 
 <div class="container">
 
@@ -166,14 +210,28 @@
                                 <li class="list-group-item"><b>Genus:</b> {{ selected_classification.gbif_genus }}</li>
                                 <li class="list-group-item"><b>Species:</b> {{ selected_classification.gbif_species }}</li>
                                 <li class="list-group-item"><b>Determined by:</b>
-                                    {% if specimen.acceptance == 0 and specimen.ai_classification %}
+                                    {% if specimen.acceptance == 0 or specimen.acceptance == 1 %}
                                     BugBox
                                     {% elif specimen.user %}
                                     {{ specimen.user }}
                                     {% endif %}
                                 </li>
                                 <hr/>
-                                <li class="list-group-item">AI Predictions</li>
+                                <li class="list-group-item">AI Prediction
+                                  {% if acceptance != '' %}
+                                  <button type="button" class="btn btn-sm ms-3
+                                    {% if specimen.acceptance == 0 %}
+                                      btn-info
+                                    {% elif specimen.acceptance == 1 %}
+                                      btn-success
+                                    {% elif specimen.acceptance == 2 %}
+                                      btn-warning
+                                    {% endif %}
+                                  " data-bs-toggle="modal" data-bs-target="#confirmRejectModal">
+                                    {{ acceptance }}</button>
+                                  {% endif %}
+
+                                </li>
                                 <li class="list-group-item"><b>Primary prediction:</b>
                                     {{ ai_classification.name }}
                                 </li>

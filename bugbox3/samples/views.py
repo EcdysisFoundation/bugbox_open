@@ -420,7 +420,7 @@ def specimen_view_context(specimen):
     context = {
         'specimen': specimen,
         'selected_classification':
-            specimen.ai_classification if specimen.ai_classification and specimen.acceptance == 0
+            specimen.ai_classification if not specimen.classification
             else specimen.classification,
         'verified_classification': '' if specimen.acceptance == 0 else specimen.classification,
         'ai_classification': specimen.ai_classification,
@@ -460,7 +460,9 @@ class SpecimenView(FormView):
         specimen = get_object_or_404(Specimen, id=self.kwargs['id'])
         context.update(specimen_view_context(specimen))
         context.update({
-            'form_action_url': reverse('samples:specimen', kwargs={'id': specimen.id})
+            'form_action_url': reverse('samples:specimen', kwargs={'id': specimen.id}),
+            'acceptance_choices': constants.ACCEPTANCE_CHOICES,
+            'acceptance': '' if specimen.acceptance is None else constants.ACCEPTANCE_LOOKUP[specimen.acceptance]
         })
         return context
 
@@ -468,6 +470,7 @@ class SpecimenView(FormView):
         files = form.cleaned_data['image_files']
         primary_pick = form.cleaned_data['primary_picker']
         delete_pick = form.cleaned_data['delete_picker']
+        determin_pick = form.cleaned_data['determin_picker']
         if files:
             specimen = get_object_or_404(Specimen, id=self.kwargs['id'])
             created_images = 0
@@ -493,6 +496,15 @@ class SpecimenView(FormView):
         elif delete_pick:
             SpecimenImage.objects.filter(id=delete_pick).delete()
             messages.success(self.request, 'Succesfully deleted image')
+        elif determin_pick is not None:
+            print('determin_pick')
+            specimen = get_object_or_404(Specimen, id=self.kwargs['id'])
+            specimen.acceptance = determin_pick
+            if specimen.acceptance == constants.ACCEPTANCE_CONFIRMED and specimen.classification != specimen.ai_classification:
+                specimen.classification = specimen.ai_classification
+            elif specimen.acceptance == constants.ACCEPTANCE_REJECTED and specimen.classification == specimen.ai_classification:
+                specimen.classification = None
+            specimen.save()
         return super().form_valid(form)
 
     def get_success_url(self):
@@ -533,6 +545,15 @@ class SpecimenUpdateView(UpdateView):
         print(form.errors)
         response = super().form_invalid(form)
         return response
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        if context['object'].ai_classification:
+            if context['object'].ai_classification != form.instance.classification:
+                form.instance.acceptance = constants.ACCEPTANCE_REJECTED
+
+        return super(SpecimenUpdateView, self).form_valid(form)
+
 
     def get_success_url(self):
         return reverse('samples:specimen', kwargs={'id': self.kwargs['id']})

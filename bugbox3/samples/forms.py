@@ -202,6 +202,7 @@ class SpecimenViewForm(Form):
     image_files = MultipleFileField(required=False)
     primary_picker = IntegerField(required=False)
     delete_picker = IntegerField(required=False)
+    determin_picker = IntegerField(required=False)
 
 
 class SpecimenUpdateForm(ModelFormMixin):
