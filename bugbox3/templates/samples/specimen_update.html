@@ -86,13 +86,13 @@
                 <li class="list-group-item">Collector</li>
                 <hr/>
                 <li class="list-group-item">
-                    <b>Name:</b> {{ classification.name }}
+                    <b>Name:</b> {{ selected_classification.name }}
                 </li>
-                <li class="list-group-item"><b>Class:</b> {{ classification.gbif_class }}</li>
-                <li class="list-group-item"><b>Order:</b> {{ classification.gbif_order }}</li>
-                <li class="list-group-item"><b>Family:</b> {{ classification.gbif_family }}</li>
-                <li class="list-group-item"><b>Genus:</b> {{ classification.gbif_genus }}</li>
-                <li class="list-group-item"><b>Species:</b> {{ classification.gbif_species }}</li>
+                <li class="list-group-item"><b>Class:</b> {{ selected_classification.gbif_class }}</li>
+                <li class="list-group-item"><b>Order:</b> {{ selected_classification.gbif_order }}</li>
+                <li class="list-group-item"><b>Family:</b> {{ selected_classification.gbif_family }}</li>
+                <li class="list-group-item"><b>Genus:</b> {{ selected_classification.gbif_genus }}</li>
+                <li class="list-group-item"><b>Species:</b> {{ selected_classification.gbif_species }}</li>
                 <li class="list-group-item"><b>Determined by:</b>
                     {% if specimen.acceptance == 0 and specimen.ai_classification %}
                     BugBox
@@ -104,7 +104,7 @@
                 <hr/>
                 <li class="list-group-item">AI Predictions</li>
                 <li class="list-group-item"><b>Primary prediction:</b>
-                    {{ classification.name }}
+                    {{ ai_classification.name }}
                 </li>
                 <li class="list-group-item">{{ probability|safe }}</li>
                 <li class="list-group-item"><b>Secondary prediction:</b> {{ specimen.optional_pred_one.class_op }} </li>

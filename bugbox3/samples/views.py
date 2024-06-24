@@ -419,10 +419,11 @@ class SampleUpdateView(UpdateView):
 def specimen_view_context(specimen):
     context = {
         'specimen': specimen,
-        'classification':
+        'selected_classification':
             specimen.ai_classification if specimen.ai_classification and specimen.acceptance == 0
             else specimen.classification,
         'verified_classification': '' if specimen.acceptance == 0 else specimen.classification,
+        'ai_classification': specimen.ai_classification,
         'probability': get_probability(specimen)
     }
     s_images = SpecimenImage.objects.filter(specimen=specimen)
