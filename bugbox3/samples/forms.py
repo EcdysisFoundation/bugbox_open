@@ -1,5 +1,15 @@
 from crispy_forms.layout import HTML, Column, Field, Fieldset, Row
-from django.forms import CharField, ChoiceField, DateField, Form, IntegerField, Select, Textarea
+from django.forms import (
+    CharField,
+    ChoiceField,
+    MultipleChoiceField,
+    SelectMultiple,
+    DateField,
+    Form,
+    IntegerField,
+    Select,
+    Textarea
+)
 
 from ..core.forms import Html5DateInput, ModelFormMixin, MultipleFileField, get_submit_layout
 from . import constants
@@ -216,6 +226,7 @@ class SpecimenUpdateForm(ModelFormMixin):
 
     hidden_fields = constants.FORM_FIELDS_SPECIMEN_HIDDEN
     field_labels = constants.FORM_FIELDS_SPECIMEN_LABELS
+    help_text = constants.FORM_FIELDS_SPECIMEN_HELP
 
     def get_primary_layout(self):
         return [
@@ -227,4 +238,10 @@ class SpecimenUpdateForm(ModelFormMixin):
                 Column(constants.FIELD_SPECIMEN_ARCHIVAL_PRESERVATION, css_class='form-control-width-medium'),
                 Column(constants.FIELD_SPECIMEN_ARCHIVAL_STORED, css_class='form-control-width-medium'),
             ),
+            Field(constants.FIELD_SPECIMEN_TAGS)
         ]
+
+    tags = MultipleChoiceField(
+        widget=SelectMultiple,
+        choices=constants.TAG_CHOICES
+    )
