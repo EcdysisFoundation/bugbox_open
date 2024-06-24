@@ -525,7 +525,6 @@ class SpecimenUpdateView(UpdateView):
                 get_datatables_row([
                     'Name',
                     'Canonical Name',
-                    'Rank'
                 ]))})
         return context
 

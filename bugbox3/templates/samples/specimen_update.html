@@ -15,6 +15,45 @@
 
 {% block content %}
 
+<div class="modal fade" id="mSelectModal" tabindex="-1" aria-labelledby="mSelectModal" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+
+        <div class="modal-header">
+          <h5>Select new morphospecies</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+
+            <div class="container">
+                <div class="row bg-light rounded pt-2 pb-1 mb-1" id="searchToolbar">
+                    <div class="col-3">
+                      <div class="first-picker"></div>
+                    </div>
+                  </div>
+                <div class="row pb-2 mt-2">
+                    <div class="col">
+                        <table id="data-table" class="table table-responsive nowrap compact table-hover" width="100%">
+                        <thead>
+                            <tr>
+                            <th>{{ container_row_header|safe }}</th>
+                            </tr>
+                        </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div class="modal-footer">
+            <div class="select-morpho-button"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
 <div class="container">
 
     <div class="row">
@@ -46,7 +85,7 @@
                         <div class="col-3">
                             <label for="dis_classification" class="form-label">Verified classification</label>
                             <input type="text" id="dis_classification" class="form-control" name="dis_classification" value="{{ verified_classification }}" disabled><br/>
-                                <button type="button" class="btn btn-small btn-info">Select New</button>
+                                <button type="button" class="btn btn-small btn-info" data-bs-toggle="modal" data-bs-target="#mSelectModal">Select New</button>
                             </button>
                         </div>
                     </div>
@@ -112,23 +151,6 @@
                 <hr/>
                 <li class="list-group-item"><b>Entered by</b></li>
             </ul>
-        </div>
-    </div>
-
-    <div class="row bg-light rounded pt-2 pb-1 mb-1" id="searchToolbar">
-        <div class="col-3">
-          <div class="first-picker"></div>
-        </div>
-      </div>
-    <div class="row pb-2 mt-2">
-        <div class="col">
-            <table id="data-table" class="table table-responsive nowrap compact table-hover" width="100%">
-            <thead>
-                <tr>
-                <th>{{ container_row_header|safe }}</th>
-                </tr>
-            </thead>
-            </table>
         </div>
     </div>
 

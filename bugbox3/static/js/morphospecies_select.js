@@ -32,23 +32,26 @@ $(function () {
         ]
     });
 
-    // CURRENTLY THIS MESSES UP MORPHOSPECIES PAGE, WILL NEED TO MAKE A NEW .JS PROBABLY.
     $('#data-table').on('click', 'tr', function () {
         if ($(this).hasClass('selected')) {
             $(this).removeClass('selected');
         } else {
             data_table.$('tr.selected').removeClass('selected');
             $(this).addClass('selected');
-            var data = data_table.rows('.selected').data();
-            data = data[0]
-            if (data !== undefined) {
-                alert('Clicked row id ' + data.id);
-                id_classification.value = data.id;
-                dis_classification.value = data.name;
-                id_acceptance.value = json_context.ACCEPTANCE_VALUE_LOOKUP.Rejected;
-            }
         }
     });
+
+    let $selectMorphoButton = $('<button type="button" class="btn btn-info" data-bs-dismiss="modal" aria-label="Select">Use Selection</button>')
+    $('.select-morpho-button').append($selectMorphoButton)
+    $selectMorphoButton.on('click', function() {
+        let data = data_table.rows('.selected').data();
+        if (data.length == 1) {
+            data = data[0]
+            id_classification.value = data.id;
+            dis_classification.value = data.name;
+            id_acceptance.value = json_context.ACCEPTANCE_VALUE_LOOKUP.Rejected;
+        }
+    })
 
       // api_url filters
       let new_datatables_url = ''

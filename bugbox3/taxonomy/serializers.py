@@ -37,6 +37,13 @@ class MorphospeciesDatatablesSerializer(MorphospeciesDatatablesSerializerMixin):
 
 class MorphospeciesPickerSerializer(MorphospeciesDatatablesSerializerMixin):
 
+    def get_data_row(self, value):
+        columns = [
+            value.name,
+            value.gbif_canonical_name,
+        ]
+        return get_datatables_container(get_datatables_row(columns))
+
     def to_representation(self, value):
         return {
             'data_row': self.get_data_row(value),

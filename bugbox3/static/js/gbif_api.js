@@ -113,7 +113,7 @@ searchInput.addEventListener('keypress', function(event) {
 });
 
 
-let $selectGbifButton = $('<button class="btn btn-success btn-sm mb-1 text-nowrap" type="button">Select GBIF Taxon</button>')
+let $selectGbifButton = $('<button class="btn btn-success btn-sm mb-1 text-nowrap" type="button">Use Selected GBIF</button>')
 $('.select-gbif-button').append($selectGbifButton)
 $selectGbifButton.on('click', function(event) {
 
