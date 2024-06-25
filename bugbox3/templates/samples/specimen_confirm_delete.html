@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Specimen Delete Confirm
+{% endblock title %}
+
+{% block content %}
+
+<div class="container">
+    <div class="row">
+        <div class="col">
+
+            <form method="post">{% csrf_token %}
+                <p>Are you sure you want to delete "{{ object }}"?</p>
+                {{ form }}
+
+                <input type="submit" value="Confirm" class="btn btn-danger">
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}

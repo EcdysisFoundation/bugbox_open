@@ -2,13 +2,13 @@ from crispy_forms.layout import HTML, Column, Field, Fieldset, Row
 from django.forms import (
     CharField,
     ChoiceField,
-    MultipleChoiceField,
-    SelectMultiple,
     DateField,
     Form,
     IntegerField,
+    MultipleChoiceField,
     Select,
-    Textarea
+    SelectMultiple,
+    Textarea,
 )
 
 from ..core.forms import Html5DateInput, ModelFormMixin, MultipleFileField, get_submit_layout

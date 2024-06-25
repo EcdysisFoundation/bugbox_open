@@ -136,7 +136,7 @@
         <div class="col-12 mb-3 mt-2 p-0">
             <div class="card">
                 <div class="card-header align-items-center bg-ecdysis text-white d-flex justify-content-between">
-                    <div class="col-md-10">
+                    <div class="col-md-8">
                         <h5><a href="{% url 'samples:experiment' specimen.sample.site_visit.site.experiment.id %}" class="link-light">
                             {{ specimen.sample.site_visit.site.experiment}}</a> -
                             Site: <a href="{% url 'samples:site-update' specimen.sample.site_visit.site.id %}" class="link-light">
@@ -148,6 +148,11 @@
                     <div class="col">
                         <a href="{% url 'samples:specimen-update' specimen.id %}" class="btn btn-light">
                             Edit Specimen
+                        </a>
+                    </div>
+                    <div class="col">
+                        <a href="{% url 'samples:specimen-delete' specimen.id specimen.sample.id %}" class="btn btn-danger">
+                          Delete Specimen
                         </a>
                     </div>
                 </div>

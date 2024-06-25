@@ -1,5 +1,4 @@
 from django.conf import settings
-from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db.models import (
     CASCADE,
     SET_NULL,
@@ -50,6 +49,7 @@ class Morphospecies(Model):
         permissions = [
             (constants.PERMISSION_MORPHOSPECIES_FUNCTIONS, constants.PERMISSION_MORPHOSPECIES_FUNCTIONS_TXT),
         ]
+
 
 @receiver(pre_save, sender=Morphospecies)
 def save_sample_thumbnail(sender, instance, **kwargs):

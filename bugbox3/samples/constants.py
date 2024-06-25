@@ -76,9 +76,9 @@ ACCEPTANCE_CONFIRMED = 1
 ACCEPTANCE_REJECTED = 2
 
 ACCEPTANCE_CHOICES = (
-(ACCEPTANCE_PENDING, 'Pending'),
-(ACCEPTANCE_CONFIRMED, 'Confirmed'),
-(ACCEPTANCE_REJECTED, 'Rejected'),
+    (ACCEPTANCE_PENDING, 'Pending'),
+    (ACCEPTANCE_CONFIRMED, 'Confirmed'),
+    (ACCEPTANCE_REJECTED, 'Rejected'),
 )
 
 ACCEPTANCE_VALUE_LOOKUP = {v[1]: v[0] for v in ACCEPTANCE_CHOICES}
@@ -101,84 +101,84 @@ SAMPLE_TYPE_SOIL_PROBE = 'soil_probe'
 SAMPLE_TYPE_VEGETATION_SWEEP = 'vegetation_sweep'
 
 SAMPLE_TYPE_CHOICES = (
-BLANK_CHOICE_DASH[0],
-(SAMPLE_TYPE_AQUATIC_SWEEP, 'Aquatic sweep'),
-(SAMPLE_TYPE_BEAT_SHEET_TRAY, 'Beat sheet/tray'),
-(SAMPLE_TYPE_BEE_BOWL_BLUE, 'Bee bowl (blue)'),
-(SAMPLE_TYPE_BEE_BOWL_COLOR_UNKNOWN, 'bee bowl (color unknown)'),
-(SAMPLE_TYPE_BEE_BOWL_WHITE, 'Bee bowl (white)'),
-(SAMPLE_TYPE_BEE_BOWL_YELLOW, 'Bee bowl (yellow)'),
-(SAMPLE_TYPE_BLUE_VANE_TRAP, 'Blue vane trap'),
-(SAMPLE_TYPE_DUNG_CORE, 'Dung core'),
-(SAMPLE_TYPE_HAND_COLLECTION, 'Hand collection'),
-(SAMPLE_TYPE_MALAISE_TRAP, 'Malaise trap'),
-(SAMPLE_TYPE_QUADRAT, 'Quadrat'),
-(SAMPLE_TYPE_SOIL_CORE, 'Soil core'),
-(SAMPLE_TYPE_SOIL_PROBE, 'Soil probe'),
-(SAMPLE_TYPE_VEGETATION_SWEEP, 'Vegetation sweep'),
+    BLANK_CHOICE_DASH[0],
+    (SAMPLE_TYPE_AQUATIC_SWEEP, 'Aquatic sweep'),
+    (SAMPLE_TYPE_BEAT_SHEET_TRAY, 'Beat sheet/tray'),
+    (SAMPLE_TYPE_BEE_BOWL_BLUE, 'Bee bowl (blue)'),
+    (SAMPLE_TYPE_BEE_BOWL_COLOR_UNKNOWN, 'bee bowl (color unknown)'),
+    (SAMPLE_TYPE_BEE_BOWL_WHITE, 'Bee bowl (white)'),
+    (SAMPLE_TYPE_BEE_BOWL_YELLOW, 'Bee bowl (yellow)'),
+    (SAMPLE_TYPE_BLUE_VANE_TRAP, 'Blue vane trap'),
+    (SAMPLE_TYPE_DUNG_CORE, 'Dung core'),
+    (SAMPLE_TYPE_HAND_COLLECTION, 'Hand collection'),
+    (SAMPLE_TYPE_MALAISE_TRAP, 'Malaise trap'),
+    (SAMPLE_TYPE_QUADRAT, 'Quadrat'),
+    (SAMPLE_TYPE_SOIL_CORE, 'Soil core'),
+    (SAMPLE_TYPE_SOIL_PROBE, 'Soil probe'),
+    (SAMPLE_TYPE_VEGETATION_SWEEP, 'Vegetation sweep'),
 )
 
 SAMPLE_TYPE_CHOICES_WO_BLANK = (v for v in SAMPLE_TYPE_CHOICES if v != BLANK_CHOICE_DASH[0])
 
 SAMPLE_TYPE_CHOICES_DICT = {v[0]: v[1] for v in SAMPLE_TYPE_CHOICES}
 
-SITE_HABITAT_TYPES = [
-'alfalfa',
-'almonds',
-'apples',
-'bare',
-'barley',
-'barn',
-'berries',
-'bison',
-'canola',
-'cattle',
-'cherries',
-'corn',
-'cover crop',
-'dairy',
-'flax',
-'goat',
-'green beans',
-'hay',
-'kernza',
-'lentils',
-'livestock',
-'milo',
-'n/a',
-'native praire',
-'not in list',
-'oats',
-'pasture',
-'peas',
-'pig',
-'prairie',
-'rangeland',
-'rye',
-'sheep',
-'silvopasture',
-'sorghum',
-'soybeans',
-'sunflower',
-'unknown',
-'vegetable',
-'vineyard',
-'wetland',
-'wheat',
-'winter wheat',
-'woods',
-]
+SITE_HABITAT_TYPES = (
+    'alfalfa',
+    'almonds',
+    'apples',
+    'bare',
+    'barley',
+    'barn',
+    'berries',
+    'bison',
+    'canola',
+    'cattle',
+    'cherries',
+    'corn',
+    'cover crop',
+    'dairy',
+    'flax',
+    'goat',
+    'green beans',
+    'hay',
+    'kernza',
+    'lentils',
+    'livestock',
+    'milo',
+    'n/a',
+    'native praire',
+    'not in list',
+    'oats',
+    'pasture',
+    'peas',
+    'pig',
+    'prairie',
+    'rangeland',
+    'rye',
+    'sheep',
+    'silvopasture',
+    'sorghum',
+    'soybeans',
+    'sunflower',
+    'unknown',
+    'vegetable',
+    'vineyard',
+    'wetland',
+    'wheat',
+    'winter wheat',
+    'woods',
+)
 
 SITE_HABITAT_TYPE_CHOICES = ((v, v.capitalize()) for v in SITE_HABITAT_TYPES)
 
 SITE_HABITAT_TYPE_CHOICES_W_BLANK = tuple(chain((BLANK_CHOICE_DASH[0],), SITE_HABITAT_TYPE_CHOICES))
 
 SITE_TREATMENT_TYPES = (
-'conventional',
-'regenerative',
-'transitional',
-'unknown',
-'not in list',
+    'conventional',
+    'regenerative',
+    'transitional',
+    'unknown',
+    'not in list',
 )
 
 SITE_TREATMENT_CHOICES = ((v, v.capitalize()) for v in SITE_TREATMENT_TYPES)
@@ -187,91 +187,91 @@ SITE_TREATMENT_CHOICES_W_BLANK = tuple(chain((BLANK_CHOICE_DASH[0],), SITE_TREAT
 
 #  Form Fields
 
-FORM_FIELDS_EXPERIMENT = [
-FIELD_NAME,
-FIELD_ABBREVIATION,
-FIELD_FROM_YEAR,
-FIELD_TO_YEAR,
-FIELD_LEADER,
-FIELD_COMPLETED,
-FIELD_SUMMARY,
-FIELD_NO_SITES,
-FIELD_DATE_PER_SITE
-]
+FORM_FIELDS_EXPERIMENT = (
+    FIELD_NAME,
+    FIELD_ABBREVIATION,
+    FIELD_FROM_YEAR,
+    FIELD_TO_YEAR,
+    FIELD_LEADER,
+    FIELD_COMPLETED,
+    FIELD_SUMMARY,
+    FIELD_NO_SITES,
+    FIELD_DATE_PER_SITE
+)
 
-FORM_FIELDS_SAMPLE_PLAN = [
-FIELD_SAMPLE_PLAN_ID,
-FIELD_SAMPLE_PLAN_SAMPLE_TYPE,
-FIELD_SAMPLE_PLAN_NO_PER_DATE,
-FIELD_SAMPLE_PLAN_NAME_NO_PER_TYPE
-]
+FORM_FIELDS_SAMPLE_PLAN = (
+    FIELD_SAMPLE_PLAN_ID,
+    FIELD_SAMPLE_PLAN_SAMPLE_TYPE,
+    FIELD_SAMPLE_PLAN_NO_PER_DATE,
+    FIELD_SAMPLE_PLAN_NAME_NO_PER_TYPE
+)
 
-FORM_FIELDS_SITE = [
-FIELD_SITE_EXPERIMENT_ID,
-FIELD_SITE_SITE_NAME,
-FIELD_SITE_HABITAT_TYPE,
-FIELD_SITE_TREATMENT,
-FIELD_SITE_LONGITUDE,
-FIELD_SITE_LATITUDE
-]
+FORM_FIELDS_SITE = (
+    FIELD_SITE_EXPERIMENT_ID,
+    FIELD_SITE_SITE_NAME,
+    FIELD_SITE_HABITAT_TYPE,
+    FIELD_SITE_TREATMENT,
+    FIELD_SITE_LONGITUDE,
+    FIELD_SITE_LATITUDE
+)
 
-FORM_FIELDS_SITE_VISIT = [
-FIELD_SITE_VISIT_DATE
-]
+FORM_FIELDS_SITE_VISIT = (
+    FIELD_SITE_VISIT_DATE,
+)
 
-FORM_FIELDS_SAMPLE = [
-FIELD_SAMPLE_TYPE,
-FIELD_SAMPLE_NAME_NO,
-FIELD_SAMPLE_NOTES,
-FIELD_SAMPLE_COMPLETED,
-FIELD_SAMPLE_IMAGE,
-]
+FORM_FIELDS_SAMPLE = (
+    FIELD_SAMPLE_TYPE,
+    FIELD_SAMPLE_NAME_NO,
+    FIELD_SAMPLE_NOTES,
+    FIELD_SAMPLE_COMPLETED,
+    FIELD_SAMPLE_IMAGE,
+)
 
-FORM_FIELDS_SPECIMEN = [
-FIELD_SPEIMCEN_SAMPLE,
-FIELD_SPECIMEN_CLASSIFICATION,
-FIELD_SPECIMEN_PARTIAL_COUNT,
-FIELD_SPECIMEN_TAGS,
-FIELD_SPECIMEN_ACCEPTANCE,
-FIELD_SPECIMEN_ARCHIVAL_IDENTIFIER,
-FIELD_SPECIMEN_ARCHIVAL_PRESERVATION,
-FIELD_SPECIMEN_ARCHIVAL_STORED,
-]
+FORM_FIELDS_SPECIMEN = (
+    FIELD_SPEIMCEN_SAMPLE,
+    FIELD_SPECIMEN_CLASSIFICATION,
+    FIELD_SPECIMEN_PARTIAL_COUNT,
+    FIELD_SPECIMEN_TAGS,
+    FIELD_SPECIMEN_ACCEPTANCE,
+    FIELD_SPECIMEN_ARCHIVAL_IDENTIFIER,
+    FIELD_SPECIMEN_ARCHIVAL_PRESERVATION,
+    FIELD_SPECIMEN_ARCHIVAL_STORED,
+)
 
-FORM_FIELDS_SPECIMEN_HIDDEN = [
-FIELD_SPECIMEN_ACCEPTANCE,
-FIELD_SPECIMEN_CLASSIFICATION,
-FIELD_SPEIMCEN_SAMPLE
-]
+FORM_FIELDS_SPECIMEN_HIDDEN = (
+    FIELD_SPECIMEN_ACCEPTANCE,
+    FIELD_SPECIMEN_CLASSIFICATION,
+    FIELD_SPEIMCEN_SAMPLE
+)
 
 # Required Fields
 
-FORM_FIELDS_EXPERIMENT_REQUIRED = [
-FIELD_NAME,
-FIELD_FROM_YEAR,
-FIELD_TO_YEAR,
-FIELD_LEADER,
-FIELD_NO_SITES,
-FIELD_DATE_PER_SITE
-]
+FORM_FIELDS_EXPERIMENT_REQUIRED = (
+    FIELD_NAME,
+    FIELD_FROM_YEAR,
+    FIELD_TO_YEAR,
+    FIELD_LEADER,
+    FIELD_NO_SITES,
+    FIELD_DATE_PER_SITE
+)
 
 # Field Labels
 
 FORM_FIELDS_EXPERIMENT_LABELS = {
-FIELD_NAME: 'Experiment Name',
-FIELD_LEADER: 'Experiment Leader',
-FIELD_NO_SITES: 'Number of Sites',
-FIELD_DATE_PER_SITE: 'Sample Dates/Site',
+    FIELD_NAME: 'Experiment Name',
+    FIELD_LEADER: 'Experiment Leader',
+    FIELD_NO_SITES: 'Number of Sites',
+    FIELD_DATE_PER_SITE: 'Sample Dates/Site',
 }
 
 FORM_FIELDS_SAMPLE_PLAN_LABELS = {
-FIELD_SAMPLE_PLAN_NO_PER_DATE: 'Number per Date',
-FIELD_SAMPLE_PLAN_NAME_NO_PER_TYPE: 'Name/No.'
+    FIELD_SAMPLE_PLAN_NO_PER_DATE: 'Number per Date',
+    FIELD_SAMPLE_PLAN_NAME_NO_PER_TYPE: 'Name/No.'
 }
 
 FORM_FIELDS_SPECIMEN_LABELS = {
-FIELD_SPECIMEN_ARCHIVAL_PRESERVATION: 'Preservation',
-FIELD_SPECIMEN_ARCHIVAL_STORED: 'Stored'
+    FIELD_SPECIMEN_ARCHIVAL_PRESERVATION: 'Preservation',
+    FIELD_SPECIMEN_ARCHIVAL_STORED: 'Stored'
 }
 
 # HELP TEXT
@@ -280,7 +280,7 @@ FORM_FIELDS_SPECIMEN_HELP = {
     FIELD_SPECIMEN_TAGS: 'use cmd/ctrl + click to select multiple',
 }
 
-TAGS = [
+TAGS = (
     'adult'
     'alate',
     'apterous',
@@ -314,6 +314,6 @@ TAGS = [
     'teneral',
     'worker',
     'worker (major)'
-]
+)
 
 TAG_CHOICES = ((v, v) for v in TAGS)

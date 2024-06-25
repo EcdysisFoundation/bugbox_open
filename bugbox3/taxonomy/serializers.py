@@ -35,6 +35,7 @@ class MorphospeciesDatatablesSerializer(MorphospeciesDatatablesSerializerMixin):
             'data_row': data_row
         }
 
+
 class MorphospeciesPickerSerializer(MorphospeciesDatatablesSerializerMixin):
 
     def get_data_row(self, value):

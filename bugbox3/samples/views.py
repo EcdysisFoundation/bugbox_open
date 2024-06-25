@@ -4,7 +4,7 @@ from django.forms import inlineformset_factory
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.views.generic import TemplateView
-from django.views.generic.edit import CreateView, FormView, UpdateView
+from django.views.generic.edit import CreateView, DeleteView, FormView, UpdateView
 from rest_framework.reverse import reverse as api_reverse
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
@@ -26,8 +26,8 @@ from .forms import (
     SamplePlanForm,
     SiteForm,
     SiteVisitForm,
+    SpecimenForm,
     SpecimenViewForm,
-    SpecimenForm
 )
 from .models import Experiment, Sample, SamplePlan, Site, SiteVisit, Specimen, SpecimenImage
 from .models_query import get_sample_plan_descriptions
@@ -499,9 +499,11 @@ class SpecimenView(FormView):
         elif determin_pick is not None:
             specimen = get_object_or_404(Specimen, id=self.kwargs['id'])
             specimen.acceptance = determin_pick
-            if specimen.acceptance == constants.ACCEPTANCE_CONFIRMED and specimen.classification != specimen.ai_classification:
+            if specimen.acceptance == constants.ACCEPTANCE_CONFIRMED \
+                    and specimen.classification != specimen.ai_classification:
                 specimen.classification = specimen.ai_classification
-            elif specimen.acceptance == constants.ACCEPTANCE_REJECTED and specimen.classification == specimen.ai_classification:
+            elif specimen.acceptance == constants.ACCEPTANCE_REJECTED \
+                    and specimen.classification == specimen.ai_classification:
                 specimen.classification = None
             specimen.save()
         return super().form_valid(form)
@@ -524,7 +526,7 @@ class SpecimenCreateView(CreateView):
         context.update({
             'json_context': get_json_context({
                 'datatables_url': api_reverse('taxonomy:morphospecies-picker-list',
-                                     request=self.request, kwargs=kwargs),
+                                              request=self.request, kwargs=kwargs),
                 'first_picker_choices': GBIF_RANK_CHOICES_WO_BLANK_LIST,
                 'first_picker_text': 'any rank',
                 'ACCEPTANCE_VALUE_LOOKUP': constants.ACCEPTANCE_VALUE_LOOKUP
@@ -564,7 +566,7 @@ class SpecimenUpdateView(UpdateView):
         context.update({
             'json_context': get_json_context({
                 'datatables_url': api_reverse('taxonomy:morphospecies-picker-list',
-                                     request=self.request, kwargs=kwargs),
+                                              request=self.request, kwargs=kwargs),
                 'first_picker_choices': GBIF_RANK_CHOICES_WO_BLANK_LIST,
                 'first_picker_text': 'any rank',
                 'ACCEPTANCE_VALUE_LOOKUP': constants.ACCEPTANCE_VALUE_LOOKUP
@@ -586,3 +588,15 @@ class SpecimenUpdateView(UpdateView):
 
     def get_success_url(self):
         return reverse('samples:specimen', kwargs={'id': self.kwargs['id']})
+
+
+class SpecimenDeleteView(DeleteView):
+
+    model = Specimen
+    template_name = 'samples/specimen_confirm_delete.html'
+
+    def get_object(self, queryset=None):
+        return get_object_or_404(Specimen, id=self.kwargs['id'])
+
+    def get_success_url(self):
+        return reverse('samples:sample', kwargs={'sample_id': self.kwargs['sample_id']})

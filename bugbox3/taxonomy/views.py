@@ -69,6 +69,7 @@ def get_morphospecies_datatable(datatables_url):
             ])),
         }
 
+
 class MophospeciesView(TemplateView):
     template_name = 'taxonomy/morphospecies.html'
 
@@ -125,7 +126,11 @@ class MorphospeciesDetailView(TemplateView):
         elif morphospecies.image:
             img_thumbnail = {
                 'path': morphospecies.image.url,
-                'height': calc_image_height(constants.MORPHPOSPECIES_THUMBSIZE, morphospecies.image.height, morphospecies.image.width),
+                'height': calc_image_height(
+                    constants.MORPHPOSPECIES_THUMBSIZE,
+                    morphospecies.image.height,
+                    morphospecies.image.width
+                ),
                 'width': constants.MORPHPOSPECIES_THUMBSIZE
             }
         ai = AiTraining.objects.filter(morphospecies=morphospecies).select_related('model').order_by('id').all()
