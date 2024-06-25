@@ -37,7 +37,6 @@
                                 <li class="list-group-item d-flex justify-content-between align-items-start"><b>Subfamily:</b> {{ morphospecies.subfamily }}</li>
                                 <li class="list-group-item d-flex justify-content-between align-items-start"><b>Genus:</b> {{ morphospecies.gbif_genus }}</li>
                                 <li class="list-group-item d-flex justify-content-between align-items-start"><b>Species:</b> {{ morphospecies.gbif_species }}</li>
-                                <li class="list-group-item d-flex justify-content-between align-items-start"><b>Note:</b> {{ morphospecies.note }}</li>
                                 <hr/>
                                     <li class="list-group-item"><b>specimens</b></li>
                                 <li class="list-group-item">
@@ -64,6 +63,20 @@
                                 </ul>
                             </div>
                         {% endif %}
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            {% if morphospecies.note %}
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex align-items-start"><b>Note:</b> {{ morphospecies.note }}</li>
+                            </ul>
+                            {% endif %}
+                            <p class="card-text">
+                                {% if img_thumbnail %}
+                                    <img src="{{img_thumbnail.path}}" width="{{ img_thumbnail.width }}" height="{{ img_thumbnail.height }}">
+                                {% endif %}
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>

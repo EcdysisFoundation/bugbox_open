@@ -207,8 +207,8 @@ class Specimen(Model):
 class SpecimenImage(Model):
     specimen = ForeignKey(Specimen, on_delete=CASCADE)
     primary_image = BooleanField(default=False)
-    image = ImageField(upload_to='cms_app/images/')  # change to specimen_images
-    image_thumbnail = ImageField(null=True, blank=True, upload_to='cms_app/images/')  # change to specimen_images
+    image = ImageField(upload_to='specimen_images')  # change to specimen_images
+    image_thumbnail = ImageField(null=True, blank=True, upload_to='specimen_images')  # change to specimen_images
     image_thumbnail_medium = ImageField(null=True, blank=True, upload_to='specimen_images')
     image_thumbnail_large = ImageField(null=True, blank=True, upload_to='specimen_images')
     date_added = DateTimeField(auto_now_add=True)

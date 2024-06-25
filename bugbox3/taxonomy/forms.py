@@ -1,4 +1,5 @@
 from crispy_forms.layout import Column, Field, Row
+from django.forms import CharField, Textarea
 
 from ..core.forms import ModelFormMixin, get_submit_layout
 from . import constants
@@ -24,6 +25,10 @@ class MorphospeciesForm(MorphospeciesFormMixin):
 
     def get_primary_layout(self):
         return [Field(v) for v in constants.FORM_FIELDS_MORPHO]
+
+    note = CharField(
+        widget=Textarea
+    )
 
 
 class MorphospeciesUpdateForm(MorphospeciesFormMixin):
@@ -54,5 +59,10 @@ class MorphospeciesUpdateForm(MorphospeciesFormMixin):
                 Column(constants.FIELD_MORPHO_GBIF_GENUS),
                 Column(constants.FIELD_MORPHO_GBIF_SPECIES),
             ),
-            Field(constants.FIELD_MORPHO_NOTE)
+            Field(constants.FIELD_MORPHO_NOTE),
+            Field(constants.FIELD_MORPHO_IMAGE)
         ]
+
+    note = CharField(
+        widget=Textarea
+    )

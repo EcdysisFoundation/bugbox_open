@@ -8,10 +8,14 @@ from django.db.models import (
     DateTimeField,
     FloatField,
     ForeignKey,
+    ImageField,
     IntegerField,
     Model,
 )
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
 
+from ..libs.utilities import resized_thumbnail
 from . import constants
 
 
@@ -31,11 +35,11 @@ class Morphospecies(Model):
     gbif_canonical_name = CharField(max_length=300, blank=True)
     gbif_rank = CharField(max_length=50, blank=True)
     gbif_status = CharField(max_length=50, blank=True)
-    # remove bypass, all current entries are zero
-    bypass = FloatField(default=0, null=False, validators=[MaxValueValidator(100), MinValueValidator(0)])
     date_added = DateTimeField(auto_now_add=True)
     date_modified = DateTimeField(auto_now=True, auto_created=True)
-    note = CharField(blank=True, max_length=500)
+    note = CharField(blank=True, max_length=2000)
+    image = ImageField(upload_to='morpho_images/', null=True, blank=True)
+    image_thumbnail = ImageField(upload_to='morpho_images/', null=True, blank=True)
 
     def __str__(self):
         return str(self.name)
@@ -46,6 +50,28 @@ class Morphospecies(Model):
         permissions = [
             (constants.PERMISSION_MORPHOSPECIES_FUNCTIONS, constants.PERMISSION_MORPHOSPECIES_FUNCTIONS_TXT),
         ]
+
+@receiver(pre_save, sender=Morphospecies)
+def save_sample_thumbnail(sender, instance, **kwargs):
+    """
+    Signal receiver to save a thumbnail if there was a change.
+    """
+    # Ok to change to only save a thumbnail for this field.
+    needs_thumbnail = False
+    try:
+        obj = sender.objects.get(pk=instance.pk)
+    except sender.DoesNotExist:
+        # new record
+        needs_thumbnail = True
+    else:
+        if not obj.image == instance.image:
+            # Field has changed
+            needs_thumbnail = True
+    if needs_thumbnail:
+        instance.image_thumbnail = resized_thumbnail(
+            instance.image,
+            constants.MORPHPOSPECIES_THUMBSIZE,
+            constants.MORPHPOSPECIES_THUMBSIZE)
 
 
 class AiVersion(Model):
