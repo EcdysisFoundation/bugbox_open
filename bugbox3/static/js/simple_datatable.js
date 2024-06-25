@@ -32,7 +32,7 @@ $(function () {
     });
 
       // api_url filters
-      let new_datatables_url = ''
+      let new_datatables_url = '';
       if (json_context.first_picker_choices) {
         let $firstPicker = $('<select placeholder="Filter by" aria-label="Filter by" id="first-picker" class="form-select"></select>')
         $('.first-picker').append($firstPicker)

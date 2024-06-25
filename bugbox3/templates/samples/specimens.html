@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load render_bundle from webpack_loader %}
+
+{% block title %}
+    Specimens
+{% endblock title %}
+
+{% block customheadtagcontent %}
+
+{% render_bundle 'specimens_all' 'js' attrs='defer' %}
+{{ json_context|safe }}
+
+{% endblock customheadtagcontent %}
+
+{% block content %}
+
+<div class="container">
+
+    <div class="row bg-ecdysis mt-3">
+        <div class="col">
+            <div class="align-items-center bg-ecdysis text-white d-flex justify-content-between">
+                <h2 class="text-light mt-1">Specimens</h2>
+                <a href="" class="btn btn-light btn-small" role="button">Go Somewhere</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row bg-light rounded pt-2 pb-1 mb-1" id="searchToolbar">
+        <div class="col-3">
+          <div class="first-picker"></div>
+        </div>
+      </div>
+
+    <div class="row">
+        <div class="col">
+            <table id="specimens-table" class="table table-striped table-responsive nowrap compact" width="100%">
+                <thead>
+                    <tr>
+                    <th>{{ container_row_header|safe }}</th>
+                    </tr>
+                </thead>
+                </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

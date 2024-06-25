@@ -59,6 +59,9 @@
             <div class="card">
                 <div class="card-header align-items-center bg-ecdysis text-white d-flex justify-content-between">
                     <h5>Sites and Samples from this Experiment</h5>
+                    <a href="{% url 'samples:specimens-experiment' experiment.id %}" class="btn btn-light">
+                        All Specimens
+                    </a>
                     <a href="{% url 'samples:site-create' experiment.id %}" class="btn btn-light">
                         Create Site
                     </a>

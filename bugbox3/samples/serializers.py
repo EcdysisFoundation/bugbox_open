@@ -3,7 +3,12 @@ from rest_framework.serializers import ModelSerializer
 
 from bugbox3.libs.ui_helpers import get_datatables_container, get_datatables_row, get_img_src
 
-from ..libs.ui_helpers import classify_specimen_button, get_classifcation, get_probability
+from ..libs.ui_helpers import (
+    classify_specimen_button,
+    get_classifcation,
+    get_probability_or_user,
+    get_specimen_context
+)
 from . import constants
 from .models import Experiment, Sample, Site, Specimen
 
@@ -160,16 +165,6 @@ class SpecimenDatatablesSerializer(ModelSerializer):
             constants.FIELD_SPECIMEN_ARCHIVAL_IDENTIFIER
         ]
 
-    def get_id_checkbox(self, value):
-        return '<input type="checkbox" name="specimen_id" value="{0}" />'.format(value.id)
-
-    def probability(self, value):
-        if value.acceptance == constants.ACCEPTANCE_REJECTED:
-            return '<span class="badge text-bg-success">{0}</span>'.format(value.user)
-        else:
-            version = '<p>{0}</p>'.format(value.ai_version.version) if value.ai_version else ''
-            return '{0}{1}'.format(get_probability(value), version)
-
     def get_data_row(self, value):
         img_exists = False
         if value.specimenimage_set.first():
@@ -186,8 +181,44 @@ class SpecimenDatatablesSerializer(ModelSerializer):
             '<a href="{0}">{1}</a>'.format(link, img_thumbnail),
             value.partial_count if value.partial_count else '',
             get_classifcation(value),
-            self.probability(value),
+            get_probability_or_user(value),
             classify_specimen_button(value, img_exists)
+        ]
+        return get_datatables_container(get_datatables_row(columns))
+
+    def to_representation(self, value):
+        return {
+            'data_row': self.get_data_row(value),
+        }
+
+class SpecimensAllDatatablesSerializer(ModelSerializer):
+
+    class Meta:
+        model = Specimen
+        fields = [
+            constants.FIELD_SPECIMEN_PARTIAL_COUNT,
+            constants.FIELD_SPECIMEN_ACCEPTANCE,
+            constants.FIELD_SPECIMEN_CONFIDENCE,
+            constants.FIELD_SPECIMEN_ARCHIVAL_IDENTIFIER
+        ]
+
+    def get_data_row(self, value):
+        img_exists = False
+        if value.specimenimage_set.first():
+            img_exists = True
+            specimen_image = value.specimenimage_set.first()
+            if specimen_image.image_thumbnail:
+                img_thumbnail = get_img_src(specimen_image.image_thumbnail)
+            else:
+                img_thumbnail = get_img_src(specimen_image.image)
+        else:
+            img_thumbnail = get_img_src(img_exists)
+        link = reverse('samples:specimen', kwargs={'id': value.id})
+        columns = [
+            '<a href="{0}">{1}</a>'.format(link, img_thumbnail),
+            get_classifcation(value),
+            get_probability_or_user(value),
+            get_specimen_context(value)
         ]
         return get_datatables_container(get_datatables_row(columns))
 

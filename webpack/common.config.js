@@ -16,6 +16,7 @@ module.exports = {
     sample_detail: path.resolve(__dirname, '../bugbox3/static/js/sample_detail'),
     apexcharts_config: path.resolve(__dirname, '../bugbox3/static/js/apexcharts_config'),
     gbif_api: path.resolve(__dirname, '../bugbox3/static/js/gbif_api'),
+    specimens_all: path.resolve(__dirname, '../bugbox3/static/js/specimens_all'),
   },
   output: {
     path: path.resolve(

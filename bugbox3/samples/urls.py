@@ -15,9 +15,11 @@ from .views import (
     SiteUpdateView,
     SpecimenCreateView,
     SpecimenDatatablesViewSet,
+    SpecimensAllDatatablesViewSet,
     SpecimenDeleteView,
     SpecimenUpdateView,
     SpecimenView,
+    SpecimensView
 )
 
 router = DefaultRouter()
@@ -29,6 +31,8 @@ router.register(r'sites-data/(?P<experiment_id>[^/]+)', SitesDatatablesViewSet,
                 basename='site-data')
 router.register(r'specimens-data/(?P<sample_id>[^/]+)', SpecimenDatatablesViewSet,
                 basename='specimen-data')
+router.register(r'specimens-all-data/(?P<id>[^/]+)', SpecimensAllDatatablesViewSet,
+                basename='specimen-all-data')
 
 app_name = "samples"
 urlpatterns = [
@@ -46,5 +50,7 @@ urlpatterns = [
     path('specimen/<int:id>', SpecimenView.as_view(), name='specimen'),
     path('specimen-create/<int:sample_id>', SpecimenCreateView.as_view(), name='specimen-create'),
     path('specimen-update/<int:id>', SpecimenUpdateView.as_view(), name='specimen-update'),
-    path('specimen-delete/<int:id>/<int:sample_id>', SpecimenDeleteView.as_view(), name='specimen-delete')
+    path('specimen-delete/<int:id>/<int:sample_id>', SpecimenDeleteView.as_view(), name='specimen-delete'),
+    path('specimens/', SpecimensView.as_view(), name='specimens'),
+    path('specimens-experiment/<int:id>', SpecimensView.as_view(), name='specimens-experiment')
 ]

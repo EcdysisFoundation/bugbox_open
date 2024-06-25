@@ -8,7 +8,6 @@ from django.views.generic import TemplateView
 urlpatterns = [
     path("", TemplateView.as_view(template_name="pages/about.html"), name="about"),
     path("about/", TemplateView.as_view(template_name="pages/about.html"), name="about"),
-    path("my-bugbox", TemplateView.as_view(template_name="pages/my-bugbox.html"), name="my-bugbox"),
     path("samples/", include("bugbox3.samples.urls", namespace="samples")),
     path("taxonomy/", include("bugbox3.taxonomy.urls", namespace="taxonomy")),
     # Django Admin, use {% url 'admin:index' %}

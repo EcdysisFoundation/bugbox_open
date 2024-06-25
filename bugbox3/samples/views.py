@@ -36,6 +36,7 @@ from .serializers import (
     SamplesDatatablesSerializer,
     SitesDatatablesSerializer,
     SpecimenDatatablesSerializer,
+    SpecimensAllDatatablesSerializer
 )
 
 
@@ -74,11 +75,34 @@ class SitesDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
 class SpecimenDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
 
     serializer_class = SpecimenDatatablesSerializer
-    search_vector = [constants.FIELD_SPECIMEN_PARTIAL_COUNT]
+    search_vector = ['classification__name']
 
     def get_queryset(self):
         sample_id = int(self.kwargs['sample_id'])
         return Specimen.objects.filter(sample_id=sample_id).order_by('-id')
+
+class SpecimensAllDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
+
+    serializer_class = SpecimensAllDatatablesSerializer
+    search_vector = [
+        'classification__name',
+        'ai_classification__name',
+    ]
+
+    def get_queryset(self):
+        specimen = Specimen.objects.filter(
+            sample__site_visit__site__experiment__isnull=False
+        )
+        try:
+            id = int(self.kwargs['id'])
+        except:
+            id = None
+        if id:
+            specimen = specimen.filter(sample__site_visit__site__experiment__id=self.kwargs['id'])
+        if self.request.query_params.get('first_filter'):
+            acceptance = self.request.query_params.get('first_filter')
+            specimen = specimen.filter(acceptance=acceptance)
+        return specimen.order_by('-id')
 
 
 class ExperimentsView(TemplateView):
@@ -596,3 +620,29 @@ class SpecimenDeleteView(DeleteView):
 
     def get_success_url(self):
         return reverse('samples:sample', kwargs={'sample_id': self.kwargs['sample_id']})
+
+class SpecimensView(TemplateView):
+    template_name = 'samples/specimens.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if 'id' not in kwargs:
+            kwargs['id'] = 0
+        datatables_url = api_reverse('samples:specimen-all-data-list',
+                                     request=self.request, kwargs=kwargs)
+        Experiment.objects.values('name', 'id')
+        context.update({
+            'container_row_header': get_datatables_container(
+                get_datatables_row([
+                    'Image',
+                    'Classification',
+                    'Probability<br/>(Model)',
+                    'Sample'
+                ])),
+            'json_context': get_json_context({
+                'datatables_url': datatables_url,
+                'first_picker_choices': constants.ACCEPTANCE_CHOICES,
+                'first_picker_text': 'AI ID Acceptance',
+            }),
+        })
+        return context

@@ -1,5 +1,7 @@
 from django.urls import reverse
 
+from bugbox3.samples import constants
+
 
 def get_numeric_dropdown(length, button_label):
     """
@@ -147,3 +149,29 @@ def get_probability(specimen):
         return 'Pending'
     else:
         return ''
+
+def get_probability_or_user(specimen):
+    if specimen.acceptance == constants.ACCEPTANCE_REJECTED:
+            return '<span class="badge text-bg-success">{0}</span>'.format(specimen.user)
+    else:
+        version = '<p>{0}</p>'.format(specimen.ai_version.version) if specimen.ai_version else ''
+        return '{0}{1}'.format(get_probability(specimen), version)
+
+
+def get_specimen_context(specimen):
+    """
+    Get a description with links of the specimen context for display as html.
+    """
+    e = '<a href="{0}">{1}</a>'.format(
+        reverse('samples:experiment', kwargs={
+                'experiment_id': specimen.sample.site_visit.site.experiment.id}),
+        specimen.sample.site_visit.site.experiment.name
+    )
+    s = '<a href="{0}">{1}</a>'.format(
+         reverse('samples:sample', kwargs={
+                 'sample_id': specimen.sample.id}),
+         specimen.sample.name_no
+    )
+    return '{0}<br/>{1} {2}'.format(
+        e, specimen.sample.site_visit.visit_date, s
+    )
