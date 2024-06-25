@@ -122,13 +122,13 @@ def classify_specimen_button(specimen, img_exists):
 
 def get_classifcation(specimen):
     if specimen.acceptance and specimen.classification:
-        v = specimen.classification.gbif_canonical_name
-        return v if v else specimen.classification.name
+        return specimen.classification.name
     elif specimen.ai_classification:
-        v = specimen.ai_classification.gbif_canonical_name
-        return v if v else specimen.ai_classification.name
-    else:
+        return specimen.ai_classification.name
+    elif specimen.specimenimage_set.first():
         return 'Pending'
+    else:
+        return ''
 
 
 def get_probability(specimen):
@@ -143,4 +143,7 @@ def get_probability(specimen):
                     aria-label="Success example" style="width: {1}%"
                     aria-valuenow="{1}" aria-valuemin="0" aria-valuemax="100">{1}%</div>
                     </div>""".format(bg_class, specimen.confidence)
-    return 'Pending'
+    elif specimen.specimenimage_set.first():
+        return 'Pending'
+    else:
+        return ''

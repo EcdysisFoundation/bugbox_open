@@ -32,6 +32,7 @@ function getTabDetails(row) {
   let li = '<li class="list-group-item d-flex justify-content-between align-items-start">'
   let lic = '</li>'
   let result = `<ul class="list-group list-group-flush">
+  ${li}<b>Canonical Name:</b> ${row.canonicalName}${lic}
   ${li}<b>Rank:</b> ${row.rank}${lic}
   ${li}<b>Class:</b> ${row.class}${lic}
   ${li}<b>Order:</b> ${row.order}${lic}

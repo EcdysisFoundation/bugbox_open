@@ -215,7 +215,8 @@ class SpecimenViewForm(Form):
     determin_picker = IntegerField(required=False)
 
 
-class SpecimenUpdateForm(ModelFormMixin):
+class SpecimenForm(ModelFormMixin):
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper.layout = get_submit_layout(self.helper.layout, kwargs)
@@ -232,6 +233,7 @@ class SpecimenUpdateForm(ModelFormMixin):
         return [
             Field(constants.FIELD_SPECIMEN_CLASSIFICATION),
             Field(constants.FIELD_SPECIMEN_ACCEPTANCE),
+            Field(constants.FIELD_SPEIMCEN_SAMPLE),
             Row(
                 Column(constants.FIELD_SPECIMEN_PARTIAL_COUNT, css_class='form-control-width-medium'),
                 Column(constants.FIELD_SPECIMEN_ARCHIVAL_IDENTIFIER, css_class='form-control-width-medium'),

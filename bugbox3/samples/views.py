@@ -27,7 +27,7 @@ from .forms import (
     SiteForm,
     SiteVisitForm,
     SpecimenViewForm,
-    SpecimenUpdateForm
+    SpecimenForm
 )
 from .models import Experiment, Sample, SamplePlan, Site, SiteVisit, Specimen, SpecimenImage
 from .models_query import get_sample_plan_descriptions
@@ -497,7 +497,6 @@ class SpecimenView(FormView):
             SpecimenImage.objects.filter(id=delete_pick).delete()
             messages.success(self.request, 'Succesfully deleted image')
         elif determin_pick is not None:
-            print('determin_pick')
             specimen = get_object_or_404(Specimen, id=self.kwargs['id'])
             specimen.acceptance = determin_pick
             if specimen.acceptance == constants.ACCEPTANCE_CONFIRMED and specimen.classification != specimen.ai_classification:
@@ -511,8 +510,45 @@ class SpecimenView(FormView):
         return reverse('samples:specimen', kwargs={'id':  self.kwargs['id']})
 
 
+class SpecimenCreateView(CreateView):
+    form_class = SpecimenForm
+    template_name = 'samples/specimen_create.html'
+    action = 'create'
+
+    def get_context_data(self, **kwargs):
+        context = super(SpecimenCreateView, self).get_context_data(**kwargs)
+        sample = get_object_or_404(Sample, id=self.kwargs['sample_id'])
+        context.update({
+            'form_action_url': reverse('samples:specimen-create', kwargs={'sample_id': sample.id}),
+        })
+        context.update({
+            'json_context': get_json_context({
+                'datatables_url': api_reverse('taxonomy:morphospecies-picker-list',
+                                     request=self.request, kwargs=kwargs),
+                'first_picker_choices': GBIF_RANK_CHOICES_WO_BLANK_LIST,
+                'first_picker_text': 'any rank',
+                'ACCEPTANCE_VALUE_LOOKUP': constants.ACCEPTANCE_VALUE_LOOKUP
+            }),
+            'container_row_header': get_datatables_container(
+                get_datatables_row([
+                    'Name',
+                    'Canonical Name',
+                ])),
+            'sample': sample
+        })
+        return context
+
+    def form_valid(self, form):
+        sample = get_object_or_404(Sample, id=self.kwargs['sample_id'])
+        form.instance.sample_id = sample.id
+        return super(SpecimenCreateView, self).form_valid(form)
+
+    def get_success_url(self):
+        return reverse('samples:specimen', kwargs={'id': self.object.id})
+
+
 class SpecimenUpdateView(UpdateView):
-    form_class = SpecimenUpdateForm
+    form_class = SpecimenForm
     template_name = 'samples/specimen_update.html'
     action = 'update'
 
@@ -540,12 +576,6 @@ class SpecimenUpdateView(UpdateView):
                 ]))})
         return context
 
-    def form_invalid(self, form):
-        print('!!!!!!!!!!!!!FORM INVALID!!!!!!!!!!!!!!!!!!!!!!!!!')
-        print(form.errors)
-        response = super().form_invalid(form)
-        return response
-
     def form_valid(self, form):
         context = self.get_context_data()
         if context['object'].ai_classification:
@@ -553,7 +583,6 @@ class SpecimenUpdateView(UpdateView):
                 form.instance.acceptance = constants.ACCEPTANCE_REJECTED
 
         return super(SpecimenUpdateView, self).form_valid(form)
-
 
     def get_success_url(self):
         return reverse('samples:specimen', kwargs={'id': self.kwargs['id']})

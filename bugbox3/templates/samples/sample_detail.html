@@ -70,12 +70,15 @@
                 <div class="card-header align-items-center bg-ecdysis text-white d-flex justify-content-between">
                     <div class="col">
                         <h5>Specimens</h5>
+                        <a role="button" class="btn btn-secondary btn-sm {% if sample_info.completed %} disabled" aria-disabled="true"{% else %}"{% endif %}
+                           href="{% url 'samples:specimen-create' sample_info.sample_id %}">
+                           Add specimen</a>
                     </div>
                     <div class="col">
                         <form enctype="multipart/form-data" action="{{ form_action_url }}" method="POST">
                             {% csrf_token %}
                             <label for="id_image" class="form-label">
-                                {% if sample_info.completed %}Sample completed, edit sample to enable{% else %}Add Specimens{% endif %}
+                                {% if sample_info.completed %}Sample completed, edit sample to enable{% else %}Add specimens with images{% endif %}
                             </label>
                                 <input type="file" name="image" accept=".jpg, .png, .jpeg"
                                     class="form-control"
