@@ -134,10 +134,6 @@ class ExperimentView(TemplateView):
         return context
 
 
-class SpecimensView(TemplateView):
-    template_name = 'samples/specimens.html'
-
-
 class ExperimentSamplePlanCreateView(CreateView):
 
     form_class = ExperimentForm
