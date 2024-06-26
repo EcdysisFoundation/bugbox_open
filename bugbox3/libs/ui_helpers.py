@@ -125,10 +125,12 @@ def classify_specimen_button(specimen, img_exists):
 def get_classifcation(specimen):
     if specimen.acceptance and specimen.classification:
         return specimen.classification.name
-    elif specimen.ai_classification:
+    elif specimen.acceptance != constants.ACCEPTANCE_REJECTED and specimen.ai_classification:
         return specimen.ai_classification.name
-    elif specimen.specimenimage_set.first():
-        return 'Pending'
+    elif specimen.specimenimage_set.first() and specimen.acceptance == constants.ACCEPTANCE_PENDING:
+        return constants.ACCEPTANCE_LOOKUP[specimen.acceptance]
+    elif specimen.specimenimage_set.first() and specimen.acceptance == constants.ACCEPTANCE_REJECTED:
+        return constants.ACCEPTANCE_LOOKUP[specimen.acceptance]
     else:
         return ''
 

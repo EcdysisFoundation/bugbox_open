@@ -99,9 +99,12 @@ class SpecimensAllDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelVi
             id = None
         if id:
             specimen = specimen.filter(sample__site_visit__site__experiment__id=self.kwargs['id'])
-        if self.request.query_params.get('first_filter'):
+        if self.request.query_params.get('acceptance_filter'):
             acceptance = self.request.query_params.get('first_filter')
             specimen = specimen.filter(acceptance=acceptance)
+        if self.request.query_params.get('class_filter'):
+            if self.request.query_params.get('class_filter'):
+                specimen = specimen.filter(classification_id__isnull=True)
         return specimen.order_by('-id')
 
 
@@ -112,8 +115,8 @@ class ExperimentsView(TemplateView):
         context = super().get_context_data(**kwargs)
         experiments_datatables_url = api_reverse('samples:experiment-data-list',
                                                  request=self.request, kwargs=kwargs)
-        context.update({'json_context': get_json_context({
-            'experiments_datatables_url': experiments_datatables_url}),
+        context.update({
+            'json_context': get_json_context({'experiments_datatables_url': experiments_datatables_url}),
             'container_row_header': get_datatables_container(
                 get_datatables_row([
                     'Experiment',
@@ -634,7 +637,8 @@ class SpecimensView(TemplateView):
         context.update({
             'container_row_header': get_datatables_container(
                 get_datatables_row([
-                    'Image',
+                    'View',
+                    'Edit',
                     'Classification',
                     'Probability<br/>(Model)',
                     'Sample'
@@ -644,5 +648,6 @@ class SpecimensView(TemplateView):
                 'first_picker_choices': constants.ACCEPTANCE_CHOICES,
                 'first_picker_text': 'AI ID Acceptance',
             }),
+            'acceptance_picker_choices': constants.ACCEPTANCE_CHOICES,
         })
         return context

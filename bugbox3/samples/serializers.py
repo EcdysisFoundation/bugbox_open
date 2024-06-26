@@ -203,19 +203,12 @@ class SpecimensAllDatatablesSerializer(ModelSerializer):
         ]
 
     def get_data_row(self, value):
-        img_exists = False
-        if value.specimenimage_set.first():
-            img_exists = True
-            specimen_image = value.specimenimage_set.first()
-            if specimen_image.image_thumbnail:
-                img_thumbnail = get_img_src(specimen_image.image_thumbnail)
-            else:
-                img_thumbnail = get_img_src(specimen_image.image)
-        else:
-            img_thumbnail = get_img_src(img_exists)
+
         link = reverse('samples:specimen', kwargs={'id': value.id})
+        edit_link = reverse('samples:specimen-update', kwargs={'id': value.id})
         columns = [
-            '<a href="{0}">{1}</a>'.format(link, img_thumbnail),
+            '<a href="{0}" target="_blank"><i class="bi bi-eye"></i></a>'.format(link),
+            '<a href="{0}" target="_blank"><i class="bi bi-pencil"></i></a>'.format(edit_link),
             get_classifcation(value),
             get_probability_or_user(value),
             get_specimen_context(value)
@@ -223,6 +216,15 @@ class SpecimensAllDatatablesSerializer(ModelSerializer):
         return get_datatables_container(get_datatables_row(columns))
 
     def to_representation(self, value):
+        if value.specimenimage_set.first():
+            specimen_image = value.specimenimage_set.first()
+            img_thumbnail = get_img_src(specimen_image.image_thumbnail)
+            img_thumbnail_large = get_img_src(specimen_image.image_thumbnail_large)
+        else:
+            img_thumbnail = get_img_src(False)
+            img_thumbnail_large = None
         return {
             'data_row': self.get_data_row(value),
+            'img_thumbnail': img_thumbnail,
+            'img_thumbnail_large': img_thumbnail_large
         }
