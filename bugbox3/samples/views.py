@@ -97,8 +97,17 @@ class SpecimensAllDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelVi
             id = int(self.kwargs['id'])
         except:
             id = None
-        if id:
+        try:
+            sample_id = int(self.kwargs['sample_id'])
+        except:
+            sample_id = None
+        if id and not sample_id:
             specimen = specimen.filter(sample__site_visit__site__experiment__id=self.kwargs['id'])
+        elif id and sample_id:
+            specimen = specimen.filter(
+                sample__site_visit__site__experiment__id=self.kwargs['id'],
+                sample__id=self.kwargs['sample_id'],
+            )
         if self.request.query_params.get('acceptance_filter'):
             acceptance = self.request.query_params.get('first_filter')
             specimen = specimen.filter(acceptance=acceptance)
@@ -631,6 +640,8 @@ class SpecimensView(TemplateView):
         context = super().get_context_data(**kwargs)
         if 'id' not in kwargs:
             kwargs['id'] = 0
+        if 'sample_id' not in kwargs:
+            kwargs['sample_id'] = 0
         datatables_url = api_reverse('samples:specimen-all-data-list',
                                      request=self.request, kwargs=kwargs)
         Experiment.objects.values('name', 'id')

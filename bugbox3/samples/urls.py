@@ -31,7 +31,7 @@ router.register(r'sites-data/(?P<experiment_id>[^/]+)', SitesDatatablesViewSet,
                 basename='site-data')
 router.register(r'specimens-data/(?P<sample_id>[^/]+)', SpecimenDatatablesViewSet,
                 basename='specimen-data')
-router.register(r'specimens-all-data/(?P<id>[^/]+)', SpecimensAllDatatablesViewSet,
+router.register(r'specimens-all-data/(?P<id>[^/]+)/(?P<sample_id>[^/]+)', SpecimensAllDatatablesViewSet,
                 basename='specimen-all-data')
 
 app_name = "samples"
@@ -52,5 +52,6 @@ urlpatterns = [
     path('specimen-update/<int:id>', SpecimenUpdateView.as_view(), name='specimen-update'),
     path('specimen-delete/<int:id>/<int:sample_id>', SpecimenDeleteView.as_view(), name='specimen-delete'),
     path('specimens/', SpecimensView.as_view(), name='specimens'),
-    path('specimens-experiment/<int:id>', SpecimensView.as_view(), name='specimens-experiment')
+    path('specimens-experiment/<int:id>', SpecimensView.as_view(), name='specimens-experiment'),
+    path('specimens-experiment-sample/<int:id>/<int:sample_id>', SpecimensView.as_view(), name='specimens-experiment-sample')
 ]
