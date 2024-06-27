@@ -76,11 +76,10 @@ $(function () {
         let query_params = []
 
         if (needsClassification.checked) {
-            console.log('it is checked')
-            query_params.push(['acceptance_filter', true]);
+            query_params.push(['class_filter', true]);
         }
         if (acceptancePicker.value in [0, 1, 2]) {
-            query_params.push(['first_filter', acceptancePicker.value]);
+            query_params.push(['acceptance_filter', acceptancePicker.value]);
         }
         if (query_params.length) {
             for (let i = 0; i < query_params.length; i++) {

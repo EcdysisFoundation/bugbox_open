@@ -109,7 +109,7 @@ class SpecimensAllDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelVi
                 sample__id=self.kwargs['sample_id'],
             )
         if self.request.query_params.get('acceptance_filter'):
-            acceptance = self.request.query_params.get('first_filter')
+            acceptance = self.request.query_params.get('acceptance_filter')
             specimen = specimen.filter(acceptance=acceptance)
         if self.request.query_params.get('class_filter'):
             if self.request.query_params.get('class_filter'):
