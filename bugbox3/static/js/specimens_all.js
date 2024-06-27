@@ -39,9 +39,19 @@ $(function () {
             {
                 data: 'img_thumbnail',
                 render: function (data, type, row, meta) {
-                    let thumb = row.img_thumbnail_large
-                    // html in thumb is causing problems due to quote excacpes, move here.
-                    return `<button type="button" class="btn" data-bs-toggle="modal" data-bs-target="#imageModal" data-bs-whatever="thumnbail_large image"> ${data} </button>`
+                    if (row.img_thumbnail_large) {
+                        return `<button type="button" class="btn" data-bs-toggle="modal"
+                                data-bs-target="#imageModal"
+                                data-bs-whatever="
+                                <img src='${row.img_thumbnail_large.url}'
+                                width='${row.img_thumbnail_large.width}'
+                                height='${row.img_thumbnail_large.height}'>
+                                ">
+                                ${data} </button>`
+                    } else {
+                        return `<div class="ms-4 mt-2">${data}</div>`
+                    }
+
                 }
             },
             {

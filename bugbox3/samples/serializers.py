@@ -216,13 +216,19 @@ class SpecimensAllDatatablesSerializer(ModelSerializer):
         return get_datatables_container(get_datatables_row(columns))
 
     def to_representation(self, value):
+        img_thumbnail_large = None
         if value.specimenimage_set.first():
             specimen_image = value.specimenimage_set.first()
             img_thumbnail = get_img_src(specimen_image.image_thumbnail)
-            img_thumbnail_large = get_img_src(specimen_image.image_thumbnail_large)
+            if specimen_image.image_thumbnail_large:
+                img_thumbnail_large = {
+                    'url': specimen_image.image_thumbnail_large.url,
+                    'width': specimen_image.image_thumbnail_large.width,
+                    'height': specimen_image.image_thumbnail_large.height
+                }
         else:
             img_thumbnail = get_img_src(False)
-            img_thumbnail_large = None
+
         return {
             'data_row': self.get_data_row(value),
             'img_thumbnail': img_thumbnail,
