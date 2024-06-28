@@ -10,6 +10,7 @@ import DataTable from 'datatables.net-bs5';
 let id_classification = document.getElementById('id_classification');
 let dis_classification = document.getElementById('dis_classification');
 let id_acceptance = document.getElementById('id_acceptance');
+let clear_classification = document.getElementById('clear_classification');
 
 $(function () {
     const json_context = JSON.parse(document.getElementById('json_context').textContent)
@@ -40,6 +41,11 @@ $(function () {
             $(this).addClass('selected');
         }
     });
+
+    clear_classification.addEventListener('click', function() {
+        id_classification.value = null;
+        dis_classification.value = null;
+    })
 
     let $selectMorphoButton = $('<button type="button" class="btn btn-info" data-bs-dismiss="modal" aria-label="Select">Use Selection</button>')
     $('.select-morpho-button').append($selectMorphoButton)

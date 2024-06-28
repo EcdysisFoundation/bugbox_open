@@ -225,6 +225,8 @@ class SpecimenForm(ModelFormMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper.layout = get_submit_layout(self.helper.layout, kwargs)
+        if kwargs['instance'] is None:
+            self.fields[constants.FIELD_SPECIMEN_ACCEPTANCE].widget = HiddenInput()
 
     class Meta:
         model = Specimen
@@ -237,7 +239,6 @@ class SpecimenForm(ModelFormMixin):
     def get_primary_layout(self):
         return [
             Field(constants.FIELD_SPECIMEN_CLASSIFICATION),
-            Field(constants.FIELD_SPECIMEN_ACCEPTANCE),
             Field(constants.FIELD_SPEIMCEN_SAMPLE),
             Row(
                 Column(constants.FIELD_SPECIMEN_PARTIAL_COUNT, css_class='form-control-width-medium'),
@@ -245,12 +246,20 @@ class SpecimenForm(ModelFormMixin):
                 Column(constants.FIELD_SPECIMEN_ARCHIVAL_PRESERVATION, css_class='form-control-width-medium'),
                 Column(constants.FIELD_SPECIMEN_ARCHIVAL_STORED, css_class='form-control-width-medium'),
             ),
-            Field(constants.FIELD_SPECIMEN_TAGS)
+            Row(
+                Column(constants.FIELD_SPECIMEN_TAGS),
+                Column(constants.FIELD_SPECIMEN_ACCEPTANCE)
+            )
         ]
 
     tags = MultipleChoiceField(
         widget=SelectMultiple,
         choices=constants.TAG_CHOICES
+    )
+
+    acceptance = ChoiceField(
+        widget=Select,
+        choices=constants.ACCEPTANCE_CHOICES
     )
 
 

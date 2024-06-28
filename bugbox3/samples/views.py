@@ -607,10 +607,13 @@ class SpecimenUpdateView(UpdateView):
 
     def form_valid(self, form):
         context = self.get_context_data()
-        if context['object'].ai_classification:
-            if context['object'].ai_classification != form.instance.classification:
+        if context['object'].ai_classification and form.instance.classification:
+            if context['object'].ai_classification != form.instance.classification and form.instance.acceptance != constants.ACCEPTANCE_REJECTED:
                 form.instance.acceptance = constants.ACCEPTANCE_REJECTED
-
+            elif context['object'].ai_classification == form.instance.classification and form.instance.acceptance == constants.ACCEPTANCE_REJECTED:
+                form.instance.classification = None
+        elif context['object'].ai_classification and form.instance.acceptance == constants.ACCEPTANCE_CONFIRMED:
+            form.instance.classification = context['object'].ai_classification
         return super(SpecimenUpdateView, self).form_valid(form)
 
     def get_success_url(self):

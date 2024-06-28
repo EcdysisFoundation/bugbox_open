@@ -239,7 +239,6 @@ FORM_FIELDS_SPECIMEN = (
 )
 
 FORM_FIELDS_SPECIMEN_HIDDEN = (
-    FIELD_SPECIMEN_ACCEPTANCE,
     FIELD_SPECIMEN_CLASSIFICATION,
     FIELD_SPEIMCEN_SAMPLE
 )
@@ -271,13 +270,16 @@ FORM_FIELDS_SAMPLE_PLAN_LABELS = {
 
 FORM_FIELDS_SPECIMEN_LABELS = {
     FIELD_SPECIMEN_ARCHIVAL_PRESERVATION: 'Preservation',
-    FIELD_SPECIMEN_ARCHIVAL_STORED: 'Stored'
+    FIELD_SPECIMEN_ARCHIVAL_STORED: 'Stored',
+    FIELD_SPECIMEN_ACCEPTANCE: 'AI Acceptance'
 }
 
 # HELP TEXT
 
 FORM_FIELDS_SPECIMEN_HELP = {
     FIELD_SPECIMEN_TAGS: 'use cmd/ctrl + click to select multiple',
+    FIELD_SPECIMEN_ACCEPTANCE: 'if acceptance is "Confirmed" the AI Prediction ' + \
+        'will be saved as the "Verified classification"'
 }
 
 TAGS = (

@@ -56,12 +56,6 @@
 
 <div class="container">
 
-    <!--
-    add ai confirm reject pending selector
-    add ability to delete verified_classification, would also set confirmed to pending
-    Can we close this page if showed up here from review page?
-    -->
-
     <div class="row">
         <div class="col-12 mb-3 mt-2 p-0">
             <div class="card">
@@ -92,6 +86,7 @@
                             <label for="dis_classification" class="form-label">Verified classification</label>
                             <input type="text" id="dis_classification" class="form-control" name="dis_classification" value="{{ verified_classification }}" disabled><br/>
                                 <button type="button" class="btn btn-small btn-info" data-bs-toggle="modal" data-bs-target="#mSelectModal">Select New</button>
+                                <button type="button" class="btn btn-small btn-secondary" id="clear_classification">Clear Verified</button>
                             </button>
                         </div>
                     </div>
