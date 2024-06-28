@@ -669,14 +669,25 @@ class SpecimensView(FormView):
         return context
 
     def form_invalid(self, form):
-        print('_________FORM ERROR___________')
-        print(form.errors)
-        print(form)
-        print(form.__dict__)
+        messages.error(self.request, 'Form Error, changes not saved')
         return super().form_invalid(form)
 
     def form_valid(self, form):
-        messages.success(self.request, 'Succesfully added {0} new specimens'.format(form.cleaned_data))
+        confirm_ids = form.cleaned_data['json_data'][self._sv_confirm_ids]
+        reject_ids = form.cleaned_data['json_data'][self._sv_reject_ids]
+        confirmed_ids = [int(v) for v in confirm_ids] if confirm_ids else []
+        rejected_ids = [int(v) for v in reject_ids] if reject_ids else []
+        confirm_count = 0
+        for i in confirmed_ids:
+            specimen = get_object_or_404(Specimen, id=i)
+            specimen.acceptance=constants.ACCEPTANCE_CONFIRMED
+            specimen.classification = specimen.ai_classification
+            specimen.save()
+            confirm_count += 1
+        Specimen.objects.filter(
+            id__in=rejected_ids, acceptance=constants.ACCEPTANCE_PENDING).update(
+                acceptance=constants.ACCEPTANCE_REJECTED)
+        messages.success(self.request, 'Succesfully confirmed {0} specimens and rejected {1}'.format(confirm_count), len(rejected_ids))
         return super().form_valid(form)
 
     def get_success_url(self):

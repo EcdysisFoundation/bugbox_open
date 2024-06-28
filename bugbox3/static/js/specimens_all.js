@@ -55,17 +55,34 @@ $(function () {
             {
                 data: 'id',
                 render: function (data, type, row) {
-                    idS.push(data)
-                    let disabled = ''
-                    if (!row.has_image) {
-                        disabled = 'disabled'
+                    let disabled = '';
+                    let confirm_check = '';
+                    let reject_check = '';
+                    let clear_check = 'checked';
+                    let confirmed = '';
+                    let rejected = '';
+                    if (!row.has_image || row.acceptance != 0) {
+                        disabled = 'disabled';
+                    } else {
+                        // only can change if acceptance == 0 and has an image
+                        idS.push(data)
+                    }
+                    if (row.acceptance == 1) {
+                        clear_check = '';
+                        confirm_check = 'checked';
+                        confirmed = 'ed'
+                    }
+                    if (row.acceptance == 2) {
+                         clear_check = '';
+                         reject_check = 'checked';
+                         rejected = 'ed'
                     }
                     return `<div class="btn-group" role="group" aria-label="Review button group">
-<input type="radio" class="btn-check" name="review-${data}" id="confirm-${data}" value="${data}" autocomplete="off" ${disabled}>
-<label class="btn btn-outline-success" for="confirm-${data}">Confirm</label>
-<input type="radio" class="btn-check" name="review-${data}" id="reject-${data}" value="${data}" autocomplete="off" ${disabled}>
-<label class="btn btn-outline-danger" for="reject-${data}">Reject</label>
-<input type="radio" class="btn-check" name="review-${data}" id="clear-${data}" value="" autocomplete="off" checked ${disabled}>
+<input type="radio" class="btn-check" name="review-${data}" id="confirm-${data}" value="${data}" autocomplete="off" ${confirm_check} ${disabled}>
+<label class="btn btn-outline-success" for="confirm-${data}">Confirm${confirmed}</label>
+<input type="radio" class="btn-check" name="review-${data}" id="reject-${data}" value="${data}" autocomplete="off" ${reject_check} ${disabled}>
+<label class="btn btn-outline-danger" for="reject-${data}">Reject${rejected}</label>
+<input type="radio" class="btn-check" name="review-${data}" id="clear-${data}" value="" autocomplete="off" ${clear_check} ${disabled}>
 <label class="btn btn-link-secondary" for="clear-${data}">Clear</label>
 </div>`
                 }
@@ -114,10 +131,8 @@ $(function () {
                 let btnReject = document.getElementById('reject-' + idS[i].toString())
                 if (btnConfirm.checked) {
                     json_data.confirm_ids.push(btnConfirm.value)
-                } else {
-                    if (btnReject.checked) {
-                        json_data.reject_ids.push(btnReject.value)
-                    }
+                } else if (btnReject.checked) {
+                    json_data.reject_ids.push(btnReject.value)
                 }
             }
 

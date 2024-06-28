@@ -1,3 +1,6 @@
+import json
+from django.core.exceptions import ValidationError
+from django.utils.safestring import mark_safe
 from crispy_forms.layout import HTML, Column, Field, Fieldset, Row
 from django.forms import (
     CharField,
@@ -253,6 +256,14 @@ class SpecimenForm(ModelFormMixin):
 
 class JSONFieldForm(Form):
 
-    json_data = JSONField()
+    json_data = JSONField(decoder=json.JSONDecoder)
 
     json_data.widget = HiddenInput()
+
+    def clean(self):
+        cleaned_data = super().clean()
+        json_data = cleaned_data.get('json_data')
+        if not all([v.isnumeric() for v in json_data['reject_ids']]):
+            raise ValidationError(mark_safe('non-integers provided in form as ids'))
+        if not all([v.isnumeric() for v in json_data['reject_ids']]):
+            raise ValidationError(mark_safe('non-integers provided in form as ids'))

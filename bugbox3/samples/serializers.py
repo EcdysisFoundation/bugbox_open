@@ -233,5 +233,6 @@ class SpecimensAllDatatablesSerializer(ModelSerializer):
             'img_thumbnail': img_thumbnail,
             'img_thumbnail_large': img_thumbnail_large,
             'id': value.id,
-            'has_image': True if specimen_image else False
+            'has_image': True if specimen_image else False,
+            'acceptance': value.acceptance
         }
