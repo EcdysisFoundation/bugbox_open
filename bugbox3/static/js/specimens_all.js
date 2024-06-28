@@ -7,19 +7,14 @@ $(function () {
     let filterButton = document.getElementById('filterButton');
     let acceptancePicker = document.getElementById('acceptancePicker');
     let imageModal = document.getElementById('imageModal');
+    let json_data = json_context.json_data;
+    let jsonDataInput = document.getElementById('id_json_data');
+    let submitBtn = document.getElementById('submit-btn');
+    let idS = []
     imageModal.addEventListener('show.bs.modal', event => {
-        // Button that triggered the modal
-        console.log(event.relatedTarget)
         const button = event.relatedTarget
-        // Extract info from data-bs-* attributes
         const thisimage = button.getAttribute('data-bs-whatever')
-         console.log(thisimage)
-        // If necessary, you could initiate an AJAX request here
-        // and then do the updating in a callback.
-        //
-        // Update the modal's content.
         const modalBodyInput = imageModal.querySelector('.modal-body')
-
         modalBodyInput.innerHTML = thisimage
     })
 
@@ -38,7 +33,7 @@ $(function () {
         columns: [
             {
                 data: 'img_thumbnail',
-                render: function (data, type, row, meta) {
+                render: function (data, type, row) {
                     if (row.img_thumbnail_large) {
                         return `<button type="button" class="btn" data-bs-toggle="modal"
                                 data-bs-target="#imageModal"
@@ -56,6 +51,24 @@ $(function () {
             },
             {
                 data: 'data_row',
+            },
+            {
+                data: 'id',
+                render: function (data, type, row) {
+                    idS.push(data)
+                    let disabled = ''
+                    if (!row.has_image) {
+                        disabled = 'disabled'
+                    }
+                    return `<div class="btn-group" role="group" aria-label="Review button group">
+<input type="radio" class="btn-check" name="review-${data}" id="confirm-${data}" value="${data}" autocomplete="off" ${disabled}>
+<label class="btn btn-outline-success" for="confirm-${data}">Confirm</label>
+<input type="radio" class="btn-check" name="review-${data}" id="reject-${data}" value="${data}" autocomplete="off" ${disabled}>
+<label class="btn btn-outline-danger" for="reject-${data}">Reject</label>
+<input type="radio" class="btn-check" name="review-${data}" id="clear-${data}" value="" autocomplete="off" checked ${disabled}>
+<label class="btn btn-link-secondary" for="clear-${data}">Clear</label>
+</div>`
+                }
             }
         ]
     });
@@ -92,6 +105,23 @@ $(function () {
 
         };
         specimens_table.ajax.url(url).load();
+       })
+
+       submitBtn.addEventListener('click', function() {
+            //alert(idS)
+            for (let i = 0; i < idS.length; i++) {
+                let btnConfirm = document.getElementById('confirm-' + idS[i].toString())
+                let btnReject = document.getElementById('reject-' + idS[i].toString())
+                if (btnConfirm.checked) {
+                    json_data.confirm_ids.push(btnConfirm.value)
+                } else {
+                    if (btnReject.checked) {
+                        json_data.reject_ids.push(btnReject.value)
+                    }
+                }
+            }
+
+            jsonDataInput.value = JSON.stringify(json_data);
        })
 });
 

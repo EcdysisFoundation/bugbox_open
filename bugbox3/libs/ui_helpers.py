@@ -2,6 +2,10 @@ from django.urls import reverse
 
 from bugbox3.samples import constants
 
+"""
+UI Helpers. Many of these may be better moved to .js webpack modules.
+"""
+
 
 def get_numeric_dropdown(length, button_label):
     """
@@ -164,12 +168,12 @@ def get_specimen_context(specimen):
     """
     Get a description with links of the specimen context for display as html.
     """
-    e = '<a href="{0}">{1}</a>'.format(
+    e = '<a href="{0}" target="_blank">{1}</a>'.format(
         reverse('samples:experiment', kwargs={
                 'experiment_id': specimen.sample.site_visit.site.experiment.id}),
         specimen.sample.site_visit.site.experiment.name
     )
-    s = '<a href="{0}">{1}</a>'.format(
+    s = '<a href="{0}" target="_blank">{1}</a>'.format(
          reverse('samples:sample', kwargs={
                  'sample_id': specimen.sample.id}),
          specimen.sample.name_no

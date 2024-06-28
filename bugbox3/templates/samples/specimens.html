@@ -55,19 +55,24 @@
             <button type="button" class="btn btn-success btn-sm" id="filterButton">Apply Filters</button>
         </div>
       </div>
-
+    <form enctype="multipart/form-data" action="{{ form_action_url }}" method="POST">
+      {% csrf_token %}
     <div class="row">
         <div class="col">
             <table id="specimens-table" class="table table-striped table-responsive nowrap compact" width="100%">
                 <thead>
                     <tr>
-                    <th>Image</th>
-                    <th>{{ container_row_header|safe }}</th>
+                      <th>Image</th>
+                      <th>{{ container_row_header|safe }}</th>
+                      <th>Review</th>
                     </tr>
                 </thead>
                 </table>
+                <input type="hidden" name="json_data" value="null" id="id_json_data">
+                <input type="submit" value="Submit" id="submit-btn" class="btn btn-secondary mt-2 ms-3">
         </div>
     </div>
+    </form>
 </div>
 
 {% endblock %}

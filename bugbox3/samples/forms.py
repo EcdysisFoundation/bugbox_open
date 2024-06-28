@@ -4,7 +4,9 @@ from django.forms import (
     ChoiceField,
     DateField,
     Form,
+    HiddenInput,
     IntegerField,
+    JSONField,
     MultipleChoiceField,
     Select,
     SelectMultiple,
@@ -247,3 +249,10 @@ class SpecimenForm(ModelFormMixin):
         widget=SelectMultiple,
         choices=constants.TAG_CHOICES
     )
+
+
+class JSONFieldForm(Form):
+
+    json_data = JSONField()
+
+    json_data.widget = HiddenInput()

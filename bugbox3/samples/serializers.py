@@ -217,8 +217,8 @@ class SpecimensAllDatatablesSerializer(ModelSerializer):
 
     def to_representation(self, value):
         img_thumbnail_large = None
-        if value.specimenimage_set.first():
-            specimen_image = value.specimenimage_set.first()
+        specimen_image = value.specimenimage_set.first()
+        if specimen_image:
             img_thumbnail = get_img_src(specimen_image.image_thumbnail)
             if specimen_image.image_thumbnail_large:
                 img_thumbnail_large = {
@@ -228,9 +228,10 @@ class SpecimensAllDatatablesSerializer(ModelSerializer):
                 }
         else:
             img_thumbnail = get_img_src(False)
-
         return {
             'data_row': self.get_data_row(value),
             'img_thumbnail': img_thumbnail,
-            'img_thumbnail_large': img_thumbnail_large
+            'img_thumbnail_large': img_thumbnail_large,
+            'id': value.id,
+            'has_image': True if specimen_image else False
         }

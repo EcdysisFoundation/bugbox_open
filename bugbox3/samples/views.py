@@ -21,6 +21,7 @@ from ..taxonomy.constants import GBIF_RANK_CHOICES_WO_BLANK_LIST
 from . import constants
 from .forms import (
     ExperimentForm,
+    JSONFieldForm,
     NewSpecimenImageForm,
     SampleForm,
     SamplePlanForm,
@@ -93,20 +94,14 @@ class SpecimensAllDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelVi
         specimen = Specimen.objects.filter(
             sample__site_visit__site__experiment__isnull=False
         )
-        try:
-            id = int(self.kwargs['id'])
-        except:
-            id = None
-        try:
-            sample_id = int(self.kwargs['sample_id'])
-        except:
-            sample_id = None
+        id = int(self.kwargs['id'])
+        sample_id = int(self.kwargs['sample_id'])
         if id and not sample_id:
-            specimen = specimen.filter(sample__site_visit__site__experiment__id=self.kwargs['id'])
+            specimen = specimen.filter(sample__site_visit__site__experiment__id=id)
         elif id and sample_id:
             specimen = specimen.filter(
-                sample__site_visit__site__experiment__id=self.kwargs['id'],
-                sample__id=self.kwargs['sample_id'],
+                sample__site_visit__site__experiment__id=id,
+                sample__id=sample_id,
             )
         if self.request.query_params.get('acceptance_filter'):
             acceptance = self.request.query_params.get('acceptance_filter')
@@ -633,17 +628,25 @@ class SpecimenDeleteView(DeleteView):
     def get_success_url(self):
         return reverse('samples:sample', kwargs={'sample_id': self.kwargs['sample_id']})
 
-class SpecimensView(TemplateView):
+class SpecimensView(FormView):
+    form_class = JSONFieldForm
     template_name = 'samples/specimens.html'
+
+    _sv_confirm_ids = 'confirm_ids'
+    _sv_reject_ids = 'reject_ids'
+    _sv_json_data = {
+        _sv_confirm_ids: [],
+        _sv_reject_ids: []
+    }
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        if 'id' not in kwargs:
-            kwargs['id'] = 0
-        if 'sample_id' not in kwargs:
-            kwargs['sample_id'] = 0
+        if 'id' not in self.kwargs:
+            self.kwargs['id'] = 0
+        if 'sample_id' not in self.kwargs:
+            self.kwargs['sample_id'] = 0
         datatables_url = api_reverse('samples:specimen-all-data-list',
-                                     request=self.request, kwargs=kwargs)
+                                     request=self.request, kwargs=self.kwargs)
         Experiment.objects.values('name', 'id')
         context.update({
             'container_row_header': get_datatables_container(
@@ -658,7 +661,23 @@ class SpecimensView(TemplateView):
                 'datatables_url': datatables_url,
                 'first_picker_choices': constants.ACCEPTANCE_CHOICES,
                 'first_picker_text': 'AI ID Acceptance',
+                'json_data': self._sv_json_data
             }),
             'acceptance_picker_choices': constants.ACCEPTANCE_CHOICES,
+            'form_action_url': reverse('samples:specimens-experiment-sample', kwargs={'id': self.kwargs['id'], 'sample_id': self.kwargs['sample_id']})
         })
         return context
+
+    def form_invalid(self, form):
+        print('_________FORM ERROR___________')
+        print(form.errors)
+        print(form)
+        print(form.__dict__)
+        return super().form_invalid(form)
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Succesfully added {0} new specimens'.format(form.cleaned_data))
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse('samples:specimens-experiment-sample', kwargs={'id': self.kwargs['id'], 'sample_id': self.kwargs['sample_id']})
