@@ -278,8 +278,8 @@ FORM_FIELDS_SPECIMEN_LABELS = {
 
 FORM_FIELDS_SPECIMEN_HELP = {
     FIELD_SPECIMEN_TAGS: 'use cmd/ctrl + click to select multiple',
-    FIELD_SPECIMEN_ACCEPTANCE: 'if acceptance is "Confirmed" the AI Prediction ' + \
-        'will be saved as the "Verified classification"'
+    FIELD_SPECIMEN_ACCEPTANCE: 'if acceptance is "Confirmed" the AI Prediction '
+                               'will be saved as the "Verified classification"'
 }
 
 TAGS = (

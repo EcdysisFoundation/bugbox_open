@@ -1,6 +1,84 @@
 import $ from 'jquery';
 import DataTable from 'datatables.net-bs5';
 
+let idS = []
+
+function formatRowDiv (cols) {
+    return `<div class='row'>${cols}</div>`;
+}
+
+function formatColDiv (col) {
+    return `<div class='col'>${col}</div>`;
+}
+
+function getAiReview (row) {
+    let disabled = '';
+    let confirm_check = '';
+    let reject_check = '';
+    let clear_check = 'checked';
+    let confirmed = '';
+    let rejected = '';
+    if (!row.has_image || row.acceptance != 0 || !row.ai_classification_name) {
+        disabled = 'disabled';
+    } else {
+        // only can change if acceptance == 0 and has an image
+        idS.push(row.id)
+    }
+    if (row.acceptance == 1) {
+        clear_check = '';
+        confirm_check = 'checked';
+        confirmed = 'ed'
+    }
+    if (row.acceptance == 2) {
+         clear_check = '';
+         reject_check = 'checked';
+         rejected = 'ed'
+    }
+    return `<div class="btn-group" role="group" aria-label="Review button group">
+<input type="radio" class="btn-check" name="review-${row.id}" id="confirm-${row.id}" value="${row.id}" autocomplete="off" ${confirm_check} ${disabled}>
+<label class="btn btn-outline-success" for="confirm-${row.id}">Confirm${confirmed}</label>
+<input type="radio" class="btn-check" name="review-${row.id}" id="reject-${row.id}" value="${row.id}" autocomplete="off" ${reject_check} ${disabled}>
+<label class="btn btn-outline-danger" for="reject-${row.id}">Reject${rejected}</label>
+<input type="radio" class="btn-check" name="review-${row.id}" id="clear-${row.id}" value="" autocomplete="off" ${clear_check} ${disabled}>
+<label class="btn btn-link-secondary" for="clear-${row.id}">Clear</label>
+</div>`
+}
+
+function getRow ( data, type, row ) {
+    let cols = ''
+    // img_thumbnail
+    if (row.img_thumbnail_large) {
+        cols += formatColDiv(`<button type="button" class="btn" data-bs-toggle="modal"
+                data-bs-target="#imageModal"
+                data-bs-whatever="
+                <img src='${row.img_thumbnail_large.url}'
+                width='${row.img_thumbnail_large.width}'
+                height='${row.img_thumbnail_large.height}'>
+                ">
+                ${data} </button>`);
+    } else {
+        cols += formatColDiv(`<div class="ms-4 mt-2">${data}</div>`);
+    }
+    // view and edit
+    cols += formatColDiv(
+        `<p><a href="${row.view_link}" target="_blank"><i class="bi bi-eye"></i></a></p>
+<p><a href="${row.edit_link}" target="_blank"><i class="bi bi-pencil"></i></a></p>`);
+    // specimen context
+    cols += formatColDiv(
+        row.specimen_context
+    )
+    // classification
+    cols += formatColDiv(row.classification_name)
+
+    // ai_classification
+    cols += formatColDiv(row.ai_classification)
+
+    // ai review pane
+    cols += formatColDiv(getAiReview(row))
+
+    return formatRowDiv(cols)
+};
+
 $(function () {
     const json_context = JSON.parse(document.getElementById('json_context').textContent);
     let needsClassification = document.getElementById('needsClassification');
@@ -10,7 +88,6 @@ $(function () {
     let json_data = json_context.json_data;
     let jsonDataInput = document.getElementById('id_json_data');
     let submitBtn = document.getElementById('submit-btn');
-    let idS = []
     imageModal.addEventListener('show.bs.modal', event => {
         const button = event.relatedTarget
         const thisimage = button.getAttribute('data-bs-whatever')
@@ -33,59 +110,7 @@ $(function () {
         columns: [
             {
                 data: 'img_thumbnail',
-                render: function (data, type, row) {
-                    if (row.img_thumbnail_large) {
-                        return `<button type="button" class="btn" data-bs-toggle="modal"
-                                data-bs-target="#imageModal"
-                                data-bs-whatever="
-                                <img src='${row.img_thumbnail_large.url}'
-                                width='${row.img_thumbnail_large.width}'
-                                height='${row.img_thumbnail_large.height}'>
-                                ">
-                                ${data} </button>`
-                    } else {
-                        return `<div class="ms-4 mt-2">${data}</div>`
-                    }
-
-                }
-            },
-            {
-                data: 'data_row',
-            },
-            {
-                data: 'id',
-                render: function (data, type, row) {
-                    let disabled = '';
-                    let confirm_check = '';
-                    let reject_check = '';
-                    let clear_check = 'checked';
-                    let confirmed = '';
-                    let rejected = '';
-                    if (!row.has_image || row.acceptance != 0) {
-                        disabled = 'disabled';
-                    } else {
-                        // only can change if acceptance == 0 and has an image
-                        idS.push(data)
-                    }
-                    if (row.acceptance == 1) {
-                        clear_check = '';
-                        confirm_check = 'checked';
-                        confirmed = 'ed'
-                    }
-                    if (row.acceptance == 2) {
-                         clear_check = '';
-                         reject_check = 'checked';
-                         rejected = 'ed'
-                    }
-                    return `<div class="btn-group" role="group" aria-label="Review button group">
-<input type="radio" class="btn-check" name="review-${data}" id="confirm-${data}" value="${data}" autocomplete="off" ${confirm_check} ${disabled}>
-<label class="btn btn-outline-success" for="confirm-${data}">Confirm${confirmed}</label>
-<input type="radio" class="btn-check" name="review-${data}" id="reject-${data}" value="${data}" autocomplete="off" ${reject_check} ${disabled}>
-<label class="btn btn-outline-danger" for="reject-${data}">Reject${rejected}</label>
-<input type="radio" class="btn-check" name="review-${data}" id="clear-${data}" value="" autocomplete="off" ${clear_check} ${disabled}>
-<label class="btn btn-link-secondary" for="clear-${data}">Clear</label>
-</div>`
-                }
+                render: getRow
             }
         ]
     });

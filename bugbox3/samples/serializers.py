@@ -5,9 +5,10 @@ from bugbox3.libs.ui_helpers import get_datatables_container, get_datatables_row
 
 from ..libs.ui_helpers import (
     classify_specimen_button,
+    get_ai_classification,
     get_classifcation,
     get_probability_or_user,
-    get_specimen_context
+    get_specimen_context,
 )
 from . import constants
 from .models import Experiment, Sample, Site, Specimen
@@ -191,6 +192,7 @@ class SpecimenDatatablesSerializer(ModelSerializer):
             'data_row': self.get_data_row(value),
         }
 
+
 class SpecimensAllDatatablesSerializer(ModelSerializer):
 
     class Meta:
@@ -201,19 +203,6 @@ class SpecimensAllDatatablesSerializer(ModelSerializer):
             constants.FIELD_SPECIMEN_CONFIDENCE,
             constants.FIELD_SPECIMEN_ARCHIVAL_IDENTIFIER
         ]
-
-    def get_data_row(self, value):
-
-        link = reverse('samples:specimen', kwargs={'id': value.id})
-        edit_link = reverse('samples:specimen-update', kwargs={'id': value.id})
-        columns = [
-            '<a href="{0}" target="_blank"><i class="bi bi-eye"></i></a>'.format(link),
-            '<a href="{0}" target="_blank"><i class="bi bi-pencil"></i></a>'.format(edit_link),
-            get_classifcation(value),
-            get_probability_or_user(value),
-            get_specimen_context(value)
-        ]
-        return get_datatables_container(get_datatables_row(columns))
 
     def to_representation(self, value):
         img_thumbnail_large = None
@@ -229,10 +218,16 @@ class SpecimensAllDatatablesSerializer(ModelSerializer):
         else:
             img_thumbnail = get_img_src(False)
         return {
-            'data_row': self.get_data_row(value),
             'img_thumbnail': img_thumbnail,
             'img_thumbnail_large': img_thumbnail_large,
             'id': value.id,
             'has_image': True if specimen_image else False,
-            'acceptance': value.acceptance
+            'acceptance': value.acceptance,
+            'ai_classification_name': value.ai_classification.name if value.ai_classification else '',
+            'ai_classification': get_ai_classification(value),
+            'classification_name': value.classification.name if value.classification else '',
+            'classification_id': value.classification.id if value.classification else '',
+            'view_link': reverse('samples:specimen', kwargs={'id': value.id}),
+            'edit_link': reverse('samples:specimen-update', kwargs={'id': value.id}),
+            'specimen_context': get_specimen_context(value)
         }

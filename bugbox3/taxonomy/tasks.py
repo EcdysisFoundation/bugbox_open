@@ -35,7 +35,7 @@ def id_image(id):
     try:
         data = image_prediction(specimenimage.image)
     except SoftTimeLimitExceeded:
-        logging.exception('SoftTimeLimitExceeded on id_image of specimen uuid: {}'.format(id))
+        logging.exception('SoftTimeLimitExceeded on id_image of specimen id: {}'.format(id))
         data = None
     except FileNotFoundError as e:
         print(e)

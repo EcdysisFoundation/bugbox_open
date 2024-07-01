@@ -156,12 +156,22 @@ def get_probability(specimen):
     else:
         return ''
 
+
 def get_probability_or_user(specimen):
     if specimen.acceptance == constants.ACCEPTANCE_REJECTED:
-            return '<span class="badge text-bg-success">{0}</span>'.format(specimen.user)
+        return '<span class="badge text-bg-success">{0}</span>'.format(specimen.user)
     else:
         version = '<p>{0}</p>'.format(specimen.ai_version.version) if specimen.ai_version else ''
         return '{0}{1}'.format(get_probability(specimen), version)
+
+
+def get_ai_classification(specimen):
+    if not specimen.ai_classification:
+        return ''
+    return '<p>{0} {1}{2}</p>'.format(
+        specimen.ai_classification.name,
+        get_probability(specimen),
+        specimen.ai_version.version)
 
 
 def get_specimen_context(specimen):

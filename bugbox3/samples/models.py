@@ -207,8 +207,8 @@ class Specimen(Model):
 class SpecimenImage(Model):
     specimen = ForeignKey(Specimen, on_delete=CASCADE)
     primary_image = BooleanField(default=False)
-    image = ImageField(upload_to='specimen_images')  # change to specimen_images
-    image_thumbnail = ImageField(null=True, blank=True, upload_to='specimen_images')  # change to specimen_images
+    image = ImageField(upload_to='specimen_images')
+    image_thumbnail = ImageField(null=True, blank=True, upload_to='specimen_images')
     image_thumbnail_medium = ImageField(null=True, blank=True, upload_to='specimen_images')
     image_thumbnail_large = ImageField(null=True, blank=True, upload_to='specimen_images')
     date_added = DateTimeField(auto_now_add=True)
@@ -221,7 +221,7 @@ class SpecimenImage(Model):
 @receiver(pre_save, sender=SpecimenImage)
 def ensure_single_true_flag(sender, instance, **kwargs):
     """
-    Signal receiver to ensure only one MyModel instance has flag set to True.
+    Signal receiver to ensure only one instance has flag set to True.
     """
     if instance.primary_image:
         # If flag is set to True, set flag to False for other instances
@@ -258,6 +258,16 @@ def save_specimen_image_thumbnail(sender, instance, **kwargs):
             constants.SPECIMEN_IMAGE_THUMBSIZE_LARGE,
             constants.SPECIMEN_IMAGE_THUMBSIZE_LARGE,
             'thumbnail_large')
+
+# raises bugbox3.samples.models.Specimen.DoesNotExist: Specimen matching query does not exist.
+# Specimen not completely saved by the time it runs? Use Atomic?
+# @receiver(post_save, sender=SpecimenImage)
+# def classify_new_images(sender, instance, created, **kwargs):
+#     # classify if it is a new image and meets criteria acceptence == Pending
+#     # and no previous classifications to the specimen.
+#     if created and instance.specimen.acceptance == \
+#           constants.ACCEPTANCE_PENDING and not instance.specimen.ai_classification:
+#         id_image.delay(instance.specimen.id)
 
 
 class TimelineEvent(Model):

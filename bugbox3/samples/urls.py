@@ -15,11 +15,11 @@ from .views import (
     SiteUpdateView,
     SpecimenCreateView,
     SpecimenDatatablesViewSet,
-    SpecimensAllDatatablesViewSet,
     SpecimenDeleteView,
+    SpecimensAllDatatablesViewSet,
+    SpecimensView,
     SpecimenUpdateView,
     SpecimenView,
-    SpecimensView
 )
 
 router = DefaultRouter()
@@ -51,5 +51,7 @@ urlpatterns = [
     path('specimen-create/<int:sample_id>', SpecimenCreateView.as_view(), name='specimen-create'),
     path('specimen-update/<int:id>', SpecimenUpdateView.as_view(), name='specimen-update'),
     path('specimen-delete/<int:id>/<int:sample_id>', SpecimenDeleteView.as_view(), name='specimen-delete'),
-    path('specimens-experiment-sample/<int:id>/<int:sample_id>', SpecimensView.as_view(), name='specimens-experiment-sample')
+    path('specimens-experiment-sample/<int:id>/<int:sample_id>',
+         SpecimensView.as_view(),
+         name='specimens-experiment-sample')
 ]

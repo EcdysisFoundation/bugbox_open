@@ -37,7 +37,7 @@ from .serializers import (
     SamplesDatatablesSerializer,
     SitesDatatablesSerializer,
     SpecimenDatatablesSerializer,
-    SpecimensAllDatatablesSerializer
+    SpecimensAllDatatablesSerializer,
 )
 
 
@@ -81,6 +81,7 @@ class SpecimenDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelViewSe
     def get_queryset(self):
         sample_id = int(self.kwargs['sample_id'])
         return Specimen.objects.filter(sample_id=sample_id).order_by('-id')
+
 
 class SpecimensAllDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
 
@@ -608,9 +609,13 @@ class SpecimenUpdateView(UpdateView):
     def form_valid(self, form):
         context = self.get_context_data()
         if context['object'].ai_classification and form.instance.classification:
-            if context['object'].ai_classification != form.instance.classification and form.instance.acceptance != constants.ACCEPTANCE_REJECTED:
+            if context['object'].ai_classification != \
+                form.instance.classification and form.instance.acceptance != \
+                    constants.ACCEPTANCE_REJECTED:
                 form.instance.acceptance = constants.ACCEPTANCE_REJECTED
-            elif context['object'].ai_classification == form.instance.classification and form.instance.acceptance == constants.ACCEPTANCE_REJECTED:
+            elif context['object'].ai_classification == \
+                form.instance.classification and form.instance.acceptance == \
+                    constants.ACCEPTANCE_REJECTED:
                 form.instance.classification = None
         elif context['object'].ai_classification and form.instance.acceptance == constants.ACCEPTANCE_CONFIRMED:
             form.instance.classification = context['object'].ai_classification
@@ -630,6 +635,7 @@ class SpecimenDeleteView(DeleteView):
 
     def get_success_url(self):
         return reverse('samples:sample', kwargs={'sample_id': self.kwargs['sample_id']})
+
 
 class SpecimensView(FormView):
     form_class = JSONFieldForm
@@ -654,20 +660,24 @@ class SpecimensView(FormView):
         context.update({
             'container_row_header': get_datatables_container(
                 get_datatables_row([
-                    'View',
-                    'Edit',
+                    'Image',
+                    'View</br>Edit',
+                    'Sample',
                     'Classification',
-                    'Probability<br/>(Model)',
-                    'Sample'
+                    'AI Classification<br/>(model)',
+                    'AI Review'
                 ])),
             'json_context': get_json_context({
                 'datatables_url': datatables_url,
                 'first_picker_choices': constants.ACCEPTANCE_CHOICES,
                 'first_picker_text': 'AI ID Acceptance',
-                'json_data': self._sv_json_data
+                'json_data': self._sv_json_data,
             }),
             'acceptance_picker_choices': constants.ACCEPTANCE_CHOICES,
-            'form_action_url': reverse('samples:specimens-experiment-sample', kwargs={'id': self.kwargs['id'], 'sample_id': self.kwargs['sample_id']})
+            'form_action_url': reverse(
+                'samples:specimens-experiment-sample',
+                kwargs={'id': self.kwargs['id'],
+                        'sample_id': self.kwargs['sample_id']})
         })
         return context
 
@@ -683,15 +693,23 @@ class SpecimensView(FormView):
         confirm_count = 0
         for i in confirmed_ids:
             specimen = get_object_or_404(Specimen, id=i)
-            specimen.acceptance=constants.ACCEPTANCE_CONFIRMED
+            specimen.acceptance = constants.ACCEPTANCE_CONFIRMED
             specimen.classification = specimen.ai_classification
             specimen.save()
             confirm_count += 1
         Specimen.objects.filter(
             id__in=rejected_ids, acceptance=constants.ACCEPTANCE_PENDING).update(
                 acceptance=constants.ACCEPTANCE_REJECTED)
-        messages.success(self.request, 'Succesfully confirmed {0} specimens and rejected {1}'.format(confirm_count), len(rejected_ids))
+        messages.success(
+            self.request, 'Succesfully confirmed {0} specimens and rejected {1}'.format(
+                confirm_count, len(rejected_ids)))
         return super().form_valid(form)
 
     def get_success_url(self):
-        return reverse('samples:specimens-experiment-sample', kwargs={'id': self.kwargs['id'], 'sample_id': self.kwargs['sample_id']})
+        return reverse(
+            'samples:specimens-experiment-sample',
+            kwargs={
+                'id': self.kwargs['id'],
+                'sample_id': self.kwargs['sample_id']
+            }
+        )

@@ -1,7 +1,7 @@
 import json
-from django.core.exceptions import ValidationError
-from django.utils.safestring import mark_safe
+
 from crispy_forms.layout import HTML, Column, Field, Fieldset, Row
+from django.core.exceptions import ValidationError
 from django.forms import (
     CharField,
     ChoiceField,
@@ -15,6 +15,7 @@ from django.forms import (
     SelectMultiple,
     Textarea,
 )
+from django.utils.safestring import mark_safe
 
 from ..core.forms import Html5DateInput, ModelFormMixin, MultipleFileField, get_submit_layout
 from . import constants
