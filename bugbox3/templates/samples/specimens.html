@@ -30,7 +30,7 @@
     <div class="row bg-ecdysis mt-3">
         <div class="col">
             <div class="align-items-center bg-ecdysis text-white d-flex justify-content-between">
-                <h2 class="text-light mt-1">Specimens</h2>
+                <h2 class="text-light mt-1">Review Specimens</h2>
                 <a href="" class="btn btn-light btn-small" role="button">Go Somewhere</a>
             </div>
         </div>
@@ -39,20 +39,11 @@
     <div class="row bg-light rounded pt-2 pb-1 mb-1" id="searchToolbar">
         <div class="col-3">
             <select placeholder="Filter by" aria-label="Filter by" id="acceptancePicker" class="form-select">
-                <option value="">ID Acceptance</option>
+                <option value="">Any acceptance</option>
                 {% for i in acceptance_picker_choices %}
-                <option value="{{ i.0 }}">{{ i.1 }}</option>
+                <option value="{{ i.0 }}" {% if i.0 == 0 %} selected{% endif %}>{{ i.1 }}</option>
                 {% endfor %}
             </select>
-        </div>
-        <div class="col-3 form-check form-switch">
-            <input class="form-check-input" type="checkbox" role="switch" id="needsClassification">
-            <label class="form-check-label" for="needsClassification">
-              Needs verified classification
-            </label>
-          </div>
-        <div class="col-3">
-            <button type="button" class="btn btn-success btn-sm" id="filterButton">Apply Filters</button>
         </div>
       </div>
     <div class="row">

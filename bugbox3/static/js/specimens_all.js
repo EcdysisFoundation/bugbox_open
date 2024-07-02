@@ -81,13 +81,12 @@ function getRow ( data, type, row ) {
 
 $(function () {
     const json_context = JSON.parse(document.getElementById('json_context').textContent);
-    let needsClassification = document.getElementById('needsClassification');
-    let filterButton = document.getElementById('filterButton');
     let acceptancePicker = document.getElementById('acceptancePicker');
     let imageModal = document.getElementById('imageModal');
     let json_data = json_context.json_data;
     let jsonDataInput = document.getElementById('id_json_data');
     let submitBtn = document.getElementById('submit-btn');
+    let url = json_context.datatables_url + '?acceptance_filter=0'
     imageModal.addEventListener('show.bs.modal', event => {
         const button = event.relatedTarget
         const thisimage = button.getAttribute('data-bs-whatever')
@@ -101,7 +100,7 @@ $(function () {
         processing: false,
         serverSide: true,
         ajax: {
-            url: json_context.datatables_url,
+            url: url,
             dataSrc: 'data'
         },
         language: {
@@ -118,21 +117,9 @@ $(function () {
      // api_url filters
 
      acceptancePicker.addEventListener("change", function () {
-        if (acceptancePicker.value in [0, 1]) {
-            needsClassification.disabled = true
-            needsClassification.checked = false;
-           } else {
-            needsClassification.disabled = false;
-           }
-     })
-
-     filterButton.addEventListener("click", function() {
-        let url = json_context.datatables_url
+        url = json_context.datatables_url
+        // Allow to add additional query_params and combine with &
         let query_params = []
-
-        if (needsClassification.checked) {
-            query_params.push(['class_filter', true]);
-        }
         if (acceptancePicker.value in [0, 1, 2]) {
             query_params.push(['acceptance_filter', acceptancePicker.value]);
         }
@@ -147,10 +134,9 @@ $(function () {
 
         };
         specimens_table.ajax.url(url).load();
-       })
+     })
 
        submitBtn.addEventListener('click', function() {
-            //alert(idS)
             for (let i = 0; i < idS.length; i++) {
                 let btnConfirm = document.getElementById('confirm-' + idS[i].toString())
                 let btnReject = document.getElementById('reject-' + idS[i].toString())
