@@ -13,6 +13,36 @@
 
 {% block content %}
 
+<!-- Export Modal -->
+<div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exportModalLabel">Export Data</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+              <form id="exportForm" action="{% url 'taxonomy:morphospecies-csv' %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="type" class="col-form-label"><strong>Export Name</strong></label>
+                    <select class="form-control" id="name" name="name" required>
+                        <option value="all-morph">All Morhpospecies</option>
+                    </select>
+                </div>
+                <button type="submit" name="morpho" class="btn btn-primary mt-3">
+                  <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                  Export Data
+                </button>
+              </form>
+
+            </div>
+        </div>
+    </div>
+  </div>
+
+
 <div class="container">
 
     <div class="row bg-ecdysis mt-3">
@@ -41,6 +71,12 @@
                 </tr>
             </thead>
             </table>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-3">
+            <button class="btn btn-link" data-bs-toggle="modal" data-bs-target="#exportModal">Export Data</button>
         </div>
     </div>
 

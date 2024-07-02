@@ -1,9 +1,11 @@
+import csv
 from time import sleep
 
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db.models import Count, Q
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.views.generic import CreateView, TemplateView, UpdateView
@@ -228,3 +230,21 @@ def classify_sample(request, id):
         id_image.delay(s.id)
     sleep(3)
     return redirect(request.META['HTTP_REFERER'])
+
+
+def morphospecies_csv(request):
+    response = HttpResponse(content_type='text/csv')
+    name = request.GET.get('name')
+    response['Content-Disposition'] = f'attachment; filename="{name}.csv"'
+    writer = csv.writer(response)
+    headers = ['None']
+    result_values_list = []
+
+    if name == 'all-morph':
+        headers = constants.EXPORT_HEADERS_MORPHOSPECIES
+        result_values_list = Morphospecies.objects.values_list(*headers)
+
+    writer.writerow(headers)
+    writer.writerows(list(result_values_list))
+
+    return response
