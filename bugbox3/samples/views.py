@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db import transaction
 from django.forms import inlineformset_factory
 from django.shortcuts import get_object_or_404
@@ -9,6 +10,7 @@ from rest_framework.reverse import reverse as api_reverse
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
 from ..core.views import DatatablesModelViewSetMixin
+from ..core.permissions import IS_RESEARCH, REVIEW_SPECIMEN_PAGE
 from ..libs.ui_helpers import (
     calc_image_height,
     get_datatables_container,
@@ -41,14 +43,18 @@ from .serializers import (
 )
 
 
-class ExperimentsDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
+class ExperimentsDatatablesViewSet(PermissionRequiredMixin, DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
+
+    permission_required = IS_RESEARCH
 
     serializer_class = ExperimentsDatatablesSerializer
     queryset = Experiment.objects.all().order_by(constants.FIELD_NAME)
     search_vector = [constants.FIELD_NAME, constants.FIELD_ABBREVIATION]
 
 
-class SamplesDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
+class SamplesDatatablesViewSet(PermissionRequiredMixin, DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
+
+    permission_required = IS_RESEARCH
 
     serializer_class = SamplesDatatablesSerializer
     search_vector = [constants.FIELD_SAMPLE_TYPE]
@@ -58,7 +64,9 @@ class SamplesDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelViewSet
         return Sample.objects.filter(site_visit__site__experiment_id=experiment_id)
 
 
-class SitesDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
+class SitesDatatablesViewSet(PermissionRequiredMixin, DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
+
+    permission_required = IS_RESEARCH
 
     serializer_class = SitesDatatablesSerializer
     search_vector = [
@@ -73,7 +81,9 @@ class SitesDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
         return Site.objects.filter(experiment_id=experiment_id)
 
 
-class SpecimenDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
+class SpecimenDatatablesViewSet(PermissionRequiredMixin, DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
+
+    permission_required = IS_RESEARCH
 
     serializer_class = SpecimenDatatablesSerializer
     search_vector = ['classification__name']
@@ -83,7 +93,9 @@ class SpecimenDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelViewSe
         return Specimen.objects.filter(sample_id=sample_id).order_by('-id')
 
 
-class SpecimensAllDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
+class SpecimensAllDatatablesViewSet(PermissionRequiredMixin, DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
+
+    permission_required = IS_RESEARCH
 
     serializer_class = SpecimensAllDatatablesSerializer
     search_vector = [
@@ -113,7 +125,10 @@ class SpecimensAllDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelVi
         return specimen.order_by('-id')
 
 
-class ExperimentsView(TemplateView):
+class ExperimentsView(PermissionRequiredMixin, TemplateView):
+
+    permission_required = IS_RESEARCH
+
     template_name = 'samples/experiments.html'
 
     def get_context_data(self, **kwargs):
@@ -135,7 +150,10 @@ class ExperimentsView(TemplateView):
         return context
 
 
-class ExperimentView(TemplateView):
+class ExperimentView(PermissionRequiredMixin, TemplateView):
+
+    permission_required = IS_RESEARCH
+
     template_name = 'samples/experiment.html'
 
     def get_context_data(self, **kwargs):
@@ -152,6 +170,7 @@ class ExperimentView(TemplateView):
             'experiment': experiment,
             'years': years,
             'sample_plan_descriptions': description,
+            'review_permission': self.request.user.has_perm(REVIEW_SPECIMEN_PAGE),
             'container_row_header': get_datatables_container(
                 get_datatables_row([
                     'Site Name',
@@ -166,7 +185,9 @@ class ExperimentView(TemplateView):
         return context
 
 
-class ExperimentSamplePlanCreateView(CreateView):
+class ExperimentSamplePlanCreateView(PermissionRequiredMixin, CreateView):
+
+    permission_required = IS_RESEARCH
 
     form_class = ExperimentForm
     template_name = 'samples/experiment_form.html'
@@ -205,7 +226,9 @@ class ExperimentSamplePlanCreateView(CreateView):
         return reverse('samples:experiments')
 
 
-class ExperimentSamplePlanUpdateView(UpdateView):
+class ExperimentSamplePlanUpdateView(PermissionRequiredMixin, UpdateView):
+
+    permission_required = IS_RESEARCH
 
     form_class = ExperimentForm
     template_name = 'samples/experiment_form.html'
@@ -251,7 +274,9 @@ class ExperimentSamplePlanUpdateView(UpdateView):
         return reverse('samples:experiments')
 
 
-class SiteCreateView(CreateView):
+class SiteCreateView(PermissionRequiredMixin, CreateView):
+
+    permission_required = IS_RESEARCH
 
     form_class = SiteForm
     template_name = 'samples/site_form.html'
@@ -296,7 +321,10 @@ class SiteCreateView(CreateView):
         return reverse('samples:experiment', kwargs={'experiment_id': self.kwargs['experiment_id']})
 
 
-class SiteUpdateView(UpdateView):
+class SiteUpdateView(PermissionRequiredMixin, UpdateView):
+
+    permission_required = IS_RESEARCH
+
     form_class = SiteForm
     template_name = 'samples/site_form.html'
     action = 'update'
@@ -346,7 +374,10 @@ class SiteUpdateView(UpdateView):
         return reverse('samples:experiment', kwargs={'experiment_id': self.experiment.id})
 
 
-class SampleView(FormView):
+class SampleView(PermissionRequiredMixin, FormView):
+
+    permission_required = IS_RESEARCH
+
     form_class = NewSpecimenImageForm
     template_name = 'samples/sample_detail.html'
 
@@ -386,6 +417,7 @@ class SampleView(FormView):
                 'completed': sample.completed,
                 'img_thumbnail': img_thumbnail
             },
+            'review_permission': self.request.user.has_perm(REVIEW_SPECIMEN_PAGE),
             'container_row_header': get_datatables_container(
                 get_datatables_row([
                     'Image',
@@ -427,7 +459,10 @@ class SampleView(FormView):
         return reverse('samples:sample', kwargs={'sample_id': self.kwargs['sample_id']})
 
 
-class SampleUpdateView(UpdateView):
+class SampleUpdateView(PermissionRequiredMixin, UpdateView):
+
+    permission_required = IS_RESEARCH
+
     form_class = SampleForm
     template_name = 'samples/sample_form.html'
     action = 'update'
@@ -479,7 +514,10 @@ def specimen_view_context(specimen):
     return context
 
 
-class SpecimenView(FormView):
+class SpecimenView(PermissionRequiredMixin, FormView):
+
+    permission_required = IS_RESEARCH
+
     form_class = SpecimenViewForm
     template_name = 'samples/specimen_detail.html'
 
@@ -540,7 +578,10 @@ class SpecimenView(FormView):
         return reverse('samples:specimen', kwargs={'id':  self.kwargs['id']})
 
 
-class SpecimenCreateView(CreateView):
+class SpecimenCreateView(PermissionRequiredMixin, CreateView):
+
+    permission_required = IS_RESEARCH
+
     form_class = SpecimenForm
     template_name = 'samples/specimen_create.html'
     action = 'create'
@@ -577,7 +618,10 @@ class SpecimenCreateView(CreateView):
         return reverse('samples:specimen', kwargs={'id': self.object.id})
 
 
-class SpecimenUpdateView(UpdateView):
+class SpecimenUpdateView(PermissionRequiredMixin, UpdateView):
+
+    permission_required = IS_RESEARCH
+
     form_class = SpecimenForm
     template_name = 'samples/specimen_update.html'
     action = 'update'
@@ -625,7 +669,9 @@ class SpecimenUpdateView(UpdateView):
         return reverse('samples:specimen', kwargs={'id': self.kwargs['id']})
 
 
-class SpecimenDeleteView(DeleteView):
+class SpecimenDeleteView(PermissionRequiredMixin, DeleteView):
+
+    permission_required = IS_RESEARCH
 
     model = Specimen
     template_name = 'samples/specimen_confirm_delete.html'
@@ -637,7 +683,10 @@ class SpecimenDeleteView(DeleteView):
         return reverse('samples:sample', kwargs={'sample_id': self.kwargs['sample_id']})
 
 
-class SpecimensView(FormView):
+class SpecimensView(PermissionRequiredMixin, FormView):
+
+    permission_required = IS_RESEARCH + [REVIEW_SPECIMEN_PAGE]
+
     form_class = JSONFieldForm
     template_name = 'samples/specimens.html'
 

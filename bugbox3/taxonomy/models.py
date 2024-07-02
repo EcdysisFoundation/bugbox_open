@@ -43,13 +43,6 @@ class Morphospecies(Model):
     def __str__(self):
         return str(self.name)
 
-    class Meta:
-        verbose_name = 'Morphospecies'
-        verbose_name_plural = 'Morphospecies'
-        permissions = [
-            (constants.PERMISSION_MORPHOSPECIES_FUNCTIONS, constants.PERMISSION_MORPHOSPECIES_FUNCTIONS_TXT),
-        ]
-
 
 @receiver(pre_save, sender=Morphospecies)
 def save_sample_thumbnail(sender, instance, **kwargs):

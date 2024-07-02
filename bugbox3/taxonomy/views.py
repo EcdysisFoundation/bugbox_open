@@ -1,6 +1,8 @@
 from time import sleep
 
 from django.contrib import messages
+from django.contrib.auth.decorators import permission_required
+from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
@@ -9,6 +11,7 @@ from rest_framework.reverse import reverse as api_reverse
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
 from ..core.views import DatatablesModelViewSetMixin
+from ..core.permissions import IS_RESEARCH, ADD_MORPHOSPECIES, CHANGE_MORPHOSPECIES
 from ..libs.ui_helpers import calc_image_height, get_datatables_container, get_datatables_row
 from ..libs.utilities import get_json_context
 from ..samples import constants as samples_constants
@@ -20,7 +23,9 @@ from .serializers import MorphospeciesDatatablesSerializer, MorphospeciesPickerS
 from .tasks import id_image
 
 
-class MorphospeciesDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
+class MorphospeciesDatatablesViewSet(PermissionRequiredMixin, DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
+
+    permission_required = IS_RESEARCH
     serializer_class = MorphospeciesDatatablesSerializer
     search_vector = (
         constants.FIELD_MORPHO_NAME,
@@ -35,7 +40,9 @@ class MorphospeciesDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelV
         return Morphospecies.objects.all().order_by(constants.FIELD_MORPHO_NAME)
 
 
-class MorphospeciesPickerViewSet(DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
+class MorphospeciesPickerViewSet(PermissionRequiredMixin, DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
+
+    permission_required = IS_RESEARCH
     serializer_class = MorphospeciesPickerSerializer
     search_vector = (
         constants.FIELD_MORPHO_NAME,
@@ -70,7 +77,9 @@ def get_morphospecies_datatable(datatables_url):
         }
 
 
-class MophospeciesView(TemplateView):
+class MophospeciesView(PermissionRequiredMixin, TemplateView):
+
+    permission_required = IS_RESEARCH
     template_name = 'taxonomy/morphospecies.html'
 
     def get_context_data(self, **kwargs):
@@ -78,10 +87,15 @@ class MophospeciesView(TemplateView):
         datatables_url = api_reverse('taxonomy:morphospecies-data-list',
                                      request=self.request, kwargs=kwargs)
         context.update(get_morphospecies_datatable(datatables_url))
+        context.update({
+            'can_add': self.request.user.has_perm(ADD_MORPHOSPECIES),
+        })
         return context
 
 
-class MorphospeciesDetailView(TemplateView):
+class MorphospeciesDetailView(PermissionRequiredMixin, TemplateView):
+
+    permission_required = IS_RESEARCH
     template_name = 'taxonomy/morphospecies_detail.html'
 
     def get_context_data(self, **kwargs):
@@ -141,6 +155,7 @@ class MorphospeciesDetailView(TemplateView):
             'train': [a.train for a in ai]
         }
         context.update({
+            'can_edit': self.request.user.has_perm(CHANGE_MORPHOSPECIES),
             'display_name': display_name,
             'morphospecies': morphospecies,
             'ai_last_train': ai_accuracy_over_time['train'][-1] if ai_accuracy_over_time['train'] else 0,
@@ -159,8 +174,9 @@ class MorphospeciesDetailView(TemplateView):
         return context
 
 
-class MorphospeciesCreateView(CreateView):
+class MorphospeciesCreateView(PermissionRequiredMixin, CreateView):
 
+    permission_required = IS_RESEARCH + [ADD_MORPHOSPECIES]
     form_class = MorphospeciesForm
     template_name = 'taxonomy/morphospecies_form.html'
     action = 'create'
@@ -177,7 +193,9 @@ class MorphospeciesCreateView(CreateView):
         return reverse('taxonomy:morphospecies-detail', kwargs={'id': self.object.id})
 
 
-class MorphospeciesUpdateView(UpdateView):
+class MorphospeciesUpdateView(PermissionRequiredMixin, UpdateView):
+
+    permission_required = IS_RESEARCH + [CHANGE_MORPHOSPECIES]
     form_class = MorphospeciesUpdateForm
     template_name = 'taxonomy/morphospecies_form_update.html'
     action = 'update'
@@ -196,13 +214,13 @@ class MorphospeciesUpdateView(UpdateView):
     def get_success_url(self):
         return reverse('taxonomy:morphospecies-detail', kwargs={'id': self.object.id})
 
-
+@permission_required(IS_RESEARCH)
 def classify_specimen(request, id):
     id_image.delay(id)
     sleep(2)
     return redirect(request.META['HTTP_REFERER'])
 
-
+@permission_required(IS_RESEARCH)
 def classify_sample(request, id):
     sample = get_object_or_404(Sample, id=id)
     specimen = Specimen.objects.filter(sample=sample, acceptance=0)

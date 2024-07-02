@@ -203,6 +203,11 @@ class Specimen(Model):
     def __str__(self):
         return str(self.uuid)
 
+    class Meta:
+        permissions = [
+            (constants.PERMISSION_SPECIMEN_REVIEW, constants.PERMISSION_SPECIMEN_REVIEW_TXT)
+        ]
+
 
 class SpecimenImage(Model):
     specimen = ForeignKey(Specimen, on_delete=CASCADE)

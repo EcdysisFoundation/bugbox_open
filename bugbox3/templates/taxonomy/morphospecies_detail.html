@@ -22,7 +22,9 @@
                 <div class="card-header align-items-center bg-ecdysis text-white d-flex justify-content-between">
                     <h2 class="text-light mt-1">{{ morphospecies.name }}</h2>
                     <a href="{% url 'taxonomy:morphospecies' %}" class="btn btn-light btn-small" role="button">Morphospecies</a>
-                    <a href="{% url 'taxonomy:morphospecies-update' morphospecies.id %}" class="btn btn-light btn-small" role="button">Edit</a>
+                    {% if can_edit %}
+                        <a href="{% url 'taxonomy:morphospecies-update' morphospecies.id %}" class="btn btn-light btn-small" role="button">Edit</a>
+                    {% endif %}
                 </div>
                 <div class="card-body">
                     <div class="row">

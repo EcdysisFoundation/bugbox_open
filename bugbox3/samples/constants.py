@@ -319,3 +319,7 @@ TAGS = (
 )
 
 TAG_CHOICES = ((v, v) for v in TAGS)
+
+# PERMISSIONS
+PERMISSION_SPECIMEN_REVIEW = 'review_specimen_page'
+PERMISSION_SPECIMEN_REVIEW_TXT = 'Can use the review specimen page.'

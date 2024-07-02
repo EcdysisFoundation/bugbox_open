@@ -69,9 +69,13 @@
             <div class="card">
                 <div class="card-header align-items-center bg-ecdysis text-white d-flex justify-content-between">
                     <div class="col">
+                        {% if review_permission %}
                         <a href="{% url 'samples:specimens-experiment-sample' id=sample_info.experiment_id sample_id=sample_info.sample_id %}" class="link-light">
+                        {% endif %}
                             <h5>Specimens</h5>
+                        {% if review_permission %}
                         </a>
+                        {% endif %}
                         <a role="button" class="btn btn-secondary btn-sm {% if sample_info.completed %} disabled" aria-disabled="true"{% else %}"{% endif %}
                            href="{% url 'samples:specimen-create' sample_info.sample_id %}">
                            Add specimen</a>

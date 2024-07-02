@@ -19,7 +19,9 @@
         <div class="col">
             <div class="align-items-center bg-ecdysis text-white d-flex justify-content-between">
                 <h2 class="text-light mt-1">Morphospecies</h2>
-                <a href="{% url 'taxonomy:morphospecies-create' %}" class="btn btn-light btn-small" role="button">Add Morphospecies</a>
+                {% if can_add %}
+                    <a href="{% url 'taxonomy:morphospecies-create' %}" class="btn btn-light btn-small" role="button">Add Morphospecies</a>
+                {% endif %}
             </div>
         </div>
     </div>
