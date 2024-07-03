@@ -20,6 +20,7 @@ from .views import (
     SpecimensView,
     SpecimenUpdateView,
     SpecimenView,
+    experiment_ai_csv,
 )
 
 router = DefaultRouter()
@@ -36,22 +37,23 @@ router.register(r'specimens-all-data/(?P<id>[^/]+)/(?P<sample_id>[^/]+)', Specim
 
 app_name = "samples"
 urlpatterns = [
-    path('', include(router.urls)),
-    path('experiments/', ExperimentsView.as_view(), name='experiments'),
-    path('experiment/<int:experiment_id>', ExperimentView.as_view(), name='experiment'),
-    path('experiment-sample-plan-create/',
-         ExperimentSamplePlanCreateView.as_view(), name='experiment-sample-plan-create'),
-    path('experiment-sample-plan-update/<int:experiment_id>',
-         ExperimentSamplePlanUpdateView.as_view(), name='experiment-sample-plan-update'),
-    path('site-create/<int:experiment_id>', SiteCreateView.as_view(), name='site-create'),
-    path('site-update/<int:site_id>', SiteUpdateView.as_view(), name='site-update'),
-    path('sample/<int:sample_id>', SampleView.as_view(), name='sample'),
-    path('sample-update/<int:sample_id>', SampleUpdateView.as_view(), name='sample-update'),
-    path('specimen/<int:id>', SpecimenView.as_view(), name='specimen'),
-    path('specimen-create/<int:sample_id>', SpecimenCreateView.as_view(), name='specimen-create'),
-    path('specimen-update/<int:id>', SpecimenUpdateView.as_view(), name='specimen-update'),
-    path('specimen-delete/<int:id>/<int:sample_id>', SpecimenDeleteView.as_view(), name='specimen-delete'),
-    path('specimens-experiment-sample/<int:id>/<int:sample_id>',
-         SpecimensView.as_view(),
-         name='specimens-experiment-sample')
+     path('', include(router.urls)),
+     path('experiments/', ExperimentsView.as_view(), name='experiments'),
+     path('experiment/<int:experiment_id>', ExperimentView.as_view(), name='experiment'),
+     path('experiment-sample-plan-create/',
+          ExperimentSamplePlanCreateView.as_view(), name='experiment-sample-plan-create'),
+     path('experiment-sample-plan-update/<int:experiment_id>',
+          ExperimentSamplePlanUpdateView.as_view(), name='experiment-sample-plan-update'),
+     path('site-create/<int:experiment_id>', SiteCreateView.as_view(), name='site-create'),
+     path('site-update/<int:site_id>', SiteUpdateView.as_view(), name='site-update'),
+     path('sample/<int:sample_id>', SampleView.as_view(), name='sample'),
+     path('sample-update/<int:sample_id>', SampleUpdateView.as_view(), name='sample-update'),
+     path('specimen/<int:id>', SpecimenView.as_view(), name='specimen'),
+     path('specimen-create/<int:sample_id>', SpecimenCreateView.as_view(), name='specimen-create'),
+     path('specimen-update/<int:id>', SpecimenUpdateView.as_view(), name='specimen-update'),
+     path('specimen-delete/<int:id>/<int:sample_id>', SpecimenDeleteView.as_view(), name='specimen-delete'),
+     path('specimens-experiment-sample/<int:id>/<int:sample_id>',
+          SpecimensView.as_view(),
+          name='specimens-experiment-sample'),
+     path('experiment-ai-csv/<int:id>', experiment_ai_csv, name='experiment-ai-csv')
 ]

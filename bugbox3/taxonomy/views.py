@@ -12,8 +12,8 @@ from django.views.generic import CreateView, TemplateView, UpdateView
 from rest_framework.reverse import reverse as api_reverse
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
+from ..core.permissions import ADD_MORPHOSPECIES, CHANGE_MORPHOSPECIES, IS_RESEARCH
 from ..core.views import DatatablesModelViewSetMixin
-from ..core.permissions import IS_RESEARCH, ADD_MORPHOSPECIES, CHANGE_MORPHOSPECIES
 from ..libs.ui_helpers import calc_image_height, get_datatables_container, get_datatables_row
 from ..libs.utilities import get_json_context
 from ..samples import constants as samples_constants
@@ -216,11 +216,13 @@ class MorphospeciesUpdateView(PermissionRequiredMixin, UpdateView):
     def get_success_url(self):
         return reverse('taxonomy:morphospecies-detail', kwargs={'id': self.object.id})
 
+
 @permission_required(IS_RESEARCH)
 def classify_specimen(request, id):
     id_image.delay(id)
     sleep(2)
     return redirect(request.META['HTTP_REFERER'])
+
 
 @permission_required(IS_RESEARCH)
 def classify_sample(request, id):
@@ -232,6 +234,7 @@ def classify_sample(request, id):
     return redirect(request.META['HTTP_REFERER'])
 
 
+@permission_required(IS_RESEARCH)
 def morphospecies_csv(request):
     response = HttpResponse(content_type='text/csv')
     name = request.GET.get('name')

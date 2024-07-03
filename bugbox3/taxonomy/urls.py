@@ -10,7 +10,7 @@ from .views import (
     MorphospeciesUpdateView,
     classify_sample,
     classify_specimen,
-    morphospecies_csv
+    morphospecies_csv,
 )
 
 router = DefaultRouter()
@@ -28,5 +28,5 @@ urlpatterns = [
     path('morphospecies-update/<int:id>/', MorphospeciesUpdateView.as_view(), name='morphospecies-update'),
     path('classify-specimen/<int:id>/', classify_specimen, name='classify-specimen'),
     path('classify-sample/<int:id>/', classify_sample, name='classify-sample'),
-    path('morphospecies/csv', morphospecies_csv, name="morphospecies-csv"),
+    path('morphospecies/csv', morphospecies_csv, name='morphospecies-csv'),
 ]

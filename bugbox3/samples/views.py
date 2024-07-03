@@ -1,7 +1,12 @@
+import csv
+
 from django.contrib import messages
+from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db import transaction
+from django.db.models import Case, CharField, F, Func, Value, When
 from django.forms import inlineformset_factory
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.views.generic import TemplateView
@@ -9,8 +14,8 @@ from django.views.generic.edit import CreateView, DeleteView, FormView, UpdateVi
 from rest_framework.reverse import reverse as api_reverse
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
-from ..core.views import DatatablesModelViewSetMixin
 from ..core.permissions import IS_RESEARCH, REVIEW_SPECIMEN_PAGE
+from ..core.views import DatatablesModelViewSetMixin
 from ..libs.ui_helpers import (
     calc_image_height,
     get_datatables_container,
@@ -166,8 +171,16 @@ class ExperimentView(PermissionRequiredMixin, TemplateView):
         description = [v['description'] for v in get_sample_plan_descriptions(experiment.id)]
         sites_datatables_url = api_reverse(
             'samples:site-data-list', request=self.request, kwargs=kwargs)
+        experiment_sites = Site.objects.filter(
+            experiment_id=experiment.id).order_by(
+                constants.FIELD_SITE_SITE_NAME)
+        other_experiments = Experiment.objects.exclude(
+            id=experiment.id).order_by(constants.FIELD_ABBREVIATION)
         context.update({
             'experiment': experiment,
+            'experiment_sites': experiment_sites,
+            'other_experiments': other_experiments,
+            'sample_types': constants.SAMPLE_TYPE_CHOICES,
             'years': years,
             'sample_plan_descriptions': description,
             'review_permission': self.request.user.has_perm(REVIEW_SPECIMEN_PAGE),
@@ -762,3 +775,47 @@ class SpecimensView(PermissionRequiredMixin, FormView):
                 'sample_id': self.kwargs['sample_id']
             }
         )
+
+
+@permission_required(IS_RESEARCH)
+def experiment_ai_csv(request, id):
+    experiment = get_object_or_404(Experiment, id=id)
+    response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
+    response['Content-Disposition'] = f'attachment; filename="{experiment.abbreviation}.csv"'
+    sampleTypes = request.GET.getlist('sampleTypes')
+    sites = request.GET.getlist('sites')
+    other_experiments = request.GET.getlist('otherExperiments')
+    all_exp = other_experiments + [experiment.id]
+    headersArr = constants.EXPERIMENT_AI_CSV + ['Top 1 Correct', 'Top 3 Correct']
+    specimens = Specimen.objects.filter(
+        sample__site_visit__site__experiment_id__in=all_exp,
+        sample__sample_type__in=sampleTypes).exclude(
+            acceptance=constants.ACCEPTANCE_PENDING)
+    if not other_experiments:
+        specimens = specimens.filter(
+            sample__site_visit__site__in=sites)
+    else:
+        specimens = specimens.order_by('sample__site_visit__site__experiment__name')
+    specimens = specimens.values_list(
+        *constants.EXPERIMENT_AI_CSV,
+        Case(When(classification=F(constants.FIELD_SPECIMEN_AI_CLASSIFICATION), then=1),
+             default=0, output_field=CharField()),
+        Case(When(classification=F(constants.FIELD_SPECIMEN_AI_CLASSIFICATION), then=1),
+             When(classification__name=Func(
+                F(constants.FIELD_SPECIMEN_OPTIONAL_PRED_ONE),
+                Value('class_op'),
+                function='jsonb_extract_path_text',
+             ), then=1),
+             When(classification__name=Func(
+                F(constants.FIELD_SPECIMEN_OPTIONAL_PRED_TWO),
+                Value('class_op'),
+                function='jsonb_extract_path_text',
+             ), then=1),
+             default=0, output_field=CharField())
+    )
+
+    writer = csv.writer(response)
+    writer.writerow(headersArr)
+    writer.writerows(list(specimens))
+
+    return response

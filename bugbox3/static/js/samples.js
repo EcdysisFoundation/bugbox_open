@@ -8,6 +8,23 @@ function getDetail( row ) {
 
 $(function () {
     const json_context = JSON.parse(document.getElementById('json_context').textContent);
+
+    document.querySelector('#check-all_sites').onchange = (e) => {
+        document.querySelectorAll('[name=sites]').forEach(el => {
+            el.checked = e.target.checked
+        })
+    }
+    document.querySelector('#check-all_sampleTypes').onchange = (e) => {
+        document.querySelectorAll('[name=sampleTypes]').forEach(el => {
+            el.checked = e.target.checked
+        })
+    }
+    document.querySelector('#check-all_otherExperiments').onchange = (e) => {
+        document.querySelectorAll('[name=otherExperiments]').forEach(el => {
+            el.checked = e.target.checked
+        })
+    }
+
     var samples_table = $('#samples-table').DataTable({
         order: [[1, 'desc']],
         ordering: false,
@@ -45,17 +62,17 @@ $(function () {
         var tr = $(this).closest('tr');
         var row = samples_table.row(tr);
         var idx = detailRows.indexOf(tr.attr('id'));
- 
+
         if (row.child.isShown()) {
             tr.removeClass('details');
             row.child.hide();
- 
+
             // Remove from the 'open' array
             detailRows.splice(idx, 1);
         } else {
             tr.addClass('details');
             row.child(getDetail(row.data())).show();
- 
+
             // Add to the 'open' array
             if (idx === -1) {
                 detailRows.push(tr.attr('id'));
