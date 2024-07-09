@@ -21,6 +21,7 @@ from .views import (
     SpecimenUpdateView,
     SpecimenView,
     experiment_ai_csv,
+    experiment_csv,
 )
 
 router = DefaultRouter()
@@ -55,5 +56,6 @@ urlpatterns = [
      path('specimens-experiment-sample/<int:id>/<int:sample_id>',
           SpecimensView.as_view(),
           name='specimens-experiment-sample'),
-     path('experiment-ai-csv/<int:id>', experiment_ai_csv, name='experiment-ai-csv')
+     path('experiment-ai-csv/<int:id>', experiment_ai_csv, name='experiment-ai-csv'),
+     path('experiment-csv/<int:id>', experiment_csv, name='experiment-csv')
 ]

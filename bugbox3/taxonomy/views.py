@@ -1,5 +1,5 @@
 import csv
-from time import sleep
+import time
 
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
@@ -91,6 +91,7 @@ class MophospeciesView(PermissionRequiredMixin, TemplateView):
         context.update(get_morphospecies_datatable(datatables_url))
         context.update({
             'can_add': self.request.user.has_perm(ADD_MORPHOSPECIES),
+            'exp_morph_choices': constants.EXP_MORPH_CHOICES
         })
         return context
 
@@ -220,7 +221,7 @@ class MorphospeciesUpdateView(PermissionRequiredMixin, UpdateView):
 @permission_required(IS_RESEARCH)
 def classify_specimen(request, id):
     id_image.delay(id)
-    sleep(2)
+    time.sleep(2)
     return redirect(request.META['HTTP_REFERER'])
 
 
@@ -230,7 +231,7 @@ def classify_sample(request, id):
     specimen = Specimen.objects.filter(sample=sample, acceptance=0)
     for s in specimen:
         id_image.delay(s.id)
-    sleep(3)
+    time.sleep(3)
     return redirect(request.META['HTTP_REFERER'])
 
 
@@ -238,15 +239,17 @@ def classify_sample(request, id):
 def morphospecies_csv(request):
     response = HttpResponse(content_type='text/csv')
     name = request.GET.get('name')
-    response['Content-Disposition'] = f'attachment; filename="{name}.csv"'
-    writer = csv.writer(response)
+    name = name if name in constants.EXP_MORPH_CHOICES_NAMES else ''
     headers = ['None']
     result_values_list = []
 
-    if name == 'all-morph':
+    if name == constants.EXP_MORPH_ALL_MORPH:
         headers = constants.EXPORT_HEADERS_MORPHOSPECIES
         result_values_list = Morphospecies.objects.values_list(*headers)
-
+    timestr = time.strftime("%Y%m%d-%H%M%S")
+    response['Content-Disposition'] = 'attachment; filename="{0}-{1}.csv"'.format(
+        name, timestr)
+    writer = csv.writer(response)
     writer.writerow(headers)
     writer.writerows(list(result_values_list))
 

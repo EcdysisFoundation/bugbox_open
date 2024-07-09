@@ -28,7 +28,9 @@
                 <div class="form-group">
                     <label for="type" class="col-form-label"><strong>Export Name</strong></label>
                     <select class="form-control" id="name" name="name" required>
-                        <option value="all-morph">All Morhpospecies</option>
+                        {% for e in exp_morph_choices %}
+                            <option value="{{e.0}}">{{e.1}}</option>
+                        {% endfor %}
                     </select>
                 </div>
                 <button type="submit" name="morpho" class="btn btn-primary mt-3">

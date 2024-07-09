@@ -72,6 +72,83 @@
     </div>
 </div>
 
+<!-- Export Modal2 -->
+<div class="modal fade" id="exportModal2" tabindex="-1" aria-labelledby="exportModal2Label" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exportModal2Label">Export Experiment Data</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="exportForm2" action="{% url 'samples:experiment-csv' experiment.id %}">
+                    {% csrf_token %}
+
+                    <select class="form-select" id="export-type" name="export-type" aria-label="select export variables" required>
+                        {% for e_type in export_types %}
+                        <option value="{{e_type.0}}">{{e_type.1}}</option>
+                        {% endfor %}
+                      </select>
+
+                    <h5 class="mt-3">Sites</h5>
+                    <div class="form-check">
+                        <input class="form-check-input" id="check-all_sites2" type="checkbox" checked="checked" >
+                        <label class="form-check-label" for="check-all_sites2">
+                            Check All
+                        </label>
+                    </div>
+                    {% for site in experiment_sites %}
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input ms-2" id="site2-{{site.id}}" value="{{site.id}}" type="checkbox" name="sites2" checked>
+                            <label class="form-check-label ms-2" for="site2-{{site.id}}">{{site.site_name|truncatechars:15}}</label>
+                        </div>
+                    {% endfor %}
+                    <h5 class="mt-3">Sample Types</h5>
+                    <div class="form-check">
+                        <input id="check-all_sampleTypes2" class="form-check-input" type="checkbox" checked>
+                        <label class="form-check-label" for="check-all_sampleTypes2">Check All</label>
+                    </div>
+                    {% for type in sample_types %}
+                        <div class="form-check">
+                            <input class="form-check-input ms-2" id="type2-{{type.0}}" value="{{type.0}}" type="checkbox" name="sampleTypes2" checked>
+                                <label class="form-check-label ms-2" for="type2-{{type.0}}">{{type.1}}
+                            </label>
+                        </div>
+                    {% endfor %}
+                    <h5 class="mt-3">Indices</h5>
+                    <div class="form-check">
+                        <input id="check-all_indices" class="form-check-input" type="checkbox">
+                        <label class="form-check-label" for="check-all_indices">Check All</label>
+                    </div>
+                    {% for i in indices %}
+                        <div class="form-check">
+                            <input class="form-check-input ms-2" id="indices-{{i.0}}" value="{{i.0}}" type="checkbox" name="indices">
+                                <label class="form-check-label ms-2" for="indices-{{i.0}}">{{i.1}}
+                            </label>
+                        </div>
+                    {% endfor %}
+                        <h5 class="mt-3">Include other experiments</h5>
+                            <input class="form-check-input" id="check-all_otherExperiments2" type="checkbox">
+                                <label class="form-check-label" for="check-all_otherExperiments2">Check All</label>
+                            <p class="ms-5">*if any selected, current experiment will include all sites</p>
+                            {% for e in other_experiments %}
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input ms-2" id="exp2-{{e.id}}" value="{{e.id}}" type="checkbox" name="otherExperiments2" >
+                                    <label class="form-check-label ms-2" for="exp2-{{e.id}}">{{ e.abbreviation }}</label>
+                                </div>
+                            {% endfor %}
+                    <div class="modal-footer">
+                        <button type="submit" name="experiment" class="btn btn-primary">
+                            Export Experiment Data
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="container">
     <div class="row">
         <div class="col-12 mb-3 mt-2 p-0">
@@ -155,9 +232,12 @@
         </div>
     </div>
 
-<div class="row mb-4">
+<div class="row mb-4 border">
     <div class="col-3">
         <button class="btn btn-link" data-bs-toggle="modal" data-bs-target="#exportModal">Export AI Data</button>
+    </div>
+    <div class="col-3">
+        <button class="btn btn-link" data-bs-toggle="modal" data-bs-target="#exportModal2">Export Experiment Data</button>
     </div>
 </div>
 

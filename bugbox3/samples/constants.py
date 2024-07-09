@@ -135,9 +135,24 @@ SAMPLE_TYPE_CHOICES = (
     (SAMPLE_TYPE_VEGETATION_SWEEP, 'Vegetation sweep'),
 )
 
-SAMPLE_TYPE_CHOICES_WO_BLANK = (v for v in SAMPLE_TYPE_CHOICES if v != BLANK_CHOICE_DASH[0])
+SAMPLE_TYPE_CHOICES_ALL = [v[0] for v in SAMPLE_TYPE_CHOICES]
+
+SAMPLE_TYPE_CHOICES_WO_BLANK = [v for v in SAMPLE_TYPE_CHOICES if v != BLANK_CHOICE_DASH[0]]
 
 SAMPLE_TYPE_CHOICES_DICT = {v[0]: v[1] for v in SAMPLE_TYPE_CHOICES}
+
+INDICES_CHOICES = (
+    ('abundance', "Abundance"),
+    ('species_richness', "Species Richness"),
+    ('shannons_h', "Shannon's H"),
+    ('simpsons', "Simpson's (1-D)"),
+    ('hill_shannon', "Hill-Shannon"),
+    ('hill_simpson', "Hill-Simpson"),
+)
+
+INDICES_CHOICES_ALL = [v[0] for v in INDICES_CHOICES]
+
+INDICES_CHOICES_DICT = {v[0]: v[1] for v in INDICES_CHOICES}
 
 SITE_HABITAT_TYPES = (
     'alfalfa',
@@ -186,7 +201,7 @@ SITE_HABITAT_TYPES = (
     'woods',
 )
 
-SITE_HABITAT_TYPE_CHOICES = ((v, v.capitalize()) for v in SITE_HABITAT_TYPES)
+SITE_HABITAT_TYPE_CHOICES = [(v, v.capitalize()) for v in SITE_HABITAT_TYPES]
 
 SITE_HABITAT_TYPE_CHOICES_W_BLANK = tuple(chain((BLANK_CHOICE_DASH[0],), SITE_HABITAT_TYPE_CHOICES))
 
@@ -198,7 +213,7 @@ SITE_TREATMENT_TYPES = (
     'not in list',
 )
 
-SITE_TREATMENT_CHOICES = ((v, v.capitalize()) for v in SITE_TREATMENT_TYPES)
+SITE_TREATMENT_CHOICES = [(v, v.capitalize()) for v in SITE_TREATMENT_TYPES]
 
 SITE_TREATMENT_CHOICES_W_BLANK = tuple(chain((BLANK_CHOICE_DASH[0],), SITE_TREATMENT_CHOICES))
 
@@ -359,3 +374,12 @@ EXPERIMENT_AI_CSV = [
     FIELD_SPECIMEN_OPTIONAL_PRED_TWO_CLASS_OP,
     FIELD_SPECIMEN_OPTIONAL_PRED_TWO_PRED_OP,
 ]
+
+EXP_CSV_TYPE_ALL = 'all'
+EXP_CSV_TYPE_REVIEWED = 'reviewed-only'
+EXPERIMENT_CSV_EXPORT_CHOICES = (
+    (EXP_CSV_TYPE_ALL, 'Reviewd and AI (all)'),
+    (EXP_CSV_TYPE_REVIEWED, 'Reviewed only'),
+)
+
+EXPERIMENT_CSV_EXPORT_TYPES = [v[0] for v in EXPERIMENT_CSV_EXPORT_CHOICES]

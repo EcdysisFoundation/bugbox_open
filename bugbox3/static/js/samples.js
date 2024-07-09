@@ -24,6 +24,26 @@ $(function () {
             el.checked = e.target.checked
         })
     }
+    document.querySelector('#check-all_sites2').onchange = (e) => {
+        document.querySelectorAll('[name=sites2]').forEach(el => {
+            el.checked = e.target.checked
+        })
+    }
+    document.querySelector('#check-all_sampleTypes2').onchange = (e) => {
+        document.querySelectorAll('[name=sampleTypes2]').forEach(el => {
+            el.checked = e.target.checked
+        })
+    }
+    document.querySelector('#check-all_otherExperiments2').onchange = (e) => {
+        document.querySelectorAll('[name=otherExperiments2]').forEach(el => {
+            el.checked = e.target.checked
+        })
+    }
+    document.querySelector('#check-all_indices').onchange = (e) => {
+        document.querySelectorAll('[name=indices').forEach(el => {
+            el.checked = e.target.checked
+        })
+    }
 
     var samples_table = $('#samples-table').DataTable({
         order: [[1, 'desc']],
