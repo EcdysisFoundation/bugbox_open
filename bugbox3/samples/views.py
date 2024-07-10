@@ -616,7 +616,8 @@ class SpecimenCreateView(PermissionRequiredMixin, CreateView):
                                               request=self.request, kwargs=kwargs),
                 'first_picker_choices': GBIF_RANK_CHOICES_WO_BLANK_LIST,
                 'first_picker_text': 'any rank',
-                'ACCEPTANCE_VALUE_LOOKUP': constants.ACCEPTANCE_VALUE_LOOKUP
+                'ACCEPTANCE_VALUE_LOOKUP': constants.ACCEPTANCE_VALUE_LOOKUP,
+                'ai_classification_id': None
             }),
             'container_row_header': get_datatables_container(
                 get_datatables_row([
@@ -630,6 +631,7 @@ class SpecimenCreateView(PermissionRequiredMixin, CreateView):
     def form_valid(self, form):
         sample = get_object_or_404(Sample, id=self.kwargs['sample_id'])
         form.instance.sample_id = sample.id
+        form.instance.created_by_user_id = self.request.user.id
         return super(SpecimenCreateView, self).form_valid(form)
 
     def get_success_url(self):
@@ -659,7 +661,8 @@ class SpecimenUpdateView(PermissionRequiredMixin, UpdateView):
                                               request=self.request, kwargs=kwargs),
                 'first_picker_choices': GBIF_RANK_CHOICES_WO_BLANK_LIST,
                 'first_picker_text': 'any rank',
-                'ACCEPTANCE_VALUE_LOOKUP': constants.ACCEPTANCE_VALUE_LOOKUP
+                'ACCEPTANCE_VALUE_LOOKUP': constants.ACCEPTANCE_VALUE_LOOKUP,
+                'ai_classification_id': self.object.ai_classification.id if self.object.ai_classification else None
             }),
             'container_row_header': get_datatables_container(
                 get_datatables_row([

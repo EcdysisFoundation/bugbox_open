@@ -240,7 +240,7 @@ class SpecimenForm(ModelFormMixin):
     def get_primary_layout(self):
         return [
             Field(constants.FIELD_SPECIMEN_CLASSIFICATION),
-            Field(constants.FIELD_SPEIMCEN_SAMPLE),
+            Field(constants.FIELD_SPECIMCEN_SAMPLE),
             Row(
                 Column(constants.FIELD_SPECIMEN_PARTIAL_COUNT, css_class='form-control-width-medium'),
                 Column(constants.FIELD_SPECIMEN_ARCHIVAL_IDENTIFIER, css_class='form-control-width-medium'),

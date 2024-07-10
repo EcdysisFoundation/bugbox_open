@@ -55,7 +55,15 @@ $(function () {
             data = data[0]
             id_classification.value = data.id;
             dis_classification.value = data.name;
-            id_acceptance.value = json_context.ACCEPTANCE_VALUE_LOOKUP.Rejected;
+            if (json_context.ai_classification_id) {
+                if (json_context.ai_classification_id == data.id) {
+                    id_acceptance.value = json_context.ACCEPTANCE_VALUE_LOOKUP.Confirmed;
+                } else {
+                    id_acceptance.value = json_context.ACCEPTANCE_VALUE_LOOKUP.Rejected;
+                }
+            } else {
+                id_acceptance.value = json_context.ACCEPTANCE_VALUE_LOOKUP.Pending;
+            }
         }
     })
 

@@ -101,7 +101,6 @@ class SiteVisit(Model):
     uuid = UUIDField(default=uuid.uuid4, unique=True)
     site = ForeignKey(Site, on_delete=CASCADE)
     visit_date = DateField()
-    by_user = ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=SET_NULL)
     sample_with_plan = BooleanField(default=True)
     notes = CharField(max_length=1000, blank=True)
 
@@ -131,10 +130,10 @@ class Sample(Model):
                             choices=constants.SAMPLE_TYPE_CHOICES)
     name_no = CharField(max_length=100, blank=True)
     notes = CharField(max_length=1000, blank=True)
-    completed = BooleanField(default=False)  # for photosampling? ExperimentsDatatablesSerializer
+    completed = BooleanField(default=False)
     image = ImageField(null=True, blank=True, upload_to='sample_images')
     image_thumbnail = ImageField(null=True, blank=True, upload_to='sample_images')
-    entered_by = ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=SET_NULL)
+    created_by_user = ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=SET_NULL)
 
 
 @receiver(pre_save, sender=Sample)
@@ -169,10 +168,8 @@ class Specimen(Model):
                                    null=True, blank=True, related_name="ai")
     ai_version = ForeignKey(AiVersion, on_delete=SET_NULL, null=True, blank=True)
     sample = ForeignKey(Sample, on_delete=SET_NULL, null=True, blank=True)
-    # change to reviewer_user / determiner_user
-    user = ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=SET_NULL)
-    # but the image is what is uploaded, so this captures the first person to upload an image.
-    upload_user = ForeignKey(settings.AUTH_USER_MODEL, related_name="specimens_uploaded",
+    reviewer_user = ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=SET_NULL)
+    created_by_user = ForeignKey(settings.AUTH_USER_MODEL, related_name="specimens_uploaded",
                              null=True, on_delete=SET_NULL)
     partial_count = PositiveSmallIntegerField(blank=True, default=0, null=True)
     date_added = DateTimeField(auto_now_add=True)
@@ -194,11 +191,16 @@ class Specimen(Model):
         super(Specimen, self).save(*args, **kwargs)
 
         if new_specimen:
-            if self.user:
+            #print('New Specimen...')
+            #print(self)
+            #print(self.__dict__)
+            #print(args)
+            #print(kwargs)
+            if self.created_by_user:
                 TimelineEvent.objects.create(
                     specimen=self,
-                    event_title=self.user.name,
-                    body=self.user.name + " submitted this observation.")
+                    event_title=self.created_by_user.name,
+                    body=self.created_by_user.name + " submitted this observation.")
 
     def __str__(self):
         return str(self.uuid)
@@ -217,7 +219,7 @@ class SpecimenImage(Model):
     image_thumbnail_medium = ImageField(null=True, blank=True, upload_to='specimen_images')
     image_thumbnail_large = ImageField(null=True, blank=True, upload_to='specimen_images')
     date_added = DateTimeField(auto_now_add=True)
-    uploaded_by = ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=SET_NULL)
+    uploaded_by_user = ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=SET_NULL)
 
     class Meta:
         ordering = ['-primary_image']

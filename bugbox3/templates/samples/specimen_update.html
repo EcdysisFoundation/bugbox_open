@@ -153,7 +153,7 @@
                 <li class="list-group-item"><b>Secondary prediction:</b> {{ specimen.optional_pred_one.class_op }} </li>
                 <li class="list-group-item"><b>Tertiary prediction:</b> {{ specimen.optional_pred_two.class_op }}</li>
                 <hr/>
-                <li class="list-group-item"><b>Entered by</b></li>
+                <li class="list-group-item"><b>Entered by:</b> {{ specimen.created_by_user }}</li>
             </ul>
         </div>
     </div>
