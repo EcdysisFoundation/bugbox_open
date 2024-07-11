@@ -326,13 +326,16 @@ class SiteCreateView(PermissionRequiredMixin, CreateView):
         context = self.get_context_data()
         form.instance.experiment_id = context['experiment_details']['experiment'].id
         formsets = context['formsets']
-        with transaction.atomic():
-            self.object = form.save()
-            if formsets.is_valid():
-                formsets.instance = self.object
-                formsets.save()
-            else:
-                print('ERRORS_formsets: ' + str(formsets.errors))
+        self.object = form.save()
+        if formsets.is_valid():
+            formsets.instance = self.object
+            instances = formsets.save(commit=False)
+            for i in instances:
+                i.created_by_user_id = self.request.user.id
+                i.save()
+            formsets.save()
+        else:
+            print('ERRORS_formsets: ' + str(formsets.errors))
         return super(SiteCreateView, self).form_valid(form)
 
     def get_success_url(self):
@@ -379,11 +382,14 @@ class SiteUpdateView(PermissionRequiredMixin, UpdateView):
     def form_valid(self, form):
         context = self.get_context_data()
         formsets = context['formsets']
+        self.object = form.save()
         if formsets.is_valid():
+            formsets.instance = self.object
             instances = formsets.save(commit=False)
-            for instance in instances:
-                instance.created_by_user_id = self.request.user.id
-                instance.save()
+            for i in instances:
+                i.created_by_user_id = self.request.user.id
+                i.save()
+            formsets.save()
         else:
             print('ERRORS_formsets: ' + str(formsets.errors))
         return super(SiteUpdateView, self).form_valid(form)
