@@ -347,7 +347,7 @@ class SiteUpdateView(PermissionRequiredMixin, UpdateView):
     template_name = 'samples/site_form.html'
     action = 'update'
 
-    formset_total = 10
+    formset_total = 20
 
     form_set = inlineformset_factory(Site, SiteVisit, form=SiteVisitForm, max_num=formset_total, extra=formset_total)
 
@@ -379,13 +379,13 @@ class SiteUpdateView(PermissionRequiredMixin, UpdateView):
     def form_valid(self, form):
         context = self.get_context_data()
         formsets = context['formsets']
-        with transaction.atomic():
-            self.object = form.save()
-            if formsets.is_valid():
-                formsets.instance = self.object
-                formsets.save()
-            else:
-                print('ERRORS_formsets: ' + str(formsets.errors))
+        if formsets.is_valid():
+            instances = formsets.save(commit=False)
+            for instance in instances:
+                instance.created_by_user_id = self.request.user.id
+                instance.save()
+        else:
+            print('ERRORS_formsets: ' + str(formsets.errors))
         return super(SiteUpdateView, self).form_valid(form)
 
     def get_success_url(self):
@@ -430,7 +430,7 @@ class SampleView(PermissionRequiredMixin, FormView):
                 'visit_date': sample.site_visit.visit_date,
                 'sample_type': constants.SAMPLE_TYPE_CHOICES_DICT[sample.sample_type],
                 'name_no': sample.name_no,
-                'entered_by': 'P. Laceholder',
+                'entered_by': sample.created_by_user,
                 'notes': sample.notes,
                 'completed': sample.completed,
                 'img_thumbnail': img_thumbnail

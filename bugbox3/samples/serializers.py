@@ -131,7 +131,7 @@ class SitesDatatablesSerializer(ModelSerializer):
                 s.name_no,
                 self.get_observations(s.id),
                 self.get_reviewed(s.id),
-                'P. Laceholder'  # add field to model and populate at create
+                s.created_by_user
             ])
         return get_datatables_container(rows)
 

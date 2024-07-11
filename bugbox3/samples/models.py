@@ -100,6 +100,7 @@ class Site(Model):
 class SiteVisit(Model):
     uuid = UUIDField(default=uuid.uuid4, unique=True)
     site = ForeignKey(Site, on_delete=CASCADE)
+    created_by_user = ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=SET_NULL)
     visit_date = DateField()
     sample_with_plan = BooleanField(default=True)
     notes = CharField(max_length=1000, blank=True)
@@ -119,7 +120,8 @@ class SiteVisit(Model):
                     Sample.objects.create(
                         site_visit_id=self.id,
                         sample_type=plan.sample_type,
-                        name_no=name)
+                        name_no=name,
+                        created_by_user=self.created_by_user)
                     n = n - 1
 
 
@@ -152,7 +154,7 @@ def save_sample_thumbnail(sender, instance, **kwargs):
         if not obj.image == instance.image:
             # Field has changed
             needs_thumbnail = True
-    if needs_thumbnail:
+    if needs_thumbnail and instance.image:
         instance.image_thumbnail = resized_thumbnail(
             instance.image,
             constants.SAMPLE_IMAGE_THUMBSIZE,
@@ -191,12 +193,8 @@ class Specimen(Model):
         super(Specimen, self).save(*args, **kwargs)
 
         if new_specimen:
-            #print('New Specimen...')
-            #print(self)
-            #print(self.__dict__)
-            #print(args)
-            #print(kwargs)
-            if self.created_by_user:
+            # skip this for now
+            if self.created_by_user and 1 == 2:
                 TimelineEvent.objects.create(
                     specimen=self,
                     event_title=self.created_by_user.name,
@@ -281,5 +279,9 @@ class TimelineEvent(Model):
     specimen = ForeignKey(Specimen, on_delete=CASCADE)
     event_title = CharField(max_length=200)
     date_time = DateTimeField(auto_now_add=True, auto_created=True)
-    body = TextField()
-    image_url = CharField(max_length=500)
+    body = CharField(max_length=1000, blank=True)
+    by_user = ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=SET_NULL)
+
+# automated entries to retain, besides comments
+# username... changed, reviewed ... this observations
+# username uploaded images

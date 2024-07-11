@@ -204,8 +204,6 @@
                         </div>
                         <div class="col-5">
                             <ul class="list-group list-group-flush">
-                                <li class="list-group-item">Collector</li>
-                                <hr/>
                                 <li class="list-group-item">
                                     <b>Name:</b> {{ selected_classification.name }}
                                 </li>
@@ -247,7 +245,7 @@
                                 <li class="list-group-item"><b>Secondary prediction:</b> {{ specimen.optional_pred_one.class_op }} </li>
                                 <li class="list-group-item"><b>Tertiary prediction:</b> {{ specimen.optional_pred_two.class_op }}</li>
                                 <hr/>
-                                <li class="list-group-item"><b>Entered by:</b> {{ specimen.created_by_user }}</li>
+                                <li class="list-group-item"><b>Entered by:</b> {{ specimen.created_by_user }}<br/> on {{ specimen.date_added }}</li>
                                 <li class="list-group-item"><b>Partial count:</b> {{ specimen.partial_count }}</li>
                                 <li class="list-group-item"><b>Tags:</b>
                                   {% for t in specimen.tags %}

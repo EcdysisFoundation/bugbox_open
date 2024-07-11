@@ -165,7 +165,7 @@ class SiteVisitForm(ModelFormMixin):
         model = SiteVisit
         fields = constants.FORM_FIELDS_SITE_VISIT
 
-    hidden_fields = [constants.FIELD_SITE_VISIT_ID]
+    hidden_fields = constants.FORM_FIELDS_SITE_VISIT_HIDDEN
 
     def get_primary_layout(self):
         return [
