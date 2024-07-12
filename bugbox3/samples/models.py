@@ -105,6 +105,17 @@ class SiteVisit(Model):
     sample_with_plan = BooleanField(default=True)
     notes = CharField(max_length=1000, blank=True)
 
+    @property
+    def has_related_data(self):
+        """
+        Indicate if a Sample label image has been uploadedm or marked as completed or Specimens exist.
+        """
+        if self.sample_set.exclude(image='', completed=False):
+            return True
+        if Specimen.objects.filter(sample__site_visit_id=self.id):
+            return True
+        return False
+
     def save(self, *args, **kwargs):
         is_create = False
         if self.pk is None:

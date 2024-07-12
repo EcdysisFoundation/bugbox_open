@@ -384,10 +384,12 @@ class SiteUpdateView(PermissionRequiredMixin, UpdateView):
         formsets = context['formsets']
         self.object = form.save()
         if formsets.is_valid():
+            print(formsets.__dict__)
             formsets.instance = self.object
             instances = formsets.save(commit=False)
             for i in instances:
                 i.created_by_user_id = self.request.user.id
+                print(i.__dict__)
                 i.save()
             formsets.save()
         else:

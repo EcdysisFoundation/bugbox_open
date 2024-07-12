@@ -23,8 +23,6 @@ class MultipleFileField(FileField):
 
     def clean(self, data, initial=None):
         single_file_clean = super().clean
-        print('DATA')
-        print(data)
 
         if isinstance(data, (list, tuple)):
             result = [single_file_clean(d, initial) for d in data]

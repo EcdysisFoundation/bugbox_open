@@ -6,6 +6,13 @@ from bugbox3.samples import constants
 UI Helpers. Many of these may be better moved to .js webpack modules.
 """
 
+DISABLED_DELETE_CHECK = '''<div class="form-check">
+  <input class="form-check-input" type="checkbox" value="" id="flexCheckIndeterminateDisabled" disabled>
+  <label class="form-check-label" for="flexCheckIndeterminateDisabled">
+    Delete
+  </label>
+</div>'''
+
 
 def get_numeric_dropdown(length, button_label):
     """

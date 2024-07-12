@@ -18,6 +18,7 @@ from django.forms import (
 from django.utils.safestring import mark_safe
 
 from ..core.forms import Html5DateInput, ModelFormMixin, MultipleFileField, get_submit_layout
+from ..libs.ui_helpers import DISABLED_DELETE_CHECK
 from . import constants
 from .models import Experiment, Sample, SamplePlan, Site, SiteVisit, Specimen
 
@@ -168,13 +169,19 @@ class SiteVisitForm(ModelFormMixin):
     hidden_fields = constants.FORM_FIELDS_SITE_VISIT_HIDDEN
 
     def get_primary_layout(self):
+
+        has_related_data = self.instance.has_related_data if self.instance.id else False
+        if has_related_data:
+            delete_check = HTML(DISABLED_DELETE_CHECK)
+        else:
+            delete_check = 'DELETE'
         return [
             Field(constants.FIELD_SITE_VISIT_ID),
             HTML("<div class='d-none' id='formsets_row_{{ forloop.counter }}'>"),
             Row(
                 Column(constants.FIELD_SITE_VISIT_DATE, css_class='form-control-width-medium'),
-                Column('DELETE', css_class='mt-5'),
-                css_class='my-0'
+                Column(delete_check, css_class='mt-5'),
+                css_class='my-0',
             ),
             HTML('</div>')
         ]
