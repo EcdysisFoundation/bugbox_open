@@ -570,7 +570,8 @@ class SpecimenView(PermissionRequiredMixin, FormView):
                 for f in files:
                     SpecimenImage.objects.create(
                         specimen=specimen,
-                        image=f
+                        image=f,
+                        uploaded_by_user=self.request.user
                     )
                     created_images += 1
             except Exception:

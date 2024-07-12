@@ -282,5 +282,5 @@ class JSONFieldForm(Form):
         json_data = cleaned_data.get('json_data')
         if not all([v.isnumeric() for v in json_data['reject_ids']]):
             raise ValidationError(mark_safe('non-integers provided in form as ids'))
-        if not all([v.isnumeric() for v in json_data['reject_ids']]):
+        if not all([v.isnumeric() for v in json_data['confirm_ids']]):
             raise ValidationError(mark_safe('non-integers provided in form as ids'))

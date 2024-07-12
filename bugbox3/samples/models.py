@@ -196,21 +196,6 @@ class Specimen(Model):
     archival_preservation = CharField(max_length=100, blank=True)
     archival_stored = CharField(max_length=100, blank=True)
 
-    def save(self, *args, **kwargs):
-        new_specimen = False
-        if self.pk is None:
-            """This code only happens on first create"""
-            new_specimen = True
-        super(Specimen, self).save(*args, **kwargs)
-
-        if new_specimen:
-            # skip this for now
-            if self.created_by_user and 1 == 2:
-                TimelineEvent.objects.create(
-                    specimen=self,
-                    event_title=self.created_by_user.name,
-                    body=self.created_by_user.name + " submitted this observation.")
-
     def __str__(self):
         return str(self.uuid)
 
@@ -294,5 +279,5 @@ class TimelineEvent(Model):
     by_user = ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=SET_NULL)
 
 # automated entries to retain, besides comments
-# username... changed, reviewed ... this observations
+# username... changed, reviewed ... this observations (changed and reviewed both are species identification changes.)
 # username uploaded images
