@@ -49,6 +49,7 @@ from .serializers import (
     SpecimenDatatablesSerializer,
     SpecimensAllDatatablesSerializer,
 )
+from .timeline_events import audit_specimen_update, audit_specimen_view, timeline_events
 
 
 class ExperimentsDatatablesViewSet(PermissionRequiredMixin, DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
@@ -384,12 +385,10 @@ class SiteUpdateView(PermissionRequiredMixin, UpdateView):
         formsets = context['formsets']
         self.object = form.save()
         if formsets.is_valid():
-            print(formsets.__dict__)
             formsets.instance = self.object
             instances = formsets.save(commit=False)
             for i in instances:
                 i.created_by_user_id = self.request.user.id
-                print(i.__dict__)
                 i.save()
             formsets.save()
         else:
@@ -554,7 +553,10 @@ class SpecimenView(PermissionRequiredMixin, FormView):
         context.update({
             'form_action_url': reverse('samples:specimen', kwargs={'id': specimen.id}),
             'acceptance_choices': constants.ACCEPTANCE_CHOICES,
-            'acceptance': '' if specimen.acceptance is None else constants.ACCEPTANCE_LOOKUP[specimen.acceptance]
+            'acceptance': '' if specimen.acceptance is None else constants.ACCEPTANCE_LOOKUP[specimen.acceptance],
+            'json_context': get_json_context({
+                'timeline_events': timeline_events(specimen)
+            })
         })
         return context
 
@@ -591,6 +593,7 @@ class SpecimenView(PermissionRequiredMixin, FormView):
             messages.success(self.request, 'Succesfully deleted image')
         elif determin_pick is not None:
             specimen = get_object_or_404(Specimen, id=self.kwargs['id'])
+            initial = {constants.FIELD_SPECIMEN_ACCEPTANCE: specimen.acceptance}
             specimen.acceptance = determin_pick
             if specimen.acceptance == constants.ACCEPTANCE_CONFIRMED \
                     and specimen.classification != specimen.ai_classification:
@@ -599,6 +602,7 @@ class SpecimenView(PermissionRequiredMixin, FormView):
                     and specimen.classification == specimen.ai_classification:
                 specimen.classification = None
             specimen.save()
+            audit_specimen_view(initial, self.request.user, specimen)
         return super().form_valid(form)
 
     def get_success_url(self):
@@ -693,6 +697,7 @@ class SpecimenUpdateView(PermissionRequiredMixin, UpdateView):
                 form.instance.classification = None
         elif context['object'].ai_classification and form.instance.acceptance == constants.ACCEPTANCE_CONFIRMED:
             form.instance.classification = context['object'].ai_classification
+        audit_specimen_update(form, self.request.user, context['object'])
         return super(SpecimenUpdateView, self).form_valid(form)
 
     def get_success_url(self):

@@ -183,7 +183,7 @@ class Specimen(Model):
     sample = ForeignKey(Sample, on_delete=SET_NULL, null=True, blank=True)
     reviewer_user = ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=SET_NULL)
     created_by_user = ForeignKey(settings.AUTH_USER_MODEL, related_name="specimens_uploaded",
-                             null=True, on_delete=SET_NULL)
+                                 null=True, on_delete=SET_NULL)
     partial_count = PositiveSmallIntegerField(blank=True, default=0, null=True)
     date_added = DateTimeField(auto_now_add=True)
     date_modified = DateTimeField(auto_now=True, auto_created=True)

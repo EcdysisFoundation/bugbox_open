@@ -17,6 +17,7 @@ module.exports = {
     apexcharts_config: path.resolve(__dirname, '../bugbox3/static/js/apexcharts_config'),
     gbif_api: path.resolve(__dirname, '../bugbox3/static/js/gbif_api'),
     specimens_all: path.resolve(__dirname, '../bugbox3/static/js/specimens_all'),
+    timeline: path.resolve(__dirname, '../bugbox3/static/js/timeline'),
   },
   output: {
     path: path.resolve(

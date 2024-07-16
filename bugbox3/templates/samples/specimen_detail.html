@@ -1,8 +1,15 @@
 {% extends "base.html" %}
 
+{% load render_bundle from webpack_loader %}
+
 {% block title %}
     Specimen
 {% endblock title %}
+
+{% block customheadtagcontent %}
+{% render_bundle 'timeline' 'js' attrs='defer' %}
+{{ json_context|safe }}
+{% endblock customheadtagcontent %}
 
 {% block content %}
 
@@ -245,7 +252,6 @@
                                 <li class="list-group-item"><b>Secondary prediction:</b> {{ specimen.optional_pred_one.class_op }} </li>
                                 <li class="list-group-item"><b>Tertiary prediction:</b> {{ specimen.optional_pred_two.class_op }}</li>
                                 <hr/>
-                                <li class="list-group-item"><b>Entered by:</b> {{ specimen.created_by_user }}<br/> on {{ specimen.date_added }}</li>
                                 <li class="list-group-item"><b>Partial count:</b> {{ specimen.partial_count }}</li>
                                 <li class="list-group-item"><b>Tags:</b>
                                   {% for t in specimen.tags %}
@@ -266,6 +272,12 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <div class="row">
+      <div class="col">
+        <section id="timeline-section"></section>
+      </div>
     </div>
 
 </div>
