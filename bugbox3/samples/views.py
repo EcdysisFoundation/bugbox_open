@@ -508,9 +508,10 @@ def specimen_view_context(specimen):
     context = {
         'specimen': specimen,
         'selected_classification':
-            specimen.ai_classification if not specimen.classification
+            specimen.ai_classification if not specimen.classification and \
+                specimen.acceptance != constants.ACCEPTANCE_REJECTED
             else specimen.classification,
-        'verified_classification': '' if specimen.acceptance == 0 else specimen.classification,
+        'verified_classification': specimen.classification,
         'ai_classification': specimen.ai_classification,
         'probability': get_probability(specimen)
     }
@@ -598,9 +599,11 @@ class SpecimenView(PermissionRequiredMixin, FormView):
             if specimen.acceptance == constants.ACCEPTANCE_CONFIRMED \
                     and specimen.classification != specimen.ai_classification:
                 specimen.classification = specimen.ai_classification
+                specimen.reviewer_user = self.request.user
             elif specimen.acceptance == constants.ACCEPTANCE_REJECTED \
                     and specimen.classification == specimen.ai_classification:
                 specimen.classification = None
+                specimen.reviewer_user = None
             specimen.save()
             audit_specimen_view(initial, self.request.user, specimen)
         return super().form_valid(form)
@@ -697,6 +700,8 @@ class SpecimenUpdateView(PermissionRequiredMixin, UpdateView):
                 form.instance.classification = None
         elif context['object'].ai_classification and form.instance.acceptance == constants.ACCEPTANCE_CONFIRMED:
             form.instance.classification = context['object'].ai_classification
+        if form.initial[constants.FIELD_SPECIMEN_CLASSIFICATION] != form.instance.classification:
+            context['object'].reviewer_user = self.request.user
         audit_specimen_update(form, self.request.user, context['object'])
         return super(SpecimenUpdateView, self).form_valid(form)
 
@@ -779,6 +784,7 @@ class SpecimensView(PermissionRequiredMixin, FormView):
             specimen = get_object_or_404(Specimen, id=i)
             specimen.acceptance = constants.ACCEPTANCE_CONFIRMED
             specimen.classification = specimen.ai_classification
+            specimen.reviewer_user = self.request.user
             specimen.save()
             confirm_count += 1
         Specimen.objects.filter(

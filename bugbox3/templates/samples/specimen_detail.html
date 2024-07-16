@@ -215,18 +215,20 @@
                                     <b>Name:</b> {{ selected_classification.name }}
                                 </li>
                                 <li class="list-group-item">
-                                  <b>Canonical Name:</b> {{ selected_classification.gbif_canonical_name }}
+                                  <b>Canonical Name:</b> {% if selected_classification.gbif_rank == 'SPECIES' %}<i>{% endif %}
+                                  {{ selected_classification.gbif_canonical_name }}
+                                  {% if selected_classification.gbif_rank == 'SPECIES' %}</i>{% endif %}
                               </li>
                                 <li class="list-group-item"><b>Class:</b> {{ selected_classification.gbif_class }}</li>
                                 <li class="list-group-item"><b>Order:</b> {{ selected_classification.gbif_order }}</li>
                                 <li class="list-group-item"><b>Family:</b> {{ classselected_classificationification.gbif_family }}</li>
                                 <li class="list-group-item"><b>Genus:</b> {{ selected_classification.gbif_genus }}</li>
-                                <li class="list-group-item"><b>Species:</b> {{ selected_classification.gbif_species }}</li>
+                                <li class="list-group-item"><b>Species:</b> <i>{{ selected_classification.gbif_species }}</i></li>
                                 <li class="list-group-item"><b>Determined by:</b>
-                                    {% if specimen.acceptance == 0 or specimen.acceptance == 1 %}
-                                    BugBox
-                                    {% elif specimen.user %}
-                                    {{ specimen.user }}
+                                    {% if specimen.reviewer_user %}
+                                      {{ specimen.reviewer_user }}
+                                    {% elif specimen.ai_classification and not specimen.classification %}
+                                      BugBox
                                     {% endif %}
                                 </li>
                                 <hr/>
@@ -240,7 +242,13 @@
                                     {% elif specimen.acceptance == 2 %}
                                       btn-warning
                                     {% endif %}
-                                  " data-bs-toggle="modal" data-bs-target="#confirmRejectModal">
+                                  "
+                                  {% if ai_classification.name %}
+                                  data-bs-toggle="modal" data-bs-target="#confirmRejectModal"
+                                  {% else %}
+                                    disabled
+                                  {% endif %}
+                                  >
                                     {{ acceptance }}</button>
                                   {% endif %}
 
