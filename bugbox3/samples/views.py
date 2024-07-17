@@ -49,7 +49,7 @@ from .serializers import (
     SpecimenDatatablesSerializer,
     SpecimensAllDatatablesSerializer,
 )
-from .timeline_events import audit_specimen_update, audit_specimen_view, timeline_events
+from .timeline_events import audit_specimen_update, audit_specimen_view, audit_upload_images, timeline_events
 
 
 class ExperimentsDatatablesViewSet(PermissionRequiredMixin, DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
@@ -465,10 +465,13 @@ class SampleView(PermissionRequiredMixin, FormView):
         created_images = 0
         try:
             for f in files:
-                specimen = Specimen.objects.create(sample=sample)
+                specimen = Specimen.objects.create(
+                    sample=sample,
+                    created_by_user=self.request.user)
                 SpecimenImage.objects.create(
                     specimen=specimen,
-                    image=f
+                    image=f,
+                    uploaded_by_user=self.request.user
                 )
                 created_images += 1
         except Exception:
@@ -508,9 +511,8 @@ def specimen_view_context(specimen):
     context = {
         'specimen': specimen,
         'selected_classification':
-            specimen.ai_classification if not specimen.classification and \
-                specimen.acceptance != constants.ACCEPTANCE_REJECTED
-            else specimen.classification,
+            specimen.ai_classification if not specimen.classification and
+            specimen.acceptance != constants.ACCEPTANCE_REJECTED else specimen.classification,
         'verified_classification': specimen.classification,
         'ai_classification': specimen.ai_classification,
         'probability': get_probability(specimen)
@@ -577,6 +579,7 @@ class SpecimenView(PermissionRequiredMixin, FormView):
                         uploaded_by_user=self.request.user
                     )
                     created_images += 1
+                audit_upload_images(self.request.user, specimen, created_images)
             except Exception:
                 messages.add_message(
                     self.request,
@@ -732,9 +735,11 @@ class SpecimensView(PermissionRequiredMixin, FormView):
 
     _sv_confirm_ids = 'confirm_ids'
     _sv_reject_ids = 'reject_ids'
+    _sv_new_classifications = 'new_classifications'
     _sv_json_data = {
-        _sv_confirm_ids: [],
-        _sv_reject_ids: []
+        _sv_confirm_ids: [],  # specimen ids
+        _sv_reject_ids: [],  # specimen ids
+        _sv_new_classifications: {},  # key:value pairs of specimen_id: morphospecies_id
     }
 
     def get_context_data(self, **kwargs):
@@ -747,6 +752,11 @@ class SpecimensView(PermissionRequiredMixin, FormView):
                                      request=self.request, kwargs=self.kwargs)
         Experiment.objects.values('name', 'id')
         context.update({
+            'container_row_header_2': get_datatables_container(
+                get_datatables_row([
+                    'Name',
+                    'Canonical Name',
+                ])),
             'container_row_header': get_datatables_container(
                 get_datatables_row([
                     'Image',
@@ -758,9 +768,11 @@ class SpecimensView(PermissionRequiredMixin, FormView):
                 ])),
             'json_context': get_json_context({
                 'datatables_url': datatables_url,
-                'first_picker_choices': constants.ACCEPTANCE_CHOICES,
-                'first_picker_text': 'AI ID Acceptance',
                 'json_data': self._sv_json_data,
+                'datatables_url_2': api_reverse('taxonomy:morphospecies-picker-list',
+                                                request=self.request, kwargs=kwargs),
+                'second_picker_choices': GBIF_RANK_CHOICES_WO_BLANK_LIST,
+                'second_picker_text': 'any rank',
             }),
             'acceptance_picker_choices': constants.ACCEPTANCE_CHOICES,
             'form_action_url': reverse(
@@ -777,22 +789,50 @@ class SpecimensView(PermissionRequiredMixin, FormView):
     def form_valid(self, form):
         confirm_ids = form.cleaned_data['json_data'][self._sv_confirm_ids]
         reject_ids = form.cleaned_data['json_data'][self._sv_reject_ids]
+        new_classifications = form.cleaned_data['json_data'][self._sv_new_classifications]
+        # do some sanitizing and cast any string ids.
+        if isinstance(self._sv_json_data[self._sv_new_classifications], dict):
+            new_classifications = {int(key): int(v) for key, v in new_classifications.items()}
+        else:
+            new_classifications = self._sv_json_data[self._sv_new_classifications]
         confirmed_ids = [int(v) for v in confirm_ids] if confirm_ids else []
         rejected_ids = [int(v) for v in reject_ids] if reject_ids else []
-        confirm_count = 0
+        add_confirm_count = 0
+        add_reject_count = 0
+        for specimen_id, morhpo_id in new_classifications.items():
+            specimen = get_object_or_404(Specimen, id=specimen_id)
+            ai_classification_id = specimen.ai_classification.id if specimen.ai_classification else None
+            if ai_classification_id == morhpo_id:
+                specimen.acceptance = constants.ACCEPTANCE_CONFIRMED
+                specimen.classification = specimen.ai_classification
+                specimen.reviewer_user = self.request.user
+                specimen.save()
+                add_confirm_count += 1
+            else:
+                morpho = get_object_or_404(Morphospecies, id=morhpo_id)
+                specimen.classification = morpho
+                specimen.acceptance = constants.ACCEPTANCE_REJECTED
+                specimen.reviewer_user = self.request.user
+                specimen.save()
+                add_reject_count += 1
+            # prioritize new_classifications for confirmed or rejected.
+            if specimen_id in confirmed_ids:
+                confirmed_ids.remove(specimen_id)
+            if specimen_id in rejected_ids:
+                rejected_ids.remove(specimen_id)
         for i in confirmed_ids:
             specimen = get_object_or_404(Specimen, id=i)
             specimen.acceptance = constants.ACCEPTANCE_CONFIRMED
             specimen.classification = specimen.ai_classification
             specimen.reviewer_user = self.request.user
             specimen.save()
-            confirm_count += 1
         Specimen.objects.filter(
             id__in=rejected_ids, acceptance=constants.ACCEPTANCE_PENDING).update(
                 acceptance=constants.ACCEPTANCE_REJECTED)
         messages.success(
-            self.request, 'Succesfully confirmed {0} specimens and rejected {1}'.format(
-                confirm_count, len(rejected_ids)))
+            self.request, 'Succesfully confirmed {0} AI classifications and rejected {1}'.format(
+                len(confirmed_ids) + add_confirm_count,
+                len(rejected_ids) + add_reject_count))
         return super().form_valid(form)
 
     def get_success_url(self):

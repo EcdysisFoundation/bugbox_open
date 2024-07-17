@@ -14,7 +14,7 @@
 
 {% block content %}
 
-<!-- Modal -->
+<!-- Modals -->
 <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="messageModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
       <div class="modal-content bg-transparent border border-0">
@@ -23,7 +23,46 @@
         </div>
       </div>
     </div>
+</div>
+
+<div class="modal fade" id="morphoModal" tabindex="-1" aria-labelledby="morphoModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5>Select new morphospecies</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+
+          <div class="container">
+              <div class="row bg-light rounded pt-2 pb-1 mb-1" id="searchToolbar">
+                  <div class="col-3">
+                    <div class="second-picker"></div>
+                  </div>
+                </div>
+              <div class="row pb-2 mt-2">
+                  <div class="col">
+                      <table id="data-table-2" class="table table-responsive nowrap compact table-hover" width="100%">
+                      <thead>
+                          <tr>
+                          <th>{{ container_row_header_2|safe }}</th>
+                          </tr>
+                      </thead>
+                      </table>
+                  </div>
+              </div>
+          </div>
+
+      </div>
+      <div class="modal-footer">
+        <button id="morpho-clear-btn" type="button" class="btn btn-secondary" data-bs-dismiss="modal" aria-label="Select">Clear Input</button>
+        <button id="morpho-select-btn" type="button" class="btn btn-info" data-bs-dismiss="modal" aria-label="Select">Use Selection</button>
+      </div>
+    </div>
   </div>
+</div>
+
 
 <div class="container">
 
@@ -31,7 +70,6 @@
         <div class="col">
             <div class="align-items-center bg-ecdysis text-white d-flex justify-content-between">
                 <h2 class="text-light mt-1">Review Specimens</h2>
-                <a href="" class="btn btn-light btn-small" role="button">Go Somewhere</a>
             </div>
         </div>
     </div>

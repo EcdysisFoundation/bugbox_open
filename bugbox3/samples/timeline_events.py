@@ -5,7 +5,9 @@ from .models import TimelineEvent
 EVENT_TITLE_REVIEW = 'Reviewed'
 EVENT_TITLE_UPDATE = 'Updated'
 EVENT_TITLE_CREATED = 'Created'
+EVENT_TITLE_UPLOADED_IMAGES = 'Uploaded images'
 EVENT_BY_USERNAME = constants.FIELD_TIMELINE_EVENT_BY_USER + '__username'
+EVENT_UNKNOWN_USER = 'Unknown user'
 
 EVENT_REVIEW_COLUMNS = (
     constants.FIELD_SPECIMEN_ACCEPTANCE,
@@ -77,6 +79,15 @@ def audit_specimen_view(initial, user, specimen):
         )
 
 
+def audit_upload_images(user, specimen, created_images):
+    TimelineEvent.objects.create(
+            specimen_id=specimen.id,
+            event_title=EVENT_TITLE_UPLOADED_IMAGES,
+            by_user=user,
+            body='Uploaded {0} images'.format(created_images)
+        )
+
+
 def get_created_entry(username, date):
     return {
         EVENT_BY_USERNAME: username,
@@ -87,7 +98,8 @@ def get_created_entry(username, date):
 
 
 def timeline_events(specimen):
-    events = [get_created_entry(specimen.created_by_user.username, specimen.date_added)]
+    user = specimen.created_by_user.username if specimen.created_by_user else EVENT_UNKNOWN_USER
+    events = [get_created_entry(user, specimen.date_added)]
     events += list(TimelineEvent.objects.filter(
                     specimen_id=specimen.id).values(*EVENT_VALUES))
     for e in events:
