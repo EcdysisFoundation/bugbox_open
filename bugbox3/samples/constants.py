@@ -404,9 +404,11 @@ EXP_HEADERS_ARR = [
 
 EXP_CSV_TYPE_ALL = 'all'
 EXP_CSV_TYPE_REVIEWED = 'reviewed-only'
+EXP_CSV_TYPE_AI = 'ai-only'
 EXPERIMENT_CSV_EXPORT_CHOICES = (
     (EXP_CSV_TYPE_ALL, 'Reviewd and AI (all)'),
     (EXP_CSV_TYPE_REVIEWED, 'Reviewed only'),
+    (EXP_CSV_TYPE_AI, 'AI only'),
 )
 
 EXPERIMENT_CSV_EXPORT_TYPES = [v[0] for v in EXPERIMENT_CSV_EXPORT_CHOICES]

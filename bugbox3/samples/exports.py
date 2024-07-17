@@ -119,9 +119,11 @@ def experiment_csv(request, id):
             }
             for specimen in specimens.all():
                 morphospecies_id = None
-                if specimen.classification_id:
+                if specimen.classification_id and export_type != constants.EXP_CSV_TYPE_AI:
                     morphospecies_id = specimen.classification_id
                 elif specimen.ai_classification_id and specimen.acceptance != constants.ACCEPTANCE_REJECTED:
+                    morphospecies_id = specimen.ai_classification_id
+                elif specimen.ai_classification_id and export_type == constants.EXP_CSV_TYPE_AI:
                     morphospecies_id = specimen.ai_classification_id
                 if export_type == constants.EXP_CSV_TYPE_REVIEWED \
                         and specimen.acceptance == constants.ACCEPTANCE_PENDING:
