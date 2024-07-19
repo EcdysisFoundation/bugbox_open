@@ -136,6 +136,8 @@ def classify_specimen_button(specimen, img_exists):
 def get_classifcation(specimen):
     if specimen.acceptance and specimen.classification:
         return specimen.classification.name
+    elif specimen.classification and not specimen.ai_classification:
+        return specimen.classification.name
     elif specimen.acceptance != constants.ACCEPTANCE_REJECTED and specimen.ai_classification:
         return specimen.ai_classification.name
     elif specimen.specimenimage_set.first() and specimen.acceptance == constants.ACCEPTANCE_PENDING:
@@ -165,7 +167,8 @@ def get_probability(specimen):
 
 
 def get_probability_or_user(specimen):
-    if specimen.acceptance == constants.ACCEPTANCE_REJECTED:
+    if specimen.acceptance == constants.ACCEPTANCE_REJECTED or (
+            specimen.classification and not specimen.ai_classification):
         return '<span class="badge text-bg-success">{0}</span>'.format(specimen.created_by_user)
     else:
         version = '<p>{0}</p>'.format(specimen.ai_version.version) if specimen.ai_version else ''

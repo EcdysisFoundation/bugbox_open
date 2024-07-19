@@ -2,15 +2,16 @@ import csv
 import time
 
 from django.contrib.auth.decorators import permission_required
+from django.db.models import Case, CharField, F, Func, Value, When
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
-from django.db.models import Case, CharField, F, Func, Value, When
 
 from ..core.permissions import IS_RESEARCH
 from ..taxonomy.models import Morphospecies
+from . import constants
 from .calculations import get_indices
 from .models import Experiment, Sample, Specimen
-from . import constants
+
 
 @permission_required(IS_RESEARCH)
 def experiment_ai_csv(request, id):

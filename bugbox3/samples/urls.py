@@ -1,6 +1,7 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
+from .exports import experiment_ai_csv, experiment_csv
 from .views import (
     ExperimentSamplePlanCreateView,
     ExperimentSamplePlanUpdateView,
@@ -20,9 +21,8 @@ from .views import (
     SpecimensView,
     SpecimenUpdateView,
     SpecimenView,
+    SpecimsWithoutImagesFormView,
 )
-
-from .exports import experiment_ai_csv, experiment_csv
 
 router = DefaultRouter()
 router.register(r'experiments-data', ExperimentsDatatablesViewSet,
@@ -56,6 +56,7 @@ urlpatterns = [
      path('specimens-experiment-sample/<int:id>/<int:sample_id>',
           SpecimensView.as_view(),
           name='specimens-experiment-sample'),
+     path('specimens-wo-img/<int:id>', SpecimsWithoutImagesFormView.as_view(), name='specimens-wo-img'),
      path('experiment-ai-csv/<int:id>', experiment_ai_csv, name='experiment-ai-csv'),
      path('experiment-csv/<int:id>', experiment_csv, name='experiment-csv')
 ]

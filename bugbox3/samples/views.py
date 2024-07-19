@@ -1,5 +1,4 @@
 from django.contrib import messages
-
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db import transaction
 from django.forms import inlineformset_factory
@@ -20,7 +19,7 @@ from ..libs.ui_helpers import (
     get_probability,
 )
 from ..libs.utilities import get_json_context
-from ..taxonomy.constants import GBIF_RANK_CHOICES_WO_BLANK_LIST
+from ..taxonomy import constants as taxa_const
 from ..taxonomy.models import Morphospecies
 from . import constants
 from .forms import (
@@ -32,6 +31,7 @@ from .forms import (
     SiteForm,
     SiteVisitForm,
     SpecimenForm,
+    SpecimensWithoutImagesForm,
     SpecimenViewForm,
 )
 from .models import Experiment, Sample, SamplePlan, Site, SiteVisit, Specimen, SpecimenImage
@@ -536,6 +536,64 @@ def specimen_view_context(specimen):
     return context
 
 
+class SpecimsWithoutImagesFormView(PermissionRequiredMixin, FormView):
+
+    permission_required = IS_RESEARCH
+
+    form_class = SpecimensWithoutImagesForm
+    template_name = 'samples/specimens_wo_images.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        sample = get_object_or_404(Sample, id=self.kwargs['id'])
+        morpho_names = [v[taxa_const.FIELD_MORPHO_NAME] for v in taxa_const.SKIP_MORPHOSPECIES]
+        existing_names = []
+        for m in morpho_names:
+            if Specimen.objects.filter(classification__name=m, sample_id=sample.id):
+                existing_names.append(m)
+        use_names = [v for v in morpho_names if v not in existing_names]
+        context.update({
+            'morpho_names': ', '.join(morpho_names),
+            'existing_names': ', '.join(existing_names),
+            'use_names': use_names,
+            'sample_link': reverse(
+                'samples:sample', kwargs={'sample_id': self.kwargs['id']}),
+            'experiment': sample.site_visit.site.experiment.name,
+            'experiment_id': sample.site_visit.site.experiment.id,
+            'site_name': sample.site_visit.site.site_name,
+            'visit_date': sample.site_visit.visit_date,
+            'sample_type': constants.SAMPLE_TYPE_CHOICES_DICT[sample.sample_type],
+            'name_no': sample.name_no,
+            'form_action_url': reverse(
+                'samples:specimens-wo-img', kwargs={'id': self.kwargs['id']})
+        })
+        return context
+
+    def form_valid(self, form):
+        sample = get_object_or_404(Sample, id=self.kwargs['id'])
+        entered_names = []
+        for v in taxa_const.SKIP_MORPHOSPECIES:
+            name = v[taxa_const.FIELD_MORPHO_NAME]
+            if name in form.cleaned_data:
+                if form.cleaned_data[name]:
+                    morhpospecies = get_object_or_404(Morphospecies, name=name)
+                    Specimen.objects.create(
+                        sample=sample,
+                        classification=morhpospecies,
+                        created_by_user=self.request.user,
+                        partial_count=form.cleaned_data[name]
+                    )
+                    entered_names.append(name)
+        messages.success(
+            self.request, 'Succesfully entered counts for {0}'.format(
+                ', '.join(entered_names)
+            ))
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse('samples:sample', kwargs={'sample_id':  self.kwargs['id']})
+
+
 class SpecimenView(PermissionRequiredMixin, FormView):
 
     permission_required = IS_RESEARCH
@@ -627,7 +685,7 @@ class SpecimenCreateView(PermissionRequiredMixin, CreateView):
             'json_context': get_json_context({
                 'datatables_url': api_reverse('taxonomy:morphospecies-picker-list',
                                               request=self.request, kwargs=kwargs),
-                'first_picker_choices': GBIF_RANK_CHOICES_WO_BLANK_LIST,
+                'first_picker_choices': taxa_const.GBIF_RANK_CHOICES_WO_BLANK_LIST,
                 'first_picker_text': 'any rank',
                 'ACCEPTANCE_VALUE_LOOKUP': constants.ACCEPTANCE_VALUE_LOOKUP,
                 'ai_classification_id': None
@@ -672,7 +730,7 @@ class SpecimenUpdateView(PermissionRequiredMixin, UpdateView):
             'json_context': get_json_context({
                 'datatables_url': api_reverse('taxonomy:morphospecies-picker-list',
                                               request=self.request, kwargs=kwargs),
-                'first_picker_choices': GBIF_RANK_CHOICES_WO_BLANK_LIST,
+                'first_picker_choices': taxa_const.GBIF_RANK_CHOICES_WO_BLANK_LIST,
                 'first_picker_text': 'any rank',
                 'ACCEPTANCE_VALUE_LOOKUP': constants.ACCEPTANCE_VALUE_LOOKUP,
                 'ai_classification_id': self.object.ai_classification.id if self.object.ai_classification else None
@@ -765,7 +823,7 @@ class SpecimensView(PermissionRequiredMixin, FormView):
                 'json_data': self._sv_json_data,
                 'datatables_url_2': api_reverse('taxonomy:morphospecies-picker-list',
                                                 request=self.request, kwargs=kwargs),
-                'second_picker_choices': GBIF_RANK_CHOICES_WO_BLANK_LIST,
+                'second_picker_choices': taxa_const.GBIF_RANK_CHOICES_WO_BLANK_LIST,
                 'second_picker_text': 'any rank',
             }),
             'acceptance_picker_choices': constants.ACCEPTANCE_CHOICES,

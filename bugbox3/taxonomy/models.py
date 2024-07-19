@@ -24,6 +24,7 @@ class Morphospecies(Model):
     defunt_morpho = ForeignKey("self", null=True, on_delete=SET_NULL)
     defunt_date = DateTimeField(null=True)
     gbif_key = IntegerField(null=True, blank=True)
+    gbif_phylum = CharField(max_length=64, blank=True)
     gbif_class = CharField(max_length=64, blank=True)
     gbif_order = CharField(max_length=64, blank=True)
     gbif_family = CharField(max_length=64, blank=True)
@@ -45,7 +46,7 @@ class Morphospecies(Model):
 
 
 @receiver(pre_save, sender=Morphospecies)
-def save_sample_thumbnail(sender, instance, **kwargs):
+def save_thumbnail(sender, instance, **kwargs):
     """
     Signal receiver to save a thumbnail if there was a change.
     """
@@ -60,7 +61,7 @@ def save_sample_thumbnail(sender, instance, **kwargs):
         if not obj.image == instance.image:
             # Field has changed
             needs_thumbnail = True
-    if needs_thumbnail:
+    if needs_thumbnail and instance.image:
         instance.image_thumbnail = resized_thumbnail(
             instance.image,
             constants.MORPHPOSPECIES_THUMBSIZE,

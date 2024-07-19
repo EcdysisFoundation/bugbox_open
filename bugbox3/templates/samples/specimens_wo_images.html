@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Specimens without images form
+{% endblock title %}
+
+{% block content %}
+
+<div class="container">
+    <div class="row">
+        <div class="col mb-3 mt-2 p-0">
+            <div class="card">
+                <div class="card-header align-items-center bg-ecdysis text-white d-flex justify-content-between">
+                    <div class="col">
+                        <h5>Create specimens for <a href="{% url 'samples:experiment' experiment_id %}" class="link-light">
+                            {{ experiment }}</a> -
+                            Site: {{ site_name }} -
+                            {{ visit_date }}
+                            {{ sample_type }} sample: <a href="{{sample_link}}" class="link-light">{{ name_no }}</a>
+                        </h5>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col">
+                            <p>This form allows you to enter intial counts for the following Morphospecies: {{ morpho_names }}.
+                                Once an entry exists in the sample for any of those, add or change those values on their specimen page.
+                            </p>
+                            {% if existing_names %}
+                            <p class="text-bg-warning p-3">
+                                We checked, and found there are already specimen entries for the following Morphospecies: {{ existing_names }}.
+                                Thefore, they are not included on this form.
+                            </p>
+                            {% endif %}
+
+                            <form enctype="multipart/form-data" action="{{ form_action_url }}" method="POST">
+                                {% csrf_token %}
+                                <div class="row"><div class="col-3">
+                                {% for name in use_names %}
+
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text">{{name}}</span>
+
+                                        <input class="form-control" type="number" id="{{ name }}" name="{{ name }}" min="0" max="30000">
+                                    </div>
+                                {% endfor %}
+                                </div></div>
+                                <input type="submit" value="Submit" class="btn btn-primary mt-2 ms-3">
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row m-2 pb-2"><div class="col-2">
+
+{% endblock content %}

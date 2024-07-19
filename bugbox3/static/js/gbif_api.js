@@ -6,17 +6,18 @@ let rr = document.getElementById('gbif-list');
 let tabContent = document.getElementById('gbif-nav-tabContent');
 let speciesLookup = new Map();
 
-let id_name = document.getElementById('id_name')
-let id_gbif_key = document.getElementById('id_gbif_key')
-let id_gbif_canonical_name = document.getElementById('id_gbif_canonical_name')
-let id_gbif_class = document.getElementById('id_gbif_class')
-let id_gbif_order = document.getElementById('id_gbif_order')
-let id_gbif_family = document.getElementById('id_gbif_family')
-let id_gbif_genus = document.getElementById('id_gbif_genus')
-let id_gbif_species = document.getElementById('id_gbif_species')
-let id_gbif_scientific_name = document.getElementById('id_gbif_scientific_name')
-let id_gbif_status = document.getElementById('id_gbif_status')
-let id_gbif_rank = document.getElementById('id_gbif_rank')
+let id_name = document.getElementById('id_name');
+let id_gbif_key = document.getElementById('id_gbif_key');
+let id_gbif_canonical_name = document.getElementById('id_gbif_canonical_name');
+let id_gbif_phylum = document.getElementById('id_gbif_phylum');
+let id_gbif_class = document.getElementById('id_gbif_class');
+let id_gbif_order = document.getElementById('id_gbif_order');
+let id_gbif_family = document.getElementById('id_gbif_family');
+let id_gbif_genus = document.getElementById('id_gbif_genus');
+let id_gbif_species = document.getElementById('id_gbif_species');
+let id_gbif_scientific_name = document.getElementById('id_gbif_scientific_name');
+let id_gbif_status = document.getElementById('id_gbif_status');
+let id_gbif_rank = document.getElementById('id_gbif_rank');
 
 let messageModalBody = document.getElementById('messageModal-body');
 let messageModal = new Modal(document.getElementById('messageModal'), {
@@ -33,6 +34,7 @@ function getTabDetails(row) {
   let lic = '</li>'
   let result = `<ul class="list-group list-group-flush">
   ${li}<b>Canonical Name:</b> ${row.canonicalName}${lic}
+  ${li}<b>Phylum:</b> ${row.phylum}${lic}
   ${li}<b>Rank:</b> ${row.rank}${lic}
   ${li}<b>Class:</b> ${row.class}${lic}
   ${li}<b>Order:</b> ${row.order}${lic}
@@ -125,6 +127,7 @@ $selectGbifButton.on('click', function(event) {
   id_name.value = v.canonicalName;
   id_gbif_key.value = v.key;
   id_gbif_canonical_name.value = v.canonicalName;
+  if (v.phylum) { id_gbif_phylum.value = v.phylum};
   if (v.class) { id_gbif_class.value = v.class; };
   if (v.order) { id_gbif_order.value = v.order; };
   if (v.family) { id_gbif_family.value = v.family; };

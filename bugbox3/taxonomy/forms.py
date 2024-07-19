@@ -46,8 +46,9 @@ class MorphospeciesUpdateForm(MorphospeciesFormMixin):
                 Column(constants.FIELD_MORPHO_GBIF_SCIENTIFIC_NAME),
             ),
             Row(
-                Column(constants.FIELD_MORPHO_GBIF_RANK, css_class='form-control-width-medium'),
-                Column(constants.FIELD_MORPHO_GBIF_STATUS, css_class='form-control-width-medium'),
+                Column(constants.FIELD_MORPHO_GBIF_RANK),
+                Column(constants.FIELD_MORPHO_GBIF_STATUS),
+                Column(constants.FIELD_MORPHO_GBIF_PHYLUM),
             ),
             Row(
                 Column(constants.FIELD_MORPHO_GBIF_CLASS),

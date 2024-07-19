@@ -68,7 +68,7 @@
         <div class="col-12 mb-3 mt-2 p-0">
             <div class="card">
                 <div class="card-header align-items-center bg-ecdysis text-white d-flex justify-content-between">
-                    <div class="col">
+                    <div class="col-2">
                         {% if review_permission %}
                         <a href="{% url 'samples:specimens-experiment-sample' id=sample_info.experiment_id sample_id=sample_info.sample_id %}" class="link-light">
                         {% endif %}
@@ -78,7 +78,13 @@
                         {% endif %}
                         <a role="button" class="btn btn-secondary btn-sm {% if sample_info.completed %} disabled" aria-disabled="true"{% else %}"{% endif %}
                            href="{% url 'samples:specimen-create' sample_info.sample_id %}">
-                           Add specimen</a>
+                           Add 1 specimen</a>
+                    </div>
+                    <div class="col-3">
+                        <h5>&nbsp;</h5>
+                        <a role="button" class="btn btn-dark btn-sm {% if sample_info.completed %} disabled" aria-disabled="true"{% else %}"{% endif %}
+                        href="{% url 'samples:specimens-wo-img' sample_info.sample_id %}">
+                      Add specimens without images</a>
                     </div>
                     <div class="col">
                         <form enctype="multipart/form-data" action="{{ form_action_url }}" method="POST">

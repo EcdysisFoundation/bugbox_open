@@ -271,6 +271,26 @@ class SpecimenForm(ModelFormMixin):
     )
 
 
+class SpecimensWithoutImagesForm(Form):
+    """
+    Form for entering counts.
+    Names here must coorespond to taxanomy.constants.SKIP_MORPHOSPECIES.FIELD_MORPHO_NAME
+    """
+
+    Annelida = IntegerField(
+        required=False)
+    Arachnida = IntegerField(
+        required=False)
+    Collembola = IntegerField(
+        required=False)
+    Gastropoda = IntegerField(
+        required=False)
+    Nematoda = IntegerField(
+        required=False)
+    Thysanoptera = IntegerField(
+        required=False)
+
+
 class JSONFieldForm(Form):
 
     json_data = JSONField(decoder=json.JSONDecoder)
