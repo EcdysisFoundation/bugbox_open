@@ -8,6 +8,7 @@ from django.shortcuts import get_object_or_404
 
 from ..core.permissions import IS_RESEARCH
 from ..taxonomy.models import Morphospecies
+from ..taxonomy.utils import get_skip_morphospecies_ids
 from . import constants
 from .calculations import get_indices
 from .models import Experiment, Sample, Specimen
@@ -27,10 +28,8 @@ def experiment_ai_csv(request, id):
     if not all([v.isnumeric() for v in other_experiments]):
         return HttpResponse(status=404)
     other_experiments = [int(v) for v in other_experiments]
-
     all_exp = other_experiments + [experiment.id]
     headersArr = constants.EXPERIMENT_AI_CSV + ['Top 1 Correct', 'Top 3 Correct']
-
     specimens = Specimen.objects.filter(
         sample__site_visit__site__experiment_id__in=all_exp,
         sample__sample_type__in=sample_types).exclude(
@@ -77,6 +76,7 @@ def experiment_csv(request, id):
     export_type = export_type if export_type in constants.EXPERIMENT_CSV_EXPORT_TYPES else None
     sample_types = request.GET.getlist('sampleTypes2')
     sample_types = [v for v in sample_types if v in constants.SAMPLE_TYPE_CHOICES_ALL]
+    include_skip_morph = request.GET.get('include_skip_morph')
     sites = request.GET.getlist('sites2')
     if not all([v.isnumeric() for v in sites]):
         return HttpResponse(status=404)
@@ -91,6 +91,10 @@ def experiment_csv(request, id):
     unknown_species = 'Not identified'
     if export_type == constants.EXP_CSV_TYPE_REVIEWED:
         unknown_species += ' or reviewed'
+    if not include_skip_morph:
+        skip_morphospecies_ids = get_skip_morphospecies_ids()
+    else:
+        skip_morphospecies_ids = []
     all_species = {unknown_species}
 
     rows = []
@@ -106,6 +110,8 @@ def experiment_csv(request, id):
             )
         for sample in samples:
             specimens = sample.specimen_set
+            if not include_skip_morph and export_type != constants.EXP_CSV_TYPE_AI:
+                specimens = specimens.exclude(classification_id__in=skip_morphospecies_ids)
             if not specimens.count() and not sample.completed:
                 # indicates a planned sample that was not actually taken or completed
                 continue
@@ -116,23 +122,25 @@ def experiment_csv(request, id):
                 constants.EXP_HEAD_ARR_DATE: sample.site_visit.visit_date.strftime('%d %b %Y'),
                 constants.EXP_HEAD_ARR_SAMPLE_TYPE: sample.sample_type,
                 constants.EXP_HEAD_ARR_SAMPLE_NAME: sample.name_no,
+                constants.EXP_HEAD_ARR_SAMPLE_COMPLETED: sample.completed,
                 unknown_species: 0  # starting count
             }
             for specimen in specimens.all():
-                morphospecies_id = None
-                if specimen.classification_id and export_type != constants.EXP_CSV_TYPE_AI:
-                    morphospecies_id = specimen.classification_id
-                elif specimen.ai_classification_id and specimen.acceptance != constants.ACCEPTANCE_REJECTED:
+                if export_type == constants.EXP_CSV_TYPE_AI:
                     morphospecies_id = specimen.ai_classification_id
-                elif specimen.ai_classification_id and export_type == constants.EXP_CSV_TYPE_AI:
-                    morphospecies_id = specimen.ai_classification_id
-                if export_type == constants.EXP_CSV_TYPE_REVIEWED \
-                        and specimen.acceptance == constants.ACCEPTANCE_PENDING:
-                    # But what about entered specimens, not ran through AI, such as counts without image?
-                    # Use an entry in determined_by? But then what about deleted users?
-                    morphospecies_id = None
+                elif export_type == constants.EXP_CSV_TYPE_REVIEWED:
+                    if specimen.acceptance == constants.ACCEPTANCE_PENDING and specimen.ai_classification:
+                        morphospecies_id = None
+                    else:
+                        morphospecies_id = specimen.classification_id
+                else:
+                    # must be the all selection, prioritize classifcation_id
+                    if specimen.classification_id:
+                        morphospecies_id = specimen.classification_id
+                    else:
+                        morphospecies_id = specimen.ai_classification_id
                 if morphospecies_id:
-                    morpho = Morphospecies.objects.get(pk=morphospecies_id)
+                    morpho = Morphospecies.objects.get(id=morphospecies_id)
                     name = morpho.name
                     morpho_headers[0][name] = morpho.gbif_order
                     morpho_headers[1][name] = morpho.gbif_family

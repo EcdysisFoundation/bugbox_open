@@ -34,7 +34,6 @@ from .forms import (
 )
 from .models import Experiment, Sample, SamplePlan, Site, SiteVisit, Specimen, SpecimenImage
 from .models_query import get_sample_plan_descriptions
-
 from .timeline_events import audit_specimen_update, audit_specimen_view, audit_upload_images, timeline_events
 
 
@@ -94,6 +93,8 @@ class ExperimentView(PermissionRequiredMixin, TemplateView):
             'years': years,
             'sample_plan_descriptions': description,
             'review_permission': self.request.user.has_perm(REVIEW_SPECIMEN_PAGE),
+            'skip_morphospecies': ', '.join(
+                [v[taxa_const.FIELD_MORPHO_NAME] for v in taxa_const.SKIP_MORPHOSPECIES]),
             'container_row_header': get_datatables_container(
                 get_datatables_row([
                     'Site Name',

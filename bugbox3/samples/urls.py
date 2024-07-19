@@ -18,13 +18,12 @@ from .views import (
     SpecimenView,
     SpecimsWithoutImagesFormView,
 )
-
 from .views_dtables import (
-     ExperimentsDatatablesViewSet,
-     SamplesDatatablesViewSet,
-     SitesDatatablesViewSet,
-     SpecimenDatatablesViewSet,
-     SpecimensAllDatatablesViewSet
+    ExperimentsDatatablesViewSet,
+    SamplesDatatablesViewSet,
+    SitesDatatablesViewSet,
+    SpecimenDatatablesViewSet,
+    SpecimensAllDatatablesViewSet,
 )
 
 router = DefaultRouter()
