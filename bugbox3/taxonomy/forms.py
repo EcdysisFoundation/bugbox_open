@@ -1,5 +1,5 @@
 from crispy_forms.layout import Column, Field, Row
-from django.forms import CharField, Textarea
+from django.forms import CharField, Textarea, TextInput
 
 from ..core.forms import ModelFormMixin, get_submit_layout
 from . import constants
@@ -17,6 +17,13 @@ class MorphospeciesFormMixin(ModelFormMixin):
         fields = constants.FORM_FIELDS_MORPHO
 
     required_fields = constants.FORM_FIELDS_MORPHO_REQUIRED
+    field_labels = constants.FORM_FIELDS_MORPHO_LABELS
+    help_text = constants.FORM_MORPHO_HELP_TEXT
+
+    gbif_canonical_name = CharField(widget=TextInput(attrs={'readonly': 'readonly'}))
+    note = CharField(
+        widget=Textarea
+    )
 
 
 class MorphospeciesForm(MorphospeciesFormMixin):
@@ -26,16 +33,14 @@ class MorphospeciesForm(MorphospeciesFormMixin):
     def get_primary_layout(self):
         return [Field(v) for v in constants.FORM_FIELDS_MORPHO]
 
-    note = CharField(
-        widget=Textarea
-    )
+
+
 
 
 class MorphospeciesUpdateForm(MorphospeciesFormMixin):
 
     hidden_fields = constants.FORM_FIELDS_MORPHO_UPDATE_HIDDEN
-    field_labels = constants.FORM_FIELDS_MORPHO_LABELS
-    help_text = constants.FORM_MORPHO_HELP_TEXT
+
 
     def get_primary_layout(self):
         return [
@@ -64,6 +69,3 @@ class MorphospeciesUpdateForm(MorphospeciesFormMixin):
             Field(constants.FIELD_MORPHO_IMAGE)
         ]
 
-    note = CharField(
-        widget=Textarea
-    )

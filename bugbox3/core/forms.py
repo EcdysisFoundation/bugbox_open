@@ -41,10 +41,10 @@ class Html5DateInput(DateInput):
 class ModelFormMixin(ModelForm):
     required_fields = []
     hidden_fields = []
+    disabled_fields = []
     field_labels = {}
     field_choices = {}
     help_text = {}
-    help_text_expanded = {}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -57,6 +57,9 @@ class ModelFormMixin(ModelForm):
             if field_name in self.hidden_fields:
                 field.widget = HiddenInput()
 
+            if field_name in self.disabled_fields:
+                field.disabled = True
+
             if field_name in self.field_labels:
                 field.label = self.field_labels[field_name]
 
@@ -67,9 +70,6 @@ class ModelFormMixin(ModelForm):
                 field.help_text = self.help_text[field_name]
             else:
                 field.help_text = False
-
-            if field_name in self.help_text_expanded:
-                field.help_text_expanded = self.help_text_expanded[field_name]
 
         self.helper = FormHelper(self)
         self.helper.form_method = 'post'

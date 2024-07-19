@@ -2,6 +2,7 @@ from django.conf import settings
 from django.db.models import (
     CASCADE,
     SET_NULL,
+    BooleanField,
     CharField,
     DateField,
     DateTimeField,
