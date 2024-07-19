@@ -5,23 +5,26 @@ from .exports import experiment_ai_csv, experiment_csv
 from .views import (
     ExperimentSamplePlanCreateView,
     ExperimentSamplePlanUpdateView,
-    ExperimentsDatatablesViewSet,
     ExperimentsView,
     ExperimentView,
-    SamplesDatatablesViewSet,
     SampleUpdateView,
     SampleView,
     SiteCreateView,
-    SitesDatatablesViewSet,
     SiteUpdateView,
     SpecimenCreateView,
-    SpecimenDatatablesViewSet,
     SpecimenDeleteView,
-    SpecimensAllDatatablesViewSet,
     SpecimensView,
     SpecimenUpdateView,
     SpecimenView,
     SpecimsWithoutImagesFormView,
+)
+
+from .views_dtables import (
+     ExperimentsDatatablesViewSet,
+     SamplesDatatablesViewSet,
+     SitesDatatablesViewSet,
+     SpecimenDatatablesViewSet,
+     SpecimensAllDatatablesViewSet
 )
 
 router = DefaultRouter()
