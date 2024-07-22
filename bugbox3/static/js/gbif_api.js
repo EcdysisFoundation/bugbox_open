@@ -93,7 +93,7 @@ function getGbif( param ) { $.get( 'https://api.gbif.org/v1/species/search', {
 
 
 $(function () {
-
+const json_context = JSON.parse(document.getElementById('json_context').textContent)
 let searchInput = document.getElementById('gbif-input');
 
 let $searchButton = $('<button class="btn btn-success btn-sm mb-1 text-nowrap" type="button">Search GBIF</button>')
@@ -124,7 +124,7 @@ $selectGbifButton.on('click', function(event) {
 
   if (gbif_selected.length) {
   let v = speciesLookup.get(gbif_selected[0].id)
-  id_name.value = v.canonicalName;
+  if (json_context.action == 'create') {id_name.value = v.canonicalName;}
   id_gbif_key.value = v.key;
   id_gbif_canonical_name.value = v.canonicalName;
   if (v.phylum) { id_gbif_phylum.value = v.phylum};

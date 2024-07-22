@@ -186,6 +186,9 @@ class MorphospeciesCreateView(PermissionRequiredMixin, CreateView):
 
     def get_context_data(self, **kwargs):
         context = super(MorphospeciesCreateView, self).get_context_data(**kwargs)
+        context.update({'json_context': get_json_context({
+            'action': self.action
+        })})
         return context
 
     def form_valid(self, form):
@@ -208,6 +211,9 @@ class MorphospeciesUpdateView(PermissionRequiredMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super(MorphospeciesUpdateView, self).get_context_data(**kwargs)
+        context.update({'json_context': get_json_context({
+            'action': self.action
+        })})
         return context
 
     def form_valid(self, form):
