@@ -1,5 +1,5 @@
 from crispy_forms.layout import Column, Field, Row
-from django.forms import CharField, Textarea, TextInput
+from django.forms import CharField, IntegerField, Textarea, TextInput, Form
 
 from ..core.forms import ModelFormMixin, get_submit_layout
 from . import constants
@@ -69,3 +69,8 @@ class MorphospeciesUpdateForm(MorphospeciesFormMixin):
             Field(constants.FIELD_MORPHO_IMAGE)
         ]
 
+
+class MorphospeciesCombineForm(Form):
+
+    combine_to_id = IntegerField(
+        required=False)

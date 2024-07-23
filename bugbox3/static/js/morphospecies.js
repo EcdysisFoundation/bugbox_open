@@ -7,6 +7,21 @@ import DataTable from 'datatables.net-bs5';
 // first_picker_choices can be None
 // Requires json_context.first_picker_text if json_context.first_picker_choices
 
+function getUrl(dt_url, first_filter, first_check) {
+    let ff = ''
+    let fc = ''
+    if (first_filter) {
+        ff = '?first_filter=' + first_filter;
+    }
+    if (first_check.prop("checked")) {
+        let sep = '?'
+        if (ff) {
+            sep = '&'
+        }
+        fc = `${sep}first_check=` + first_check.prop("checked")
+    }
+    return `${dt_url}${ff}${fc}`
+}
 
 
 $(function () {
@@ -33,15 +48,24 @@ $(function () {
 
       // api_url filters
       let new_datatables_url = '';
-      if (json_context.first_picker_choices) {
-        let $firstPicker = $('<select placeholder="Filter by" aria-label="Filter by" id="first-picker" class="form-select"></select>')
+
+      let $firstPicker = $('<select placeholder="Filter by" aria-label="Filter by" id="first-picker" class="form-select"></select>')
         $('.first-picker').append($firstPicker)
         $firstPicker.append(`<option value="">` + json_context.first_picker_text + `</option>`)
         $firstPicker.append(json_context.first_picker_choices.map(value => `<option value="${value[0]}">${value[1]}</option>`))
         $firstPicker.val('')
+
+        let $firstCheck = $(`<input class="form-check-input" type="checkbox" value="" id="firstCheck">`)
+        $('.first-check').append($firstCheck)
+
+
         $firstPicker.on('change', () => {
-            new_datatables_url = json_context.datatables_url  + '?first_filter=' + $firstPicker.val()
+            new_datatables_url = getUrl(json_context.datatables_url, $firstPicker.val(), $firstCheck)
             data_table.ajax.url( new_datatables_url ).load();
         })
-      };
+        $firstCheck.on('change', () => {
+            new_datatables_url = getUrl(json_context.datatables_url, $firstPicker.val(), $firstCheck)
+            data_table.ajax.url( new_datatables_url ).load();
+        })
+
 })

@@ -8,11 +8,54 @@
 {% block customheadtagcontent %}
 
 {% render_bundle 'apexcharts_config' 'js' attrs='defer' %}
+{% render_bundle 'morphospecies_combine' 'js' attrs='defer' %}
 {{ json_context|safe }}
 
 {% endblock customheadtagcontent %}
 
 {% block content %}
+
+<div class="modal fade" id="mSelectModal" tabindex="-1" aria-labelledby="mSelectModal" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+
+        <div class="modal-header">
+          <h5>Combine with morphospecies</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+
+            <div class="container">
+                <div class="row bg-light rounded pt-2 pb-1 mb-1" id="searchToolbar">
+                    <div class="col-3">
+                      <div class="first-picker"></div>
+                    </div>
+                  </div>
+                <div class="row pb-2 mt-2">
+                    <div class="col">
+                        <table id="data-table" class="table table-responsive nowrap compact table-hover" width="100%">
+                        <thead>
+                            <tr>
+                            <th>{{ container_row_header|safe }}</th>
+                            </tr>
+                        </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div class="modal-footer">
+            <form enctype="multipart/form-data" action="{{ form_action_url }}" method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="combine_to_id" id="combine_to_id">
+                <div class="select-morpho-button"></div>
+              </form>
+        </div>
+
+      </div>
+    </div>
+</div>
 
 <div class="container">
 
@@ -22,6 +65,9 @@
                 <div class="card-header align-items-center bg-ecdysis text-white d-flex justify-content-between">
                     <h2 class="text-light mt-1">{{ morphospecies.name }}</h2>
                     <a href="{% url 'taxonomy:morphospecies' %}" class="btn btn-light btn-small" role="button">Morphospecies</a>
+                    {% if not morphospecies.defunt_date %}
+                        <button type="button" class="btn btn-small btn-light" data-bs-toggle="modal" data-bs-target="#mSelectModal">Combine</button>
+                    {% endif %}
                     {% if can_edit %}
                         <a href="{% url 'taxonomy:morphospecies-update' morphospecies.id %}" class="btn btn-light btn-small" role="button">Edit</a>
                     {% endif %}
@@ -55,6 +101,17 @@
                                 {% endif %}
                             </ul>
                         </div>
+
+                        {% if morphospecies.defunt_date %}
+                            <div class="col-8">
+                            <h4>Defunct: merged with <a
+                                href="{% url 'taxonomy:morphospecies-detail' morphospecies.defunt_morpho_id %}">{{morphospecies.defunt_morpho}}</a>
+                            by
+                            {{morphospecies.defunt_user}}
+                            ({{morphospecies.defunt_date}})</h4>
+                            </div>
+                        {% endif %}
+
                         {% if image_set %}
                             <div class="col-8 align-items-start d-flex justify-content-end">
                                 <ul class="list-group list-group-flush">

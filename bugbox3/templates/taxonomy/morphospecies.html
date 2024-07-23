@@ -7,7 +7,7 @@
 {% endblock title %}
 
 {% block customheadtagcontent %}
-{% render_bundle 'simple_datatable' 'js' attrs='defer' %}
+{% render_bundle 'morphospecies' 'js' attrs='defer' %}
 {{ json_context|safe }}
 {% endblock customheadtagcontent %}
 
@@ -62,6 +62,14 @@
         <div class="col-3">
           <div class="first-picker"></div>
         </div>
+        <div class="col-3">
+            <div class="form-check">
+                <div class="first-check"></div>
+                <label class="form-check-label" for="firstCheck">
+                    {{ first_check}}
+                  </label>
+            </div>
+          </div>
       </div>
 
     <div class="row pb-2 mt-2">

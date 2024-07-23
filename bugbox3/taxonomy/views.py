@@ -1,5 +1,6 @@
 import csv
 import time
+from datetime import datetime
 
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
@@ -8,7 +9,7 @@ from django.db.models import Count, Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
-from django.views.generic import CreateView, TemplateView, UpdateView
+from django.views.generic import CreateView, TemplateView, UpdateView, FormView
 from rest_framework.reverse import reverse as api_reverse
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
@@ -19,7 +20,7 @@ from ..libs.utilities import get_json_context
 from ..samples import constants as samples_constants
 from ..samples.models import Sample, Specimen, SpecimenImage
 from . import constants
-from .forms import MorphospeciesForm, MorphospeciesUpdateForm
+from .forms import MorphospeciesForm, MorphospeciesUpdateForm, MorphospeciesCombineForm
 from .models import AiTraining, Morphospecies
 from .serializers import MorphospeciesDatatablesSerializer, MorphospeciesPickerSerializer
 from .tasks import id_image
@@ -35,11 +36,18 @@ class MorphospeciesDatatablesViewSet(PermissionRequiredMixin, DatatablesModelVie
     )
 
     def get_queryset(self):
+        gbif_rank = None
+        first_check = None
+        morphospecies = Morphospecies.objects.all()
         if self.request.query_params.get('first_filter'):
             gbif_rank = self.request.query_params.get('first_filter')
-            if gbif_rank in constants.GBIF_RANK_VALUES:
-                return Morphospecies.objects.filter(gbif_rank=gbif_rank).order_by(constants.FIELD_MORPHO_NAME)
-        return Morphospecies.objects.all().order_by(constants.FIELD_MORPHO_NAME)
+        if self.request.query_params.get('first_check'):
+            first_check = self.request.query_params.get('first_check')
+        if gbif_rank in constants.GBIF_RANK_VALUES:
+            morphospecies =  morphospecies.filter(gbif_rank=gbif_rank)
+        if not first_check:
+            morphospecies = morphospecies.exclude(defunt_date__isnull=False)
+        return morphospecies.order_by(constants.FIELD_MORPHO_NAME)
 
 
 class MorphospeciesPickerViewSet(PermissionRequiredMixin, DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
@@ -59,52 +67,55 @@ class MorphospeciesPickerViewSet(PermissionRequiredMixin, DatatablesModelViewSet
         return Morphospecies.objects.all().order_by(constants.FIELD_MORPHO_NAME)
 
 
-def get_morphospecies_datatable(datatables_url):
-    """
-    Forat the datatables context, including the url from rest_framework.reverse
-    as datatables_url
-    """
-    return {
-        'json_context': get_json_context({
-            'datatables_url': datatables_url,
-            'first_picker_choices': constants.GBIF_RANK_CHOICES_WO_BLANK_LIST,
-            'first_picker_text': 'any rank'
-        }),
-        'container_row_header': get_datatables_container(
-            get_datatables_row([
-                'Name',
-                'Canonical Name',
-                'Rank'
-            ])),
-        }
-
-
 class MophospeciesView(PermissionRequiredMixin, TemplateView):
 
     permission_required = IS_RESEARCH
     template_name = 'taxonomy/morphospecies.html'
 
+    first_check_txt = 'Show defunct morphospecies'
+
+    def get_morphospecies_datatable(self, datatables_url):
+        """
+        Forat the datatables context, including the url from rest_framework.reverse
+        as datatables_url
+        """
+        return {
+            'json_context': get_json_context({
+                'datatables_url': datatables_url,
+                'first_picker_choices': constants.GBIF_RANK_CHOICES_WO_BLANK_LIST,
+                'first_picker_text': 'any rank',
+                'first_check': self.first_check_txt
+            }),
+            'container_row_header': get_datatables_container(
+                get_datatables_row([
+                    'Name',
+                    'Canonical Name',
+                    'Rank'
+                ])),
+            }
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         datatables_url = api_reverse('taxonomy:morphospecies-data-list',
                                      request=self.request, kwargs=kwargs)
-        context.update(get_morphospecies_datatable(datatables_url))
+        context.update(self.get_morphospecies_datatable(datatables_url))
         context.update({
             'can_add': self.request.user.has_perm(ADD_MORPHOSPECIES),
-            'exp_morph_choices': constants.EXP_MORPH_CHOICES
+            'exp_morph_choices': constants.EXP_MORPH_CHOICES,
+            'first_check': self.first_check_txt
         })
         return context
 
 
-class MorphospeciesDetailView(PermissionRequiredMixin, TemplateView):
+class MorphospeciesDetailView(PermissionRequiredMixin, FormView):
 
+    form_class = MorphospeciesCombineForm
     permission_required = IS_RESEARCH
     template_name = 'taxonomy/morphospecies_detail.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        morphospecies = get_object_or_404(
-            Morphospecies.objects.all(), id=kwargs['id'])
+        morphospecies = get_object_or_404(Morphospecies, id=self.kwargs['id'])
         image_set = []
         if morphospecies.gbif_rank == constants.GBIF_RANK_SPECIES and morphospecies.gbif_canonical_name:
             display_name = morphospecies.gbif_canonical_name
@@ -171,10 +182,49 @@ class MorphospeciesDetailView(PermissionRequiredMixin, TemplateView):
                     filter=~Q(acceptance=samples_constants.ACCEPTANCE_PENDING)), pending=Count(
                         'pk', distinct=True, filter=Q(acceptance=samples_constants.ACCEPTANCE_PENDING))),
             'json_context': get_json_context({
-                'ai_accuracy_over_time': ai_accuracy_over_time
+                'ai_accuracy_over_time': ai_accuracy_over_time,
+                'datatables_url': api_reverse('taxonomy:morphospecies-picker-list',
+                                              request=self.request, kwargs=kwargs),
+                'first_picker_choices': constants.GBIF_RANK_CHOICES_WO_BLANK_LIST,
+                'first_picker_text': 'any rank',
             })
         })
         return context
+
+    def form_valid(self, form):
+        combine_to_id = form.cleaned_data['combine_to_id']
+        if combine_to_id:
+            morphospecies = get_object_or_404(Morphospecies, id=self.kwargs['id'])
+            combine_to = get_object_or_404(Morphospecies, id=combine_to_id)
+
+            if morphospecies.id != combine_to.id:
+                if not morphospecies.defunt_date:
+                    Specimen.objects.filter(classification=morphospecies).update(
+                        classification_id=combine_to.id)
+                    Specimen.objects.filter(ai_classification=morphospecies).update(
+                        ai_classification_id=combine_to.id)
+                    morphospecies.defunt_date = datetime.today()
+                    morphospecies.defunt_user = self.request.user
+                    morphospecies.defunt_morpho = combine_to
+                    morphospecies.save()
+
+                    messages.success(self.request, 'Successfully combined {0} (id={1}) to {2} (id={3})'.format(
+                        morphospecies.name, morphospecies.id, combine_to.name, combine_to.id))
+                else:
+                    messages.warning(self.request, 'Warning: {0} (id={3}) is a defunct Morphospecies, did not save changes').format(
+                        combine_to.name, combine_to.id
+                    )
+            else:
+                messages.warning(self.request, 'Warning: {0} (id={1}) is the same as {2} (id={3}), did not save changes'.format(
+                    morphospecies.name, morphospecies.id, combine_to.name, combine_to.id))
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        if self.request.POST['combine_to_id']:
+            return reverse(
+                'taxonomy:morphospecies'
+            )
+        return reverse('taxonomy:morphospecies-detail', kwargs={'id': self.kwargs['id']})
 
 
 class MorphospeciesCreateView(PermissionRequiredMixin, CreateView):
