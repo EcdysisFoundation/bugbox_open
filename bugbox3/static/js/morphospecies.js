@@ -1,12 +1,6 @@
 import $ from 'jquery';
 import DataTable from 'datatables.net-bs5';
 
-// Basic datatable with optional filtering
-// Requries json_context.datatables_url
-// Requires json_context.first_picker_choices
-// first_picker_choices can be None
-// Requires json_context.first_picker_text if json_context.first_picker_choices
-
 function getUrl(dt_url, first_filter, first_check) {
     let ff = ''
     let fc = ''

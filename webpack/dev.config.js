@@ -7,7 +7,7 @@ module.exports = merge(commonConfig, {
   devServer: {
     port: 3000,
     proxy: {
-      '/': 'http://django:8000',
+      '/': 'http://django:8002',
     },
     client: {
       overlay: {

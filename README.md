@@ -25,7 +25,7 @@ To run commands to manage.py, use this syntax, to the appropriate .yml file
 
 Sort and format imports
 
-    $ docker compose -f local.yml exec -T django isort bugbox3 
+    $ docker compose -f local.yml exec -T django isort bugbox3
 
 Check other Flake8 issues
 
@@ -35,11 +35,11 @@ Check other Flake8 issues
 
     Database backups are configured with Cookie cutter methods. In our case it is expanded to the local version to aid in development. Seperate AWS IAM users are configured for different envirionments
 
-    use bugbox-local user access keys for local.yml use cases, whle bugbox-local-server is for local-server.yml cases. These .yml files should reference a .secrets file in the repo .env directory that defines the 
+    use bugbox-local user access keys for local.yml use cases, whle bugbox-localserver is for localserver.yml cases. These .yml files should reference a .secrets file in the repo .env directory that defines the
     environment variables and is gitignored to keep it secret.
 
     Initiate a backup in docker
-    $ docker compose -f local.yml exec postgres backup   
+    $ docker compose -f local.yml exec postgres backup
 
     Upload backups to S3
     $ docker compose -f local.yml run --rm awscli upload

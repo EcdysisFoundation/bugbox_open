@@ -77,3 +77,6 @@ IS_RESEARCH = [
     DELETE_SITEVISIT,
     VIEW_SITEVISIT,
 ]
+
+def show_toolbar(request):
+    return str(request.user) == 'mikaylaelectra'

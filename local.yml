@@ -20,7 +20,7 @@ services:
       - ./.envs/.local/.postgres
       - ./.envs/.local/.secrets
     ports:
-      - '8000:8000'
+      - '8002:8002'
     command: /start
 
   postgres:
@@ -35,7 +35,9 @@ services:
     env_file:
       - ./.envs/.local/.postgres
     ports:
-      - "5433:5432"
+      - "5435:5434"
+    command:
+      -p 5434
 
   redis:
     image: docker.io/redis:6
@@ -69,7 +71,7 @@ services:
     image: bugbox3_local_flower
     container_name: bugbox3_local_flower
     ports:
-      - '5555:5555'
+      - '5556:5556'
     command: /start-flower
 
   node:
