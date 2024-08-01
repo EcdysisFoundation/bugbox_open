@@ -130,12 +130,13 @@
                         <div class="col">
                             {% if morphospecies.note %}
                             <ul class="list-group list-group-flush">
-                                <li class="list-group-item d-flex align-items-start"><b>Note:</b> {{ morphospecies.note }}</li>
+                                <li class="list-group-item d-flex align-items-start"><b>Note: </b>{{ morphospecies.note }}</li>
                             </ul>
                             {% endif %}
                             <p class="card-text">
-                                {% if img_thumbnail %}
+                                {% if img_thumbnail %}<a href="{{img.path}}" target="_blank">
                                     <img src="{{img_thumbnail.path}}" width="{{ img_thumbnail.width }}" height="{{ img_thumbnail.height }}">
+                                    </a>
                                 {% endif %}
                             </p>
                         </div>

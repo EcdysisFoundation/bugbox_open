@@ -145,6 +145,7 @@ class MorphospeciesDetailView(PermissionRequiredMixin, FormView):
                     'height': i.height if i.width <= max_width else calc_image_height(max_width, i.height, i.width)
                 })
         img_thumbnail = None
+        img = None
         if morphospecies.image_thumbnail:
             img_thumbnail = {
                 'path': morphospecies.image_thumbnail.url,
@@ -161,6 +162,12 @@ class MorphospeciesDetailView(PermissionRequiredMixin, FormView):
                 ),
                 'width': constants.MORPHPOSPECIES_THUMBSIZE
             }
+        if morphospecies.image:
+            img = {
+                'path': morphospecies.image.url,
+                'height': morphospecies.image.height,
+                'width': morphospecies.image.width
+            }
         ai = AiTraining.objects.filter(morphospecies=morphospecies).select_related('model').order_by('id').all()
         ai_accuracy_over_time = {
             'precision': [[a.model.entered_date, a.precision] for a in ai],
@@ -176,6 +183,7 @@ class MorphospeciesDetailView(PermissionRequiredMixin, FormView):
             'image_set': image_set,
             'image_count': image_count,
             'img_thumbnail': img_thumbnail,
+            'img': img,
             'specimen_count': Specimen.objects.filter(classification=morphospecies).aggregate(
                 reviewed=Count(
                     'pk', distinct=True,
