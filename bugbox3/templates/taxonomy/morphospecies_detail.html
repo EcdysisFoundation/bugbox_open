@@ -76,7 +76,9 @@
                     <div class="row">
                         <div class="col-4">
                             <ul class="list-group list-group-flush">
-                                <li class="list-group-item d-flex justify-content-between align-items-start"><b>Canonical Name:</b> {{ morphospecies.gbif_canonical_name }}</li>
+                                <li class="list-group-item d-flex justify-content-between align-items-start"><b>Canonical Name: </b>
+                                    {% if morphospecies.gbif_rank == 'SPECIES' %}<i>{% endif %}{{ morphospecies.gbif_canonical_name }}{% if morphospecies.gbif_rank == 'SPECIES' %}</i>{% endif %}
+                                    </li>
                                 <li class="list-group-item d-flex justify-content-between align-items-start"><b>Rank:</b> {{ morphospecies.gbif_rank }}</li>
                                 <hr/>
                                 <li class="list-group-item d-flex justify-content-between align-items-start"><b>Phylum:</b> {{ morphospecies.gbif_phylum }}</li>
@@ -85,7 +87,7 @@
                                 <li class="list-group-item d-flex justify-content-between align-items-start"><b>Family:</b> {{ morphospecies.gbif_family }}</li>
                                 <li class="list-group-item d-flex justify-content-between align-items-start"><b>Subfamily:</b> {{ morphospecies.subfamily }}</li>
                                 <li class="list-group-item d-flex justify-content-between align-items-start"><b>Genus:</b> {{ morphospecies.gbif_genus }}</li>
-                                <li class="list-group-item d-flex justify-content-between align-items-start"><b>Species:</b> {{ morphospecies.gbif_species }}</li>
+                                <li class="list-group-item d-flex justify-content-between align-items-start"><b>Species:</b> <i>{{ morphospecies.gbif_species }}</i></li>
                                 <hr/>
                                     <li class="list-group-item"><b>specimens</b></li>
                                 <li class="list-group-item">

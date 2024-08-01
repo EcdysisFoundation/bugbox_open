@@ -78,5 +78,6 @@ IS_RESEARCH = [
     VIEW_SITEVISIT,
 ]
 
+
 def show_toolbar(request):
     return str(request.user) == 'mikaylaelectra'

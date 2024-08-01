@@ -1,5 +1,5 @@
 from crispy_forms.layout import Column, Field, Row
-from django.forms import CharField, IntegerField, Textarea, TextInput, Form
+from django.forms import CharField, Form, IntegerField, Textarea, TextInput
 
 from ..core.forms import ModelFormMixin, get_submit_layout
 from . import constants
@@ -34,13 +34,9 @@ class MorphospeciesForm(MorphospeciesFormMixin):
         return [Field(v) for v in constants.FORM_FIELDS_MORPHO]
 
 
-
-
-
 class MorphospeciesUpdateForm(MorphospeciesFormMixin):
 
     hidden_fields = constants.FORM_FIELDS_MORPHO_UPDATE_HIDDEN
-
 
     def get_primary_layout(self):
         return [

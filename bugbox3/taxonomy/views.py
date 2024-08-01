@@ -9,7 +9,7 @@ from django.db.models import Count, Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
-from django.views.generic import CreateView, TemplateView, UpdateView, FormView
+from django.views.generic import CreateView, FormView, TemplateView, UpdateView
 from rest_framework.reverse import reverse as api_reverse
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
@@ -20,7 +20,7 @@ from ..libs.utilities import get_json_context
 from ..samples import constants as samples_constants
 from ..samples.models import Sample, Specimen, SpecimenImage
 from . import constants
-from .forms import MorphospeciesForm, MorphospeciesUpdateForm, MorphospeciesCombineForm
+from .forms import MorphospeciesCombineForm, MorphospeciesForm, MorphospeciesUpdateForm
 from .models import AiTraining, Morphospecies
 from .serializers import MorphospeciesDatatablesSerializer, MorphospeciesPickerSerializer
 from .tasks import id_image
@@ -44,7 +44,7 @@ class MorphospeciesDatatablesViewSet(PermissionRequiredMixin, DatatablesModelVie
         if self.request.query_params.get('first_check'):
             first_check = self.request.query_params.get('first_check')
         if gbif_rank in constants.GBIF_RANK_VALUES:
-            morphospecies =  morphospecies.filter(gbif_rank=gbif_rank)
+            morphospecies = morphospecies.filter(gbif_rank=gbif_rank)
         if not first_check:
             morphospecies = morphospecies.exclude(defunt_date__isnull=False)
         return morphospecies.order_by(constants.FIELD_MORPHO_NAME)
@@ -211,12 +211,14 @@ class MorphospeciesDetailView(PermissionRequiredMixin, FormView):
                     messages.success(self.request, 'Successfully combined {0} (id={1}) to {2} (id={3})'.format(
                         morphospecies.name, morphospecies.id, combine_to.name, combine_to.id))
                 else:
-                    messages.warning(self.request, 'Warning: {0} (id={3}) is a defunct Morphospecies, did not save changes').format(
+                    messages.warning(
+                        self.request, 'Warning: {0} (id={3}) is a defunct Morphospecies, did not save changes').format(
                         combine_to.name, combine_to.id
                     )
             else:
-                messages.warning(self.request, 'Warning: {0} (id={1}) is the same as {2} (id={3}), did not save changes'.format(
-                    morphospecies.name, morphospecies.id, combine_to.name, combine_to.id))
+                messages.warning(
+                    self.request, 'Warning: {0} (id={1}) is the same as {2} (id={3}), did not save changes'.format(
+                        morphospecies.name, morphospecies.id, combine_to.name, combine_to.id))
         return super().form_valid(form)
 
     def get_success_url(self):
