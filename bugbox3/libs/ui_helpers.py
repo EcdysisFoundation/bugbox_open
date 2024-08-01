@@ -178,10 +178,13 @@ def get_probability_or_user(specimen):
 def get_ai_classification(specimen):
     if not specimen.ai_classification:
         return ''
+    version = ''
+    if specimen.ai_version:
+        version = specimen.ai_version.version
     return '<p>{0} {1}{2}</p>'.format(
         specimen.ai_classification.name,
         get_probability(specimen),
-        specimen.ai_version.version)
+        version)
 
 
 def get_specimen_context(specimen):
