@@ -77,7 +77,7 @@ class SamplesDatatablesSerializer(ModelSerializer):
     def get_data_row(self, value):
         columns = [
             value.sample_type,
-            value.site_visit.visit_date,
+            value.site_visit.visit_date.strftime("%d-%b-%Y"),
             value.site_visit.site.site_name
         ]
         return get_datatables_container(get_datatables_row(columns))
@@ -125,7 +125,7 @@ class SitesDatatablesSerializer(ModelSerializer):
                 sample_type = s.sample_type
             sample_url = reverse('samples:sample', kwargs={'sample_id': s.id})
             rows += get_datatables_row([
-                s.site_visit.visit_date,
+                s.site_visit.visit_date.strftime("%d-%b-%Y"),
                 '<a href="{0}" class="link-success">{1} <i class="bi bi-bug-fill"></i></a>'.format(
                     sample_url, sample_type),
                 s.name_no,

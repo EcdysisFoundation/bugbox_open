@@ -213,14 +213,17 @@ class SiteCreateView(PermissionRequiredMixin, CreateView):
     def get_context_data(self, **kwargs):
         context = super(SiteCreateView, self).get_context_data(**kwargs)
         experiment = get_object_or_404(Experiment, id=self.kwargs['experiment_id'])
-        context['experiment_details'] = {
-            'experiment': experiment,
-            'plans': get_sample_plan_descriptions(experiment.id)
-        }
-        context['json_context'] = get_json_context(get_formsets_display_control_config(
-                    self.formset_total, experiment.date_per_site))
-        context['form_action_url'] = reverse(
-            'samples:site-create', kwargs={'experiment_id': self.kwargs['experiment_id']})
+        context.update({
+            'action': self.action,
+            'experiment_details': {
+                'experiment': experiment,
+                'plans': get_sample_plan_descriptions(experiment.id)
+            },
+            'json_context': get_json_context(get_formsets_display_control_config(
+                    self.formset_total, experiment.date_per_site)),
+            'form_action_url': reverse(
+                'samples:site-create', kwargs={'experiment_id': self.kwargs['experiment_id']})
+        })
         self.experiment = experiment
         if self.request.POST:
             context['formsets'] = self.form_set(self.request.POST)
@@ -267,10 +270,15 @@ class SiteUpdateView(PermissionRequiredMixin, UpdateView):
         context = super(SiteUpdateView, self).get_context_data(**kwargs)
         experiment = get_object_or_404(Experiment, id=self.object.experiment_id)
         self.experiment = experiment
-        context['experiment_details'] = {
-            'experiment': experiment,
-            'plans': get_sample_plan_descriptions(experiment.id)
-        }
+        context.update({
+            'site_id': self.kwargs['site_id'],
+            'action': self.action,
+            'experiment_details': {
+                'experiment': experiment,
+                'plans': get_sample_plan_descriptions(experiment.id)
+            },
+            'has_related_data': [i.visit_date for i in SiteVisit.objects.filter(site_id=self.object.id) if i.has_related_data]
+        })
         site_visit_count = SiteVisit.objects.filter(site_id=self.object.id).count()
         if site_visit_count < 1:
             site_visit_count = 1
@@ -302,6 +310,19 @@ class SiteUpdateView(PermissionRequiredMixin, UpdateView):
 
     def get_success_url(self):
         return reverse('samples:experiment', kwargs={'experiment_id': self.experiment.id})
+
+
+class SiteDeleteView(PermissionRequiredMixin, DeleteView):
+    permission_required = IS_RESEARCH
+
+    model = Site
+    template_name = 'samples/confirm_delete.html'
+
+    def get_object(self, queryset=None):
+        return get_object_or_404(Site, id=self.kwargs['id'])
+
+    def get_success_url(self):
+        return reverse('samples:experiment', kwargs={'experiment_id': self.kwargs['experiment_id']})
 
 
 class SampleView(PermissionRequiredMixin, FormView):
@@ -339,7 +360,7 @@ class SampleView(PermissionRequiredMixin, FormView):
                 'country': sample.site_visit.site.country,
                 'state': sample.site_visit.site.state_region,
                 'county': sample.site_visit.site.county_region,
-                'visit_date': sample.site_visit.visit_date,
+                'visit_date': sample.site_visit.visit_date.strftime("%d-%b-%Y"),
                 'sample_type': constants.SAMPLE_TYPE_CHOICES_DICT[sample.sample_type],
                 'name_no': sample.name_no,
                 'entered_by': sample.created_by_user,
@@ -472,7 +493,7 @@ class SpecimsWithoutImagesFormView(PermissionRequiredMixin, FormView):
             'experiment': sample.site_visit.site.experiment.name,
             'experiment_id': sample.site_visit.site.experiment.id,
             'site_name': sample.site_visit.site.site_name,
-            'visit_date': sample.site_visit.visit_date,
+            'visit_date': sample.site_visit.visit_date.strftime("%d-%b-%Y"),
             'sample_type': constants.SAMPLE_TYPE_CHOICES_DICT[sample.sample_type],
             'name_no': sample.name_no,
             'form_action_url': reverse(
@@ -680,7 +701,7 @@ class SpecimenDeleteView(PermissionRequiredMixin, DeleteView):
     permission_required = IS_RESEARCH
 
     model = Specimen
-    template_name = 'samples/specimen_confirm_delete.html'
+    template_name = 'samples/confirm_delete.html'
 
     def get_object(self, queryset=None):
         return get_object_or_404(Specimen, id=self.kwargs['id'])

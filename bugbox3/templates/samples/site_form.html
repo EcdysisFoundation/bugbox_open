@@ -19,10 +19,16 @@
       <div class="col-12 mb-3 mt-2 p-0 bg-form">
         <div class="card">
           <div class="card-header align-items-center bg-ecdysis text-white d-flex justify-content-between">
-            <h5>Create Site for Experiment: {{ experiment_details.experiment.name }}</h5>
+            <h5>{{ action|capfirst }} Site for Experiment: {{ experiment_details.experiment.name }}</h5>
             <a href="{% url 'samples:experiment' experiment_details.experiment.id %}" class="btn btn-light">
               View Experiment
             </a>
+            {% if action == 'update' %}
+            <a href="{% url 'samples:site-delete' site_id experiment_details.experiment.id %}" type="button" class="btn btn-light
+            {% if has_related_data %} disabled{% endif %}">
+              Delete Site
+            </a>
+            {% endif %}
           </div>
           <div class="card-body">
           {% crispy form %}
@@ -42,7 +48,7 @@
                 <p class="card-text">Enter sample dates to create samples<br/>
                   <ul>
                   {% for plan in experiment_details.plans %}
-                  <li>{{ plan.description }}</li> 
+                  <li>{{ plan.description }}</li>
                   {% endfor %}
                   </ul>
                 </p>

@@ -202,5 +202,5 @@ def get_specimen_context(specimen):
          specimen.sample.name_no
     )
     return '{0}<br/>{1} {2}'.format(
-        e, specimen.sample.site_visit.visit_date, s
+        e, specimen.sample.site_visit.visit_date.strftime("%d-%b-%Y"), s
     )

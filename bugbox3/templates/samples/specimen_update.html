@@ -134,8 +134,8 @@
                 <li class="list-group-item"><b>Class:</b> {{ selected_classification.gbif_class }}</li>
                 <li class="list-group-item"><b>Order:</b> {{ selected_classification.gbif_order }}</li>
                 <li class="list-group-item"><b>Family:</b> {{ selected_classification.gbif_family }}</li>
-                <li class="list-group-item"><b>Genus:</b> {{ selected_classification.gbif_genus }}</li>
-                <li class="list-group-item"><b>Species:</b> {{ selected_classification.gbif_species }}</li>
+                <li class="list-group-item"><b>Genus:</b> <i>{{ selected_classification.gbif_genus }}</i></li>
+                <li class="list-group-item"><b>Species:</b> <i>{{ selected_classification.gbif_species }}</i></li>
                 <li class="list-group-item"><b>Determined by:</b>
                     {% if specimen.acceptance == 0 and specimen.ai_classification %}
                     BugBox

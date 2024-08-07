@@ -96,6 +96,9 @@ class Site(Model):
         self.gis_point = point
         super(Site, self).save(*args, **kwargs)
 
+    def __str__(self):
+        return f'{self.site_name}'
+
 
 class SiteVisit(Model):
     uuid = UUIDField(default=uuid.uuid4, unique=True)
@@ -277,7 +280,3 @@ class TimelineEvent(Model):
     date_time = DateTimeField(auto_now_add=True, auto_created=True)
     body = CharField(max_length=1000, blank=True)
     by_user = ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=SET_NULL)
-
-# automated entries to retain, besides comments
-# username... changed, reviewed ... this observations (changed and reviewed both are species identification changes.)
-# username uploaded images
