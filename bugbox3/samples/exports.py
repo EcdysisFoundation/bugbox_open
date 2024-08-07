@@ -119,7 +119,7 @@ def experiment_csv(request, id):
             row = {
                 constants.EXP_HEAD_ARR_EXPERIMENT: this_experiment.name,
                 constants.EXP_HEAD_ARR_SITE: sample.site_visit.site.site_name,
-                constants.EXP_HEAD_ARR_DATE: sample.site_visit.visit_date.strftime('%d %b %Y'),
+                constants.EXP_HEAD_ARR_DATE: sample.site_visit.visit_date.strftime("%d-%b-%Y"),
                 constants.EXP_HEAD_ARR_SAMPLE_TYPE: sample.sample_type,
                 constants.EXP_HEAD_ARR_SAMPLE_NAME: sample.name_no,
                 constants.EXP_HEAD_ARR_SAMPLE_COMPLETED: sample.completed,
