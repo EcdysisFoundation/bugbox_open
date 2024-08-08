@@ -277,7 +277,9 @@ class SiteUpdateView(PermissionRequiredMixin, UpdateView):
                 'experiment': experiment,
                 'plans': get_sample_plan_descriptions(experiment.id)
             },
-            'has_related_data': [i.visit_date for i in SiteVisit.objects.filter(site_id=self.object.id) if i.has_related_data]
+            'has_related_data': [
+                i.visit_date for i in SiteVisit.objects.filter(site_id=self.object.id) if i.has_related_data
+            ]
         })
         site_visit_count = SiteVisit.objects.filter(site_id=self.object.id).count()
         if site_visit_count < 1:

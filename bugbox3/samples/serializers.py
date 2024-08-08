@@ -11,7 +11,7 @@ from ..libs.ui_helpers import (
     get_specimen_context,
 )
 from . import constants
-from .models import Experiment, Sample, Site, Specimen
+from .models import Experiment, Sample, SamplePlan, Site, Specimen
 
 
 class ExperimentsDatatablesSerializer(ModelSerializer):
@@ -107,14 +107,46 @@ class SitesDatatablesSerializer(ModelSerializer):
     def get_reviewed(self, id):
         return Specimen.objects.filter(sample_id=id, acceptance__gt=0).count()
 
+    def get_orphaned(self, s, sample_plans):
+        warning = '<i class="bi bi-exclamation-triangle text-warning"></i> '
+        if not sample_plans['sample_types']:
+            return ''
+        if s.sample_type not in sample_plans['sample_types']:
+            return warning
+        if s.name_no not in sample_plans['sample_names']:
+            return warning
+        return ''
+
+    def get_sample_plans(self, experiment_id):
+        sample_plans = SamplePlan.objects.filter(experiment_id=experiment_id)
+        sample_types = []
+        sample_names = []
+        for plan in sample_plans:
+            n = plan.no_per_date
+            while n:
+                name = str(plan.name_no_per_type) + str(n)
+                sample_types.append(plan.sample_type)
+                sample_names.append(name)
+                n = n - 1
+        return {
+            'sample_types': sample_types,
+            'sample_names': sample_names
+        }
+
+    def get_note(self, s):
+        if s.notes:
+            return '<i class="bi bi-info-square text-info"></i> '
+        return ''
+
     def get_sample_data(self, value):
         samples = Sample.objects.filter(
             site_visit__site_id=value.id)
+        sample_plans = self.get_sample_plans(value.experiment_id)
         rows = get_datatables_row([
             'Date',
             'Sample Type',
             'Sample Name',
-            'Observations',
+            'Specimens',
             'Reviewed',
             'Entered by'
         ])
@@ -125,6 +157,7 @@ class SitesDatatablesSerializer(ModelSerializer):
                 sample_type = s.sample_type
             sample_url = reverse('samples:sample', kwargs={'sample_id': s.id})
             rows += get_datatables_row([
+                self.get_orphaned(s, sample_plans) + self.get_note(s) +
                 s.site_visit.visit_date.strftime("%d-%b-%Y"),
                 '<a href="{0}" class="link-success">{1} <i class="bi bi-bug-fill"></i></a>'.format(
                     sample_url, sample_type),

@@ -25,11 +25,11 @@ To run commands to manage.py, use this syntax, to the appropriate .yml file
 
 Sort and format imports
 
-    $ docker compose -f local.yml exec -T django isort bugbox3
+    docker compose -f local.yml exec -T django isort bugbox3
 
 Check other Flake8 issues
 
-    $ docker compose -f local.yml exec -T django flake8 bugbox3
+    docker compose -f local.yml exec -T django flake8 bugbox3
 
 ### Database backups
 

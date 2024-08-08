@@ -180,7 +180,7 @@
                                 <p class="card-text">{{ plan }} per site</p>
                                 {% endfor %}
                             </ul>
-                            <p class="card-text"><b>Leader:</b> {{experiment.leader}} </p>
+                            <p class="card-text"><b>Leader:</b> {{experiment.leader}}</p>
                         </div>
                         {% if experiment.summary %}
                             <div class="col-md-4 mt-2">
@@ -236,6 +236,20 @@
             </div>
         </div>
     </div>
+<div class="row mb-4 border">
+    <div class="col-1">
+        <a href="#" data-bs-toggle="tooltip" data-bs-title="
+            Orphaned samples: If a sample has the warning icon, this indicates it falls outside the current experiment design.">
+            <i class="bi bi-exclamation-triangle text-warning"></i>
+        </a>
+    </div>
+    <div class="col-1">
+        <a href="#" data-bs-toggle="tooltip" data-bs-title="
+            Sample note: If a sample has the info icon, this indicates it has a note associated with it.">
+            <i class="bi bi-info-square text-info"></i>
+        </a>
+    </div>
+</div>
 
 <div class="row mb-4 border">
     <div class="col-3">
