@@ -1,5 +1,5 @@
 from . import constants
-from .models import SamplePlan
+from .models import Experiment, SamplePlan, Specimen
 
 
 def describe_sample_plan(sample_plan):
@@ -32,3 +32,10 @@ def get_sample_plan_descriptions(experiment_id):
     if plans:
         return [describe_sample_plan(p) for p in plans]
     return []
+
+
+def get_user_choices():
+    return Specimen.objects.order_by(
+        constants.FIELD_SPECIMEN_CREATED_BY_USER).distinct(
+        constants.FIELD_SPECIMEN_CREATED_BY_USER).values_list(
+        constants.FIELD_SPECIMEN_CREATED_BY_USER, flat=True)

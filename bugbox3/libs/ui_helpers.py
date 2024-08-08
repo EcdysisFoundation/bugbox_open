@@ -201,6 +201,6 @@ def get_specimen_context(specimen):
                  'sample_id': specimen.sample.id}),
          specimen.sample.name_no
     )
-    return '{0}<br/>{1} {2}'.format(
+    return '{0}<br/>{1}<br/>{2}'.format(
         e, specimen.sample.site_visit.visit_date.strftime("%d-%b-%Y"), s
     )

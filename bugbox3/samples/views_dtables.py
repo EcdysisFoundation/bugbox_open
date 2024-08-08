@@ -72,6 +72,8 @@ class SpecimensAllDatatablesViewSet(PermissionRequiredMixin, DatatablesModelView
     search_vector = [
         'classification__name',
         'ai_classification__name',
+        'archival_identifier',
+        'archival_stored'
     ]
 
     def get_queryset(self):

@@ -44,6 +44,14 @@ function formatColDiv (col) {
     return `<div class='col'>${col}</div>`;
 }
 
+function get_archival (row) {
+    if (row.archival_identifier) {
+        return `${row.archival_identifier}<br/>${row.archival_preservation}<br/>${row.archival_stored}`
+    } else {
+        return ''
+    }
+}
+
 function getAiReview (row) {
     let disabled = '';
     let confirm_check = '';
@@ -79,6 +87,8 @@ function getAiReview (row) {
 
 function getRow ( data, type, row ) {
     let cols = ''
+    let view_edit = `<h5><a href="${row.view_link}" target="_blank"><i class="bi bi-eye"></i></a>
+<a href="${row.edit_link}" target="_blank"><i class="bi bi-pencil"></i></a></h5>`
     // img_thumbnail
     if (row.img_thumbnail_large) {
         cols += formatColDiv(`<button type="button" class="btn" data-bs-toggle="modal"
@@ -88,14 +98,12 @@ function getRow ( data, type, row ) {
                 width='${row.img_thumbnail_large.width}'
                 height='${row.img_thumbnail_large.height}'>
                 ">
-                ${data} </button>`);
+                ${data} </button>${view_edit}`);
     } else {
-        cols += formatColDiv(`<div class="ms-4 mt-2">${data}</div>`);
+        cols += formatColDiv(`<div class="ms-4 mt-2">${data}</div>${view_edit}`);
     }
     // view and edit
-    cols += formatColDiv(
-        `<p><a href="${row.view_link}" target="_blank"><i class="bi bi-eye"></i></a></p>
-<p><a href="${row.edit_link}" target="_blank"><i class="bi bi-pencil"></i></a></p>`);
+    cols += formatColDiv(get_archival(row));
     // specimen context
     cols += formatColDiv(
         row.specimen_context

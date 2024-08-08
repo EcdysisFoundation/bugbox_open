@@ -33,7 +33,7 @@ from .forms import (
     SpecimenViewForm,
 )
 from .models import Experiment, Sample, SamplePlan, Site, SiteVisit, Specimen, SpecimenImage
-from .models_query import get_sample_plan_descriptions
+from .models_query import get_sample_plan_descriptions, get_user_choices
 from .timeline_events import audit_specimen_update, audit_specimen_view, audit_upload_images, timeline_events
 
 
@@ -728,15 +728,22 @@ class SpecimensView(PermissionRequiredMixin, FormView):
         _sv_new_classifications: {},  # key:value pairs of specimen_id: morphospecies_id
     }
 
+    archival_check_text = 'Archival specimens'
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        experiment_name = None
+        sample_name = None
         if 'id' not in self.kwargs:
             self.kwargs['id'] = 0
+        if self.kwargs['id']:
+            experiment_name = get_object_or_404(Experiment, id=self.kwargs['id']).name
         if 'sample_id' not in self.kwargs:
             self.kwargs['sample_id'] = 0
+        if self.kwargs['sample_id']:
+            sample_name = get_object_or_404(Sample, id=self.kwargs['sample_id']).name_no
         datatables_url = api_reverse('samples:specimen-all-data-list',
                                      request=self.request, kwargs=self.kwargs)
-        Experiment.objects.values('name', 'id')
         context.update({
             'container_row_header_2': get_datatables_container(
                 get_datatables_row([
@@ -746,7 +753,7 @@ class SpecimensView(PermissionRequiredMixin, FormView):
             'container_row_header': get_datatables_container(
                 get_datatables_row([
                     'Image',
-                    'View</br>Edit',
+                    'Archival',
                     'Sample',
                     'Classification',
                     'AI Classification<br/>(model)',
@@ -759,8 +766,13 @@ class SpecimensView(PermissionRequiredMixin, FormView):
                                                 request=self.request, kwargs=kwargs),
                 'second_picker_choices': taxa_const.GBIF_RANK_CHOICES_WO_BLANK_LIST,
                 'second_picker_text': 'any rank',
+                'acceptance_picker_choices': constants.ACCEPTANCE_CHOICES,
+                'archival_check_text': self.archival_check_text,
             }),
             'acceptance_picker_choices': constants.ACCEPTANCE_CHOICES,
+            'archival_check_text': self.archival_check_text,
+            'experiment_name': experiment_name,
+            'sample_name': sample_name,
             'form_action_url': reverse(
                 'samples:specimens-experiment-sample',
                 kwargs={'id': self.kwargs['id'],
