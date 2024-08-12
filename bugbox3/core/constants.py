@@ -1,6 +1,12 @@
 
-
+CANADA = 'Canada'
 UNITED_STATES = 'United States'
+
+US_STATE_CHOICES = 'US_STATE_CHOICES'
+CANADA_STATE_CHOICES = 'CANADA_STATE_CHOICES'
+
+COUNTRY_CHOICES = ((CANADA_STATE_CHOICES, CANADA), (US_STATE_CHOICES, UNITED_STATES))
+COUNTRY_LOOKUP = {v[0]: v[1] for v in COUNTRY_CHOICES}
 
 FIPS_STATE = {
     '02': 'AK',
@@ -58,4 +64,10 @@ FIPS_STATE = {
     '55': 'WI',
     '54': 'WV',
     '56': 'WY'
+}
+
+
+STATE_CHOICES = {
+    US_STATE_CHOICES: [[v, v] for _ , v in FIPS_STATE.items()],
+    CANADA_STATE_CHOICES: (('Manitoba', 'Manitoba'), ('Saskatchewan', 'Saskatchewan'))
 }

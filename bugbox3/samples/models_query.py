@@ -1,5 +1,8 @@
+from django.conf import settings
+
 from . import constants
 from .models import Experiment, SamplePlan, Specimen
+from ..users.models import User
 
 
 def describe_sample_plan(sample_plan):
@@ -35,7 +38,5 @@ def get_sample_plan_descriptions(experiment_id):
 
 
 def get_user_choices():
-    return Specimen.objects.order_by(
-        constants.FIELD_SPECIMEN_CREATED_BY_USER).distinct(
-        constants.FIELD_SPECIMEN_CREATED_BY_USER).values_list(
-        constants.FIELD_SPECIMEN_CREATED_BY_USER, flat=True)
+    return [(u.id, u.username) for u in User.objects.filter(
+        is_active=True, groups__name__in=['is_research']).order_by('username')]

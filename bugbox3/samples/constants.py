@@ -108,6 +108,8 @@ ACCEPTANCE_CHOICES = (
     (ACCEPTANCE_REJECTED, 'Rejected'),
 )
 
+ACCEPTNACE_VALID = (ACCEPTANCE_PENDING, ACCEPTANCE_CONFIRMED, ACCEPTANCE_REJECTED)
+
 ACCEPTANCE_VALUE_LOOKUP = {v[1]: v[0] for v in ACCEPTANCE_CHOICES}
 ACCEPTANCE_LOOKUP = {v[0]: v[1] for v in ACCEPTANCE_CHOICES}
 
@@ -330,7 +332,7 @@ FORM_FIELDS_SPECIMEN_HELP = {
 }
 
 TAGS = (
-    'adult'
+    'adult',
     'alate',
     'apterous',
     'Bobbie',
@@ -365,7 +367,7 @@ TAGS = (
     'worker (major)'
 )
 
-TAG_CHOICES = ((v, v) for v in TAGS)
+TAG_CHOICES = [(v, v) for v in TAGS]
 
 # PERMISSIONS
 PERMISSION_SPECIMEN_REVIEW = 'review_specimen_page'

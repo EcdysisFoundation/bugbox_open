@@ -69,19 +69,35 @@
     <div class="row bg-ecdysis mt-3">
         <div class="col">
             <div class="align-items-center bg-ecdysis text-white d-flex justify-content-between">
-                <h2 class="text-light mt-1">Review Specimens</h2>
+                <h2 class="text-light mt-1">Specimens
+                  {% if experiment_name %} - Experiment: {{ experiment_name }}{% endif %}
+                  {% if sample_name %} - Sample: {{ sample_name }}{% endif %}
+                </h2>
             </div>
         </div>
     </div>
 
-    <div class="row bg-light rounded pt-2 pb-1 mb-1" id="searchToolbar">
+    <div class="row bg-light pt-2 pb-2">
         <div class="col-3">
-            <select placeholder="Filter by" aria-label="Filter by" id="acceptancePicker" class="form-select">
-                <option value="">Any acceptance</option>
-                {% for i in acceptance_picker_choices %}
-                <option value="{{ i.0 }}" {% if i.0 == 0 %} selected{% endif %}>{{ i.1 }}</option>
-                {% endfor %}
-            </select>
+          <div class="acceptance-picker"></div>
+        </div>
+        <div class="col-3">
+          <div class="user-picker"></div>
+        </div>
+        <div class="col-3">
+          <div class="archival-check"></div>
+        </div>
+      </div>
+      <div class="row bg-light rounded pb-1 mb-2">
+        <div class="col-3">
+          <div class="country-picker"></div>
+        </div>
+        <div class="col-3">
+          <div class="state-picker"></div>
+          <div class="ca-state-picker"></div>
+        </div>
+        <div class="col-3">
+          <div class="tag-picker"></div>
         </div>
       </div>
     <div class="row">

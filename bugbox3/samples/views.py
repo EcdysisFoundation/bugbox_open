@@ -8,6 +8,7 @@ from django.views.generic import TemplateView
 from django.views.generic.edit import CreateView, DeleteView, FormView, UpdateView
 from rest_framework.reverse import reverse as api_reverse
 
+from ..core import constants as constants_core
 from ..core.permissions import IS_RESEARCH, REVIEW_SPECIMEN_PAGE
 from ..libs.ui_helpers import (
     calc_image_height,
@@ -728,8 +729,6 @@ class SpecimensView(PermissionRequiredMixin, FormView):
         _sv_new_classifications: {},  # key:value pairs of specimen_id: morphospecies_id
     }
 
-    archival_check_text = 'Archival specimens'
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         experiment_name = None
@@ -766,11 +765,12 @@ class SpecimensView(PermissionRequiredMixin, FormView):
                                                 request=self.request, kwargs=kwargs),
                 'second_picker_choices': taxa_const.GBIF_RANK_CHOICES_WO_BLANK_LIST,
                 'second_picker_text': 'any rank',
-                'acceptance_picker_choices': constants.ACCEPTANCE_CHOICES,
-                'archival_check_text': self.archival_check_text,
+                'acceptance_choices': constants.ACCEPTANCE_CHOICES,
+                'user_choices': get_user_choices(),
+                'state_choices_dict': constants_core.STATE_CHOICES,
+                'country_choices': constants_core.COUNTRY_CHOICES,
+                'tag_choices': constants.TAG_CHOICES
             }),
-            'acceptance_picker_choices': constants.ACCEPTANCE_CHOICES,
-            'archival_check_text': self.archival_check_text,
             'experiment_name': experiment_name,
             'sample_name': sample_name,
             'form_action_url': reverse(

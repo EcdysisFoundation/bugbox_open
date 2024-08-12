@@ -1,10 +1,12 @@
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
+from ..core.constants import COUNTRY_LOOKUP
 from ..core.permissions import IS_RESEARCH
 from ..core.views import DatatablesModelViewSetMixin
 from . import constants
 from .models import Experiment, Sample, Site, Specimen
+from .models_query import get_user_choices
 from .serializers import (
     ExperimentsDatatablesSerializer,
     SamplesDatatablesSerializer,
@@ -89,10 +91,31 @@ class SpecimensAllDatatablesViewSet(PermissionRequiredMixin, DatatablesModelView
                 sample__site_visit__site__experiment__id=id,
                 sample__id=sample_id,
             )
-        if self.request.query_params.get('acceptance_filter'):
-            acceptance = self.request.query_params.get('acceptance_filter')
-            specimen = specimen.filter(acceptance=acceptance)
-        if self.request.query_params.get('class_filter'):
-            if self.request.query_params.get('class_filter'):
-                specimen = specimen.filter(classification_id__isnull=True)
+        acceptance = self.request.query_params.get('acceptance')
+        if acceptance:
+            acceptance = int(acceptance)
+            if acceptance in constants.ACCEPTNACE_VALID:
+                specimen = specimen.filter(acceptance=acceptance)
+        archival = self.request.query_params.get('archival')
+        if archival:
+            specimen = specimen.exclude(
+                archival_identifier__isnull=True,
+                archival_preservation='',
+                archival_stored=''
+            )
+        user = self.request.query_params.get('user')
+        if user:
+            users = [v[0] for v in get_user_choices()]
+            user = int(user)
+            if user in users:
+                specimen = specimen.filter(created_by_user_id=user)
+        state = self.request.query_params.get('state')
+        if state:
+            specimen = specimen.filter(sample__site_visit__site__state_region=state)
+        country = self.request.query_params.get('country')
+        if country:
+            specimen = specimen.filter(sample__site_visit__site__country=COUNTRY_LOOKUP[country])
+        tag = self.request.query_params.get('tag')
+        if tag:
+            specimen = specimen.filter(tags__contains=[tag])
         return specimen.order_by('-id')

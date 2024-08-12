@@ -9,6 +9,50 @@ let idS = []
 
 let newClassifications = {}
 
+let usStateChoices = json_context.state_choices_dict.US_STATE_CHOICES
+let caStateChoices = json_context.state_choices_dict.CANADA_STATE_CHOICES
+
+function getUrl(dt_url,
+        acceptance_filter, archival_check, user_filter,
+        country_filter, state_filter, tag_filter
+    ) {
+    let url_str = ''
+    let params = []
+    if (acceptance_filter) {
+        params.push('acceptance=' + acceptance_filter);
+    }
+    if (archival_check.prop("checked")) {
+        params.push('archival=' + archival_check.prop("checked"));
+    }
+    if (user_filter) {
+        params.push('user=' + user_filter);
+    }
+    if (country_filter) {
+        params.push('country=' + country_filter);
+    }
+    if (state_filter) {
+        params.push('state=' + state_filter);
+    }
+    if (tag_filter) {
+        params.push('tag=' + tag_filter);
+    }
+    for ( let i = 0; i < params.length; i++) {
+        let sep = '&'
+        if (i == 0) {
+            sep = '?'
+        }
+        url_str += `${sep}${params[i]}`;
+    }
+    return `${dt_url}${url_str}`
+}
+
+function reloadUrl() {
+    specimens_table.ajax.url( getUrl(
+            json_context.datatables_url,
+            $acceptancePicker.val(), $archivalCheck, $userPicker.val(),
+            $countryPicker.val(), $statePicker.val(), $tagPicker.val()
+        )).load();
+}
 
 
 function doMyThing(recipient) {
@@ -131,12 +175,11 @@ clearMorphoButton.addEventListener('click', function() {
     clearSelection(recipient);
 })
 
-    let acceptancePicker = document.getElementById('acceptancePicker');
     let imageModal = document.getElementById('imageModal');
     let json_data = json_context.json_data;
     let jsonDataInput = document.getElementById('id_json_data');
     let submitBtn = document.getElementById('submit-btn');
-    let url = json_context.datatables_url + '?acceptance_filter=0'
+    let url = json_context.datatables_url
     imageModal.addEventListener('show.bs.modal', event => {
         const button = event.relatedTarget
         const thisimage = button.getAttribute('data-bs-whatever')
@@ -164,27 +207,79 @@ clearMorphoButton.addEventListener('click', function() {
         ]
     });
 
-     // api_url filters
+    // api_url filters
 
-     acceptancePicker.addEventListener("change", function () {
-        url = json_context.datatables_url
-        // Allow to add additional query_params and combine with &
-        let query_params = []
-        if (acceptancePicker.value in [0, 1, 2]) {
-            query_params.push(['acceptance_filter', acceptancePicker.value]);
+    let $acceptancePicker = $('<select placeholder="Acceptance (any)" id="acceptance-filter" class="form-select"></select>')
+    $('.acceptance-picker').append($acceptancePicker)
+    $acceptancePicker.append(`<option value="">Acceptance (any)</option>`)
+    $acceptancePicker.append(json_context.acceptance_choices.map(value => `<option value="${value[0]}">${value[1]}</option>`))
+    $acceptancePicker.val('')
+
+    let $archivalCheck = $(`<input class="form-check-input" type="checkbox" value="" id="archivalCheck"><label class="form-check-label ms-1" for="archivalCheck">Archival specimens</label>`)
+    $('.archival-check').append($archivalCheck)
+
+    let $userPicker = $(`<select placeholder="User (any)" id="user-filter" class="form-select"></select>`)
+    $('.user-picker').append($userPicker)
+    $userPicker.append(`<option value="">User (any)</option>`)
+    $userPicker.append(json_context.user_choices.map(value => `<option value="${value[0]}">${value[1]}</option>`))
+    $userPicker.val('')
+
+    let $countryPicker = $(`<select placeholder="country (any)" id="country-filter" class="form-select"></select>`)
+    $('.country-picker').append($countryPicker)
+    $countryPicker.append(`<option value="">Country (any)</option>`)
+    $countryPicker.append(json_context.country_choices.map(value => `<option value="${value[0]}">${value[1]}</option>`))
+    $countryPicker.val('')
+
+    let $statePicker = $(`<select placeholder="State (any)" id="state-filter" class="form-select"></select>`)
+    $('.state-picker').append($statePicker)
+    $statePicker.append(`<option value="">State (any)</option>`)
+    $statePicker.append(usStateChoices.map(value => `<option value="${value[0]}">${value[1]}</option>`))
+    $statePicker.val('')
+
+    let $caStatePicker = $(`<select placeholder="State (any)" id="ca-state-filter" class="form-select"></select>`)
+    $('.ca-state-picker').append($caStatePicker)
+    $caStatePicker.append(`<option value="">State (any)</option>`)
+    $caStatePicker.append(caStateChoices.map(value => `<option value="${value[0]}">${value[1]}</option>`))
+    $caStatePicker.val('')
+    $caStatePicker.hide();
+
+    let $tagPicker = $(`<select placeholder="Tag (any)" id="tag-filter" class="form-select"></select>`)
+    $('.tag-picker').append($tagPicker)
+    $tagPicker.append(`<option value="">Tag (any)</option>`)
+    $tagPicker.append(json_context.tag_choices.map(value => `<option value="${value[0]}">${value[1]}</option>`))
+    $tagPicker.val('')
+
+    $acceptancePicker.on('change', () => {
+        reloadUrl();
+    })
+    $archivalCheck.on('change', () => {
+        reloadUrl();
+    })
+    $userPicker.on('change', () => {
+        reloadUrl();
+    })
+    // with more countries will need to instead dynamically rebuild select options from STATE_CHOICES.
+    $countryPicker.on('change', () => {
+        if ($countryPicker.val() == 'CANADA_STATE_CHOICES') {
+            $statePicker.hide()
+            $statePicker.val('')
+            $caStatePicker.show()
         }
-        if (query_params.length) {
-            for (let i = 0; i < query_params.length; i++) {
-                if (i == 0) {
-                    url += '?' + query_params[i][0] + '=' + query_params[i][1];
-                } else {
-                    url += '&' + query_params[i][0] + '=' + query_params[i][1];
-                };
-            };
+        else {
+            $caStatePicker.hide()
+            $caStatePicker.val('')
+            $statePicker.show()
+        }
+        reloadUrl();
+    })
+    $statePicker.on('change', () => {
+        reloadUrl();
+    })
+    $tagPicker.on('change', () => {
+        reloadUrl();
+    })
 
-        };
-        specimens_table.ajax.url(url).load();
-     })
+    // Review panel
 
        submitBtn.addEventListener('click', function() {
             for (let i = 0; i < idS.length; i++) {
