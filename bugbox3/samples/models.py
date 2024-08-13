@@ -45,6 +45,7 @@ class Experiment(Model):
     date_per_site = PositiveIntegerField()
     completed = BooleanField(default=False)
     summary = TextField(null=True, blank=True)
+    archived = CharField(max_length=3000, blank=True)
 
     def __str__(self):
         return f'{self.name}'
@@ -63,13 +64,14 @@ class Site(Model):
     site_name = CharField(max_length=1000)
     habitat_type = CharField(max_length=100, blank=True)
     treatment = CharField(max_length=100, blank=True)
-    gis_point = PointField()
+    gis_point = PointField(null=True)
     country = CharField(max_length=1000, blank=True)
     state_region = CharField(max_length=1000, blank=True)
     county_region = CharField(max_length=1000, blank=True)
     us_state_county_fips = CharField(blank=True, max_length=5)
     longitude = DecimalField(max_digits=9, decimal_places=6, null=True)
     latitude = DecimalField(max_digits=9, decimal_places=6, null=True)
+    archived = CharField(max_length=3000, blank=True)
 
     def save(self, *args, **kwargs):
         """
