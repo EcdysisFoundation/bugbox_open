@@ -1,3 +1,4 @@
+import os.path
 from django.contrib import messages
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db import transaction
@@ -343,17 +344,20 @@ class SampleView(PermissionRequiredMixin, FormView):
             'samples:specimen-data-list', request=self.request, kwargs=self.kwargs)
         img_thumbnail = None
         if sample.image_thumbnail:
-            img_thumbnail = {
-                'path': sample.image_thumbnail.url,
-                'height': sample.image_thumbnail.height,
-                'width': sample.image_thumbnail.width
-            }
+            if os.path.isfile(sample.image_thumbnail.path):
+                img_thumbnail = {
+                    'path': sample.image_thumbnail.url,
+                    'height': sample.image_thumbnail.height,
+                    'width': sample.image_thumbnail.width
+                }
         elif sample.image:
-            img_thumbnail = {
-                'path': sample.image.url,
-                'height': calc_image_height(constants.SAMPLE_IMAGE_THUMBSIZE, sample.image.height, sample.image.width),
-                'width': constants.SAMPLE_IMAGE_THUMBSIZE
-            }
+            if os.path.isfile(sample.image.path):
+                img_thumbnail = {
+                    'path': sample.image.url,
+                    'height': calc_image_height(constants.SAMPLE_IMAGE_THUMBSIZE, sample.image.height, sample.image.width),
+                    'width': constants.SAMPLE_IMAGE_THUMBSIZE
+                }
+        sample_type = constants.SAMPLE_TYPE_CHOICES_DICT[sample.sample_type] if sample.sample_type in constants.SAMPLE_TYPE_CHOICES_DICT.keys() else sample.sample_type
         context.update({
             'sample_info': {
                 'sample_id': sample.id,
@@ -364,7 +368,7 @@ class SampleView(PermissionRequiredMixin, FormView):
                 'state': sample.site_visit.site.state_region,
                 'county': sample.site_visit.site.county_region,
                 'visit_date': sample.site_visit.visit_date.strftime("%d-%b-%Y"),
-                'sample_type': constants.SAMPLE_TYPE_CHOICES_DICT[sample.sample_type],
+                'sample_type': sample_type,
                 'name_no': sample.name_no,
                 'entered_by': sample.created_by_user,
                 'notes': sample.notes,

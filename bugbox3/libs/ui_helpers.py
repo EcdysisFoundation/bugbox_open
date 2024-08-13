@@ -1,3 +1,4 @@
+import os.path
 from django.urls import reverse
 
 from bugbox3.samples import constants
@@ -92,6 +93,8 @@ def get_img_src(img_field, resize_width=None, styles=None):
     Get an html img tag formated from an ImageField.
     Styes should be a string of styes, exampe 'c-1 c-2'
     """
+    if img_field and not os.path.isfile(img_field.path):
+        return '<i class="bi bi-question-diamond"></i>'
     def img_src(path, width, height, styles):
         return '<img src="{0}" width="{1}" height="{2}" style="{3}">'.format(
             path,
