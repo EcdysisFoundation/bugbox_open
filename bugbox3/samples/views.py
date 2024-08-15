@@ -491,6 +491,9 @@ class SpecimsWithoutImagesFormView(PermissionRequiredMixin, FormView):
             if Specimen.objects.filter(classification__name=m, sample_id=sample.id):
                 existing_names.append(m)
         use_names = [v for v in morpho_names if v not in existing_names]
+        sample_type = constants.SAMPLE_TYPE_CHOICES_DICT[sample.sample_type] \
+            if sample.sample_type in constants.SAMPLE_TYPE_CHOICES_DICT.keys() \
+            else sample.sample_type
         context.update({
             'morpho_names': ', '.join(morpho_names),
             'existing_names': ', '.join(existing_names),
@@ -501,7 +504,7 @@ class SpecimsWithoutImagesFormView(PermissionRequiredMixin, FormView):
             'experiment_id': sample.site_visit.site.experiment.id,
             'site_name': sample.site_visit.site.site_name,
             'visit_date': sample.site_visit.visit_date.strftime("%d-%b-%Y"),
-            'sample_type': constants.SAMPLE_TYPE_CHOICES_DICT[sample.sample_type],
+            'sample_type': sample_type,
             'name_no': sample.name_no,
             'form_action_url': reverse(
                 'samples:specimens-wo-img', kwargs={'id': self.kwargs['id']})
