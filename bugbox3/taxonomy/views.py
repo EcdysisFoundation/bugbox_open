@@ -1,4 +1,5 @@
 import csv
+import os.path
 import time
 from datetime import datetime
 
@@ -139,35 +140,39 @@ class MorphospeciesDetailView(PermissionRequiredMixin, FormView):
                     i = s.image_thumbnail
                 else:
                     i = s.image
-                image_set.append({
-                    'path': i.url,
-                    'width': i.width if i.width <= max_width else max_width,
-                    'height': i.height if i.width <= max_width else calc_image_height(max_width, i.height, i.width)
-                })
+                if os.path.isfile(i.path):
+                    image_set.append({
+                        'path': i.url,
+                        'width': i.width if i.width <= max_width else max_width,
+                        'height': i.height if i.width <= max_width else calc_image_height(max_width, i.height, i.width)
+                    })
         img_thumbnail = None
         img = None
         if morphospecies.image_thumbnail:
-            img_thumbnail = {
-                'path': morphospecies.image_thumbnail.url,
-                'height': morphospecies.image_thumbnail.height,
-                'width': morphospecies.image_thumbnail.width
-            }
+            if os.path.isfile(morphospecies.image_thumbnail.path):
+                img_thumbnail = {
+                    'path': morphospecies.image_thumbnail.url,
+                    'height': morphospecies.image_thumbnail.height,
+                    'width': morphospecies.image_thumbnail.width
+                }
         elif morphospecies.image:
-            img_thumbnail = {
-                'path': morphospecies.image.url,
-                'height': calc_image_height(
-                    constants.MORPHPOSPECIES_THUMBSIZE,
-                    morphospecies.image.height,
-                    morphospecies.image.width
-                ),
-                'width': constants.MORPHPOSPECIES_THUMBSIZE
-            }
+            if os.path.isfile(morphospecies.image.path):
+                img_thumbnail = {
+                    'path': morphospecies.image.url,
+                    'height': calc_image_height(
+                        constants.MORPHPOSPECIES_THUMBSIZE,
+                        morphospecies.image.height,
+                        morphospecies.image.width
+                    ),
+                    'width': constants.MORPHPOSPECIES_THUMBSIZE
+                }
         if morphospecies.image:
-            img = {
-                'path': morphospecies.image.url,
-                'height': morphospecies.image.height,
-                'width': morphospecies.image.width
-            }
+            if os.path.isfile(morphospecies.image.path):
+                img = {
+                    'path': morphospecies.image.url,
+                    'height': morphospecies.image.height,
+                    'width': morphospecies.image.width
+                }
         ai = AiTraining.objects.filter(morphospecies=morphospecies).select_related('model').order_by('id').all()
         ai_accuracy_over_time = {
             'precision': [[a.model.entered_date, a.precision] for a in ai],
