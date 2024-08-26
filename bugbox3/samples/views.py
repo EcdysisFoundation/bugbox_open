@@ -1,4 +1,5 @@
 import os.path
+
 from django.contrib import messages
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db import transaction
@@ -357,7 +358,9 @@ class SampleView(PermissionRequiredMixin, FormView):
                     'height': calc_image_height(constants.SAMPLE_IMAGE_THUMBSIZE, sample.image.height, sample.image.width),
                     'width': constants.SAMPLE_IMAGE_THUMBSIZE
                 }
-        sample_type = constants.SAMPLE_TYPE_CHOICES_DICT[sample.sample_type] if sample.sample_type in constants.SAMPLE_TYPE_CHOICES_DICT.keys() else sample.sample_type
+        sample_type = constants.SAMPLE_TYPE_CHOICES_DICT[sample.sample_type] \
+            if sample.sample_type in constants.SAMPLE_TYPE_CHOICES_DICT.keys() \
+            else sample.sample_type
         context.update({
             'sample_info': {
                 'sample_id': sample.id,

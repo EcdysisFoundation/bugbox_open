@@ -1,4 +1,5 @@
 import os.path
+
 from django.urls import reverse
 
 from bugbox3.samples import constants
@@ -95,6 +96,7 @@ def get_img_src(img_field, resize_width=None, styles=None):
     """
     if img_field and not os.path.isfile(img_field.path):
         return '<i class="bi bi-question-diamond"></i>'
+
     def img_src(path, width, height, styles):
         return '<img src="{0}" width="{1}" height="{2}" style="{3}">'.format(
             path,
@@ -102,6 +104,7 @@ def get_img_src(img_field, resize_width=None, styles=None):
             height,
             str(styles)
         )
+
     if img_field and not resize_width:
         return img_src(
             img_field.url,

@@ -207,7 +207,7 @@ class SpecimenDatatablesSerializer(ModelSerializer):
             if specimen_image.image_thumbnail:
                 img_thumbnail = get_img_src(specimen_image.image_thumbnail)
             else:
-                img_thumbnail = get_img_src(specimen_image.image)
+                img_thumbnail = get_img_src(specimen_image.image, constants.SPECIMEN_IMAGE_THUMBSIZE)
         else:
             img_thumbnail = get_img_src(img_exists)
         link = reverse('samples:specimen', kwargs={'id': value.id})

@@ -2,6 +2,7 @@ from django.conf import settings
 from django.db.models import (
     CASCADE,
     SET_NULL,
+    BooleanField,
     CharField,
     DateField,
     DateTimeField,
@@ -11,7 +12,7 @@ from django.db.models import (
     IntegerField,
     Model,
 )
-from django.db.models.signals import pre_save
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 
 from ..libs.utilities import resized_thumbnail
@@ -40,32 +41,32 @@ class Morphospecies(Model):
     note = CharField(blank=True, max_length=2000)
     image = ImageField(upload_to='morpho_images/', null=True, blank=True)
     image_thumbnail = ImageField(upload_to='morpho_images/', null=True, blank=True)
+    update_thumbs = BooleanField(null=True)
 
     def __str__(self):
         return str(self.name)
 
 
 @receiver(pre_save, sender=Morphospecies)
-def save_thumbnail(sender, instance, **kwargs):
-    """
-    Signal receiver to save a thumbnail if there was a change.
-    """
-    # Ok to change to only save a thumbnail for this field.
-    needs_thumbnail = False
-    try:
+def set_update_thumbs(sender, instance, **kwargs):
+    if instance.pk:
         obj = sender.objects.get(pk=instance.pk)
-    except sender.DoesNotExist:
-        # new record
-        needs_thumbnail = True
-    else:
-        if not obj.image == instance.image:
-            # Field has changed
-            needs_thumbnail = True
-    if needs_thumbnail and instance.image:
-        instance.image_thumbnail = resized_thumbnail(
-            instance.image,
-            constants.MORPHPOSPECIES_THUMBSIZE,
-            constants.MORPHPOSPECIES_THUMBSIZE)
+        if obj.image and (obj.image != instance.image):
+            instance.update_thumbs = True
+
+
+@receiver(post_save, sender=Morphospecies)
+def save_thumbnail(instance, created, **kwargs):
+    if created or instance.update_thumbs:
+        if instance.image:
+            instance.image_thumbnail = resized_thumbnail(
+                instance.image,
+                constants.MORPHPOSPECIES_THUMBSIZE,
+                constants.MORPHPOSPECIES_THUMBSIZE)
+        else:
+            instance.image_thumbnail = None
+        instance.update_thumbs = None
+        instance.save()
 
 
 class AiVersion(Model):

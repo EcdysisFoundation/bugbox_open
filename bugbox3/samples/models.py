@@ -24,7 +24,7 @@ from django.db.models import (
     TextField,
     UUIDField,
 )
-from django.db.models.signals import pre_save
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 
 from ..core import constants as geo_constants
@@ -152,30 +152,29 @@ class Sample(Model):
     image = ImageField(null=True, blank=True, upload_to='sample_images')
     image_thumbnail = ImageField(null=True, blank=True, upload_to='sample_images')
     created_by_user = ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=SET_NULL)
+    update_thumbs = BooleanField(null=True)
 
 
 @receiver(pre_save, sender=Sample)
-def save_sample_thumbnail(sender, instance, **kwargs):
-    """
-    Signal receiver to save a thumbnail if there was a change.
-    """
-    # Ok to change to only save a thumbnail for this field.
-    needs_thumbnail = False
-    try:
+def set_update_thumbs(sender, instance, **kwargs):
+    if instance.pk:
         obj = sender.objects.get(pk=instance.pk)
-    except sender.DoesNotExist:
-        # new record
-        needs_thumbnail = True
-    else:
-        if not obj.image == instance.image:
-            # Field has changed
-            needs_thumbnail = True
-    if needs_thumbnail and instance.image:
-        instance.image_thumbnail = resized_thumbnail(
-            instance.image,
-            constants.SAMPLE_IMAGE_THUMBSIZE,
-            constants.SAMPLE_IMAGE_THUMBSIZE,
-            'thumbnail_medium')
+        if obj.image and (obj.image != instance.image):
+            instance.update_thumbs = True
+
+
+@receiver(post_save, sender=Sample)
+def save_thumbnail(instance, created, **kwargs):
+    if created or instance.update_thumbs:
+        if instance.image:
+            instance.image_thumbnail = resized_thumbnail(
+                instance.image,
+                constants.SAMPLE_IMAGE_THUMBSIZE,
+                constants.SAMPLE_IMAGE_THUMBSIZE)
+        else:
+            instance.image_thumbnail = None
+        instance.update_thumbs = None
+        instance.save()
 
 
 class Specimen(Model):
@@ -234,22 +233,12 @@ def ensure_single_true_flag(sender, instance, **kwargs):
         SpecimenImage.objects.filter(specimen=instance.specimen).exclude(pk=instance.pk).update(primary_image=False)
 
 
-@receiver(pre_save, sender=SpecimenImage)
-def save_specimen_image_thumbnail(sender, instance, **kwargs):
+@receiver(post_save, sender=SpecimenImage)
+def save_specimen_image_thumbnail(instance, created, **kwargs):
     """
-    Signal receiver to save a thumbnail if there was a change.
+    Can only create and delete SpecimenImage.
     """
-    needs_thumbnail = False
-    try:
-        obj = sender.objects.get(pk=instance.pk)
-    except sender.DoesNotExist:
-        # new record
-        needs_thumbnail = True
-    else:
-        if not obj.image == instance.image:
-            # Field has changed
-            needs_thumbnail = True
-    if needs_thumbnail:
+    if created and instance.image:
         instance.image_thumbnail = resized_thumbnail(
             instance.image,
             constants.SPECIMEN_IMAGE_THUMBSIZE,
@@ -264,6 +253,8 @@ def save_specimen_image_thumbnail(sender, instance, **kwargs):
             constants.SPECIMEN_IMAGE_THUMBSIZE_LARGE,
             constants.SPECIMEN_IMAGE_THUMBSIZE_LARGE,
             'thumbnail_large')
+        instance.save()
+
 
 # raises bugbox3.samples.models.Specimen.DoesNotExist: Specimen matching query does not exist.
 # Specimen not completely saved by the time it runs? Use Atomic?

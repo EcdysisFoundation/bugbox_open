@@ -1,8 +1,6 @@
-from django.conf import settings
-
-from . import constants
-from .models import Experiment, SamplePlan, Specimen
 from ..users.models import User
+from . import constants
+from .models import SamplePlan
 
 
 def describe_sample_plan(sample_plan):
