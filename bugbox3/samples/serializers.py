@@ -29,22 +29,15 @@ class ExperimentsDatatablesSerializer(ModelSerializer):
             return str(v.from_year) + ' - ' + str(v.to_year)
 
     def get_sample_info(self, v):
-        result = dict(
-            total_samples='0',
-            photo_sampling='',
-            not_reviewed=''
-        )
-        samples = Sample.objects.filter(site_visit__site__experiment_id=v.id)
-        if not samples:
-            return result
-        sample_ids = [s.id for s in samples]
-        if sample_ids:
-            result['total_samples'] = str(len(sample_ids))
-            result['photo_sampling'] = str(samples.filter(completed=False).count())
-            specimens = Specimen.objects.filter(sample_id__in=sample_ids)
-            if specimens:
-                result['not_reviewed'] = specimens.filter(acceptance=constants.ACCEPTANCE_PENDING).count()
-        return result
+        return {
+            'total_samples': Sample.objects.filter(
+                site_visit__site__experiment_id=v.id).count(),
+            'photo_sampling': Sample.objects.filter(
+                site_visit__site__experiment_id=v.id, completed=False).count(),
+            'not_reviewed': Specimen.objects.filter(
+                sample__site_visit__site__experiment_id=v.id,
+                acceptance=constants.ACCEPTANCE_PENDING).distinct('sample_id').count()
+        }
 
     def get_experiment_link(self, v):
         url = reverse('samples:experiment', kwargs={'experiment_id': v.id})

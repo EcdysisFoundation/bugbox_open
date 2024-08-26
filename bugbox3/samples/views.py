@@ -355,7 +355,8 @@ class SampleView(PermissionRequiredMixin, FormView):
             if os.path.isfile(sample.image.path):
                 img_thumbnail = {
                     'path': sample.image.url,
-                    'height': calc_image_height(constants.SAMPLE_IMAGE_THUMBSIZE, sample.image.height, sample.image.width),
+                    'height': calc_image_height(
+                        constants.SAMPLE_IMAGE_THUMBSIZE, sample.image.height, sample.image.width),
                     'width': constants.SAMPLE_IMAGE_THUMBSIZE
                 }
         sample_type = constants.SAMPLE_TYPE_CHOICES_DICT[sample.sample_type] \
