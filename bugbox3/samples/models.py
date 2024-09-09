@@ -199,6 +199,7 @@ class Specimen(Model):
     archival_identifier = CharField(max_length=1000, null=True, unique=True, default=None)
     archival_preservation = CharField(max_length=100, blank=True)
     archival_stored = CharField(max_length=100, blank=True)
+    object_det_train = BooleanField(null=True)
 
     def __str__(self):
         return str(self.uuid)
@@ -218,6 +219,7 @@ class SpecimenImage(Model):
     image_thumbnail_large = ImageField(null=True, blank=True, upload_to='specimen_images')
     date_added = DateTimeField(auto_now_add=True)
     uploaded_by_user = ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=SET_NULL)
+    object_det_sent = DateTimeField(null=True)
 
     class Meta:
         ordering = ['-primary_image']

@@ -4,6 +4,7 @@ from crispy_forms.layout import HTML, Column, Field, Fieldset, Row
 from django.core.exceptions import ValidationError
 from django.forms import (
     CharField,
+    CheckboxInput,
     ChoiceField,
     DateField,
     Form,
@@ -256,7 +257,8 @@ class SpecimenForm(ModelFormMixin):
             ),
             Row(
                 Column(constants.FIELD_SPECIMEN_TAGS),
-                Column(constants.FIELD_SPECIMEN_ACCEPTANCE)
+                Column(constants.FIELD_SPECIMEN_ACCEPTANCE),
+                Column(constants.FIELD_SPECIMEN_OBJECT_DET_TRAIN, css_class='mt-5')
             )
         ]
 
@@ -268,6 +270,11 @@ class SpecimenForm(ModelFormMixin):
     acceptance = ChoiceField(
         widget=Select,
         choices=constants.ACCEPTANCE_CHOICES
+    )
+
+    object_det_train = ChoiceField(
+        widget=CheckboxInput,
+        choices=constants.TRUE_FALSE_CHOICES
     )
 
 
