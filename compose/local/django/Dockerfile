@@ -1,8 +1,8 @@
 # define an alias for the specific python version used in this file.
-FROM docker.io/python:3.11.7-slim-bookworm as python
+FROM docker.io/python:3.11.7-slim-bookworm AS python
 
 # Python build stage
-FROM docker.io/python as python-build-stage
+FROM docker.io/python AS python-build-stage
 
 ARG BUILD_ENVIRONMENT=local
 
@@ -27,9 +27,9 @@ FROM docker.io/python as python-run-stage
 ARG BUILD_ENVIRONMENT=local
 ARG APP_HOME=/app
 
-ENV PYTHONUNBUFFERED 1
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV BUILD_ENV ${BUILD_ENVIRONMENT}
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV BUILD_ENV=${BUILD_ENVIRONMENT}
 
 WORKDIR ${APP_HOME}
 
