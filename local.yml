@@ -1,5 +1,3 @@
-version: "3"
-
 volumes:
   bugbox3_local_postgres_data: {}
   bugbox3_local_postgres_data_backups: {}
@@ -85,7 +83,7 @@ services:
       - django
     volumes:
       - .:/app:z
-      # http://jdlm.info/articles/2016/03/06/lessons-building-node-app-docker.html
+      # https://jdlm.info/articles/2019/09/06/lessons-building-node-app-docker.html
       - /app/node_modules
     command: npm run dev
     ports:

@@ -329,3 +329,5 @@ WEBPACK_LOADER = {
 }
 # Your stuff...
 # ------------------------------------------------------------------------------
+LABEL_STUDIO_URL = 'http://localhost:8090'
+LABEL_STUDIO_DEFAULT_URL = 'http://localhost:8090'
