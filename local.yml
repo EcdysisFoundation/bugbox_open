@@ -7,7 +7,7 @@ services:
     build:
       context: .
       dockerfile: ./compose/local/django/Dockerfile
-    image: bugbox3_local_django
+    image: mikaylaelectra/ecdysis_django
     container_name: bugbox3_local_django
     depends_on:
       - postgres
@@ -47,7 +47,7 @@ services:
 
   celeryworker:
     <<: *django
-    image: bugbox3_local_celeryworker
+    image: mikaylaelectra/ecdysis_django
     container_name: bugbox3_local_celeryworker
     depends_on:
       - redis
@@ -57,7 +57,7 @@ services:
 
   celerybeat:
     <<: *django
-    image: bugbox3_local_celerybeat
+    image: mikaylaelectra/ecdysis_django
     container_name: bugbox3_local_celerybeat
     depends_on:
       - redis
@@ -67,7 +67,7 @@ services:
 
   flower:
     <<: *django
-    image: bugbox3_local_flower
+    image: mikaylaelectra/ecdysis_django
     container_name: bugbox3_local_flower
     ports:
       - '5556:5556'
@@ -77,7 +77,7 @@ services:
     build:
       context: .
       dockerfile: ./compose/local/node/Dockerfile
-    image: bugbox3_local_node
+    image: mikaylaelectra/ecdysis_node
     container_name: bugbox3_local_node
     depends_on:
       - django

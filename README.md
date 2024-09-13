@@ -47,24 +47,6 @@ Check other Flake8 issues
     Download a specific backup
     $ docker compose -f local.yml run --rm awscli download backup_2018_03_13T09_05_07.sql.gz
 
-### Type checks
-
-Running type checks with mypy:
-
-    $ mypy bugbox3
-
-### Test coverage
-
-To run the tests, check your test coverage, and generate an HTML coverage report:
-
-    $ coverage run -m pytest
-    $ coverage html
-    $ open htmlcov/index.html
-
-#### Running tests with pytest
-
-    $ pytest
-
 ### Live reloading and Sass CSS compilation
 
 Moved to [Live reloading and SASS compilation](https://cookiecutter-django.readthedocs.io/en/latest/developing-locally.html#sass-compilation-live-reloading).
@@ -96,13 +78,6 @@ cd bugbox3
 celery -A config.celery_app worker -B -l info
 ```
 
-### Sentry
-
-Sentry is an error logging aggregator service. You can sign up for a free account at <https://sentry.io/signup/?code=cookiecutter> or download and host it yourself.
-The system is set up with reasonable defaults, including 404 logging and integration with the WSGI application.
-
-You must set the DSN url in production.
-
 ## Deployment
 
 The following details how to deploy this application.
@@ -110,6 +85,35 @@ The following details how to deploy this application.
 ### Docker
 
 See detailed [cookiecutter-django Docker documentation](http://cookiecutter-django.readthedocs.io/en/latest/deployment-with-docker.html).
+
+Customized for Bugbox.
+
+local.yml is curently the only valid .yml
+
+Custom images build are pushed to docker hub repo. Standard images used from their source. We dont duplicate the 4 django containers with an image as cookiecutter does, to use only one image to transfer to Ecdysis01. Always on the Ecdysis01 server, do not build custom docker images there. Django build may fail there at this time. Filesystem space recovery and performance of other running continers are other reasons to not build them there. Various ports are changed from default due to conflicting ports on Ecdysis01.
+
+Bring up containers with images prebuilt
+
+`docker compose -f local.yml up --no-build -d`
+
+Open the logs, ctrl-c to escape
+
+`docker compose -f local.yml logs --tail=1000 --follow`
+
+If specific image needs built, specificy it individually (referring to non-custom images when on Ecdysis01)
+
+`docker compose -f local.yml build ymlfileservicename`
+
+Locally built custom images. Push these to docker hub.
+
+`docker push mikaylaelectra/ecdysis_django:latest`
+`docker push mikaylaelectra/ecdysis_node:latest`
+
+On remote pull these down
+
+`docker pull mikaylaelectra/ecdysis_django:latest`
+`docker pull mikaylaelectra/ecdysis_node:latest`
+
 
 ### Custom Bootstrap Compilation
 
