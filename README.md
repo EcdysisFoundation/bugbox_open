@@ -90,7 +90,7 @@ Customized for Bugbox.
 
 local.yml is curently the only valid .yml
 
-Custom images build are pushed to docker hub repo. Standard images used from their source. We dont duplicate the 4 django containers with an image as cookiecutter does, to use only one image to transfer to Ecdysis01. Always on the Ecdysis01 server, do not build custom docker images there. Django build may fail there at this time. Filesystem space recovery and performance of other running continers are other reasons to not build them there. Various ports are changed from default due to conflicting ports on Ecdysis01.
+Custom images built are pushed to docker hub repo. Standard images used from their source. Always on the Ecdysis01 server, do not build custom docker images there. Django build may fail there at this time. Filesystem space recovery and performance of other running continers are other reasons to not build them there. Various ports are changed from default due to conflicting ports on Ecdysis01.
 
 Bring up containers with images prebuilt
 
@@ -107,11 +107,17 @@ If specific image needs built, specificy it individually (referring to non-custo
 Locally built custom images. Push these to docker hub.
 
 `docker push mikaylaelectra/ecdysis_django:latest`
+`docker push mikaylaelectra/ecdysis_celeryworker:latest`
+`docker push mikaylaelectra/ecdysis_celerybeat:latest`
+`docker push mikaylaelectra/ecdysis_flower:latest`
 `docker push mikaylaelectra/ecdysis_node:latest`
 
 On remote pull these down
 
 `docker pull mikaylaelectra/ecdysis_django:latest`
+`docker pull mikaylaelectra/ecdysis_celeryworker:latest`
+`docker pull mikaylaelectra/ecdysis_celerybeat:latest`
+`docker pull mikaylaelectra/ecdysis_flower:latest`
 `docker pull mikaylaelectra/ecdysis_node:latest`
 
 
