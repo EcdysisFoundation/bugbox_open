@@ -706,7 +706,8 @@ class SpecimenUpdateView(PermissionRequiredMixin, UpdateView):
                 form.instance.classification = None
         elif context['object'].ai_classification and form.instance.acceptance == constants.ACCEPTANCE_CONFIRMED:
             form.instance.classification = context['object'].ai_classification
-        if form.initial[constants.FIELD_SPECIMEN_CLASSIFICATION] != form.instance.classification:
+        print(form.initial[constants.FIELD_SPECIMEN_CLASSIFICATION])
+        if form.initial[constants.FIELD_SPECIMEN_CLASSIFICATION] != form.instance.classification.id:
             context['object'].reviewer_user = self.request.user
         audit_specimen_update(form, self.request.user, context['object'])
         return super(SpecimenUpdateView, self).form_valid(form)

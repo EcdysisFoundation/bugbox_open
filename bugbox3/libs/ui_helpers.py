@@ -175,7 +175,7 @@ def get_probability(specimen):
 def get_probability_or_user(specimen):
     if specimen.acceptance == constants.ACCEPTANCE_REJECTED or (
             specimen.classification and not specimen.ai_classification):
-        return '<span class="badge text-bg-success">{0}</span>'.format(specimen.created_by_user)
+        return '<span class="badge text-bg-success">{0}</span>'.format(specimen.reviewer_user)
     else:
         version = '<p>{0}</p>'.format(specimen.ai_version.version) if specimen.ai_version else ''
         return '{0}{1}'.format(get_probability(specimen), version)
