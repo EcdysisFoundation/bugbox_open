@@ -1,23 +1,23 @@
-python-slugify==8.0.2  # https://github.com/un33k/python-slugify
-Pillow==10.2.0  # https://github.com/python-pillow/Pillow
+python-slugify==8.0.4  # https://github.com/un33k/python-slugify
+Pillow==10.4.0  # https://github.com/python-pillow/Pillow
 argon2-cffi==23.1.0  # https://github.com/hynek/argon2_cffi
-redis==5.0.1  # https://github.com/redis/redis-py
-hiredis==2.3.2  # https://github.com/redis/hiredis-py
-celery==5.3.6  # pyup: < 6.0  # https://github.com/celery/celery
-django-celery-beat==2.5.0  # https://github.com/celery/django-celery-beat
+redis==5.0.8  # https://github.com/redis/redis-py
+hiredis==3.0.0  # https://github.com/redis/hiredis-py
+celery==5.4.0  # pyup: < 6.0  # https://github.com/celery/celery
+django-celery-beat==2.7.0  # https://github.com/celery/django-celery-beat
 flower==2.0.1  # https://github.com/mher/flower
-psycopg[c]==3.1.17  # https://github.com/psycopg/psycopg
+psycopg[c]==3.2.2  # https://github.com/psycopg/psycopg
 label-studio-sdk==1.0.5
 
 # Django
 # ------------------------------------------------------------------------------
-django==4.2.14  # https://www.djangoproject.com/
+django==5.0.9  # https://www.djangoproject.com/
 django-environ==0.11.2  # https://github.com/joke2k/django-environ
-django-model-utils==4.3.1  # https://github.com/jazzband/django-model-utils
-django-allauth==0.60.1  # https://github.com/pennersr/django-allauth
-django-crispy-forms==2.1  # https://github.com/django-crispy-forms/django-crispy-forms
-crispy-bootstrap5==2023.10  # https://github.com/django-crispy-forms/crispy-bootstrap5
+django-model-utils==5.0.0  # https://github.com/jazzband/django-model-utils
+django-allauth==64.2.1  # https://github.com/pennersr/django-allauth
+django-crispy-forms==2.3  # https://github.com/django-crispy-forms/django-crispy-forms
+crispy-bootstrap5==2024.2  # https://github.com/django-crispy-forms/crispy-bootstrap5
 django-redis==5.4.0  # https://github.com/jazzband/django-redis
-django-webpack-loader==3.0.1  # https://github.com/django-webpack/django-webpack-loader
-djangorestframework==3.14.0
-django-bootstrap5==23.4
+django-webpack-loader==3.1.1  # https://github.com/django-webpack/django-webpack-loader
+djangorestframework==3.15.2
+django-bootstrap5==24.2
