@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db import transaction
 from django.forms import inlineformset_factory
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.views.generic import TemplateView
 from django.views.generic.edit import CreateView, DeleteView, FormView, UpdateView
@@ -647,6 +647,10 @@ class SpecimenCreateView(PermissionRequiredMixin, CreateView):
 
     def form_valid(self, form):
         sample = get_object_or_404(Sample, id=self.kwargs['sample_id'])
+        if not form.instance.classification:
+            messages.error(
+                self.request, 'A verified classification is required, please select one to create.')
+            return redirect('samples:specimen-create', sample_id=sample.id)
         form.instance.sample_id = sample.id
         form.instance.created_by_user_id = self.request.user.id
         return super(SpecimenCreateView, self).form_valid(form)
