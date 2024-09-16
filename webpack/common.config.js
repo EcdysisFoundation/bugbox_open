@@ -65,4 +65,7 @@ module.exports = {
     modules: ['node_modules'],
     extensions: ['.js', '.jsx'],
   },
+  watchOptions: {
+     ignored: [path.resolve(__dirname, '../bugbox3/node_modules'),]
+  },
 };
