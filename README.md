@@ -107,17 +107,25 @@ If specific image needs built, specificy it individually (referring to non-custo
 Locally built custom images. Push these to docker hub.
 
 `docker push mikaylaelectra/ecdysis_django:latest`
+
 `docker push mikaylaelectra/ecdysis_celeryworker:latest`
+
 `docker push mikaylaelectra/ecdysis_celerybeat:latest`
+
 `docker push mikaylaelectra/ecdysis_flower:latest`
+
 `docker push mikaylaelectra/ecdysis_node:latest`
 
 On remote pull these down
 
 `docker pull mikaylaelectra/ecdysis_django:latest`
+
 `docker pull mikaylaelectra/ecdysis_celeryworker:latest`
+
 `docker pull mikaylaelectra/ecdysis_celerybeat:latest`
+
 `docker pull mikaylaelectra/ecdysis_flower:latest`
+
 `docker pull mikaylaelectra/ecdysis_node:latest`
 
 
