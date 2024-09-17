@@ -6,9 +6,12 @@ module.exports = merge(commonConfig, {
   devtool: 'inline-source-map',
   devServer: {
     port: 3000,
-    proxy: {
-      '/': 'http://django:8002',
-    },
+    proxy: [
+      {
+        context: ['/'],
+        target: 'http://django:8002',
+      },
+    ],
     client: {
       overlay: {
         errors: true,
