@@ -19,7 +19,7 @@ Moved to [settings](http://cookiecutter-django.readthedocs.io/en/latest/settings
 
 To run commands to manage.py, use this syntax, to the appropriate .yml file
 
-    $ docker compose -f local.yml run --rm django python manage.py mycommand
+    docker compose -f local.yml run --rm django python manage.py mycommand
 
 ### Flake 8
 
@@ -33,50 +33,23 @@ Check other Flake8 issues
 
 ### Database backups
 
-    Database backups are configured with Cookie cutter methods. In our case it is expanded to the local version to aid in development. Seperate AWS IAM users are configured for different envirionments
+Database backups are configured with Cookie cutter methods. In our case it is expanded to the local version to aid in development. Seperate AWS IAM users are configured for different envirionments
 
-    use bugbox-local user access keys for local.yml use cases, whle bugbox-localserver is for localserver.yml cases. These .yml files should reference a .secrets file in the repo .env directory that defines the
+use bugbox-local user access keys for local.yml use cases, whle bugbox-localserver is for localserver.yml cases. These .yml files should reference a .secrets file in the repo .env directory that defines the
     environment variables and is gitignored to keep it secret.
 
-    Initiate a backup in docker
-    $ docker compose -f local.yml exec postgres backup
+Initiate a backup in docker
+    docker compose -f local.yml exec postgres backup
 
-    Upload backups to S3
-    $ docker compose -f local.yml run --rm awscli upload
+Upload backups to S3
+    docker compose -f local.yml run --rm awscli upload
 
-    Download a specific backup
-    $ docker compose -f local.yml run --rm awscli download backup_2018_03_13T09_05_07.sql.gz
+Download a specific backup
+    docker compose -f local.yml run --rm awscli download backup_2018_03_13T09_05_07.sql.gz
 
 ### Live reloading and Sass CSS compilation
 
 Moved to [Live reloading and SASS compilation](https://cookiecutter-django.readthedocs.io/en/latest/developing-locally.html#sass-compilation-live-reloading).
-
-### Celery
-
-This app comes with Celery.
-
-To run a celery worker:
-
-```bash
-cd bugbox3
-celery -A config.celery_app worker -l info
-```
-
-Please note: For Celery's import magic to work, it is important _where_ the celery commands are run. If you are in the same folder with _manage.py_, you should be right.
-
-To run [periodic tasks](https://docs.celeryq.dev/en/stable/userguide/periodic-tasks.html), you'll need to start the celery beat scheduler service. You can start it as a standalone process:
-
-```bash
-cd bugbox3
-celery -A config.celery_app beat
-```
-
-or you can embed the beat service inside a worker with the `-B` option (not recommended for production use):
-
-```bash
-cd bugbox3
-celery -A config.celery_app worker -B -l info
-```
 
 ## Deployment
 
@@ -94,39 +67,39 @@ Custom images built are pushed to docker hub repo. Standard images used from the
 
 Bring up containers with images prebuilt
 
-`docker compose -f local.yml up --no-build -d`
+    docker compose -f local.yml up --no-build -d
 
 Open the logs, ctrl-c to escape
 
-`docker compose -f local.yml logs --tail=1000 --follow`
+    docker compose -f local.yml logs --tail=1000 --follow
 
 If specific image needs built, specificy it individually (referring to non-custom images when on Ecdysis01)
 
-`docker compose -f local.yml build ymlfileservicename`
+    docker compose -f local.yml build ymlfileservicename
 
 Locally built custom images. Push these to docker hub.
 
-`docker push mikaylaelectra/ecdysis_django:latest`
+    docker push mikaylaelectra/ecdysis_django:latest
 
-`docker push mikaylaelectra/ecdysis_celeryworker:latest`
+    docker push mikaylaelectra/ecdysis_celeryworker:latest
 
-`docker push mikaylaelectra/ecdysis_celerybeat:latest`
+    docker push mikaylaelectra/ecdysis_celerybeat:latest
 
-`docker push mikaylaelectra/ecdysis_flower:latest`
+    docker push mikaylaelectra/ecdysis_flower:latest
 
-`docker push mikaylaelectra/ecdysis_node:latest`
+    docker push mikaylaelectra/ecdysis_node:latest
 
 On remote pull these down
 
-`docker pull mikaylaelectra/ecdysis_django:latest`
+    docker pull mikaylaelectra/ecdysis_django:latest
 
-`docker pull mikaylaelectra/ecdysis_celeryworker:latest`
+    docker pull mikaylaelectra/ecdysis_celeryworker:latest
 
-`docker pull mikaylaelectra/ecdysis_celerybeat:latest`
+    docker pull mikaylaelectra/ecdysis_celerybeat:latest
 
-`docker pull mikaylaelectra/ecdysis_flower:latest`
+    docker pull mikaylaelectra/ecdysis_flower:latest
 
-`docker pull mikaylaelectra/ecdysis_node:latest`
+    docker pull mikaylaelectra/ecdysis_node:latest
 
 
 ### Custom Bootstrap Compilation
