@@ -362,6 +362,10 @@ class SampleView(PermissionRequiredMixin, FormView):
         sample_type = constants.SAMPLE_TYPE_CHOICES_DICT[sample.sample_type] \
             if sample.sample_type in constants.SAMPLE_TYPE_CHOICES_DICT.keys() \
             else sample.sample_type
+        has_data = sample.completed
+        if not has_data:
+            if Specimen.objects.filter(sample_id=sample.id).first():
+                has_data = True
         context.update({
             'sample_info': {
                 'sample_id': sample.id,
@@ -377,7 +381,8 @@ class SampleView(PermissionRequiredMixin, FormView):
                 'entered_by': sample.created_by_user,
                 'notes': sample.notes,
                 'completed': sample.completed,
-                'img_thumbnail': img_thumbnail
+                'img_thumbnail': img_thumbnail,
+                'has_data': has_data
             },
             'review_permission': self.request.user.has_perm(REVIEW_SPECIMEN_PAGE),
             'container_row_header': get_datatables_container(
@@ -477,6 +482,19 @@ def specimen_view_context(specimen):
             'image_set_large': image_set_large,
         })
     return context
+
+
+class SampleDeleteView(PermissionRequiredMixin, DeleteView):
+    permission_required = IS_RESEARCH
+
+    model = Sample
+    template_name = 'samples/confirm_delete.html'
+
+    def get_object(self, queryset=None):
+        return get_object_or_404(Sample, id=self.kwargs['id'])
+
+    def get_success_url(self):
+        return reverse('samples:experiment', kwargs={'experiment_id': self.kwargs['experiment_id']})
 
 
 class SpecimsWithoutImagesFormView(PermissionRequiredMixin, FormView):

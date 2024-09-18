@@ -20,7 +20,7 @@
         <div class="col-12 mb-3 mt-2 p-0">
             <div class="card">
                 <div class="card-header align-items-center bg-ecdysis text-white d-flex justify-content-between">
-                    <div class="col-md-8">
+                    <div class="col-md-6">
                         <h5>{{ sample_info.site }} - {{ sample_info.visit_date }} - {{ sample_info.sample_type }} {{ sample_info.name_no }}</h5>
                     </div>
                     <div class="col">
@@ -31,6 +31,12 @@
                     <div class="col">
                         <a href="{% url 'samples:sample-update' sample_info.sample_id %}" class="btn btn-light">
                             Edit Sample
+                        </a>
+                    </div>
+                    <div class="col">
+                        <a href="{% url 'samples:sample-delete' sample_info.sample_id sample_info.experiment_id %}" class="btn btn-danger
+                        {% if sample_info.has_data %} disabled{% endif %}">
+                          Delete Sample
                         </a>
                     </div>
                 </div>
