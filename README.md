@@ -45,7 +45,21 @@ Upload backups to S3
     docker compose -f local.yml run --rm awscli upload
 
 Download a specific backup
-    docker compose -f local.yml run --rm awscli download backup_2018_03_13T09_05_07.sql.gz
+    docker compose -f local.yml run --rm awscli download name_of_backup.sql.gz
+
+Restore to your database. First bring the containers down, and bring up just the db.
+
+    docker compose -f local.yml down
+
+    docker compose -f local.yml up postgres -d
+
+    docker compose -f docker-compose.local.yml exec postgres restore name_of_backup.sql.gz
+
+After it succesfully restores, bring it down and bring everything back up.
+
+    docker compose -f local.yml down
+
+    docker compose -f local.yml up
 
 ### Live reloading and Sass CSS compilation
 
