@@ -16,9 +16,9 @@ from .views import (
     SpecimenCreateView,
     SpecimenDeleteView,
     SpecimensView,
+    SpecimensWithoutImagesFormView,
     SpecimenUpdateView,
     SpecimenView,
-    SpecimsWithoutImagesFormView,
 )
 from .views_dtables import (
     ExperimentsDatatablesViewSet,
@@ -62,7 +62,7 @@ urlpatterns = [
      path('specimens-experiment-sample/<int:id>/<int:sample_id>',
           SpecimensView.as_view(),
           name='specimens-experiment-sample'),
-     path('specimens-wo-img/<int:id>', SpecimsWithoutImagesFormView.as_view(), name='specimens-wo-img'),
+     path('specimens-wo-img/<int:id>', SpecimensWithoutImagesFormView.as_view(), name='specimens-wo-img'),
      path('experiment-ai-csv/<int:id>', experiment_ai_csv, name='experiment-ai-csv'),
      path('experiment-csv/<int:id>', experiment_csv, name='experiment-csv')
 ]

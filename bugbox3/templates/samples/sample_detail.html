@@ -16,6 +16,30 @@
 
 <div class="container">
 
+    <div class="modal fade" id="deleteSpecimensModal" tabindex="-1" aria-labelledby="deleteSpecimensModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+
+            <div class="modal-header">
+              <h5>Confirm Delete</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                you have been warned
+            </div>
+            <div class="modal-footer">
+                <form enctype="multipart/form-data" action="{{ form_action_url }}" method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="json_data" value="null" id="id_json_data">
+                    <input type="submit" value="Delete Selected Specimens" id="submit-btn" class="btn btn-danger mt-2 ms-3">
+                </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+
     <div class="row">
         <div class="col-12 mb-3 mt-2 p-0">
             <div class="card">
@@ -73,8 +97,9 @@
     <div class="row">
         <div class="col-12 mb-3 mt-2 p-0">
             <div class="card">
-                <div class="card-header align-items-center bg-ecdysis text-white d-flex justify-content-between">
-                    <div class="col-2">
+                <div class="card-header align-items-center bg-ecdysis text-white">
+                    <div class="row">
+                    <div class="col">
                         {% if review_permission %}
                         <a href="{% url 'samples:specimens-experiment-sample' id=sample_info.experiment_id sample_id=sample_info.sample_id %}" class="link-light">
                         {% endif %}
@@ -82,16 +107,8 @@
                         {% if review_permission %}
                         </a>
                         {% endif %}
-                        <a role="button" class="btn btn-secondary btn-sm {% if sample_info.completed %} disabled" aria-disabled="true"{% else %}"{% endif %}
-                           href="{% url 'samples:specimen-create' sample_info.sample_id %}">
-                           Add 1 specimen</a>
                     </div>
-                    <div class="col-3">
-                        <h5>&nbsp;</h5>
-                        <a role="button" class="btn btn-dark btn-sm {% if sample_info.completed %} disabled" aria-disabled="true"{% else %}"{% endif %}
-                        href="{% url 'samples:specimens-wo-img' sample_info.sample_id %}">
-                      Add specimens without images</a>
-                    </div>
+
                     <div class="col">
                         <form enctype="multipart/form-data" action="{{ form_action_url }}" method="POST">
                             {% csrf_token %}
@@ -106,13 +123,35 @@
                                 <input type="submit" value="Submit" class="btn btn-light mt-4 ms-3" {% if sample_info.completed %} disabled{% endif %}>
                             </form>
                     </div>
+
+                    </div>
+
+                    <div class="row">
+
+                    <div class="col">
+                    <a role="button" class="btn btn-secondary btn-sm {% if sample_info.completed %} disabled" aria-disabled="true"{% else %}"{% endif %}
+                           href="{% url 'samples:specimen-create' sample_info.sample_id %}">
+                           Add 1 specimen</a>
+                           <br/>
+                           <a role="button" class="btn btn-dark btn-sm mt-1{% if sample_info.completed %} disabled" aria-disabled="true"{% else %}"{% endif %}
+                        href="{% url 'samples:specimens-wo-img' sample_info.sample_id %}">
+                      Add specimens w/o images</a>
+                    </div>
+
+                    <div class="col-2">
+                        <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteSpecimensModal" id="openDeleteModal">
+                            Delete Selected
+                          </button>
+                    </div>
                 </div>
+            </div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col">
                             <table id="specimens-table" class="table table-striped table-responsive nowrap compact" width="100%">
                                 <thead>
                                     <tr>
+                                    <th>Select</th>
                                     <th>{{ container_row_header|safe }}</th>
                                     </tr>
                                 </thead>
