@@ -2,10 +2,12 @@ import os.path
 
 from django.contrib import messages
 from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.forms import inlineformset_factory
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
+from django.utils.safestring import mark_safe
 from django.views.generic import TemplateView
 from django.views.generic.edit import CreateView, DeleteView, FormView, UpdateView
 from rest_framework.reverse import reverse as api_reverse
@@ -25,8 +27,8 @@ from ..taxonomy.models import Morphospecies
 from . import constants
 from .forms import (
     ExperimentForm,
-    JSONFieldForm,
-    NewSpecimenImageForm,
+    JSONFieldSpecimensForm,
+    SampleDetailForm,
     SampleForm,
     SamplePlanForm,
     SiteForm,
@@ -334,7 +336,7 @@ class SampleView(PermissionRequiredMixin, FormView):
 
     permission_required = IS_RESEARCH
 
-    form_class = NewSpecimenImageForm
+    form_class = SampleDetailForm
     template_name = 'samples/sample_detail.html'
 
     def get_context_data(self, **kwargs):
@@ -403,26 +405,33 @@ class SampleView(PermissionRequiredMixin, FormView):
 
     def form_valid(self, form):
         files = form.cleaned_data['image']
-        sample = get_object_or_404(Sample, id=self.kwargs['sample_id'])
-        created_images = 0
-        try:
-            for f in files:
-                specimen = Specimen.objects.create(
-                    sample=sample,
-                    created_by_user=self.request.user)
-                SpecimenImage.objects.create(
-                    specimen=specimen,
-                    image=f,
-                    uploaded_by_user=self.request.user
-                )
-                created_images += 1
-        except Exception:
-            messages.add_message(
-                self.request,
-                messages.ERROR,
-                'Error: An unsupported file may have been selected, please use .jpg or .png')
+        json_data = form.cleaned_data['json_data']
+        if files:
+            sample = get_object_or_404(Sample, id=self.kwargs['sample_id'])
             created_images = 0
-        messages.success(self.request, 'Succesfully added {0} new specimens'.format(created_images))
+            try:
+                for f in files:
+                    specimen = Specimen.objects.create(
+                        sample=sample,
+                        created_by_user=self.request.user)
+                    SpecimenImage.objects.create(
+                        specimen=specimen,
+                        image=f,
+                        uploaded_by_user=self.request.user
+                    )
+                    created_images += 1
+            except Exception:
+                messages.add_message(
+                    self.request,
+                    messages.ERROR,
+                    'Error: An unsupported file may have been selected, please use .jpg or .png')
+                created_images = 0
+            messages.success(self.request, 'Succesfully added {0} new specimens'.format(created_images))
+        if json_data['ids']:
+            if not all([isinstance(v, int) for v in json_data['ids']]):
+                raise ValidationError(mark_safe('non-integers provided in form as ids'))
+            Specimen.objects.filter(id__in=json_data['ids']).delete()
+            messages.warning(self.request, 'Succesfully deleted {0} specimens'.format(len(json_data['ids'])))
         return super().form_valid(form)
 
     def get_success_url(self):
@@ -497,7 +506,7 @@ class SampleDeleteView(PermissionRequiredMixin, DeleteView):
         return reverse('samples:experiment', kwargs={'experiment_id': self.kwargs['experiment_id']})
 
 
-class SpecimsWithoutImagesFormView(PermissionRequiredMixin, FormView):
+class SpecimensWithoutImagesFormView(PermissionRequiredMixin, FormView):
 
     permission_required = IS_RESEARCH
 
@@ -756,7 +765,7 @@ class SpecimensView(PermissionRequiredMixin, FormView):
 
     permission_required = IS_RESEARCH + [REVIEW_SPECIMEN_PAGE]
 
-    form_class = JSONFieldForm
+    form_class = JSONFieldSpecimensForm
     template_name = 'samples/specimens.html'
 
     _sv_confirm_ids = 'confirm_ids'

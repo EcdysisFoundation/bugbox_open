@@ -216,9 +216,12 @@ class SampleForm(ModelFormMixin):
     )
 
 
-class NewSpecimenImageForm(Form):
+class SampleDetailForm(Form):
 
-    image = MultipleFileField()
+    image = MultipleFileField(required=False)
+    json_data = JSONField(decoder=json.JSONDecoder, required=False)
+
+    json_data.widget = HiddenInput()
 
 
 class SpecimenViewForm(Form):
@@ -298,7 +301,7 @@ class SpecimensWithoutImagesForm(Form):
         required=False)
 
 
-class JSONFieldForm(Form):
+class JSONFieldSpecimensForm(Form):
 
     json_data = JSONField(decoder=json.JSONDecoder)
 

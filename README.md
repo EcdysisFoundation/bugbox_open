@@ -39,12 +39,15 @@ use bugbox-local user access keys for local.yml use cases, whle bugbox-localserv
     environment variables and is gitignored to keep it secret.
 
 Initiate a backup in docker
+
     docker compose -f local.yml exec postgres backup
 
 Upload backups to S3
+
     docker compose -f local.yml run --rm awscli upload
 
 Download a specific backup
+
     docker compose -f local.yml run --rm awscli download name_of_backup.sql.gz
 
 Restore to your database. First bring the containers down, and bring up just the db.

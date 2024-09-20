@@ -215,6 +215,7 @@ class SpecimenDatatablesSerializer(ModelSerializer):
 
     def to_representation(self, value):
         return {
+            'specimen_id': value.id,
             'data_row': self.get_data_row(value),
         }
 
