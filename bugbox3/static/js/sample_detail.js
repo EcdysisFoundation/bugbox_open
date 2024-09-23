@@ -5,6 +5,7 @@ $(function () {
     const json_context = JSON.parse(document.getElementById('json_context').textContent);
     let jsonDataInput = document.getElementById('id_json_data');
     let submitBtn = document.getElementById('submit-btn');
+    let selectAllBtn = document.getElementById('select-all-btn');
     let deleteSpecimensModal = document.getElementById('deleteSpecimensModal');
     let json_data = {ids: []}
     deleteSpecimensModal.addEventListener('show.bs.modal', event => {
@@ -22,7 +23,6 @@ $(function () {
         ordering: false,
         processing: false,
         serverSide: true,
-        select:true,
         ajax: {
             url: json_context.specimen_datatables_url,
             dataSrc: 'data'
@@ -53,5 +53,14 @@ $(function () {
         json_data.ids = ids
         jsonDataInput.value = JSON.stringify(json_data);
    })
+
+   selectAllBtn.addEventListener('click', function() {
+        if ($('#specimens-table tbody tr').hasClass('selected')) {
+            $('#specimens-table tbody tr').removeClass('selected');
+        } else {
+            $('#specimens-table tbody tr').addClass('selected');
+        }
+   })
+
 
 })
