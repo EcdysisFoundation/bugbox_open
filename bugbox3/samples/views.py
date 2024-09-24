@@ -28,6 +28,7 @@ from . import constants
 from .forms import (
     ExperimentForm,
     JSONFieldSpecimensForm,
+    MultiSpecimenForm,
     SampleDetailForm,
     SampleForm,
     SamplePlanForm,
@@ -37,7 +38,7 @@ from .forms import (
     SpecimensWithoutImagesForm,
     SpecimenViewForm,
 )
-from .models import Experiment, Sample, SamplePlan, Site, SiteVisit, Specimen, SpecimenImage
+from .models import Experiment, MultiSpecimenImage, Sample, SamplePlan, Site, SiteVisit, Specimen, SpecimenImage
 from .models_query import get_sample_plan_descriptions, get_user_choices
 from .timeline_events import audit_specimen_update, audit_specimen_view, audit_upload_images, timeline_events
 
@@ -914,3 +915,59 @@ class SpecimensView(PermissionRequiredMixin, FormView):
                 'sample_id': self.kwargs['sample_id']
             }
         )
+
+
+class MultiSpecimeImageView(PermissionRequiredMixin, FormView):
+
+    permission_required = IS_RESEARCH
+
+    form_class = MultiSpecimenForm
+    template_name = 'samples/multispecimen_form.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        sample = get_object_or_404(Sample, id=self.kwargs['sample_id'])
+        datatables_url = api_reverse(
+            'samples:multispecimen-data-list', request=self.request, kwargs=self.kwargs
+        )
+        context.update({
+            'sample': sample,
+            'experiment_id': sample.site_visit.site.experiment_id,
+            'json_context': get_json_context({
+                'datatables_url': datatables_url
+            }),
+            'form_action_url': reverse(
+                'samples:multispecimen-images',
+                kwargs={'sample_id': sample.id}),
+            'container_row_header': get_datatables_container(
+                get_datatables_row([
+                    'Image',
+                    'cropped_to_specimen',
+                ]))
+        })
+        return context
+
+    def form_valid(self, form):
+        image_4_by_3 = form.cleaned_data['image_4_by_3']
+        if image_4_by_3:
+            sample = get_object_or_404(Sample, id=self.kwargs['sample_id'])
+            created_images = 0
+            try:
+                for f in image_4_by_3:
+                    MultiSpecimenImage.objects.create(
+                        sample=sample,
+                        image_4_by_3=f,
+                        uploaded_by_user=self.request.user
+                    )
+                    created_images += 1
+            except Exception:
+                messages.add_message(
+                    self.request,
+                    messages.ERROR,
+                    'Error: An unsupported file may have been selected, please use .jpg or .png')
+                created_images = 0
+            messages.success(self.request, 'Succesfully added {0} new multi-specimen images'.format(created_images))
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse('samples:multispecimen-images', kwargs={'sample_id': self.kwargs['sample_id']})

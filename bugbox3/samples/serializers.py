@@ -11,7 +11,7 @@ from ..libs.ui_helpers import (
     get_specimen_context,
 )
 from . import constants
-from .models import Experiment, Sample, SamplePlan, Site, Specimen
+from .models import Experiment, MultiSpecimenImage, Sample, SamplePlan, Site, Specimen
 
 
 class ExperimentsDatatablesSerializer(ModelSerializer):
@@ -58,6 +58,26 @@ class ExperimentsDatatablesSerializer(ModelSerializer):
     def to_representation(self, value):
         return {
             'data_row': self.get_data_row(value)
+        }
+
+
+class MultiSpecimenImageDatatablesSerializer(ModelSerializer):
+
+    class Meta:
+        model = MultiSpecimenImage
+        fields = ['image_4_by_3_thumbnail', 'cropped_to_specimen']
+
+    def get_data_row(self, value):
+        columns = [
+            value.image_4_by_3_thumbnail,
+            value.cropped_to_specimen
+        ]
+        return get_datatables_container(get_datatables_row(columns))
+
+    def to_representation(self, value):
+        return {
+            'id': value.id,
+            'data_row': self.get_data_row(value),
         }
 
 

@@ -226,6 +226,11 @@ class SampleDetailForm(Form):
     move_json_data.widget = HiddenInput()
 
 
+class MultiSpecimenForm(Form):
+
+    image_4_by_3 = MultipleFileField()
+
+
 class SpecimenViewForm(Form):
 
     image_files = MultipleFileField(required=False)

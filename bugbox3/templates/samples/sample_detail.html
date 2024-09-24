@@ -119,6 +119,16 @@
                         </div>
                     </div>
                 </div>
+                <div class="card-header align-items-center bg-ecdysis text-white d-flex justify-content-between">
+                        <div class="col-3">
+                            <h5>Multi-Specimen Images</h5>
+                        </div>
+                        <div class="col">
+                            <a href="{% url 'samples:multispecimen-images' sample_info.sample_id %}" class="btn btn-light">
+                            Add / View Multi-Specimen Images
+                            </a>
+                        </div>
+                </div>
             </div>
         </div>
     </div>
@@ -132,7 +142,7 @@
                         {% if review_permission %}
                         <a href="{% url 'samples:specimens-experiment-sample' id=sample_info.experiment_id sample_id=sample_info.sample_id %}" class="link-light">
                         {% endif %}
-                            <h5>Specimens</h5>
+                            <h5>Individual Specimens</h5>
                         {% if review_permission %}
                         </a>
                         {% endif %}
@@ -149,7 +159,7 @@
                         <form enctype="multipart/form-data" action="{{ form_action_url }}" method="POST">
                             {% csrf_token %}
                             <label for="id_image" class="form-label">
-                                {% if sample_info.completed %}Sample completed, edit sample to enable{% else %}Add specimens with images{% endif %}
+                                {% if sample_info.completed %}Sample completed, edit sample to enable{% else %}Add specimens as images{% endif %}
                             </label>
                                 <input type="file" name="image" accept=".jpg, .png, .jpeg"
                                     class="form-control"
@@ -172,7 +182,7 @@
                     </div>
 
                     </div>
-            </div>
+                </div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col">
@@ -183,7 +193,7 @@
                                     <th>{{ container_row_header|safe }}</th>
                                     </tr>
                                 </thead>
-                                </table>
+                            </table>
                         </div>
                     </div>
                 </div>
