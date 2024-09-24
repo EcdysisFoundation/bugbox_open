@@ -31,6 +31,7 @@ from ..core import constants as geo_constants
 from ..core.models import UsCountiesTigerLine
 from ..libs.utilities import resized_thumbnail
 from ..taxonomy.models import AiVersion, Morphospecies
+from ..taxonomy.tasks import id_image
 from . import constants
 
 
@@ -258,15 +259,13 @@ def save_specimen_image_thumbnail(instance, created, **kwargs):
         instance.save()
 
 
-# raises bugbox3.samples.models.Specimen.DoesNotExist: Specimen matching query does not exist.
-# Specimen not completely saved by the time it runs? Use Atomic?
-# @receiver(post_save, sender=SpecimenImage)
-# def classify_new_images(sender, instance, created, **kwargs):
-#     # classify if it is a new image and meets criteria acceptence == Pending
-#     # and no previous classifications to the specimen.
-#     if created and instance.specimen.acceptance == \
-#           constants.ACCEPTANCE_PENDING and not instance.specimen.ai_classification:
-#         id_image.delay(instance.specimen.id)
+@receiver(post_save, sender=SpecimenImage)
+def classify_new_images(sender, instance, created, **kwargs):
+    # classify if it is a new image and meets criteria acceptence == Pending
+    # and no previous classifications to the specimen.
+    if created and instance.specimen.acceptance == \
+        constants.ACCEPTANCE_PENDING and not instance.specimen.ai_classification:
+            id_image.delay(instance.specimen.id)
 
 
 class TimelineEvent(Model):
