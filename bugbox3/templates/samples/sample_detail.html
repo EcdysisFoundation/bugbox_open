@@ -108,11 +108,12 @@
                             <p class="card-text"><b>Completed:</b> {{ sample_info.completed }}</p>
                         </div>
                         <div class="col-md-4">
-                            <p class="card-text mt-5"><b>Sample Image:</b>
+                            <p class="card-text mt-5"><b>Sample Label:</b>
                                 {% if sample_info.img_thumbnail %}
-
                                 </br>
                                 <img src="{{sample_info.img_thumbnail.path}}" width="{{ sample_info.img_thumbnail.width }}" height="{{ sample_info.img_thumbnail.height }}">
+                                {% else %}
+                                <a href="{% url 'samples:sample-update' sample_info.sample_id %}" class="btn btn-light"><i class="bi bi-plus-lg"></i></a>
                                 {% endif %}
                             </p>
                         </div>
