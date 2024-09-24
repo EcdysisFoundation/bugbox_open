@@ -220,8 +220,10 @@ class SampleDetailForm(Form):
 
     image = MultipleFileField(required=False)
     json_data = JSONField(decoder=json.JSONDecoder, required=False)
+    move_json_data = JSONField(decoder=json.JSONDecoder, required=False)
 
     json_data.widget = HiddenInput()
+    move_json_data.widget = HiddenInput()
 
 
 class SpecimenViewForm(Form):

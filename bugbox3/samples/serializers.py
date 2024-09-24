@@ -65,21 +65,25 @@ class SamplesDatatablesSerializer(ModelSerializer):
 
     class Meta:
         model = Sample
-        fields = [constants.FIELD_SAMPLE_TYPE]
+        fields = [
+            constants.FIELD_SAMPLE_TYPE,
+            constants.FIELD_SAMPLE_NAME_NO
+        ]
 
     def get_data_row(self, value):
         columns = [
-            value.sample_type,
+            value.site_visit.site.site_name,
             value.site_visit.visit_date.strftime("%d-%b-%Y"),
-            value.site_visit.site.site_name
+            value.sample_type,
+            value.name_no
         ]
         return get_datatables_container(get_datatables_row(columns))
 
     def to_representation(self, value):
-        result = {
+        return {
+            'sample_id': value.id,
             'data_row': self.get_data_row(value),
         }
-        return result
 
 
 class SitesDatatablesSerializer(ModelSerializer):

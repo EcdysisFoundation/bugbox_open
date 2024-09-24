@@ -30,7 +30,11 @@ class SamplesDatatablesViewSet(PermissionRequiredMixin, DatatablesModelViewSetMi
     permission_required = IS_RESEARCH
 
     serializer_class = SamplesDatatablesSerializer
-    search_vector = [constants.FIELD_SAMPLE_TYPE]
+    search_vector = [
+        constants.FIELD_SAMPLE_TYPE,
+        constants.FIELD_SAMPLE_NAME_NO,
+        'site_visit__site__site_name'
+    ]
 
     def get_queryset(self):
         experiment_id = int(self.kwargs['experiment_id'])

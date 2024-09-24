@@ -345,6 +345,11 @@ class SampleView(PermissionRequiredMixin, FormView):
 
         specimen_datatables_url = api_reverse(
             'samples:specimen-data-list', request=self.request, kwargs=self.kwargs)
+        samples_datatables_url = api_reverse(
+            'samples:sample-data-list',
+            request=self.request,
+            kwargs={'experiment_id': sample.site_visit.site.experiment_id}
+        )
         img_thumbnail = None
         if sample.image_thumbnail:
             if os.path.isfile(sample.image_thumbnail.path):
@@ -396,8 +401,16 @@ class SampleView(PermissionRequiredMixin, FormView):
                     '<a href="{0}" class="btn btn-sm btn-outline-danger" role="button">Classify All</a>'.format(
                         reverse('taxonomy:classify-sample', kwargs={'id': sample.id}))
                 ])),
+            'sample_container_row_header': get_datatables_container(
+                get_datatables_row([
+                    'Site',
+                    'Date',
+                    'Type',
+                    'Name',
+                ])),
             'json_context': get_json_context(
-                {'specimen_datatables_url': specimen_datatables_url}),
+                {'specimen_datatables_url': specimen_datatables_url,
+                 'samples_datatables_url': samples_datatables_url}),
             'form_action_url': reverse(
                 'samples:sample', kwargs={'sample_id': sample.id})
         })
@@ -406,6 +419,7 @@ class SampleView(PermissionRequiredMixin, FormView):
     def form_valid(self, form):
         files = form.cleaned_data['image']
         json_data = form.cleaned_data['json_data']
+        move_json_data = form.cleaned_data['move_json_data']
         if files:
             sample = get_object_or_404(Sample, id=self.kwargs['sample_id'])
             created_images = 0
@@ -427,11 +441,22 @@ class SampleView(PermissionRequiredMixin, FormView):
                     'Error: An unsupported file may have been selected, please use .jpg or .png')
                 created_images = 0
             messages.success(self.request, 'Succesfully added {0} new specimens'.format(created_images))
-        if json_data['ids']:
+        if json_data:
             if not all([isinstance(v, int) for v in json_data['ids']]):
                 raise ValidationError(mark_safe('non-integers provided in form as ids'))
             Specimen.objects.filter(id__in=json_data['ids']).delete()
             messages.warning(self.request, 'Succesfully deleted {0} specimens'.format(len(json_data['ids'])))
+        if move_json_data:
+            if move_json_data['move_ids'] and move_json_data['move_sample_id']:
+                s = get_object_or_404(Sample, id=move_json_data['move_sample_id'])
+                Specimen.objects.filter(
+                    id__in=move_json_data['move_ids']).update(sample_id=s.id)
+                messages.warning(self.request, 'Succesfully moved {0} specimens to sample ID {1}'.format(
+                    len(move_json_data['move_ids']),
+                    s.id
+                ))
+            else:
+                messages.warning(self.request, 'No specimens or samples were seleceted to move.')
         return super().form_valid(form)
 
     def get_success_url(self):
