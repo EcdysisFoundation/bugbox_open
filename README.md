@@ -41,13 +41,17 @@ Initiate a backup in docker
 
     docker compose -f local.yml exec postgres backup
 
+List backups
+
+    docker compose -f local.yml exec postgres backups
+
 Upload backups to S3
 
     docker compose -f local.yml run --rm awscli upload
 
 Download a specific backup
 
-    docker compose -f local.yml run --rm awscli download name_of_backup.sql.gz
+    docker compose -f local.yml run --rm awscli download BACKUP_FILE
 
 Restore to your database. First bring the containers down...
 
@@ -59,7 +63,7 @@ bring up the db only
 
 restore it to the backup file
 
-    docker compose -f docker-compose.local.yml exec postgres restore name_of_backup.sql.gz
+    docker compose -f docker-compose.local.yml exec postgres restore BACKUP_FILE
 
 After it succesfully restores, bring it down and bring everything back up.
 
@@ -68,6 +72,28 @@ After it succesfully restores, bring it down and bring everything back up.
 bring all services up
 
     docker compose -f local.yml up
+
+Alternatvely to using the AWS CLI, a backup can be downloaded directly from the Ecdysis01 server. This process includes moving the file out and in the docker conatiner.
+
+With a backup already created in the Ecdysis01 docker container as described above, get the container ID ...
+
+    docker compose -f local.yml ps -q postgres
+
+using the returned CONTAINER_ID, move the backup file from the container to a directory named backups in the bugbox3 directory.
+
+    docker cp CONTAINER_ID:/backups/BACKUP_FILE ./backups/BACKUP_FILE
+
+Then use scp to copy this file to local computer.
+
+    scp ecdysis@ecdysis01.local:/srv/bugbox3/backups/BACKUP_FILE backups/BACKUP_FILE
+
+Get the local docker container id.
+
+    docker compose -f local.yml ps -q postgres
+
+Copy the backup to it
+
+    docker cp ./backups/BACKUP_FILE CONTAINER_ID:/backups
 
 ### Live reloading and Sass CSS compilation
 
