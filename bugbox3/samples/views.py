@@ -949,6 +949,7 @@ class MultiSpecimeImageView(PermissionRequiredMixin, FormView):
 
     def form_valid(self, form):
         image_4_by_3 = form.cleaned_data['image_4_by_3']
+        json_data = form.cleaned_data['json_data']
         if image_4_by_3:
             sample = get_object_or_404(Sample, id=self.kwargs['sample_id'])
             created_images = 0
@@ -968,6 +969,11 @@ class MultiSpecimeImageView(PermissionRequiredMixin, FormView):
                     'Error: An unsupported file may have been selected, please use .jpg or .png')
                 created_images = 0
             messages.success(self.request, 'Succesfully added {0} new multi-specimen images'.format(created_images))
+        if json_data:
+            if not all([isinstance(v, int) for v in json_data['ids']]):
+                raise ValidationError(mark_safe('non-integers provided in form as ids'))
+            MultiSpecimenImage.objects.filter(id__in=json_data['ids']).delete()
+            messages.warning(self.request, 'Succesfully deleted {0} images'.format(len(json_data['ids'])))
         return super().form_valid(form)
 
     def get_success_url(self):

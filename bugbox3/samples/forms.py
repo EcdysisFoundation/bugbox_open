@@ -228,7 +228,10 @@ class SampleDetailForm(Form):
 
 class MultiSpecimenForm(Form):
 
-    image_4_by_3 = MultipleFileField()
+    image_4_by_3 = MultipleFileField(required=False)
+    json_data = JSONField(decoder=json.JSONDecoder, required=False)
+
+    json_data.widget = HiddenInput()
 
 
 class SpecimenViewForm(Form):
