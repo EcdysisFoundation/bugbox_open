@@ -181,8 +181,9 @@ def save_thumbnail(instance, created, **kwargs):
 class MultiSpecimenImage(Model):
     sample = ForeignKey(Sample, on_delete=CASCADE)
     uuid = UUIDField(default=uuid.uuid4, unique=True)
-    image_4_by_3 = ImageField(upload_to='multi_specimen_images')
-    image_4_by_3_thumbnail = ImageField(null=True, blank=True, upload_to='multi_specimen_images')
+    image = ImageField(upload_to='multi_specimen_images')
+    image_thumbnail = ImageField(null=True, blank=True, upload_to='multi_specimen_images')
+    image_grid = CharField(max_length=10, choices=constants.MULTIIMAGE_IMAGE_GRID_CHOICES)
     cropped_to_specimen = BooleanField(null=True)
     date_added = DateTimeField(auto_now_add=True)
     uploaded_by_user = ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=SET_NULL)
@@ -193,9 +194,9 @@ def save_multi_specimen_image_thumbnail(instance, created, **kwargs):
     """
     Can only create and delete MultiSpecimenImage.
     """
-    if created and instance.image_4_by_3:
-        instance.image_4_by_3_thumbnail = resized_thumbnail(
-            instance.image_4_by_3,
+    if created and instance.image:
+        instance.image_thumbnail = resized_thumbnail(
+            instance.image,
             constants.SPECIMEN_IMAGE_THUMBSIZE_MEDIUM,
             constants.SPECIMEN_IMAGE_THUMBSIZE_MEDIUM,
             'thumbnail')

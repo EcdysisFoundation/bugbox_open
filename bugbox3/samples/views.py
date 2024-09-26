@@ -956,7 +956,8 @@ class MultiSpecimeImageView(PermissionRequiredMixin, FormView):
                 for f in image_4_by_3:
                     MultiSpecimenImage.objects.create(
                         sample=sample,
-                        image_4_by_3=f,
+                        image=f,
+                        image_grid=constants.IMAGE_GRID_CHOICE_4_BY_3,
                         uploaded_by_user=self.request.user
                     )
                     created_images += 1
