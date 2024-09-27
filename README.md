@@ -63,7 +63,7 @@ bring up the db only
 
 restore it to the backup file
 
-    docker compose -f docker-compose.local.yml exec postgres restore BACKUP_FILE
+    docker compose -f local.yml exec postgres restore BACKUP_FILE
 
 After it succesfully restores, bring it down and bring everything back up.
 

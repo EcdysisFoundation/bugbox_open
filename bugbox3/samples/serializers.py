@@ -70,6 +70,7 @@ class MultiSpecimenImageDatatablesSerializer(ModelSerializer):
     def get_data_row(self, value):
         columns = [
             get_img_src(value.image_thumbnail),
+            value.image_grid,
             value.cropped_to_specimen
         ]
         return get_datatables_container(get_datatables_row(columns))

@@ -230,8 +230,10 @@ class MultiSpecimenForm(Form):
 
     image_4_by_3 = MultipleFileField(required=False)
     json_data = JSONField(decoder=json.JSONDecoder, required=False)
+    json_crop_ids = JSONField(decoder=json.JSONDecoder, required=False)
 
     json_data.widget = HiddenInput()
+    json_crop_ids.widget = HiddenInput()
 
 
 class SpecimenViewForm(Form):

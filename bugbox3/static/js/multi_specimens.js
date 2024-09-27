@@ -11,6 +11,11 @@ $(function () {
     let submitBtn = document.getElementById('submit-btn');
     let deleteImagesModal = document.getElementById('deleteImagesModal');
     let json_data = {ids: []};
+    let jsonCropDataInput = document.getElementById('id_json_crop_ids');
+    let json_crop_ids = {ids: []};
+    let cropSubmitBtn = document.getElementById('crop-submit-btn');
+    let cropImagesModal = document.getElementById('cropImagesModal');
+
 
 
     let dt = new DataTable('#images-table', {
@@ -46,6 +51,14 @@ $(function () {
 
     });
 
+    cropImagesModal.addEventListener('show.bs.modal', event => {
+        let datalen = dt.rows('.selected').data().length;
+        const modalBodyInput = cropImagesModal.querySelector('.modal-body')
+        if (datalen) {
+            modalBodyInput.innerHTML = `Are you sure you want to crop and save ${datalen} records?`
+        } else { modalBodyInput.innerHTML = 'No images were selected to crop.' }
+    });
+
     submitBtn.addEventListener('click', function() {
         let data = dt.rows('.selected').data();
         let ids = []
@@ -57,6 +70,18 @@ $(function () {
         json_data.ids = ids
         jsonDataInput.value = JSON.stringify(json_data);
    })
+
+   cropSubmitBtn.addEventListener('click', function() {
+    let data = dt.rows('.selected').data();
+    let ids = []
+    if (data.length) {
+        for (var i = 0; i < data.length; i++) {
+            ids.push(data[i].id)
+        }
+    }
+    json_crop_ids.ids = ids
+    jsonCropDataInput.value = JSON.stringify(json_crop_ids);
+})
 
    selectAllBtn.addEventListener('click', function() {
     if ($('#images-table tbody tr').hasClass('selected')) {

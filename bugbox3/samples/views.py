@@ -21,7 +21,7 @@ from ..libs.ui_helpers import (
     get_formsets_display_control_config,
     get_probability,
 )
-from ..libs.utilities import get_json_context
+from ..libs.utilities import crop_img_to_grid, get_json_context
 from ..taxonomy import constants as taxa_const
 from ..taxonomy.models import Morphospecies
 from . import constants
@@ -942,6 +942,7 @@ class MultiSpecimeImageView(PermissionRequiredMixin, FormView):
             'container_row_header': get_datatables_container(
                 get_datatables_row([
                     'Image',
+                    'image_grid',
                     'cropped_to_specimen',
                 ]))
         })
@@ -950,8 +951,9 @@ class MultiSpecimeImageView(PermissionRequiredMixin, FormView):
     def form_valid(self, form):
         image_4_by_3 = form.cleaned_data['image_4_by_3']
         json_data = form.cleaned_data['json_data']
+        json_crop_ids = form.cleaned_data['json_crop_ids']
+        sample = get_object_or_404(Sample, id=self.kwargs['sample_id'])
         if image_4_by_3:
-            sample = get_object_or_404(Sample, id=self.kwargs['sample_id'])
             created_images = 0
             try:
                 for f in image_4_by_3:
@@ -974,6 +976,25 @@ class MultiSpecimeImageView(PermissionRequiredMixin, FormView):
                 raise ValidationError(mark_safe('non-integers provided in form as ids'))
             MultiSpecimenImage.objects.filter(id__in=json_data['ids']).delete()
             messages.warning(self.request, 'Succesfully deleted {0} images'.format(len(json_data['ids'])))
+        if json_crop_ids:
+            if not all([isinstance(v, int) for v in json_crop_ids['ids']]):
+                raise ValidationError(mark_safe('non-integers provided in form as ids'))
+            selected_images = MultiSpecimenImage.objects.filter(id__in=json_crop_ids['ids'])
+            for i in selected_images:
+                imgs = crop_img_to_grid(i.image, i.image_grid)
+                for cropped_i in imgs:
+                    specimen = Specimen.objects.create(
+                        sample=sample,
+                        created_by_user=self.request.user)
+                    SpecimenImage.objects.create(
+                        specimen=specimen,
+                        image=cropped_i,
+                        multispecimen_image_uuid=i.uuid,
+                        uploaded_by_user=self.request.user
+                    )
+                i.cropped_to_specimen = True
+                i.save()
+            messages.warning(self.request, 'Succesfully croped {0} images'.format(len(selected_images)))
         return super().form_valid(form)
 
     def get_success_url(self):
