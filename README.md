@@ -35,12 +35,15 @@ Check other Flake8 issues
 
 Database backups are configured with Cookie cutter methods. In our case it is expanded to the local version to aid in development. Seperate AWS IAM users are configured for different envirionments
 
-use bugbox-local user access keys for local.yml use cases, whle bugbox-localserver is for localserver.yml cases. These .yml files should reference a .secrets file in the repo .env directory that defines the
-    environment variables and is gitignored to keep it secret.
+use bugbox-local user access keys for local.yml use cases, whle bugbox-localserver is for localserver.yml cases. These .yml files should reference a .secrets file in the repo .env directory that defines the environment variables and is gitignored to keep it secret.
 
 Initiate a backup in docker
 
     docker compose -f local.yml exec postgres backup
+
+List backups
+
+    docker compose -f local.yml exec postgres backups
 
 Upload backups to S3
 
@@ -48,21 +51,49 @@ Upload backups to S3
 
 Download a specific backup
 
-    docker compose -f local.yml run --rm awscli download name_of_backup.sql.gz
+    docker compose -f local.yml run --rm awscli download BACKUP_FILE
 
-Restore to your database. First bring the containers down, and bring up just the db.
+Restore to your database. First bring the containers down...
 
     docker compose -f local.yml down
 
+bring up the db only
+
     docker compose -f local.yml up postgres -d
 
-    docker compose -f docker-compose.local.yml exec postgres restore name_of_backup.sql.gz
+restore it to the backup file
+
+    docker compose -f local.yml exec postgres restore BACKUP_FILE
 
 After it succesfully restores, bring it down and bring everything back up.
 
     docker compose -f local.yml down
 
+bring all services up
+
     docker compose -f local.yml up
+
+Alternatvely to using the AWS CLI, a backup can be downloaded directly from the Ecdysis01 server. This process includes moving the file out and in the docker conatiner.
+
+With a backup already created in the Ecdysis01 docker container as described above, get the container ID ...
+
+    docker compose -f local.yml ps -q postgres
+
+using the returned CONTAINER_ID, move the backup file from the container to a directory named backups in the bugbox3 directory.
+
+    docker cp CONTAINER_ID:/backups/BACKUP_FILE ./backups/BACKUP_FILE
+
+Then use scp to copy this file to local computer.
+
+    scp ecdysis@ecdysis01.local:/srv/bugbox3/backups/BACKUP_FILE backups/BACKUP_FILE
+
+Get the local docker container id.
+
+    docker compose -f local.yml ps -q postgres
+
+Copy the backup to it
+
+    docker cp ./backups/BACKUP_FILE CONTAINER_ID:/backups
 
 ### Live reloading and Sass CSS compilation
 

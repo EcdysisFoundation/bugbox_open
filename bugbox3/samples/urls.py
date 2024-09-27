@@ -7,6 +7,7 @@ from .views import (
     ExperimentSamplePlanUpdateView,
     ExperimentsView,
     ExperimentView,
+    MultiSpecimeImageView,
     SampleDeleteView,
     SampleUpdateView,
     SampleView,
@@ -22,6 +23,7 @@ from .views import (
 )
 from .views_dtables import (
     ExperimentsDatatablesViewSet,
+    MultiSpecimenDatatablesViewSet,
     SamplesDatatablesViewSet,
     SitesDatatablesViewSet,
     SpecimenDatatablesViewSet,
@@ -39,6 +41,8 @@ router.register(r'specimens-data/(?P<sample_id>[^/]+)', SpecimenDatatablesViewSe
                 basename='specimen-data')
 router.register(r'specimens-all-data/(?P<id>[^/]+)/(?P<sample_id>[^/]+)', SpecimensAllDatatablesViewSet,
                 basename='specimen-all-data')
+router.register(r'multispecimens-data/(?P<sample_id>[^/]+)', MultiSpecimenDatatablesViewSet,
+                basename='multispecimen-data')
 
 app_name = "samples"
 urlpatterns = [
@@ -59,6 +63,7 @@ urlpatterns = [
      path('specimen-create/<int:sample_id>', SpecimenCreateView.as_view(), name='specimen-create'),
      path('specimen-update/<int:id>', SpecimenUpdateView.as_view(), name='specimen-update'),
      path('specimen-delete/<int:id>/<int:sample_id>', SpecimenDeleteView.as_view(), name='specimen-delete'),
+     path('multispecimen-images/<int:sample_id>', MultiSpecimeImageView.as_view(), name='multispecimen-images'),
      path('specimens-experiment-sample/<int:id>/<int:sample_id>',
           SpecimensView.as_view(),
           name='specimens-experiment-sample'),

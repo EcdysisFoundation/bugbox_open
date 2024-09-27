@@ -11,7 +11,7 @@ from ..libs.ui_helpers import (
     get_specimen_context,
 )
 from . import constants
-from .models import Experiment, Sample, SamplePlan, Site, Specimen
+from .models import Experiment, MultiSpecimenImage, Sample, SamplePlan, Site, Specimen
 
 
 class ExperimentsDatatablesSerializer(ModelSerializer):
@@ -61,25 +61,50 @@ class ExperimentsDatatablesSerializer(ModelSerializer):
         }
 
 
-class SamplesDatatablesSerializer(ModelSerializer):
+class MultiSpecimenImageDatatablesSerializer(ModelSerializer):
 
     class Meta:
-        model = Sample
-        fields = [constants.FIELD_SAMPLE_TYPE]
+        model = MultiSpecimenImage
+        fields = ['id', 'image_4_by_3_thumbnail', 'cropped_to_specimen']
 
     def get_data_row(self, value):
         columns = [
-            value.sample_type,
-            value.site_visit.visit_date.strftime("%d-%b-%Y"),
-            value.site_visit.site.site_name
+            get_img_src(value.image_thumbnail),
+            value.image_grid,
+            value.cropped_to_specimen
         ]
         return get_datatables_container(get_datatables_row(columns))
 
     def to_representation(self, value):
-        result = {
+        return {
+            'id': value.id,
             'data_row': self.get_data_row(value),
         }
-        return result
+
+
+class SamplesDatatablesSerializer(ModelSerializer):
+
+    class Meta:
+        model = Sample
+        fields = [
+            constants.FIELD_SAMPLE_TYPE,
+            constants.FIELD_SAMPLE_NAME_NO
+        ]
+
+    def get_data_row(self, value):
+        columns = [
+            value.site_visit.site.site_name,
+            value.site_visit.visit_date.strftime("%d-%b-%Y"),
+            value.sample_type,
+            value.name_no
+        ]
+        return get_datatables_container(get_datatables_row(columns))
+
+    def to_representation(self, value):
+        return {
+            'sample_id': value.id,
+            'data_row': self.get_data_row(value),
+        }
 
 
 class SitesDatatablesSerializer(ModelSerializer):

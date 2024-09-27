@@ -31,6 +31,8 @@ from ..core import constants as geo_constants
 from ..core.models import UsCountiesTigerLine
 from ..libs.utilities import resized_thumbnail
 from ..taxonomy.models import AiVersion, Morphospecies
+
+# from ..taxonomy.tasks import id_image
 from . import constants
 
 
@@ -177,6 +179,31 @@ def save_thumbnail(instance, created, **kwargs):
         instance.save()
 
 
+class MultiSpecimenImage(Model):
+    sample = ForeignKey(Sample, on_delete=CASCADE)
+    uuid = UUIDField(default=uuid.uuid4, unique=True)
+    image = ImageField(upload_to='multi_specimen_images')
+    image_thumbnail = ImageField(null=True, blank=True, upload_to='multi_specimen_images')
+    image_grid = CharField(max_length=10, choices=constants.MULTIIMAGE_IMAGE_GRID_CHOICES)
+    cropped_to_specimen = BooleanField(null=True)
+    date_added = DateTimeField(auto_now_add=True)
+    uploaded_by_user = ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=SET_NULL)
+
+
+@receiver(post_save, sender=MultiSpecimenImage)
+def save_multi_specimen_image_thumbnail(instance, created, **kwargs):
+    """
+    Can only create and delete MultiSpecimenImage.
+    """
+    if created and instance.image:
+        instance.image_thumbnail = resized_thumbnail(
+            instance.image,
+            constants.SPECIMEN_IMAGE_THUMBSIZE_MEDIUM,
+            constants.SPECIMEN_IMAGE_THUMBSIZE_MEDIUM,
+            'thumbnail')
+        instance.save()
+
+
 class Specimen(Model):
 
     uuid = UUIDField(default=uuid.uuid4, unique=True)
@@ -212,6 +239,7 @@ class Specimen(Model):
 
 class SpecimenImage(Model):
     specimen = ForeignKey(Specimen, on_delete=CASCADE)
+    multispecimen_image_uuid = UUIDField(null=True)
     primary_image = BooleanField(default=False)
     image = ImageField(upload_to='specimen_images')
     image_thumbnail = ImageField(null=True, blank=True, upload_to='specimen_images')
@@ -258,15 +286,13 @@ def save_specimen_image_thumbnail(instance, created, **kwargs):
         instance.save()
 
 
-# raises bugbox3.samples.models.Specimen.DoesNotExist: Specimen matching query does not exist.
-# Specimen not completely saved by the time it runs? Use Atomic?
 # @receiver(post_save, sender=SpecimenImage)
 # def classify_new_images(sender, instance, created, **kwargs):
-#     # classify if it is a new image and meets criteria acceptence == Pending
-#     # and no previous classifications to the specimen.
-#     if created and instance.specimen.acceptance == \
-#           constants.ACCEPTANCE_PENDING and not instance.specimen.ai_classification:
-#         id_image.delay(instance.specimen.id)
+#    # classify if it is a new image and meets criteria acceptence == Pending
+#    # and no previous classifications to the specimen.
+#    if created and instance.specimen.acceptance == \
+#            constants.ACCEPTANCE_PENDING and not instance.specimen.ai_classification:
+#        id_image.delay(instance.specimen.id)
 
 
 class TimelineEvent(Model):
