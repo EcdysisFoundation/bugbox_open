@@ -979,7 +979,9 @@ class MultiSpecimeImageView(PermissionRequiredMixin, FormView):
         if json_crop_ids:
             if not all([isinstance(v, int) for v in json_crop_ids['ids']]):
                 raise ValidationError(mark_safe('non-integers provided in form as ids'))
-            selected_images = MultiSpecimenImage.objects.filter(id__in=json_crop_ids['ids'])
+            selected_images = MultiSpecimenImage.objects.filter(
+                id__in=json_crop_ids['ids']).exclude(cropped_to_specimen=True)
+            prev_cropped = len(json_crop_ids['ids']) - len(selected_images)
             for i in selected_images:
                 imgs = crop_img_to_grid(i.image, i.image_grid)
                 for cropped_i in imgs:
@@ -994,7 +996,10 @@ class MultiSpecimeImageView(PermissionRequiredMixin, FormView):
                     )
                 i.cropped_to_specimen = True
                 i.save()
-            messages.warning(self.request, 'Succesfully croped {0} images'.format(len(selected_images)))
+            messages.warning(self.request, 'Succesfully croped {0} images. {1}'.format(
+                len(selected_images),
+                str(prev_cropped) + ' images were skipped as already cropped.' if prev_cropped else ''
+            ))
         return super().form_valid(form)
 
     def get_success_url(self):
