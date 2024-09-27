@@ -240,6 +240,7 @@ class Specimen(Model):
 class SpecimenImage(Model):
     specimen = ForeignKey(Specimen, on_delete=CASCADE)
     multispecimen_image_uuid = UUIDField(null=True)
+    multispecimen_image_index = PositiveSmallIntegerField(null=True)
     primary_image = BooleanField(default=False)
     image = ImageField(upload_to='specimen_images')
     image_thumbnail = ImageField(null=True, blank=True, upload_to='specimen_images')
