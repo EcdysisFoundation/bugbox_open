@@ -63,6 +63,10 @@ def resized_thumbnail(image, width, height, thumbname='thumbnail'):
 
 
 def crop_img_to_grid(image, grid):
+    """
+    Return list of [(cropped_image, index),] from image cropped to grid.
+    Where index is the position in the grid.
+    """
 
     if os.path.isfile(image.path):
         # Find the file name of the image
@@ -93,7 +97,6 @@ def crop_img_to_grid(image, grid):
 
             result = []
             for i, params in enumerate(grid_params):
-                print(params)
                 new_filename = '{0}{1}.{2}'.format(
                     str(img_filename[:-len(img_suffix)-1]),
                     grid_id_format(i),
@@ -104,6 +107,6 @@ def crop_img_to_grid(image, grid):
                 crop_image.save(buffer, format=img_format)
                 # Wrap the buffer in File object
                 file_object = File(buffer, name=new_filename)
-                result.append(file_object)
+                result.append((file_object, i))
             return result
     return None

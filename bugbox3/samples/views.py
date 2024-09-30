@@ -990,8 +990,9 @@ class MultiSpecimeImageView(PermissionRequiredMixin, FormView):
                         created_by_user=self.request.user)
                     SpecimenImage.objects.create(
                         specimen=specimen,
-                        image=cropped_i,
+                        image=cropped_i[0],
                         multispecimen_image_uuid=i.uuid,
+                        multispecimen_image_index=cropped_i[1],
                         uploaded_by_user=self.request.user
                     )
                 i.cropped_to_specimen = True
