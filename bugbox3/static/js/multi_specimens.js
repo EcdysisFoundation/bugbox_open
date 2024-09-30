@@ -79,8 +79,12 @@ $(function () {
             ids.push(data[i].id)
         }
     }
-    json_crop_ids.ids = ids
-    jsonCropDataInput.value = JSON.stringify(json_crop_ids);
+    if (json_crop_ids.ids.length == 0) {
+        json_crop_ids.ids = ids
+        jsonCropDataInput.value = JSON.stringify(json_crop_ids);
+    } else {
+        $(this).prop("disabled",true);
+    }
 })
 
    selectAllBtn.addEventListener('click', function() {

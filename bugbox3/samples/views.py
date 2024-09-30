@@ -374,6 +374,9 @@ class SampleView(PermissionRequiredMixin, FormView):
         if not has_data:
             if Specimen.objects.filter(sample_id=sample.id).first():
                 has_data = True
+        classify_btn = '<a href="{0}"'.format(
+            reverse('taxonomy:classify-sample', kwargs={'id': sample.id})) + \
+            ' class="btn btn-sm btn-outline-danger" role="button" id="classify-all">Classify All</a>'
         context.update({
             'sample_info': {
                 'sample_id': sample.id,
@@ -399,8 +402,7 @@ class SampleView(PermissionRequiredMixin, FormView):
                     'Partial<br/>Count',
                     'Classification',
                     'Probability<br/>(Model)',
-                    '<a href="{0}" class="btn btn-sm btn-outline-danger" role="button">Classify All</a>'.format(
-                        reverse('taxonomy:classify-sample', kwargs={'id': sample.id}))
+                    classify_btn
                 ])),
             'sample_container_row_header': get_datatables_container(
                 get_datatables_row([
@@ -980,7 +982,7 @@ class MultiSpecimeImageView(PermissionRequiredMixin, FormView):
             if not all([isinstance(v, int) for v in json_crop_ids['ids']]):
                 raise ValidationError(mark_safe('non-integers provided in form as ids'))
             selected_images = MultiSpecimenImage.objects.filter(
-                id__in=json_crop_ids['ids']).exclude(cropped_to_specimen=True)
+                id__in=json_crop_ids['ids'])
             prev_cropped = len(json_crop_ids['ids']) - len(selected_images)
             for i in selected_images:
                 imgs = crop_img_to_grid(i.image, i.image_grid)
