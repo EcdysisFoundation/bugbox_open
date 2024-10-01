@@ -796,6 +796,7 @@ class SpecimensView(PermissionRequiredMixin, FormView):
     form_class = JSONFieldSpecimensForm
     template_name = 'samples/specimens.html'
 
+    # these are also defined in sample_detail.json
     _sv_confirm_ids = 'confirm_ids'
     _sv_reject_ids = 'reject_ids'
     _sv_new_classifications = 'new_classifications'
@@ -831,12 +832,10 @@ class SpecimensView(PermissionRequiredMixin, FormView):
                     'Archival',
                     'Sample',
                     'Classification',
-                    'AI Classification<br/>(model)',
-                    'AI Review'
+                    'AI Classification<br/>(model)'
                 ])),
             'json_context': get_json_context({
                 'datatables_url': datatables_url,
-                'json_data': self._sv_json_data,
                 'datatables_url_2': api_reverse('taxonomy:morphospecies-picker-list',
                                                 request=self.request, kwargs=kwargs),
                 'second_picker_choices': taxa_const.GBIF_RANK_CHOICES_WO_BLANK_LIST,
