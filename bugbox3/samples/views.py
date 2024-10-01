@@ -374,6 +374,9 @@ class SampleView(PermissionRequiredMixin, FormView):
         if not has_data:
             if Specimen.objects.filter(sample_id=sample.id).first():
                 has_data = True
+        classify_btn = '<a href="{0}"'.format(
+            reverse('taxonomy:classify-sample', kwargs={'id': sample.id})) + \
+            ' class="btn btn-sm btn-outline-danger" role="button" id="classify-all">Classify All</a>'
         context.update({
             'sample_info': {
                 'sample_id': sample.id,
@@ -399,8 +402,7 @@ class SampleView(PermissionRequiredMixin, FormView):
                     'Partial<br/>Count',
                     'Classification',
                     'Probability<br/>(Model)',
-                    '<a href="{0}" class="btn btn-sm btn-outline-danger" role="button">Classify All</a>'.format(
-                        reverse('taxonomy:classify-sample', kwargs={'id': sample.id}))
+                    classify_btn
                 ])),
             'sample_container_row_header': get_datatables_container(
                 get_datatables_row([
@@ -794,6 +796,7 @@ class SpecimensView(PermissionRequiredMixin, FormView):
     form_class = JSONFieldSpecimensForm
     template_name = 'samples/specimens.html'
 
+    # these are also defined in sample_detail.json
     _sv_confirm_ids = 'confirm_ids'
     _sv_reject_ids = 'reject_ids'
     _sv_new_classifications = 'new_classifications'
@@ -829,12 +832,10 @@ class SpecimensView(PermissionRequiredMixin, FormView):
                     'Archival',
                     'Sample',
                     'Classification',
-                    'AI Classification<br/>(model)',
-                    'AI Review'
+                    'AI Classification<br/>(model)'
                 ])),
             'json_context': get_json_context({
                 'datatables_url': datatables_url,
-                'json_data': self._sv_json_data,
                 'datatables_url_2': api_reverse('taxonomy:morphospecies-picker-list',
                                                 request=self.request, kwargs=kwargs),
                 'second_picker_choices': taxa_const.GBIF_RANK_CHOICES_WO_BLANK_LIST,

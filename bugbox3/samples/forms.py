@@ -1,7 +1,6 @@
 import json
 
 from crispy_forms.layout import HTML, Column, Field, Fieldset, Row
-from django.core.exceptions import ValidationError
 from django.forms import (
     CharField,
     CheckboxInput,
@@ -16,7 +15,6 @@ from django.forms import (
     SelectMultiple,
     Textarea,
 )
-from django.utils.safestring import mark_safe
 
 from ..core.forms import Html5DateInput, ModelFormMixin, MultipleFileField, get_submit_layout
 from ..libs.ui_helpers import DISABLED_DELETE_CHECK
@@ -316,13 +314,4 @@ class SpecimensWithoutImagesForm(Form):
 class JSONFieldSpecimensForm(Form):
 
     json_data = JSONField(decoder=json.JSONDecoder)
-
     json_data.widget = HiddenInput()
-
-    def clean(self):
-        cleaned_data = super().clean()
-        json_data = cleaned_data.get('json_data')
-        if not all([v.isnumeric() for v in json_data['reject_ids']]):
-            raise ValidationError(mark_safe('non-integers provided in form as ids'))
-        if not all([v.isnumeric() for v in json_data['confirm_ids']]):
-            raise ValidationError(mark_safe('non-integers provided in form as ids'))

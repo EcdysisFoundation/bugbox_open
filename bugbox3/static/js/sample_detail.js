@@ -10,6 +10,7 @@ $(function () {
     let selectAllBtn = document.getElementById('select-all-btn');
     let deleteSpecimensModal = document.getElementById('deleteSpecimensModal');
     let moveSpecimensModal = document.getElementById('moveSpecimensModal');
+    let classifyAllBtn = document.getElementById('classify-all');
     let json_data = {ids: []};
     let move_json_data = {move_ids:[], move_sample_id: null};
     deleteSpecimensModal.addEventListener('show.bs.modal', event => {
@@ -84,6 +85,10 @@ $(function () {
         } else {
             $('#specimens-table tbody tr').addClass('selected');
         }
+   })
+
+   classifyAllBtn.addEventListener('click', function() {
+        $(this).addClass("disabled")
    })
 
    let sample_table = new DataTable('#dtsample-table', {

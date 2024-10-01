@@ -5,6 +5,10 @@ Ecdysis bugbox
 [![Built with Cookiecutter Django](https://img.shields.io/badge/built%20with-Cookiecutter%20Django-ff69b4.svg?logo=cookiecutter)](https://github.com/cookiecutter/cookiecutter-django/)
 [![Black code style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 
+Development url, .js served in dev mode is http://localhost:3000/
+
+Production url with .js served from /static/ is http://localhost:8002/
+
 ## Settings
 
 Moved to [settings](http://cookiecutter-django.readthedocs.io/en/latest/settings.html).
@@ -111,7 +115,9 @@ Customized for Bugbox.
 
 local.yml is curently the only valid .yml
 
-Custom images built are pushed to docker hub repo. Standard images used from their source. Always on the Ecdysis01 server, do not build custom docker images there. Django build may fail there at this time. Filesystem space recovery and performance of other running continers are other reasons to not build them there. Various ports are changed from default due to conflicting ports on Ecdysis01.
+Custom images built are pushed to docker hub repo. Standard images used from their source. Always on the Ecdysis01 server, do not build custom docker images there. Django build may fail there at this time. Filesystem space recovery and performance of other running continers are other reasons to not build them there.
+
+Various ports are changed from default due to conflicting ports on Ecdysis01.
 
 Bring up containers with images prebuilt
 
@@ -123,7 +129,7 @@ Open the logs, ctrl-c to escape
 
 If specific image needs built, specificy it individually (referring to non-custom images when on Ecdysis01)
 
-    docker compose -f local.yml build ymlfileservicename
+    docker compose -f local.yml build SERVICE_NAME
 
 Locally built custom images. Push these to docker hub.
 
@@ -148,6 +154,10 @@ On remote pull these down
     docker pull mikaylaelectra/ecdysis_flower:latest
 
     docker pull mikaylaelectra/ecdysis_node:latest
+
+NODE: If changes are made to webpack built .js, then once deployed need to rebuild those files to /static/.
+
+    docker compose -f local.yml exec -it node sh -c "npm run build"
 
 
 ### Custom Bootstrap Compilation
