@@ -119,19 +119,7 @@ Custom images built are pushed to docker hub repo. Standard images used from the
 
 Various ports are changed from default due to conflicting ports on Ecdysis01.
 
-Bring up containers with images prebuilt
-
-    docker compose -f local.yml up --no-build -d
-
-Open the logs, ctrl-c to escape
-
-    docker compose -f local.yml logs --tail=1000 --follow
-
-If specific image needs built, specificy it individually (referring to non-custom images when on Ecdysis01)
-
-    docker compose -f local.yml build SERVICE_NAME
-
-Locally built custom images. Push these to docker hub.
+Locally built custom images. Push these to Docker Hub if changes are made to libraries.
 
     docker push mikaylaelectra/ecdysis_django:latest
 
@@ -143,7 +131,7 @@ Locally built custom images. Push these to docker hub.
 
     docker push mikaylaelectra/ecdysis_node:latest
 
-On remote pull these down
+On remote pull these down, if new versions were pushed to Docker Hub
 
     docker pull mikaylaelectra/ecdysis_django:latest
 
@@ -155,9 +143,25 @@ On remote pull these down
 
     docker pull mikaylaelectra/ecdysis_node:latest
 
-NODE: If changes are made to webpack built .js, then once deployed need to rebuild those files to /static/.
+If specific non-custom image needs built, specificy it individually (referring to non-custom images when on Ecdysis01)
+
+    docker compose -f local.yml build SERVICE_NAME
+
+Bring up containers with images prebuilt
+
+    docker compose -f local.yml up --no-build -d
+
+Open the logs, ctrl-c to escape
+
+    docker compose -f local.yml logs --tail=1000 --follow
+
+NODE: If changes are made to webpack built .js, then once deployed and fully started, need to rebuild those files to /static/.
 
     docker compose -f local.yml exec -it node sh -c "npm run build"
+
+NODE: Bring the node container down. This is not needed to run the dev port 3000 on production, after "npm run build" is ran.
+
+    docker compose -f local.yml down node
 
 
 ### Custom Bootstrap Compilation
