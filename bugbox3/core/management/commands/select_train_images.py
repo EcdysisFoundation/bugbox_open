@@ -2,7 +2,7 @@ from datetime import datetime
 
 from django.apps import apps
 from django.core.management.base import BaseCommand
-from label_studio_sdk.client import LabelStudio
+#from label_studio_sdk.client import LabelStudio
 from django.db.models.aggregates import Count
 
 class Command(BaseCommand):
@@ -14,16 +14,16 @@ class Command(BaseCommand):
     Morphospecies = apps.get_model(app_label='taxonomy', model_name='Morphospecies')
 
     def set_train_bool(self):
-       
-        specimens = self.Specimen.objects.filter(
-            (acceptance == 1 | acceptance == 2)
-        ).values_list(
-            'classification', 'acceptance'
-        ).order_by(
-            'classification', 'acceptance'
-        ).aggregate(
-               total = Count('classification')__gt=104
-        )  
 
-        
+        specimens = self.Specimen.objects.filter(
+            (Q(acceptance = 1) | Q(acceptance = 2))
+        ).order_by(
+            'classification'
+        ).annotate(
+               count_class = Count('classification')
+        ).filter(
+		count_class__gt = 104
+	)
+
+
         print(specimens.values_list)
