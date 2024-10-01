@@ -982,7 +982,7 @@ class MultiSpecimeImageView(PermissionRequiredMixin, FormView):
             if not all([isinstance(v, int) for v in json_crop_ids['ids']]):
                 raise ValidationError(mark_safe('non-integers provided in form as ids'))
             selected_images = MultiSpecimenImage.objects.filter(
-                id__in=json_crop_ids['ids'])
+                id__in=json_crop_ids['ids']).exclude(cropped_to_specimen=True)
             prev_cropped = len(json_crop_ids['ids']) - len(selected_images)
             for i in selected_images:
                 imgs = crop_img_to_grid(i.image, i.image_grid)
