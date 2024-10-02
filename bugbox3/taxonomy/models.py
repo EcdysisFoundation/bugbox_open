@@ -46,7 +46,7 @@ class Morphospecies(Model):
     def __str__(self):
         return str(self.name)
 
-
+"""
 @receiver(pre_save, sender=Morphospecies)
 def set_update_thumbs(sender, instance, **kwargs):
     if instance.pk:
@@ -67,6 +67,7 @@ def save_thumbnail(instance, created, **kwargs):
             instance.image_thumbnail = None
         instance.update_thumbs = None
         instance.save()
+"""
 
 
 class AiVersion(Model):
