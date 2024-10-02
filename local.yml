@@ -23,6 +23,7 @@ services:
     command: /start
 
   postgres:
+    shm_size: 2gb
     build:
       context: .
       dockerfile: ./compose/production/postgres/Dockerfile
