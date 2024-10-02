@@ -140,6 +140,7 @@ SAMPLE_TYPE_MALAISE_TRAP = 'malaise_trap'
 SAMPLE_TYPE_QUADRAT = 'quadrat'
 SAMPLE_TYPE_SOIL_CORE = 'soil_core'
 SAMPLE_TYPE_SOIL_PROBE = 'soil_probe'
+SAMPLE_TYPE_STICKY_TRAP = 'sticky_trap'
 SAMPLE_TYPE_VEGETATION_SWEEP = 'vegetation_sweep'
 
 SAMPLE_TYPE_CHOICES = (
@@ -157,6 +158,7 @@ SAMPLE_TYPE_CHOICES = (
     (SAMPLE_TYPE_QUADRAT, 'Quadrat'),
     (SAMPLE_TYPE_SOIL_CORE, 'Soil core'),
     (SAMPLE_TYPE_SOIL_PROBE, 'Soil probe'),
+    (SAMPLE_TYPE_STICKY_TRAP, 'Sticky trap'),
     (SAMPLE_TYPE_VEGETATION_SWEEP, 'Vegetation sweep'),
 )
 
