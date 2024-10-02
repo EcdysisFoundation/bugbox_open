@@ -1,5 +1,6 @@
 from datetime import datetime
-
+from django.db import transaction
+from django.db.models import Q, Subquery, OuterRef
 from django.apps import apps
 from django.core.management.base import BaseCommand
 #from label_studio_sdk.client import LabelStudio
@@ -13,17 +14,30 @@ class Command(BaseCommand):
     SpecimenImage = apps.get_model(app_label='samples', model_name='SpecimenImage')
     Morphospecies = apps.get_model(app_label='taxonomy', model_name='Morphospecies')
 
-    def set_train_bool(self):
-
-        specimens = self.Specimen.objects.filter(
-            (Q(acceptance = 1) | Q(acceptance = 2))
-        ).order_by(
-            'classification'
+    def handle(self, *args, **options):
+        ''' 
+        self.Specimen.objects.update(
+        object_det_train = Subquery(
+                self.Specimen.objects.values('object_det_train').filter(
+                        ( Q(acceptance = 1) | Q(acceptance = 2))
+                ).annotate(
+                        count_class = Count('classification_id')
+                ).order_by(
+                        'classification_id'
+                ).filter(
+                        count_class__gt = 104
+                )[:5]
+                )  
+        )
+        '''
+        specimens = self.Specimen.objects.values('object_det_train').filter(
+        (Q(acceptance = 1) | Q(acceptance = 2))
         ).annotate(
-               count_class = Count('classification')
+                count_class = Count('classification_id')
+        ).order_by(
+                'classification_id'
         ).filter(
-		count_class__gt = 104
-	)
-
-
-        print(specimens.values_list)
+                count_class__gt = 104
+        )[:5]
+        print(specimens)
+	
