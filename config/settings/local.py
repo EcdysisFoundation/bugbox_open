@@ -17,6 +17,8 @@ ALLOWED_HOSTS = [
     ".localhost", ".local", "172.30.0.8", "django", "192.168.16.8", "[::1]"
 ]
 
+DATA_UPLOAD_MAX_NUMBER_FILES = 400
+
 # CACHES
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#caches
