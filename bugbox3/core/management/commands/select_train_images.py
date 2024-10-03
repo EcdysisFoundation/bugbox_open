@@ -11,33 +11,27 @@ class Command(BaseCommand):
     Set which images will be selected for labelstudio with the object_det_train field
     """
     Specimen = apps.get_model(app_label='samples', model_name='Specimen')
-    SpecimenImage = apps.get_model(app_label='samples', model_name='SpecimenImage')
-    Morphospecies = apps.get_model(app_label='taxonomy', model_name='Morphospecies')
 
     def handle(self, *args, **options):
-        ''' 
-        self.Specimen.objects.update(
-        object_det_train = Subquery(
-                self.Specimen.objects.values('object_det_train').filter(
-                        ( Q(acceptance = 1) | Q(acceptance = 2))
-                ).annotate(
-                        count_class = Count('classification_id')
-                ).order_by(
-                        'classification_id'
-                ).filter(
-                        count_class__gt = 104
-                )[:5]
-                )  
-        )
-        '''
-        specimens = self.Specimen.objects.values('object_det_train').filter(
+
+        specimens = self.Specimen.objects.values('object_det_train','classification_id').filter(
         (Q(acceptance = 1) | Q(acceptance = 2))
         ).annotate(
                 count_class = Count('classification_id')
-        ).order_by(
-                'classification_id'
         ).filter(
                 count_class__gt = 104
-        )[:5]
-        print(specimens)
-	
+        ).order_by(
+                'classification_id'
+        )[:2]
+
+        class_id = [item['classification_id'] for item in specimens]
+        selected = self.Specimen.objects.filter(classification_id__in = class_id)
+
+        #print(selected)
+
+        #selected.update(object_det_train = True)
+
+        #print(class_id)
+        updated_records = self.Specimen.objects.values('object_det_train', 'classification_id').filter(object_det_train=True)
+        print(updated_records)
+       # print(specimens)

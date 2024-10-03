@@ -289,3 +289,6 @@ local_files/
 *.json
 
 Notes/
+*.geany
+*.py.kate-swp
+
