@@ -95,7 +95,7 @@ function formatRowDiv (cols) {
 }
 
 function formatColDiv (col) {
-    return `<div class='col'>${col}</div>`;
+    return `<div class=\"col\">${col}</div>`;
 }
 
 function get_archival (row) {
@@ -113,6 +113,9 @@ function getRow ( data, type, row ) {
 <a href="${row.edit_link}" target="_blank"><i class="bi bi-pencil"></i></a></h5>`
     // img_thumbnail
     if (row.img_thumbnail_large) {
+
+        console.log(`${row.img_thumbnail_large}`)
+
         cols += formatColDiv(`<button type="button" class="btn" data-bs-toggle="modal"
                 data-bs-target="#imageModal"
                 data-bs-whatever="

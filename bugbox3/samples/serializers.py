@@ -262,7 +262,12 @@ class SpecimensAllDatatablesSerializer(ModelSerializer):
         if specimen_image:
             img_thumbnail = get_img_src(specimen_image.image_thumbnail)
             if specimen_image.image_thumbnail_large:
-                img_thumbnail_large = get_img_src(specimen_image.image_thumbnail_large)
+                # dont use get_img_src() here due to modal .js reasons
+                img_thumbnail_large = {
+                    'url': specimen_image.image_thumbnail_large.url,
+                    'width': specimen_image.image_thumbnail_large.width,
+                    'height': specimen_image.image_thumbnail_large.height
+                }
         else:
             img_thumbnail = get_img_src(False)
         return {

@@ -122,7 +122,7 @@ class SiteVisit(Model):
         if Specimen.objects.filter(sample__site_visit_id=self.id):
             return True
         return False
-    """
+
     def save(self, *args, **kwargs):
         is_create = False
         if self.pk is None:
@@ -141,7 +141,6 @@ class SiteVisit(Model):
                         name_no=name,
                         created_by_user=self.created_by_user)
                     n = n - 1
-    """
 
 
 class Sample(Model):
@@ -157,7 +156,7 @@ class Sample(Model):
     created_by_user = ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=SET_NULL)
     update_thumbs = BooleanField(null=True)
 
-"""
+
 @receiver(pre_save, sender=Sample)
 def set_update_thumbs(sender, instance, **kwargs):
     if instance.pk:
@@ -178,7 +177,6 @@ def save_thumbnail(instance, created, **kwargs):
             instance.image_thumbnail = None
         instance.update_thumbs = None
         instance.save()
-"""
 
 
 class MultiSpecimenImage(Model):
@@ -191,7 +189,7 @@ class MultiSpecimenImage(Model):
     date_added = DateTimeField(auto_now_add=True)
     uploaded_by_user = ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=SET_NULL)
 
-"""
+
 @receiver(post_save, sender=MultiSpecimenImage)
 def save_multi_specimen_image_thumbnail(instance, created, **kwargs):
     # Can only create and delete MultiSpecimenImage.
@@ -202,7 +200,6 @@ def save_multi_specimen_image_thumbnail(instance, created, **kwargs):
             constants.SPECIMEN_IMAGE_THUMBSIZE_MEDIUM,
             'thumbnail')
         instance.save()
-"""
 
 
 class Specimen(Model):
@@ -254,7 +251,7 @@ class SpecimenImage(Model):
     class Meta:
         ordering = ['-primary_image']
 
-"""
+
 @receiver(pre_save, sender=SpecimenImage)
 def ensure_single_true_flag(sender, instance, **kwargs):
     # Signal receiver to ensure only one instance has flag set to True.
@@ -293,7 +290,7 @@ def classify_new_images(sender, instance, created, **kwargs):
                 constants.ACCEPTANCE_PENDING and not instance.specimen.ai_classification:
             id_image.delay(instance.specimen.id)
     transaction.on_commit(signal_handler)
-"""
+
 
 class TimelineEvent(Model):
     specimen = ForeignKey(Specimen, on_delete=CASCADE)
