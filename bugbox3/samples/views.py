@@ -608,6 +608,7 @@ class SpecimenView(PermissionRequiredMixin, FormView):
         context.update(specimen_view_context(specimen))
         context.update({
             'form_action_url': reverse('samples:specimen', kwargs={'id': specimen.id}),
+            'review_permission': self.request.user.has_perm(REVIEW_SPECIMEN_PAGE),
             'acceptance_choices': constants.ACCEPTANCE_CHOICES,
             'acceptance': '' if specimen.acceptance is None else constants.ACCEPTANCE_LOOKUP[specimen.acceptance],
             'json_context': get_json_context({
@@ -716,7 +717,7 @@ class SpecimenCreateView(PermissionRequiredMixin, CreateView):
 
 class SpecimenUpdateView(PermissionRequiredMixin, UpdateView):
 
-    permission_required = IS_RESEARCH
+    permission_required = IS_RESEARCH + [REVIEW_SPECIMEN_PAGE]
 
     form_class = SpecimenForm
     template_name = 'samples/specimen_update.html'
@@ -777,7 +778,7 @@ class SpecimenUpdateView(PermissionRequiredMixin, UpdateView):
 
 class SpecimenDeleteView(PermissionRequiredMixin, DeleteView):
 
-    permission_required = IS_RESEARCH
+    permission_required = IS_RESEARCH + [REVIEW_SPECIMEN_PAGE]
 
     model = Specimen
     template_name = 'samples/confirm_delete.html'
