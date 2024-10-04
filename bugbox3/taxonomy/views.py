@@ -206,7 +206,7 @@ class MorphospeciesDetailView(PermissionRequiredMixin, FormView):
 
     def form_valid(self, form):
         combine_to_id = form.cleaned_data['combine_to_id']
-        if combine_to_id:
+        if combine_to_id and self.request.user.has_perm(CHANGE_MORPHOSPECIES):
             morphospecies = get_object_or_404(Morphospecies, id=self.kwargs['id'])
             combine_to = get_object_or_404(Morphospecies, id=combine_to_id)
 

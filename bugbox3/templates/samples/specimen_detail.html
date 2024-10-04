@@ -153,14 +153,18 @@
                         </h5>
                     </div>
                     <div class="col">
+                      {% if review_permission %}
                         <a href="{% url 'samples:specimen-update' specimen.id %}" class="btn btn-light">
                             Edit Specimen
                         </a>
+                      {% endif %}
                     </div>
                     <div class="col">
+                      {% if review_permission %}
                         <a href="{% url 'samples:specimen-delete' specimen.id specimen.sample.id %}" class="btn btn-danger">
                           Delete Specimen
                         </a>
+                      {% endif %}
                     </div>
                 </div>
                 <div class="card-body">
@@ -243,7 +247,7 @@
                                       btn-warning
                                     {% endif %}
                                   "
-                                  {% if ai_classification.name %}
+                                  {% if ai_classification.name and review_permission %}
                                   data-bs-toggle="modal" data-bs-target="#confirmRejectModal"
                                   {% else %}
                                     disabled
