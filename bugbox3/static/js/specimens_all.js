@@ -113,9 +113,6 @@ function getRow ( data, type, row ) {
 <a href="${row.edit_link}" target="_blank"><i class="bi bi-pencil"></i></a></h5>`
     // img_thumbnail
     if (row.img_thumbnail_large) {
-
-        console.log(`${row.img_thumbnail_large}`)
-
         cols += formatColDiv(`<button type="button" class="btn" data-bs-toggle="modal"
                 data-bs-target="#imageModal"
                 data-bs-whatever="
@@ -227,8 +224,11 @@ clearMorphoButton.addEventListener('click', function() {
     $('#specimens-table tbody').on('click', '.clear-btn', function () {
         var row = $(this).closest('tr');
         var id = specimens_table.row( row ).data()["id"];
+        var input = document.getElementById(`new-class-${id}`)
         json_data.reject_ids = json_data.reject_ids.filter(v => v !== id)
         json_data.confirm_ids = json_data.confirm_ids.filter(v => v !== id)
+        input.value = ''
+        delete json_data.new_classifications[id]
     });
 
 
