@@ -14,9 +14,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-        specimens = self.Specimen.objects.values('object_det_train','classification_id').filter(
-        (Q(acceptance = 1) | Q(acceptance = 2))
-        ).annotate(
+        specimens = self.Specimen.objects.values('classification_id').annotate(
                 count_class = Count('classification_id')
         ).filter(
                 count_class__gt = 104
@@ -24,14 +22,20 @@ class Command(BaseCommand):
                 'classification_id'
         )[:2]
 
-        class_id = [item['classification_id'] for item in specimens]
-        selected = self.Specimen.objects.filter(classification_id__in = class_id)
 
-        #print(selected)
-
-        #selected.update(object_det_train = True)
-
-        #print(class_id)
+        print(specimens)
+        class_id = [item.get('classification_id') for item in specimens]
+        print(class_id)
+       #  selected = self.Specimen.objects.filter(classification_id__in = class_id).filter(
+       #  (Q(acceptance = 1) | Q(acceptance = 2))
+       #  )
+       # # #
+       # #  print(selected)
+       # #
+       #  selected.update(object_det_train = True)
+       # #
+       #  print(class_id)
         updated_records = self.Specimen.objects.values('object_det_train', 'classification_id').filter(object_det_train=True)
+
         print(updated_records)
        # print(specimens)
