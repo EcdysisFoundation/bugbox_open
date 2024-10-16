@@ -198,6 +198,7 @@ SITE_HABITAT_TYPES = (
     'canola',
     'cattle',
     'cherries',
+    'citrus',
     'corn',
     'cover crop',
     'dairy',
