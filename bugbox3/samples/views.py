@@ -726,13 +726,17 @@ class SpecimenUpdateView(PermissionRequiredMixin, UpdateView):
     def get_object(self, queryset=None):
         return get_object_or_404(Specimen, id=self.kwargs['id'])
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['review_permission'] = self.request.user.has_perm(REVIEW_SPECIMEN_PAGE)
+        return kwargs
+
     def get_context_data(self, **kwargs):
         context = super(SpecimenUpdateView, self).get_context_data(**kwargs)
         context.update(specimen_view_context(self.object))
         context.update({
             'form_action_url': reverse('samples:specimen-update', kwargs={'id': self.kwargs['id']}),
-        })
-        context.update({
+            'review_permission': self.request.user.has_perm(REVIEW_SPECIMEN_PAGE),
             'json_context': get_json_context({
                 'datatables_url': api_reverse('taxonomy:morphospecies-picker-list',
                                               request=self.request, kwargs=kwargs),
