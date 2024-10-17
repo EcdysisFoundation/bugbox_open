@@ -153,11 +153,9 @@
                         </h5>
                     </div>
                     <div class="col">
-                      {% if review_permission %}
                         <a href="{% url 'samples:specimen-update' specimen.id %}" class="btn btn-light">
                             Edit Specimen
                         </a>
-                      {% endif %}
                     </div>
                     <div class="col">
                       {% if review_permission %}

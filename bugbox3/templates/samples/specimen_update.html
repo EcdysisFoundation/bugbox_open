@@ -85,8 +85,8 @@
                         <div class="col-3">
                             <label for="dis_classification" class="form-label">Verified classification</label>
                             <input type="text" id="dis_classification" class="form-control" name="dis_classification" value="{{ verified_classification }}" disabled><br/>
-                                <button type="button" class="btn btn-small btn-info" data-bs-toggle="modal" data-bs-target="#mSelectModal">Select New</button>
-                                <button type="button" class="btn btn-small btn-secondary" id="clear_classification">Clear Verified</button>
+                                <button type="button" class="btn btn-small btn-info" data-bs-toggle="modal" data-bs-target="#mSelectModal"{% if not review_permission %} disabled{% endif %}>Select New</button>
+                                <button type="button" class="btn btn-small btn-secondary" id="clear_classification"{% if not review_permission %} disabled{% endif %}>Clear Verified</button>
                             </button>
                         </div>
                     </div>
