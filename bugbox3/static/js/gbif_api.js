@@ -64,7 +64,6 @@ function getTabHTML(row) {
 function getGbif( param ) { $.get( 'https://api.gbif.org/v1/species/search', {
   datasetKey: 'd7dddbf4-2cf0-4f39-9b2a-bb099caae36c',
   q: param,
-  isExtinct: false,
   status: 'ACCEPTED',
   limit: 40,
 }, function( data ) {
