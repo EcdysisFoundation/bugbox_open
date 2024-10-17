@@ -717,7 +717,7 @@ class SpecimenCreateView(PermissionRequiredMixin, CreateView):
 
 class SpecimenUpdateView(PermissionRequiredMixin, UpdateView):
 
-    permission_required = IS_RESEARCH + [REVIEW_SPECIMEN_PAGE]
+    permission_required = IS_RESEARCH
 
     form_class = SpecimenForm
     template_name = 'samples/specimen_update.html'
