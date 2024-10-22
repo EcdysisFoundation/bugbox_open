@@ -5,10 +5,11 @@ from ..core.constants import COUNTRY_LOOKUP
 from ..core.permissions import IS_RESEARCH
 from ..core.views import DatatablesModelViewSetMixin
 from . import constants
-from .models import Experiment, Sample, Site, Specimen
+from .models import Experiment, MultiSpecimenImage, Sample, Site, Specimen
 from .models_query import get_user_choices
 from .serializers import (
     ExperimentsDatatablesSerializer,
+    MultiSpecimenImageDatatablesSerializer,
     SamplesDatatablesSerializer,
     SitesDatatablesSerializer,
     SpecimenDatatablesSerializer,
@@ -25,12 +26,26 @@ class ExperimentsDatatablesViewSet(PermissionRequiredMixin, DatatablesModelViewS
     search_vector = [constants.FIELD_NAME, constants.FIELD_ABBREVIATION]
 
 
+class MultiSpecimenDatatablesViewSet(PermissionRequiredMixin,  DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
+
+    permission_required = IS_RESEARCH
+
+    serializer_class = MultiSpecimenImageDatatablesSerializer
+
+    def get_queryset(self):
+        return MultiSpecimenImage.objects.filter(sample_id=int(self.kwargs['sample_id']))
+
+
 class SamplesDatatablesViewSet(PermissionRequiredMixin, DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
 
     permission_required = IS_RESEARCH
 
     serializer_class = SamplesDatatablesSerializer
-    search_vector = [constants.FIELD_SAMPLE_TYPE]
+    search_vector = [
+        constants.FIELD_SAMPLE_TYPE,
+        constants.FIELD_SAMPLE_NAME_NO,
+        'site_visit__site__site_name'
+    ]
 
     def get_queryset(self):
         experiment_id = int(self.kwargs['experiment_id'])

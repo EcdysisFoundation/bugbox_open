@@ -7,6 +7,8 @@ from .views import (
     ExperimentSamplePlanUpdateView,
     ExperimentsView,
     ExperimentView,
+    MultiSpecimeImageView,
+    SampleDeleteView,
     SampleUpdateView,
     SampleView,
     SiteCreateView,
@@ -15,12 +17,13 @@ from .views import (
     SpecimenCreateView,
     SpecimenDeleteView,
     SpecimensView,
+    SpecimensWithoutImagesFormView,
     SpecimenUpdateView,
     SpecimenView,
-    SpecimsWithoutImagesFormView,
 )
 from .views_dtables import (
     ExperimentsDatatablesViewSet,
+    MultiSpecimenDatatablesViewSet,
     SamplesDatatablesViewSet,
     SitesDatatablesViewSet,
     SpecimenDatatablesViewSet,
@@ -38,6 +41,8 @@ router.register(r'specimens-data/(?P<sample_id>[^/]+)', SpecimenDatatablesViewSe
                 basename='specimen-data')
 router.register(r'specimens-all-data/(?P<id>[^/]+)/(?P<sample_id>[^/]+)', SpecimensAllDatatablesViewSet,
                 basename='specimen-all-data')
+router.register(r'multispecimens-data/(?P<sample_id>[^/]+)', MultiSpecimenDatatablesViewSet,
+                basename='multispecimen-data')
 
 app_name = "samples"
 urlpatterns = [
@@ -53,14 +58,16 @@ urlpatterns = [
      path('site-update/<int:site_id>', SiteUpdateView.as_view(), name='site-update'),
      path('sample/<int:sample_id>', SampleView.as_view(), name='sample'),
      path('sample-update/<int:sample_id>', SampleUpdateView.as_view(), name='sample-update'),
+     path('sample-delete/<int:id>/<int:experiment_id>', SampleDeleteView.as_view(), name='sample-delete'),
      path('specimen/<int:id>', SpecimenView.as_view(), name='specimen'),
      path('specimen-create/<int:sample_id>', SpecimenCreateView.as_view(), name='specimen-create'),
      path('specimen-update/<int:id>', SpecimenUpdateView.as_view(), name='specimen-update'),
      path('specimen-delete/<int:id>/<int:sample_id>', SpecimenDeleteView.as_view(), name='specimen-delete'),
+     path('multispecimen-images/<int:sample_id>', MultiSpecimeImageView.as_view(), name='multispecimen-images'),
      path('specimens-experiment-sample/<int:id>/<int:sample_id>',
           SpecimensView.as_view(),
           name='specimens-experiment-sample'),
-     path('specimens-wo-img/<int:id>', SpecimsWithoutImagesFormView.as_view(), name='specimens-wo-img'),
+     path('specimens-wo-img/<int:id>', SpecimensWithoutImagesFormView.as_view(), name='specimens-wo-img'),
      path('experiment-ai-csv/<int:id>', experiment_ai_csv, name='experiment-ai-csv'),
      path('experiment-csv/<int:id>', experiment_csv, name='experiment-csv')
 ]

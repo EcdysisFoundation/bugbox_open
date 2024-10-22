@@ -89,7 +89,7 @@ def get_datatables_row(columns, row_styles=None, col_styles=None):
     return result
 
 
-def get_img_src(img_field, resize_width=None, styles=None):
+def get_img_src(img_field, resize_width=None, styles=''):
     """
     Get an html img tag formated from an ImageField.
     Styes should be a string of styes, exampe 'c-1 c-2'

@@ -12,6 +12,7 @@ module.exports = {
     morphospecies: path.resolve(__dirname, '../bugbox3/static/js/morphospecies'),
     morphospecies_combine: path.resolve(__dirname, '../bugbox3/static/js/morphospecies_combine'),
     morphospecies_select: path.resolve(__dirname, '../bugbox3/static/js/morphospecies_select'),
+    multi_specimens: path.resolve(__dirname, '../bugbox3/static/js/multi_specimens'),
     experiments: path.resolve(__dirname, '../bugbox3/static/js/experiments'),
     samples: path.resolve(__dirname, '../bugbox3/static/js/samples'),
     sample_detail: path.resolve(__dirname, '../bugbox3/static/js/sample_detail'),

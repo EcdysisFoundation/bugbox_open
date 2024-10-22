@@ -45,6 +45,13 @@ FIELD_SAMPLE_NOTES = 'notes'
 FIELD_SAMPLE_COMPLETED = 'completed'
 FIELD_SAMPLE_IMAGE = 'image'
 
+FIELD_MULTIIMAGE_UUID = 'uuid'
+FIELD_MULTIIMAGE_IMAGE = 'image'
+FIELD_MULTIIMAGE_IMAGE_THUMBNAIL = 'image_thumbnail'
+FIELD_MULTIIMAGE_IMAGE_GRID = 'image_grid'
+FIELD_MULTIIMAGE_CROPPED_TO_SPECIMEN = 'cropped_to_specimen'
+FIELD_MULTIIMAGE_DATE_ADDED = 'date_added'
+
 FIELD_SPECIMEN_CLASSIFICATION = 'classification'
 FIELD_SPECIMEN_CLASSIFICATION_ID = 'classification_id'
 FIELD_SPECIMEN_AI_CLASSIFICATION = 'ai_classification'
@@ -133,6 +140,7 @@ SAMPLE_TYPE_MALAISE_TRAP = 'malaise_trap'
 SAMPLE_TYPE_QUADRAT = 'quadrat'
 SAMPLE_TYPE_SOIL_CORE = 'soil_core'
 SAMPLE_TYPE_SOIL_PROBE = 'soil_probe'
+SAMPLE_TYPE_STICKY_TRAP = 'sticky_trap'
 SAMPLE_TYPE_VEGETATION_SWEEP = 'vegetation_sweep'
 
 SAMPLE_TYPE_CHOICES = (
@@ -150,6 +158,7 @@ SAMPLE_TYPE_CHOICES = (
     (SAMPLE_TYPE_QUADRAT, 'Quadrat'),
     (SAMPLE_TYPE_SOIL_CORE, 'Soil core'),
     (SAMPLE_TYPE_SOIL_PROBE, 'Soil probe'),
+    (SAMPLE_TYPE_STICKY_TRAP, 'Sticky trap'),
     (SAMPLE_TYPE_VEGETATION_SWEEP, 'Vegetation sweep'),
 )
 
@@ -158,6 +167,11 @@ SAMPLE_TYPE_CHOICES_ALL = [v[0] for v in SAMPLE_TYPE_CHOICES]
 SAMPLE_TYPE_CHOICES_WO_BLANK = [v for v in SAMPLE_TYPE_CHOICES if v != BLANK_CHOICE_DASH[0]]
 
 SAMPLE_TYPE_CHOICES_DICT = {v[0]: v[1] for v in SAMPLE_TYPE_CHOICES}
+
+IMAGE_GRID_CHOICE_4_BY_3 = '4-by-3'
+MULTIIMAGE_IMAGE_GRID_CHOICES = (
+    (IMAGE_GRID_CHOICE_4_BY_3, IMAGE_GRID_CHOICE_4_BY_3),
+)
 
 INDICES_CHOICES = (
     ('abundance', "Abundance"),
@@ -184,6 +198,7 @@ SITE_HABITAT_TYPES = (
     'canola',
     'cattle',
     'cherries',
+    'citrus',
     'corn',
     'cover crop',
     'dairy',

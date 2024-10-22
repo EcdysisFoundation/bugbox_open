@@ -1,7 +1,7 @@
 import json
 
+from crispy_forms.bootstrap import UneditableField
 from crispy_forms.layout import HTML, Column, Field, Fieldset, Row
-from django.core.exceptions import ValidationError
 from django.forms import (
     CharField,
     CheckboxInput,
@@ -16,7 +16,6 @@ from django.forms import (
     SelectMultiple,
     Textarea,
 )
-from django.utils.safestring import mark_safe
 
 from ..core.forms import Html5DateInput, ModelFormMixin, MultipleFileField, get_submit_layout
 from ..libs.ui_helpers import DISABLED_DELETE_CHECK
@@ -216,9 +215,24 @@ class SampleForm(ModelFormMixin):
     )
 
 
-class NewSpecimenImageForm(Form):
+class SampleDetailForm(Form):
 
-    image = MultipleFileField()
+    image = MultipleFileField(required=False)
+    json_data = JSONField(decoder=json.JSONDecoder, required=False)
+    move_json_data = JSONField(decoder=json.JSONDecoder, required=False)
+
+    json_data.widget = HiddenInput()
+    move_json_data.widget = HiddenInput()
+
+
+class MultiSpecimenForm(Form):
+
+    image_4_by_3 = MultipleFileField(required=False)
+    json_data = JSONField(decoder=json.JSONDecoder, required=False)
+    json_crop_ids = JSONField(decoder=json.JSONDecoder, required=False)
+
+    json_data.widget = HiddenInput()
+    json_crop_ids.widget = HiddenInput()
 
 
 class SpecimenViewForm(Form):
@@ -232,6 +246,7 @@ class SpecimenViewForm(Form):
 class SpecimenForm(ModelFormMixin):
 
     def __init__(self, *args, **kwargs):
+        self.review_permission = kwargs.pop('review_permission', None)
         super().__init__(*args, **kwargs)
         self.helper.layout = get_submit_layout(self.helper.layout, kwargs)
         if kwargs['instance'] is None:
@@ -246,21 +261,47 @@ class SpecimenForm(ModelFormMixin):
     help_text = constants.FORM_FIELDS_SPECIMEN_HELP
 
     def get_primary_layout(self):
-        return [
-            Field(constants.FIELD_SPECIMEN_CLASSIFICATION),
-            Field(constants.FIELD_SPECIMCEN_SAMPLE),
-            Row(
-                Column(constants.FIELD_SPECIMEN_PARTIAL_COUNT, css_class='form-control-width-medium'),
+        row_1 = [Column(constants.FIELD_SPECIMEN_PARTIAL_COUNT, css_class='form-control-width-medium')]
+        if not self.review_permission:
+            row_1 += [
+                Column(
+                    UneditableField(
+                        constants.FIELD_SPECIMEN_ARCHIVAL_IDENTIFIER,
+                        css_class='form-control-width-medium form-control'
+                    )
+                ),
+                Column(
+                    UneditableField(
+                        constants.FIELD_SPECIMEN_ARCHIVAL_PRESERVATION,
+                        css_class='form-control-width-medium form-control'
+                    )
+                ),
+                Column(
+                    UneditableField(
+                        constants.FIELD_SPECIMEN_ARCHIVAL_STORED,
+                        css_class='form-control-width-medium form-control'
+                    )
+                ),
+            ]
+        else:
+            row_1 += [
                 Column(constants.FIELD_SPECIMEN_ARCHIVAL_IDENTIFIER, css_class='form-control-width-medium'),
                 Column(constants.FIELD_SPECIMEN_ARCHIVAL_PRESERVATION, css_class='form-control-width-medium'),
-                Column(constants.FIELD_SPECIMEN_ARCHIVAL_STORED, css_class='form-control-width-medium'),
-            ),
-            Row(
-                Column(constants.FIELD_SPECIMEN_TAGS),
-                Column(constants.FIELD_SPECIMEN_ACCEPTANCE),
-                Column(constants.FIELD_SPECIMEN_OBJECT_DET_TRAIN, css_class='mt-5')
-            )
+                Column(constants.FIELD_SPECIMEN_ARCHIVAL_STORED, css_class='form-control-width-medium')
+            ]
+        row_2 = [Column(constants.FIELD_SPECIMEN_TAGS)]
+        if not self.review_permission:
+            row_2 += [Column(UneditableField(constants.FIELD_SPECIMEN_ACCEPTANCE, css_class='form-select'))]
+        else:
+            row_2 += [Column(constants.FIELD_SPECIMEN_ACCEPTANCE)]
+        v = [
+            Field(constants.FIELD_SPECIMEN_CLASSIFICATION),
+            Field(constants.FIELD_SPECIMCEN_SAMPLE),
+            Row(*row_1),
+            Row(*row_2)
+            # Column(constants.FIELD_SPECIMEN_OBJECT_DET_TRAIN, css_class='mt-5')
         ]
+        return v
 
     tags = MultipleChoiceField(
         widget=SelectMultiple,
@@ -298,16 +339,7 @@ class SpecimensWithoutImagesForm(Form):
         required=False)
 
 
-class JSONFieldForm(Form):
+class JSONFieldSpecimensForm(Form):
 
     json_data = JSONField(decoder=json.JSONDecoder)
-
     json_data.widget = HiddenInput()
-
-    def clean(self):
-        cleaned_data = super().clean()
-        json_data = cleaned_data.get('json_data')
-        if not all([v.isnumeric() for v in json_data['reject_ids']]):
-            raise ValidationError(mark_safe('non-integers provided in form as ids'))
-        if not all([v.isnumeric() for v in json_data['confirm_ids']]):
-            raise ValidationError(mark_safe('non-integers provided in form as ids'))

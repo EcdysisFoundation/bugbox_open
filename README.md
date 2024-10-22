@@ -5,6 +5,10 @@ Ecdysis bugbox
 [![Built with Cookiecutter Django](https://img.shields.io/badge/built%20with-Cookiecutter%20Django-ff69b4.svg?logo=cookiecutter)](https://github.com/cookiecutter/cookiecutter-django/)
 [![Black code style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 
+Development url, .js served in dev mode is http://localhost:3000/
+
+Production url with .js served from /static/ is http://localhost:8002/
+
 ## Settings
 
 Moved to [settings](http://cookiecutter-django.readthedocs.io/en/latest/settings.html).
@@ -35,17 +39,65 @@ Check other Flake8 issues
 
 Database backups are configured with Cookie cutter methods. In our case it is expanded to the local version to aid in development. Seperate AWS IAM users are configured for different envirionments
 
-use bugbox-local user access keys for local.yml use cases, whle bugbox-localserver is for localserver.yml cases. These .yml files should reference a .secrets file in the repo .env directory that defines the
-    environment variables and is gitignored to keep it secret.
+use bugbox-local user access keys for local.yml use cases, whle bugbox-localserver is for localserver.yml cases. These .yml files should reference a .secrets file in the repo .env directory that defines the environment variables and is gitignored to keep it secret.
 
 Initiate a backup in docker
+
     docker compose -f local.yml exec postgres backup
 
+List backups
+
+    docker compose -f local.yml exec postgres backups
+
 Upload backups to S3
+
     docker compose -f local.yml run --rm awscli upload
 
 Download a specific backup
-    docker compose -f local.yml run --rm awscli download backup_2018_03_13T09_05_07.sql.gz
+
+    docker compose -f local.yml run --rm awscli download BACKUP_FILE
+
+Restore to your database. First bring the containers down...
+
+    docker compose -f local.yml down
+
+bring up the db only
+
+    docker compose -f local.yml up postgres -d
+
+restore it to the backup file
+
+    docker compose -f local.yml exec postgres restore BACKUP_FILE
+
+After it succesfully restores, bring it down and bring everything back up.
+
+    docker compose -f local.yml down
+
+bring all services up
+
+    docker compose -f local.yml up
+
+Alternatvely to using the AWS CLI, a backup can be downloaded directly from the Ecdysis01 server. This process includes moving the file out and in the docker conatiner.
+
+With a backup already created in the Ecdysis01 docker container as described above, get the container ID ...
+
+    docker compose -f local.yml ps -q postgres
+
+using the returned CONTAINER_ID, move the backup file from the container to a directory named backups in the bugbox3 directory.
+
+    docker cp CONTAINER_ID:/backups/BACKUP_FILE ./backups/BACKUP_FILE
+
+Then use scp to copy this file to local computer.
+
+    scp ecdysis@ecdysis01.local:/srv/bugbox3/backups/BACKUP_FILE backups/BACKUP_FILE
+
+Get the local docker container id.
+
+    docker compose -f local.yml ps -q postgres
+
+Copy the backup to it
+
+    docker cp ./backups/BACKUP_FILE CONTAINER_ID:/backups
 
 ### Live reloading and Sass CSS compilation
 
@@ -63,21 +115,11 @@ Customized for Bugbox.
 
 local.yml is curently the only valid .yml
 
-Custom images built are pushed to docker hub repo. Standard images used from their source. Always on the Ecdysis01 server, do not build custom docker images there. Django build may fail there at this time. Filesystem space recovery and performance of other running continers are other reasons to not build them there. Various ports are changed from default due to conflicting ports on Ecdysis01.
+Custom images built are pushed to docker hub repo. Standard images used from their source. Always on the Ecdysis01 server, do not build custom docker images there. Django build may fail there at this time. Filesystem space recovery and performance of other running continers are other reasons to not build them there.
 
-Bring up containers with images prebuilt
+Various ports are changed from default due to conflicting ports on Ecdysis01.
 
-    docker compose -f local.yml up --no-build -d
-
-Open the logs, ctrl-c to escape
-
-    docker compose -f local.yml logs --tail=1000 --follow
-
-If specific image needs built, specificy it individually (referring to non-custom images when on Ecdysis01)
-
-    docker compose -f local.yml build ymlfileservicename
-
-Locally built custom images. Push these to docker hub.
+Locally built custom images. Push these to Docker Hub if changes are made to libraries.
 
     docker push mikaylaelectra/ecdysis_django:latest
 
@@ -89,7 +131,7 @@ Locally built custom images. Push these to docker hub.
 
     docker push mikaylaelectra/ecdysis_node:latest
 
-On remote pull these down
+On remote pull these down, if new versions were pushed to Docker Hub
 
     docker pull mikaylaelectra/ecdysis_django:latest
 
@@ -100,6 +142,26 @@ On remote pull these down
     docker pull mikaylaelectra/ecdysis_flower:latest
 
     docker pull mikaylaelectra/ecdysis_node:latest
+
+If specific non-custom image needs built, specificy it individually (referring to non-custom images when on Ecdysis01)
+
+    docker compose -f local.yml build SERVICE_NAME
+
+Bring up containers with images prebuilt
+
+    docker compose -f local.yml up --no-build -d
+
+Open the logs, ctrl-c to escape
+
+    docker compose -f local.yml logs --tail=1000 --follow
+
+NODE: If changes are made to webpack built .js, then once deployed and fully started, need to rebuild those files to /static/.
+
+    docker compose -f local.yml exec -it node sh -c "npm run build"
+
+NODE: Bring the node container down. This is not needed to run the dev port 3000 on production, after "npm run build" is ran.
+
+    docker compose -f local.yml down node
 
 
 ### Custom Bootstrap Compilation

@@ -4,10 +4,19 @@ import DataTable from 'datatables.net-bs5';
 
 $(function () {
     const json_context = JSON.parse(document.getElementById('json_context').textContent);
+    let json_data = {
+        confirm_ids: [],  // specimen ids
+        reject_ids: [],  // specimen ids
+        new_classifications: {},  // key:value pairs of specimen_id: morphospecies_id
+    };
+    function resetJsonData() {
+        json_data = {
+            confirm_ids: [],  // specimen ids
+            reject_ids: [],  // specimen ids
+            new_classifications: {},  // key:value pairs of specimen_id: morphospecies_id
+        };
+    }
 
-let idS = []
-
-let newClassifications = {}
 
 let usStateChoices = json_context.state_choices_dict.US_STATE_CHOICES
 let caStateChoices = json_context.state_choices_dict.CANADA_STATE_CHOICES
@@ -52,6 +61,7 @@ function reloadUrl() {
             $acceptancePicker.val(), $archivalCheck, $userPicker.val(),
             $countryPicker.val(), $statePicker.val(), $tagPicker.val()
         )).load();
+    resetJsonData()
 }
 
 
@@ -63,7 +73,7 @@ function doMyThing(recipient) {
             data = data[0];
             thisRecipient.value = data.name;
             let id = recipient.replace('new-class-', '');
-            newClassifications[id] = data.id;
+            json_data.new_classifications[id] = data.id;
             let rejectCheck = 'reject-' + id;
             document.getElementById(rejectCheck).checked = true;
 
@@ -76,7 +86,7 @@ function clearSelection(recipient) {
         let thisRecipient = document.getElementById(recipient);
         thisRecipient.value = '';
         let id = recipient.replace('new-class-', '')
-        delete newClassifications[id]
+        delete json_data.new_classifications[id]
     }
 }
 
@@ -85,7 +95,7 @@ function formatRowDiv (cols) {
 }
 
 function formatColDiv (col) {
-    return `<div class='col'>${col}</div>`;
+    return `<div class=\"col\">${col}</div>`;
 }
 
 function get_archival (row) {
@@ -96,38 +106,6 @@ function get_archival (row) {
     }
 }
 
-function getAiReview (row) {
-    let disabled = '';
-    let confirm_check = '';
-    let reject_check = '';
-    let clear_check = 'checked';
-    let confirmed = '';
-    let rejected = '';
-    if (!row.has_image || row.acceptance != 0 || !row.ai_classification_name) {
-        disabled = 'disabled';
-    } else {
-        // only can change if acceptance == 0 and has an image
-        idS.push(row.id)
-    }
-    if (row.acceptance == 1) {
-        clear_check = '';
-        confirm_check = 'checked';
-        confirmed = 'ed'
-    }
-    if (row.acceptance == 2) {
-         clear_check = '';
-         reject_check = 'checked';
-         rejected = 'ed'
-    }
-    return `<div class="btn-group" role="group" aria-label="Review button group">
-<input type="radio" class="btn-check" name="review-${row.id}" id="confirm-${row.id}" value="${row.id}" autocomplete="off" ${confirm_check} ${disabled}>
-<label class="btn btn-outline-success" for="confirm-${row.id}">Confirm${confirmed}</label>
-<input type="radio" class="btn-check" name="review-${row.id}" id="reject-${row.id}" value="${row.id}" autocomplete="off" ${reject_check} ${disabled}>
-<label class="btn btn-outline-danger" for="reject-${row.id}">Reject${rejected}</label>
-<input type="radio" class="btn-check" name="review-${row.id}" id="clear-${row.id}" value="" autocomplete="off" ${clear_check} ${disabled}>
-<label class="btn btn-link-secondary" for="clear-${row.id}">Clear</label>
-</div><input class="form-control mt-1" type="text" id="new-class-${row.id}" value="" data-bs-toggle="modal" data-bs-target="#morphoModal" data-bs-whatever="new-class-${row.id}" ${disabled}>`
-}
 
 function getRow ( data, type, row ) {
     let cols = ''
@@ -158,9 +136,6 @@ function getRow ( data, type, row ) {
     // ai_classification
     cols += formatColDiv(row.ai_classification)
 
-    // ai review pane
-    cols += formatColDiv(getAiReview(row))
-
     return formatRowDiv(cols)
 };
 
@@ -176,7 +151,7 @@ clearMorphoButton.addEventListener('click', function() {
 })
 
     let imageModal = document.getElementById('imageModal');
-    let json_data = json_context.json_data;
+
     let jsonDataInput = document.getElementById('id_json_data');
     let submitBtn = document.getElementById('submit-btn');
     let url = json_context.datatables_url
@@ -186,6 +161,22 @@ clearMorphoButton.addEventListener('click', function() {
         const modalBodyInput = imageModal.querySelector('.modal-body')
         modalBodyInput.innerHTML = thisimage
     })
+
+    function getReviewPanel ( data, type, row ) {
+        if (!row.has_image || row.acceptance != 0 || !row.ai_classification_name) {
+            /// not applicable to review in these cases
+            return ''
+        }
+        return `<div class="btn-group" role="group" aria-label="Review button group">
+<input type="radio" class="btn-check confirm-btn" name="review-${row.id}" id="confirm-${row.id}" value="Confirm" autocomplete="off"/>
+<label class="btn btn-outline-success" for="confirm-${row.id}">Confirm</label>
+<input type="radio" class="btn-check reject-btn" name="review-${row.id}" id="reject-${row.id}" value="Reject" autocomplete="off"/>
+<label class="btn btn-outline-danger" for="reject-${row.id}">Reject</label>
+<input type="radio" class="btn-check clear-btn" name="review-${row.id}" id="clear-${row.id}" value="Clear" checked autocomplete="off"/>
+<label class="btn btn-link-secondary" for="clear-${row.id}">Clear</label>
+</div>
+<input class="form-control mt-1" type="text" id="new-class-${row.id}" value="" data-bs-toggle="modal" data-bs-target="#morphoModal" data-bs-whatever="new-class-${row.id}"/>`
+    }
 
     var specimens_table = $('#specimens-table').DataTable({
         order: [[1, 'desc']],
@@ -203,9 +194,43 @@ clearMorphoButton.addEventListener('click', function() {
             {
                 data: 'img_thumbnail',
                 render: getRow
+            },
+            {
+                data: '',
+                render: getReviewPanel
             }
+
         ]
     });
+
+    // reset JsonData when page turn
+    specimens_table.on('page', function () {
+        resetJsonData()
+    });
+
+    // Review Panel buttons
+    $('#specimens-table tbody').on('click', '.confirm-btn', function () {
+        var row = $(this).closest('tr');
+
+        var id = specimens_table.row( row ).data()["id"];
+        json_data.confirm_ids.push(id)
+    });
+    $('#specimens-table tbody').on('click', '.reject-btn', function () {
+        var row = $(this).closest('tr');
+
+        var id = specimens_table.row( row ).data()["id"];
+        json_data.reject_ids.push(id)
+    });
+    $('#specimens-table tbody').on('click', '.clear-btn', function () {
+        var row = $(this).closest('tr');
+        var id = specimens_table.row( row ).data()["id"];
+        var input = document.getElementById(`new-class-${id}`)
+        json_data.reject_ids = json_data.reject_ids.filter(v => v !== id)
+        json_data.confirm_ids = json_data.confirm_ids.filter(v => v !== id)
+        input.value = ''
+        delete json_data.new_classifications[id]
+    });
+
 
     // api_url filters
 
@@ -282,20 +307,6 @@ clearMorphoButton.addEventListener('click', function() {
     // Review panel
 
        submitBtn.addEventListener('click', function() {
-            for (let i = 0; i < idS.length; i++) {
-
-                let btnConfirm = document.getElementById('confirm-' + idS[i].toString())
-                let btnReject = document.getElementById('reject-' + idS[i].toString())
-                if (btnConfirm.checked) {
-                    json_data.confirm_ids.push(btnConfirm.value)
-                } else if (btnReject.checked) {
-                    json_data.reject_ids.push(btnReject.value)
-                }
-                let new_input = document.getElementById('new-class-' + idS[i].toString())
-            }
-            // overwrite new_classifications
-            json_data.new_classifications = newClassifications
-
             jsonDataInput.value = JSON.stringify(json_data);
        })
 
