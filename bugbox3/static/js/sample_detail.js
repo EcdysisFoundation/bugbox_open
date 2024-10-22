@@ -6,8 +6,9 @@ $(function () {
     let jsonDataInput = document.getElementById('id_json_data');
     let moveJsonDataInput = document.getElementById('id_move_json_data');
     let submitBtn = document.getElementById('submit-btn');
-    let moveSubmitBtn = document.getElementById('move-submit-btn')
+    let moveSubmitBtn = document.getElementById('move-submit-btn');
     let selectAllBtn = document.getElementById('select-all-btn');
+    let submitInputFiles = document.getElementById('submit-input-files');
     let deleteSpecimensModal = document.getElementById('deleteSpecimensModal');
     let moveSpecimensModal = document.getElementById('moveSpecimensModal');
     let classifyAllBtn = document.getElementById('classify-all');
@@ -63,6 +64,10 @@ $(function () {
         }
         json_data.ids = ids
         jsonDataInput.value = JSON.stringify(json_data);
+   })
+
+   submitInputFiles.addEventListener('click', function() {
+    $(this).addClass("disabled")
    })
 
    moveSubmitBtn.addEventListener('click', function() {
