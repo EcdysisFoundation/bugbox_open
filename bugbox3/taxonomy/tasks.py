@@ -9,7 +9,7 @@ from config import celery_app
 
 
 def image_prediction(image_bytes):
-    url = 'http://ecdysis01.local:8084/predictions/metaformer'  # local dev port
+    url = 'http://ecdysis01.local:8084/predictions/metaformer'
     files = {'file': image_bytes}
     response = requests.post(url, files=files)
     response.raise_for_status()
