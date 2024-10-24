@@ -851,7 +851,8 @@ class SpecimensView(PermissionRequiredMixin, FormView):
                 'user_choices': get_user_choices(),
                 'state_choices_dict': constants_core.STATE_CHOICES,
                 'country_choices': constants_core.COUNTRY_CHOICES,
-                'tag_choices': constants.TAG_CHOICES
+                'tag_choices': constants.TAG_CHOICES,
+                'sample_type_choices': constants.SAMPLE_TYPE_CHOICES_WO_BLANK
             }),
             'experiment_name': experiment_name,
             'sample_name': sample_name,

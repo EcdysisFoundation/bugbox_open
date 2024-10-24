@@ -23,7 +23,7 @@ let caStateChoices = json_context.state_choices_dict.CANADA_STATE_CHOICES
 
 function getUrl(dt_url,
         acceptance_filter, archival_check, user_filter,
-        country_filter, state_filter, tag_filter
+        country_filter, state_filter, tag_filter, sample_type_filter
     ) {
     let url_str = ''
     let params = []
@@ -45,6 +45,9 @@ function getUrl(dt_url,
     if (tag_filter) {
         params.push('tag=' + tag_filter);
     }
+    if (sample_type_filter) {
+        params.push('sample_type=' +sample_type_filter);
+    }
     for ( let i = 0; i < params.length; i++) {
         let sep = '&'
         if (i == 0) {
@@ -59,7 +62,8 @@ function reloadUrl() {
     specimens_table.ajax.url( getUrl(
             json_context.datatables_url,
             $acceptancePicker.val(), $archivalCheck, $userPicker.val(),
-            $countryPicker.val(), $statePicker.val(), $tagPicker.val()
+            $countryPicker.val(), $statePicker.val(), $tagPicker.val(),
+            $sampleTypePicker.val()
         )).load();
     resetJsonData()
 }
@@ -275,6 +279,12 @@ clearMorphoButton.addEventListener('click', function() {
     $tagPicker.append(json_context.tag_choices.map(value => `<option value="${value[0]}">${value[1]}</option>`))
     $tagPicker.val('')
 
+    let $sampleTypePicker = $(`<select placeholder="Sample type (any)" id="sample-type-filter" class="form-select"></select>`)
+    $('.sample-type-picker').append($sampleTypePicker)
+    $sampleTypePicker.append(`<option value="">Sample type (any)</option>`)
+    $sampleTypePicker.append(json_context.sample_type_choices.map(value => `<option value="${value[0]}">${value[1]}</option>`))
+    $sampleTypePicker.val('')
+
     $acceptancePicker.on('change', () => {
         reloadUrl();
     })
@@ -302,6 +312,10 @@ clearMorphoButton.addEventListener('click', function() {
         reloadUrl();
     })
     $tagPicker.on('change', () => {
+        reloadUrl();
+    })
+
+    $sampleTypePicker.on('change', () => {
         reloadUrl();
     })
 

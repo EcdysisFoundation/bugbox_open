@@ -136,4 +136,7 @@ class SpecimensAllDatatablesViewSet(PermissionRequiredMixin, DatatablesModelView
         tag = self.request.query_params.get('tag')
         if tag:
             specimen = specimen.filter(tags__contains=[tag])
+        sample_type = self.request.query_params.get('sample_type')
+        if sample_type:
+            specimen = specimen.filter(sample__sample_type=sample_type)
         return specimen.order_by('-id')
