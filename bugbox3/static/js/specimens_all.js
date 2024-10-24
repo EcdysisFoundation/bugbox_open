@@ -237,6 +237,7 @@ clearMorphoButton.addEventListener('click', function() {
     let $acceptancePicker = $('<select placeholder="Acceptance (any)" id="acceptance-filter" class="form-select"></select>')
     $('.acceptance-picker').append($acceptancePicker)
     $acceptancePicker.append(`<option value="">Acceptance (any)</option>`)
+    $acceptancePicker.append(`<option value="Reviewed">Reviewed</option>`)
     $acceptancePicker.append(json_context.acceptance_choices.map(value => `<option value="${value[0]}">${value[1]}</option>`))
     $acceptancePicker.val('')
 

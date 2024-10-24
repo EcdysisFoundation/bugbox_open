@@ -108,9 +108,12 @@ class SpecimensAllDatatablesViewSet(PermissionRequiredMixin, DatatablesModelView
             )
         acceptance = self.request.query_params.get('acceptance')
         if acceptance:
-            acceptance = int(acceptance)
+            if isinstance(acceptance, int):
+                acceptance = int(acceptance)
             if acceptance in constants.ACCEPTNACE_VALID:
                 specimen = specimen.filter(acceptance=acceptance)
+            elif acceptance == 'Reviewed':
+                specimen = specimen.exclude(acceptance=constants.ACCEPTANCE_PENDING)
         archival = self.request.query_params.get('archival')
         if archival:
             specimen = specimen.exclude(
