@@ -23,7 +23,8 @@ let caStateChoices = json_context.state_choices_dict.CANADA_STATE_CHOICES
 
 function getUrl(dt_url,
         acceptance_filter, archival_check, user_filter,
-        country_filter, state_filter, tag_filter, sample_type_filter
+        country_filter, state_filter, tag_filter, sample_type_filter,
+        recent_year_filter
     ) {
     let url_str = ''
     let params = []
@@ -46,7 +47,10 @@ function getUrl(dt_url,
         params.push('tag=' + tag_filter);
     }
     if (sample_type_filter) {
-        params.push('sample_type=' +sample_type_filter);
+        params.push('sample_type=' + sample_type_filter);
+    }
+    if (recent_year_filter) {
+        params.push('recent_year=' + recent_year_filter);
     }
     for ( let i = 0; i < params.length; i++) {
         let sep = '&'
@@ -63,7 +67,7 @@ function reloadUrl() {
             json_context.datatables_url,
             $acceptancePicker.val(), $archivalCheck, $userPicker.val(),
             $countryPicker.val(), $statePicker.val(), $tagPicker.val(),
-            $sampleTypePicker.val()
+            $sampleTypePicker.val(), $recentYearPicker.val()
         )).load();
     resetJsonData()
 }
@@ -285,6 +289,12 @@ clearMorphoButton.addEventListener('click', function() {
     $sampleTypePicker.append(json_context.sample_type_choices.map(value => `<option value="${value[0]}">${value[1]}</option>`))
     $sampleTypePicker.val('')
 
+    let $recentYearPicker = $(`<select placeholder="Year (any)" id="recent-year-filter" class="form-select"></select>`)
+    $('.recent-year-picker').append($recentYearPicker)
+    $recentYearPicker.append(`<option value="">Year (any)</option>`)
+    $recentYearPicker.append(json_context.recent_year_choices.map(value => `<option value="${value[0]}">${value[1]}</option>`))
+    $recentYearPicker.val('')
+
     $acceptancePicker.on('change', () => {
         reloadUrl();
     })
@@ -314,8 +324,10 @@ clearMorphoButton.addEventListener('click', function() {
     $tagPicker.on('change', () => {
         reloadUrl();
     })
-
     $sampleTypePicker.on('change', () => {
+        reloadUrl();
+    })
+    $recentYearPicker.on('change', () => {
         reloadUrl();
     })
 

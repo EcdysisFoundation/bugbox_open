@@ -139,4 +139,7 @@ class SpecimensAllDatatablesViewSet(PermissionRequiredMixin, DatatablesModelView
         sample_type = self.request.query_params.get('sample_type')
         if sample_type:
             specimen = specimen.filter(sample__sample_type=sample_type)
+        recent_year = self.request.query_params.get('recent_year')
+        if recent_year:
+            specimen = specimen.filter(sample__site_visit__visit_date__year=recent_year)
         return specimen.order_by('-id')

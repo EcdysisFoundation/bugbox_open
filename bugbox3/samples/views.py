@@ -1,3 +1,4 @@
+import datetime
 import os.path
 
 from django.contrib import messages
@@ -827,6 +828,8 @@ class SpecimensView(PermissionRequiredMixin, FormView):
             sample_name = get_object_or_404(Sample, id=self.kwargs['sample_id']).name_no
         datatables_url = api_reverse('samples:specimen-all-data-list',
                                      request=self.request, kwargs=self.kwargs)
+        recent_years = sorted(
+            [i for i in range(datetime.date.today().year - 10, datetime.date.today().year + 1)], reverse=True)
         context.update({
             'container_row_header_2': get_datatables_container(
                 get_datatables_row([
@@ -852,7 +855,8 @@ class SpecimensView(PermissionRequiredMixin, FormView):
                 'state_choices_dict': constants_core.STATE_CHOICES,
                 'country_choices': constants_core.COUNTRY_CHOICES,
                 'tag_choices': constants.TAG_CHOICES,
-                'sample_type_choices': constants.SAMPLE_TYPE_CHOICES_WO_BLANK
+                'sample_type_choices': constants.SAMPLE_TYPE_CHOICES_WO_BLANK,
+                'recent_year_choices': [(i, i) for i in recent_years]
             }),
             'experiment_name': experiment_name,
             'sample_name': sample_name,
