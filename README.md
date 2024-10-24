@@ -165,35 +165,8 @@ NODE: Bring the node container down. This is not needed to run the dev port 3000
 
 ### Torchserve
 
-Note: Migrating to new docker container and process for Torchserve. The rest of the section reflects the finished state of this migration. Remove note when complete.
-
-The image classifications performed from `taxonomy.tasks.image_prediction` are done through a Torchserve model produced by metaformer_ecdysis https://github.com/EcdysisFoundation/metaformer_ecdysis
-
-The model is archived into a .mar file placed on Ecdysis01 at `/pool1/model-store-2` where also exists `config.properties`. To serve this model, start its docker container from Ecsysis01
-
-#### Torchserve Docker container
-
-Start the container on Ecdysis01 (requires file structure there to work, see .yml cmd and volumes)
-
-    docker compose -f servemetaformer.yml up -d
-
-Watch logs to see when container is fully started, takes some time.
-
-    docker compose -f servemetaformer.yml logs --tail=1000 --follow
-
-From local computer, check model, version, and test classification. These web requests return json responses
-
-Get the currently deployed model info
-
-    curl http://ecdysis01.local:8075/models
-
-Get more information about the model, including the modelVersion. Assumes model name is 'metaformer'.
-
-    curl http://ecdysis01.local:8075/models/metaformer
-
-Send a local image for classification
-
-    curl -X POST http://ecdysis01.local:8074/predictions/metaformer -T <path-to-image>
+The image classifications performed from `taxonomy.tasks.image_prediction` are done through a Torchserve model served through Torchserve (see https://github.com/EcdysisFoundation/servemetaformer )
+ produced by metaformer_ecdysis (see https://github.com/EcdysisFoundation/metaformer_ecdysis )
 
 
 ### Custom Bootstrap Compilation
