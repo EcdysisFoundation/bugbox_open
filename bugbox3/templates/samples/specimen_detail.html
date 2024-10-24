@@ -214,7 +214,7 @@
                         <div class="col-5">
                             <ul class="list-group list-group-flush">
                                 <li class="list-group-item">
-                                    <b>Name:</b> {{ selected_classification.name }}
+                                    <b>Name:</b> <a href="{% url 'taxonomy:morphospecies-detail' selected_classification.id %}">{{ selected_classification.name }}</a>
                                 </li>
                                 <li class="list-group-item">
                                   <b>Canonical Name:</b> {% if selected_classification.gbif_rank == 'SPECIES' %}<i>{% endif %}
