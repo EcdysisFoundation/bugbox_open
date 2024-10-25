@@ -288,3 +288,8 @@ local_files/
 *.csv
 *.json
 
+Notes/
+*.geany
+*.py.kate-swp
+
+training_data/
