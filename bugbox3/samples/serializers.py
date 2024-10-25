@@ -158,7 +158,10 @@ class SitesDatatablesSerializer(ModelSerializer):
 
     def get_sample_data(self, value):
         samples = Sample.objects.filter(
-            site_visit__site_id=value.id)
+            site_visit__site_id=value.id).order_by(
+                'site_visit__' + constants.FIELD_SITE_VISIT_DATE,
+                constants.FIELD_SAMPLE_TYPE,
+                constants.FIELD_SAMPLE_NAME_NO)
         sample_plans = self.get_sample_plans(value.experiment_id)
         rows = get_datatables_row([
             'Date*',

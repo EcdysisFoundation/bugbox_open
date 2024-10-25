@@ -81,7 +81,7 @@ $(function () {
         ]
     });
 
-    // Array to track the ids of the details displayed rows in beekeeper_table
+    // Array to track the ids of the details displayed rows
     var detailRows = [];
     $('#samples-table tbody').on( 'click', 'tr td.details-control', function () {
         var tr = $(this).closest('tr');
