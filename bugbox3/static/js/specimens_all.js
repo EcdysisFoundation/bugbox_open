@@ -4,6 +4,7 @@ import DataTable from 'datatables.net-bs5';
 
 $(function () {
     const json_context = JSON.parse(document.getElementById('json_context').textContent);
+    const isAlphaNumeric = str => /^[a-z0-9]*$/gi.test(str);
     let json_data = {
         confirm_ids: [],  // specimen ids
         reject_ids: [],  // specimen ids
@@ -16,6 +17,15 @@ $(function () {
             new_classifications: {},  // key:value pairs of specimen_id: morphospecies_id
         };
     }
+    function cleanInput(usertxt) {
+        let result = ''
+        for (let i = 0; i < usertxt.length; i++) {
+            if (isAlphaNumeric(usertxt[i]) || usertxt[i] == ' ') {
+                result += usertxt[i]
+            }
+        }
+        return result
+    }
 
 
 let usStateChoices = json_context.state_choices_dict.US_STATE_CHOICES
@@ -24,7 +34,10 @@ let caStateChoices = json_context.state_choices_dict.CANADA_STATE_CHOICES
 function getUrl(dt_url,
         acceptance_filter, archival_check, user_filter,
         country_filter, state_filter, tag_filter, sample_type_filter,
-        recent_year_filter
+        recent_year_filter,
+        classification_filter,
+        classification_radio,
+        ai_classification_radio
     ) {
     let url_str = ''
     let params = []
@@ -52,6 +65,18 @@ function getUrl(dt_url,
     if (recent_year_filter) {
         params.push('recent_year=' + recent_year_filter);
     }
+    if (classification_filter) {
+        let x = cleanInput(classification_filter)
+        if (x) {
+            params.push('classification_filter=' + x);
+        }
+    }
+    if (classification_radio) {
+        params.push('classification_radio=' + classification_radio);
+    }
+    if (ai_classification_radio) {
+        params.push('ai_classification_radio=' + ai_classification_radio);
+    }
     for ( let i = 0; i < params.length; i++) {
         let sep = '&'
         if (i == 0) {
@@ -67,7 +92,10 @@ function reloadUrl() {
             json_context.datatables_url,
             $acceptancePicker.val(), $archivalCheck, $userPicker.val(),
             $countryPicker.val(), $statePicker.val(), $tagPicker.val(),
-            $sampleTypePicker.val(), $recentYearPicker.val()
+            $sampleTypePicker.val(), $recentYearPicker.val(),
+            $classificationFilter.val(),
+            document.getElementById('classificationRadio').checked,
+            document.getElementById('aiClassificationRadio').checked
         )).load();
     resetJsonData()
 }
@@ -295,6 +323,22 @@ clearMorphoButton.addEventListener('click', function() {
     $recentYearPicker.append(json_context.recent_year_choices.map(value => `<option value="${value[0]}">${value[1]}</option>`))
     $recentYearPicker.val('')
 
+    let $classificationFilter = $(`<input type="text" class="form-control" id="morphospecies-filter" placeholder="Morphospecies (Reviewed / AI)" maxlength="30">`)
+    $('.morphospecies-filter').append($classificationFilter)
+
+    let $classificationToggle = $(`<div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="inlineRadioOptions" id="classificationRadio" value="Reviewed" checked>
+        <label class="form-check-label text-white" for="classificationRadio">Reviewed</label>
+        </div>
+        <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="inlineRadioOptions" id="aiClassificationRadio" value="AI">
+        <label class="form-check-label text-white" for="aiClassificationRadio">AI</label>
+        </div>`)
+    $('.classification-toggle').append($classificationToggle)
+
+    let $classificationFilterButton = $(`<button type="button" class="btn btn-info">Search</button>`)
+    $('.classification-search-btn').append($classificationFilterButton)
+
     $acceptancePicker.on('change', () => {
         reloadUrl();
     })
@@ -328,6 +372,9 @@ clearMorphoButton.addEventListener('click', function() {
         reloadUrl();
     })
     $recentYearPicker.on('change', () => {
+        reloadUrl();
+    })
+    $classificationFilterButton.on('click', () => {
         reloadUrl();
     })
 

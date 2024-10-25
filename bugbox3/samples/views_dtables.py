@@ -142,4 +142,14 @@ class SpecimensAllDatatablesViewSet(PermissionRequiredMixin, DatatablesModelView
         recent_year = self.request.query_params.get('recent_year')
         if recent_year:
             specimen = specimen.filter(sample__site_visit__visit_date__year=recent_year)
+        classification_filter = self.request.query_params.get('classification_filter')
+        classification_radio = self.request.query_params.get('classification_radio')
+        ai_classification_radio = self.request.query_params.get('ai_classification_radio')
+        if classification_filter:
+            if classification_radio:
+                if classification_filter.replace(' ', '').isalnum():
+                    specimen = specimen.filter(classification__name__icontains=classification_filter)
+            elif ai_classification_radio:
+                if classification_filter.replace(' ', '').isalnum():
+                    specimen = specimen.filter(ai_classification__name__icontains=classification_filter)
         return specimen.order_by('-id')
