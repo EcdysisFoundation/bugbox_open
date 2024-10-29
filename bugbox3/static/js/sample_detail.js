@@ -124,5 +124,19 @@ $(function () {
         }
     });
 
+    // api_url fiters
+    let new_datatables_url = ''
+    if (json_context.experiment_choices) {
+        let $experimentPicker = $('<select placeholder="Filter by" aria-label="Filter by" id="experiment-picker" class="form-select"></select>')
+        $('.experiment-picker').append($experimentPicker)
+        $experimentPicker.append(`<option value="${json_context.samples_datatables_url}">${json_context.experiment_name}</option>`)
+        $experimentPicker.append(json_context.experiment_choices.map(value => `<option value="${value[0]}">${value[1]}</option>`))
+        $experimentPicker.val(json_context.samples_datatables_url)
+        $experimentPicker.on('change', () => {
+            new_datatables_url = $experimentPicker.val()
+            sample_table.ajax.url( new_datatables_url ).load();
+        })
+    }
+
 
 })

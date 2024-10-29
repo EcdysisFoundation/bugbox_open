@@ -352,6 +352,9 @@ class SampleView(PermissionRequiredMixin, FormView):
             request=self.request,
             kwargs={'experiment_id': sample.site_visit.site.experiment_id}
         )
+        experiment_choices = [(
+            api_reverse('samples:sample-data-list', request=self.request, kwargs={'experiment_id': i['id']}),
+            i['name']) for i in Experiment.objects.order_by(constants.FIELD_NAME).values('id', constants.FIELD_NAME)]
         img_thumbnail = None
         if sample.image_thumbnail:
             if os.path.isfile(sample.image_thumbnail.path):
@@ -381,6 +384,7 @@ class SampleView(PermissionRequiredMixin, FormView):
         context.update({
             'sample_info': {
                 'sample_id': sample.id,
+                'experiment_name': sample.site_visit.site.experiment.name,
                 'experiment_id': sample.site_visit.site.experiment_id,
                 'uuid': sample.uuid,
                 'site': sample.site_visit.site.site_name,
@@ -412,9 +416,13 @@ class SampleView(PermissionRequiredMixin, FormView):
                     'Type',
                     'Name',
                 ])),
-            'json_context': get_json_context(
-                {'specimen_datatables_url': specimen_datatables_url,
-                 'samples_datatables_url': samples_datatables_url}),
+            'json_context': get_json_context({
+                'specimen_datatables_url': specimen_datatables_url,
+                'samples_datatables_url': samples_datatables_url,
+                'experiment_choices': experiment_choices,
+                'experiment_id': sample.site_visit.site.experiment_id,
+                'experiment_name': sample.site_visit.site.experiment.name
+                }),
             'form_action_url': reverse(
                 'samples:sample', kwargs={'sample_id': sample.id})
         })
