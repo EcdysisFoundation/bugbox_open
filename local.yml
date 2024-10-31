@@ -98,4 +98,4 @@ services:
       - ./.envs/.local/.django
       - ./.envs/.local/.secrets
     volumes:
-      - bugbox3_local_postgres_data_backups:/backups:z
+      - bugbox3_local_postgres_data_backups:/backups

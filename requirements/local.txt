@@ -4,6 +4,7 @@ watchdog==4.0.2 # https://github.com/gorakhargosh/watchdog
 Werkzeug[watchdog]==3.0.4 # https://github.com/pallets/werkzeug
 ipdb==0.13.13  # https://github.com/gotcha/ipdb
 watchfiles==0.24.0  # https://github.com/samuelcolvin/watchfiles
+awscli==1.35.18
 
 # Testing
 # ------------------------------------------------------------------------------

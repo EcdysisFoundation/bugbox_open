@@ -25,5 +25,5 @@ django-bootstrap5==24.2
 
 # File storage S3
 boto3==1.35.50
-Collectfasta==3.2.0  # https://github.com/jasongi/collectfasta
+# Collectfasta==3.2.0  # https://github.com/jasongi/collectfasta
 django-storages==1.14.4
