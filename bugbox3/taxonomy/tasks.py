@@ -23,7 +23,11 @@ def image_prediction(image_bytes):
 def id_image(id):
     """Task to run ml model to id the image"""
     Specimen = apps.get_model(app_label='samples', model_name='Specimen')
-    specimen = Specimen.objects.get(id=id)
+    try:
+        specimen = Specimen.objects.get(id=id)
+    except Specimen.DoesNotExist:
+        print('DoesNotExist: specimen id {0}'.format(id))
+        return
     # dont re classify reviewed specimens
     if specimen.acceptance != 0:
         print(str(id) + ' is not acceptance = 0, returning...')
