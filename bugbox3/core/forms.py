@@ -1,7 +1,8 @@
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Submit
 from django.conf import settings
-from django.forms import ClearableFileInput, DateInput, FileField, HiddenInput, ValidationError
+from django.forms import (ClearableFileInput, DateInput, FileField,
+                          HiddenInput, ValidationError)
 from django.forms.models import ModelForm
 from django.utils.safestring import mark_safe
 

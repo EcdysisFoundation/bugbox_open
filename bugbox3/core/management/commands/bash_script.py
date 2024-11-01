@@ -1,8 +1,6 @@
- # myapp/management/commands/run_my_script.py
 import subprocess
 
 from django.core.management.base import BaseCommand
-
 
 # run like
 # python manage.py bash_script /path/to/my_script.sh

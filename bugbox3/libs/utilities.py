@@ -1,13 +1,22 @@
 import json
-import os.path
 from io import BytesIO
 from pathlib import Path
 
+import boto3
+from django.conf import settings
 from django.core.files import File
+from django.core.files.storage import default_storage
 from django.core.serializers.json import DjangoJSONEncoder
 from PIL import Image
 
 from ..samples.constants import IMAGE_GRID_CHOICE_4_BY_3
+
+S3_CLIENT = boto3.client(
+        's3',
+        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+        region_name=settings.AWS_REGION,
+    )
 
 
 def encode_json(data):
@@ -26,6 +35,21 @@ def grid_id_format(v):
     return '-grid-i-[{0}]'.format(v)
 
 
+def get_media_url(file):
+    """
+    Get media file urls
+    """
+    if settings.MEDIA_URL == '/media/':
+        # assume local storage
+        return file.url
+    return S3_CLIENT.generate_presigned_url(
+        'get_object',
+        Params={'Bucket': settings.AWS_STORAGE_BUCKET_NAME_MEDIA,
+                'Key': file.name},
+        HttpMethod="GET",
+        ExpiresIn=3600)
+
+
 IMAGE_TYPES = {
     "jpg": "JPEG",
     "jpeg": "JPEG",
@@ -35,7 +59,7 @@ IMAGE_TYPES = {
 
 def resized_thumbnail(image, width, height, thumbname='thumbnail'):
     # Open the image using Pillow
-    if os.path.isfile(image.path):
+    if default_storage.exists(image.name):
         try:
             with Image.open(image) as img:
                 output_size = (width, height)
@@ -68,7 +92,7 @@ def crop_img_to_grid(image, grid):
     Where index is the position in the grid.
     """
 
-    if os.path.isfile(image.path):
+    if default_storage.exists(image.name):
         # Find the file name of the image
         img_filename = Path(image.file.name).name
         # Spilt the filename on “.” to get the file extension only

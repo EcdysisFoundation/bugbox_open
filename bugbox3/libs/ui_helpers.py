@@ -1,8 +1,9 @@
-import os.path
-
+from django.core.files.storage import default_storage
 from django.urls import reverse
 
 from bugbox3.samples import constants
+
+from .utilities import get_media_url
 
 """
 UI Helpers. Many of these may be better moved to .js webpack modules.
@@ -94,7 +95,7 @@ def get_img_src(img_field, resize_width=None, styles=''):
     Get an html img tag formated from an ImageField.
     Styes should be a string of styes, exampe 'c-1 c-2'
     """
-    if img_field and not os.path.isfile(img_field.path):
+    if img_field and not default_storage.exists(img_field.name):
         return '<i class="bi bi-question-diamond"></i>'
 
     def img_src(path, width, height, styles):
@@ -107,14 +108,14 @@ def get_img_src(img_field, resize_width=None, styles=''):
 
     if img_field and not resize_width:
         return img_src(
-            img_field.url,
+            get_media_url(img_field),
             img_field.width,
             img_field.height,
             str(styles)
         )
     elif img_field and resize_width:
         return img_src(
-            img_field.url,
+            get_media_url(img_field),
             int(resize_width),
             int(resize_width) * (img_field.height / img_field.width),
             str(styles)

@@ -1,17 +1,7 @@
 from django.conf import settings
-from django.db.models import (
-    CASCADE,
-    SET_NULL,
-    BooleanField,
-    CharField,
-    DateField,
-    DateTimeField,
-    FloatField,
-    ForeignKey,
-    ImageField,
-    IntegerField,
-    Model,
-)
+from django.db.models import (CASCADE, SET_NULL, BooleanField, CharField,
+                              DateField, DateTimeField, FloatField, ForeignKey,
+                              ImageField, IntegerField, Model)
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 

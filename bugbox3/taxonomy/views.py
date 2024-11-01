@@ -1,11 +1,11 @@
 import csv
-import os.path
 import time
 from datetime import datetime
 
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.core.files.storage import default_storage
 from django.db.models import Count, Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
@@ -14,16 +14,20 @@ from django.views.generic import CreateView, FormView, TemplateView, UpdateView
 from rest_framework.reverse import reverse as api_reverse
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
-from ..core.permissions import ADD_MORPHOSPECIES, CHANGE_MORPHOSPECIES, IS_RESEARCH
+from ..core.permissions import (ADD_MORPHOSPECIES, CHANGE_MORPHOSPECIES,
+                                IS_RESEARCH)
 from ..core.views import DatatablesModelViewSetMixin
-from ..libs.ui_helpers import calc_image_height, get_datatables_container, get_datatables_row
-from ..libs.utilities import get_json_context
+from ..libs.ui_helpers import (calc_image_height, get_datatables_container,
+                               get_datatables_row)
+from ..libs.utilities import get_json_context, get_media_url
 from ..samples import constants as samples_constants
 from ..samples.models import Sample, Specimen, SpecimenImage
 from . import constants
-from .forms import MorphospeciesCombineForm, MorphospeciesForm, MorphospeciesUpdateForm
+from .forms import (MorphospeciesCombineForm, MorphospeciesForm,
+                    MorphospeciesUpdateForm)
 from .models import AiTraining, Morphospecies
-from .serializers import MorphospeciesDatatablesSerializer, MorphospeciesPickerSerializer
+from .serializers import (MorphospeciesDatatablesSerializer,
+                          MorphospeciesPickerSerializer)
 from .tasks import id_image
 
 
@@ -140,25 +144,25 @@ class MorphospeciesDetailView(PermissionRequiredMixin, FormView):
                     i = s.image_thumbnail
                 else:
                     i = s.image
-                if os.path.isfile(i.path):
+                if default_storage.exists(i.name):
                     image_set.append({
-                        'path': i.url,
+                        'path': get_media_url(i),
                         'width': i.width if i.width <= max_width else max_width,
                         'height': i.height if i.width <= max_width else calc_image_height(max_width, i.height, i.width)
                     })
         img_thumbnail = None
         img = None
         if morphospecies.image_thumbnail:
-            if os.path.isfile(morphospecies.image_thumbnail.path):
+            if default_storage.exists(morphospecies.image_thumbnail.name):
                 img_thumbnail = {
-                    'path': morphospecies.image_thumbnail.url,
+                    'path': get_media_url(morphospecies.image_thumbnail),
                     'height': morphospecies.image_thumbnail.height,
                     'width': morphospecies.image_thumbnail.width
                 }
         elif morphospecies.image:
-            if os.path.isfile(morphospecies.image.path):
+            if default_storage.exists(morphospecies.image.name):
                 img_thumbnail = {
-                    'path': morphospecies.image.url,
+                    'path': get_media_url(morphospecies.image),
                     'height': calc_image_height(
                         constants.MORPHPOSPECIES_THUMBSIZE,
                         morphospecies.image.height,
@@ -167,9 +171,9 @@ class MorphospeciesDetailView(PermissionRequiredMixin, FormView):
                     'width': constants.MORPHPOSPECIES_THUMBSIZE
                 }
         if morphospecies.image:
-            if os.path.isfile(morphospecies.image.path):
+            if default_storage.exists(morphospecies.image.name):
                 img = {
-                    'path': morphospecies.image.url,
+                    'path': get_media_url(morphospecies.image),
                     'height': morphospecies.image.height,
                     'width': morphospecies.image.width
                 }

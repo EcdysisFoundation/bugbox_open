@@ -12,7 +12,8 @@ from django.utils.translation import gettext_lazy as _
 from bugbox3.users.forms import UserAdminChangeForm
 from bugbox3.users.models import User
 from bugbox3.users.tests.factories import UserFactory
-from bugbox3.users.views import UserRedirectView, UserUpdateView, user_detail_view
+from bugbox3.users.views import (UserRedirectView, UserUpdateView,
+                                 user_detail_view)
 
 pytestmark = pytest.mark.django_db
 

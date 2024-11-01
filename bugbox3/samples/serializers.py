@@ -1,19 +1,15 @@
-import os.path
-
+from django.core.files.storage import default_storage
 from django.urls import reverse
 from rest_framework.serializers import ModelSerializer
 
-from bugbox3.libs.ui_helpers import get_datatables_container, get_datatables_row, get_img_src
-
-from ..libs.ui_helpers import (
-    classify_specimen_button,
-    get_ai_classification,
-    get_classifcation,
-    get_probability_or_user,
-    get_specimen_context,
-)
+from ..libs.ui_helpers import (classify_specimen_button, get_ai_classification,
+                               get_classifcation, get_datatables_container,
+                               get_datatables_row, get_img_src,
+                               get_probability_or_user, get_specimen_context)
+from ..libs.utilities import get_media_url
 from . import constants
-from .models import Experiment, MultiSpecimenImage, Sample, SamplePlan, Site, Specimen
+from .models import (Experiment, MultiSpecimenImage, Sample, SamplePlan, Site,
+                     Specimen)
 
 
 class ExperimentsDatatablesSerializer(ModelSerializer):
@@ -268,9 +264,9 @@ class SpecimensAllDatatablesSerializer(ModelSerializer):
             img_thumbnail = get_img_src(specimen_image.image_thumbnail)
             if specimen_image.image_thumbnail_large:
                 # dont use get_img_src() here due to modal .js reasons
-                if os.path.isfile(specimen_image.image_thumbnail_large.path):
+                if default_storage.exists(specimen_image.image_thumbnail_large.name):
                     img_thumbnail_large = {
-                        'url': specimen_image.image_thumbnail_large.url,
+                        'url': get_media_url(specimen_image.image_thumbnail_large),
                         'width': specimen_image.image_thumbnail_large.width,
                         'height': specimen_image.image_thumbnail_large.height
                     }

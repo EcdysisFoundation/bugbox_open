@@ -2,22 +2,13 @@ import json
 
 from crispy_forms.bootstrap import UneditableField
 from crispy_forms.layout import HTML, Column, Field, Fieldset, Row
-from django.forms import (
-    CharField,
-    CheckboxInput,
-    ChoiceField,
-    DateField,
-    Form,
-    HiddenInput,
-    IntegerField,
-    JSONField,
-    MultipleChoiceField,
-    Select,
-    SelectMultiple,
-    Textarea,
-)
+from django.forms import (CharField, CheckboxInput, ChoiceField, DateField,
+                          Form, HiddenInput, IntegerField, JSONField,
+                          MultipleChoiceField, Select, SelectMultiple,
+                          Textarea)
 
-from ..core.forms import Html5DateInput, ModelFormMixin, MultipleFileField, get_submit_layout
+from ..core.forms import (Html5DateInput, ModelFormMixin, MultipleFileField,
+                          get_submit_layout)
 from ..libs.ui_helpers import DISABLED_DELETE_CHECK
 from . import constants
 from .models import Experiment, Sample, SamplePlan, Site, SiteVisit, Specimen

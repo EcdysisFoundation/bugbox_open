@@ -7,14 +7,12 @@ from ..core.views import DatatablesModelViewSetMixin
 from . import constants
 from .models import Experiment, MultiSpecimenImage, Sample, Site, Specimen
 from .models_query import get_user_choices
-from .serializers import (
-    ExperimentsDatatablesSerializer,
-    MultiSpecimenImageDatatablesSerializer,
-    SamplesDatatablesSerializer,
-    SitesDatatablesSerializer,
-    SpecimenDatatablesSerializer,
-    SpecimensAllDatatablesSerializer,
-)
+from .serializers import (ExperimentsDatatablesSerializer,
+                          MultiSpecimenImageDatatablesSerializer,
+                          SamplesDatatablesSerializer,
+                          SitesDatatablesSerializer,
+                          SpecimenDatatablesSerializer,
+                          SpecimensAllDatatablesSerializer)
 
 
 class ExperimentsDatatablesViewSet(PermissionRequiredMixin, DatatablesModelViewSetMixin, ReadOnlyModelViewSet):

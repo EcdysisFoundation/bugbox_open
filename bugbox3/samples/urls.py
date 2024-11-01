@@ -2,33 +2,19 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from .exports import experiment_ai_csv, experiment_csv
-from .views import (
-    ExperimentSamplePlanCreateView,
-    ExperimentSamplePlanUpdateView,
-    ExperimentsView,
-    ExperimentView,
-    MultiSpecimeImageView,
-    SampleDeleteView,
-    SampleUpdateView,
-    SampleView,
-    SiteCreateView,
-    SiteDeleteView,
-    SiteUpdateView,
-    SpecimenCreateView,
-    SpecimenDeleteView,
-    SpecimensView,
-    SpecimensWithoutImagesFormView,
-    SpecimenUpdateView,
-    SpecimenView,
-)
-from .views_dtables import (
-    ExperimentsDatatablesViewSet,
-    MultiSpecimenDatatablesViewSet,
-    SamplesDatatablesViewSet,
-    SitesDatatablesViewSet,
-    SpecimenDatatablesViewSet,
-    SpecimensAllDatatablesViewSet,
-)
+from .views import (ExperimentSamplePlanCreateView,
+                    ExperimentSamplePlanUpdateView, ExperimentsView,
+                    ExperimentView, MultiSpecimeImageView, SampleDeleteView,
+                    SampleUpdateView, SampleView, SiteCreateView,
+                    SiteDeleteView, SiteUpdateView, SpecimenCreateView,
+                    SpecimenDeleteView, SpecimensView,
+                    SpecimensWithoutImagesFormView, SpecimenUpdateView,
+                    SpecimenView)
+from .views_dtables import (ExperimentsDatatablesViewSet,
+                            MultiSpecimenDatatablesViewSet,
+                            SamplesDatatablesViewSet, SitesDatatablesViewSet,
+                            SpecimenDatatablesViewSet,
+                            SpecimensAllDatatablesViewSet)
 
 router = DefaultRouter()
 router.register(r'experiments-data', ExperimentsDatatablesViewSet,

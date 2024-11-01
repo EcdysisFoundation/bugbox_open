@@ -1,47 +1,38 @@
 import datetime
-import os.path
 
 from django.contrib import messages
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.exceptions import ValidationError
+from django.core.files.storage import default_storage
 from django.db import transaction
 from django.forms import inlineformset_factory
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.views.generic import TemplateView
-from django.views.generic.edit import CreateView, DeleteView, FormView, UpdateView
+from django.views.generic.edit import (CreateView, DeleteView, FormView,
+                                       UpdateView)
 from rest_framework.reverse import reverse as api_reverse
 
 from ..core import constants as constants_core
 from ..core.permissions import IS_RESEARCH, REVIEW_SPECIMEN_PAGE
-from ..libs.ui_helpers import (
-    calc_image_height,
-    get_datatables_container,
-    get_datatables_row,
-    get_formsets_display_control_config,
-    get_probability,
-)
-from ..libs.utilities import crop_img_to_grid, get_json_context
+from ..libs.ui_helpers import (calc_image_height, get_datatables_container,
+                               get_datatables_row,
+                               get_formsets_display_control_config,
+                               get_probability)
+from ..libs.utilities import crop_img_to_grid, get_json_context, get_media_url
 from ..taxonomy import constants as taxa_const
 from ..taxonomy.models import Morphospecies
 from . import constants
-from .forms import (
-    ExperimentForm,
-    JSONFieldSpecimensForm,
-    MultiSpecimenForm,
-    SampleDetailForm,
-    SampleForm,
-    SamplePlanForm,
-    SiteForm,
-    SiteVisitForm,
-    SpecimenForm,
-    SpecimensWithoutImagesForm,
-    SpecimenViewForm,
-)
-from .models import Experiment, MultiSpecimenImage, Sample, SamplePlan, Site, SiteVisit, Specimen, SpecimenImage
+from .forms import (ExperimentForm, JSONFieldSpecimensForm, MultiSpecimenForm,
+                    SampleDetailForm, SampleForm, SamplePlanForm, SiteForm,
+                    SiteVisitForm, SpecimenForm, SpecimensWithoutImagesForm,
+                    SpecimenViewForm)
+from .models import (Experiment, MultiSpecimenImage, Sample, SamplePlan, Site,
+                     SiteVisit, Specimen, SpecimenImage)
 from .models_query import get_sample_plan_descriptions, get_user_choices
-from .timeline_events import audit_specimen_update, audit_specimen_view, audit_upload_images, timeline_events
+from .timeline_events import (audit_specimen_update, audit_specimen_view,
+                              audit_upload_images, timeline_events)
 
 
 class ExperimentsView(PermissionRequiredMixin, TemplateView):
@@ -357,16 +348,16 @@ class SampleView(PermissionRequiredMixin, FormView):
             i['name']) for i in Experiment.objects.order_by(constants.FIELD_NAME).values('id', constants.FIELD_NAME)]
         img_thumbnail = None
         if sample.image_thumbnail:
-            if os.path.isfile(sample.image_thumbnail.path):
+            if default_storage.exists(sample.image_thumbnail.name):
                 img_thumbnail = {
-                    'path': sample.image_thumbnail.url,
+                    'path': get_media_url(sample.image_thumbnail),
                     'height': sample.image_thumbnail.height,
                     'width': sample.image_thumbnail.width
                 }
         elif sample.image:
-            if os.path.isfile(sample.image.path):
+            if default_storage.exists(sample.image.name):
                 img_thumbnail = {
-                    'path': sample.image.url,
+                    'path': get_media_url(sample.image),
                     'height': calc_image_height(
                         constants.SAMPLE_IMAGE_THUMBSIZE, sample.image.height, sample.image.width),
                     'width': constants.SAMPLE_IMAGE_THUMBSIZE
@@ -508,15 +499,15 @@ def specimen_view_context(specimen):
     s_images = SpecimenImage.objects.filter(specimen=specimen)
     if s_images:
         image_set_large = [
-            {'path': i.image_thumbnail_large.url, 'id': i.id} for i in s_images if i.image_thumbnail_large
+            {'path': get_media_url(i.image_thumbnail_large), 'id': i.id} for i in s_images if i.image_thumbnail_large
         ]
         if not image_set_large:
             image_set_large = [{
-                'path': s_images[0].image.url,
+                'path': get_media_url(s_images[0].image),
             }]
         image_set_small = [
             {
-                'path': i.image_thumbnail_medium.url,
+                'path': get_media_url(i.image_thumbnail_medium),
                 'width': i.image_thumbnail_medium.width * 0.5,
                 'height': i.image_thumbnail_medium.height * 0.5,
                 'id': i.id
