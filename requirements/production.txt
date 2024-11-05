@@ -1,7 +1,5 @@
-# Not currently in use.
 # Replaces use of django-extensions runserver_plus for web server
-# for a local hardware production server..
 
 -r base.txt
 
-gunicorn==21.2.0  # https://github.com/benoitc/gunicorn
+gunicorn==23.0.0  # https://github.com/benoitc/gunicorn
