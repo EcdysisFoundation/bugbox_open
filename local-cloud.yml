@@ -1,0 +1,68 @@
+
+services:
+  django: &django
+    build:
+      context: .
+      dockerfile: ./compose/local/django/Dockerfile
+    image: mikaylaelectra/ecdysis_django
+    container_name: bugbox3_local_django
+    depends_on:
+      - redis
+    volumes:
+      - .:/app:z
+    env_file:
+      - ./.envs/.local/.django
+      - ./.envs/.local/.postgrescloud
+      - ./.envs/.local/.secrets
+    ports:
+      - '8002:8002'
+    command: /start
+
+  redis:
+    image: docker.io/redis:6
+    container_name: bugbox3_local_redis
+    command: --port 6380
+    ports:
+      - "6380:6380"
+
+  celeryworker:
+    <<: *django
+    image: mikaylaelectra/ecdysis_celeryworker
+    container_name: bugbox3_local_celeryworker
+    depends_on:
+      - redis
+    ports: []
+    command: /start-celeryworker
+
+  celerybeat:
+    <<: *django
+    image: mikaylaelectra/ecdysis_celerybeat
+    container_name: bugbox3_local_celerybeat
+    depends_on:
+      - redis
+    ports: []
+    command: /start-celerybeat
+
+  flower:
+    <<: *django
+    image: mikaylaelectra/ecdysis_flower
+    container_name: bugbox3_local_flower
+    ports:
+      - '5556:5556'
+    command: /start-flower
+
+  node:
+    build:
+      context: .
+      dockerfile: ./compose/local/node/Dockerfile
+    image: mikaylaelectra/ecdysis_node
+    container_name: bugbox3_local_node
+    depends_on:
+      - django
+    volumes:
+      - .:/app:z
+      # https://jdlm.info/articles/2019/09/06/lessons-building-node-app-docker.html
+      - /app/node_modules
+    command: npm run dev
+    ports:
+      - '3000:3000'

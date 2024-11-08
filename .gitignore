@@ -293,3 +293,6 @@ Notes/
 *.py.kate-swp
 
 training_data/
+
+# security keys
+*.pem
