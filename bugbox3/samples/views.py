@@ -1,5 +1,6 @@
 import datetime
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.exceptions import ValidationError
@@ -369,9 +370,11 @@ class SampleView(PermissionRequiredMixin, FormView):
         if not has_data:
             if Specimen.objects.filter(sample_id=sample.id).first():
                 has_data = True
+        d_none = 'd-none' if not settings.AI_INFERENCE_URL else ''
         classify_btn = '<a href="{0}"'.format(
             reverse('taxonomy:classify-sample', kwargs={'id': sample.id})) + \
-            ' class="btn btn-sm btn-outline-danger" role="button" id="classify-all">Classify All</a>'
+            ' class="btn btn-sm btn-outline-danger{0}"'.format(d_none) + \
+            ' role="button" id="classify-all">Classify All</a>'
         context.update({
             'sample_info': {
                 'sample_id': sample.id,

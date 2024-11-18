@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.core.files.storage import default_storage
 from django.urls import reverse
 
@@ -129,7 +130,7 @@ def calc_image_height(size, height, width):
 
 
 def classify_specimen_button(specimen, img_exists):
-    if not img_exists:
+    if not img_exists or not settings.AI_INFERENCE_URL:
         return ''
     disabled = ' disabled' if specimen.acceptance > 0 else ''
     href = 'href="{0}" '.format(

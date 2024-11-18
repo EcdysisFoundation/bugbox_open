@@ -273,9 +273,10 @@ def classify_new_images(sender, instance, created, **kwargs):
     # classify if it is a new image and meets criteria acceptence == Pending
     # and no previous classifications to the specimen.
     def signal_handler():
-        if created and instance.specimen.acceptance == \
-                constants.ACCEPTANCE_PENDING and not instance.specimen.ai_classification:
-            id_image.delay(instance.specimen.id)
+        if settings.AI_INFERENCE_URL:
+            if created and instance.specimen.acceptance == \
+                    constants.ACCEPTANCE_PENDING and not instance.specimen.ai_classification:
+                id_image.delay(instance.specimen.id)
     transaction.on_commit(signal_handler)
 
 

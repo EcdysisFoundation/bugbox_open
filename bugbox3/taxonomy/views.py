@@ -2,12 +2,13 @@ import csv
 import time
 from datetime import datetime
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.files.storage import default_storage
 from django.db.models import Count, Q
-from django.http import HttpResponse
+from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.views.generic import CreateView, FormView, TemplateView, UpdateView
@@ -295,6 +296,8 @@ class MorphospeciesUpdateView(PermissionRequiredMixin, UpdateView):
 
 @permission_required(IS_RESEARCH)
 def classify_specimen(request, id):
+    if not settings.AI_INFERENCE_URL:
+        return Http404('The AI_INFERENCE_URL is not avaialble')
     id_image.delay(id)
     time.sleep(2)
     return redirect(request.META['HTTP_REFERER'])
@@ -302,6 +305,8 @@ def classify_specimen(request, id):
 
 @permission_required(IS_RESEARCH)
 def classify_sample(request, id):
+    if not settings.AI_INFERENCE_URL:
+        return Http404('The AI_INFERENCE_URL is not avaialble')
     sample = get_object_or_404(Sample, id=id)
     specimen = Specimen.objects.filter(sample=sample, acceptance=0)
     for s in specimen:
