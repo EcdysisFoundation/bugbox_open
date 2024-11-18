@@ -17,10 +17,10 @@ CELERY_BROKER_URL = env("REDISCLOUD_URL")
 # https://docs.celeryq.dev/en/stable/userguide/configuration.html#std:setting-result_backend
 CELERY_RESULT_BACKEND = CELERY_BROKER_URL
 
-# ECDYSIS_LOCAL
-# Set to false on Heroku config,
-#  so that its aware Ecdysis network and Ecdsysis02 is not accessible.
-ECDYSIS_LOCAL = env("ECDYSIS_LOCAL")
+# AI_INFERENCE_URL
+# Set to blank on Heroku config,
+#  so that its aware the URL is not accessible, due to private network.
+AI_INFERENCE_URL = env("AI_INFERENCE_URL")
 
 # CACHES
 # ------------------------------------------------------------------------------

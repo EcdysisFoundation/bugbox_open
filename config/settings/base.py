@@ -41,10 +41,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/dev/ref/settings/#locale-paths
 LOCALE_PATHS = [str(BASE_DIR / "locale")]
 
-# ECDYSIS_LOCAL
-# Set to False on Heroku config,
-#  so that its aware Ecdysis network and Ecdsysis02 is not accessible.
-ECDYSIS_LOCAL = True
+# AI_INFERENCE_URL
+AI_INFERENCE_URL = 'http://ecdysis01.local:8084/predictions/metaformer'
 
 # DATABASES
 # ------------------------------------------------------------------------------

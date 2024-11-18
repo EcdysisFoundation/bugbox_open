@@ -3,15 +3,17 @@ import logging
 import requests
 from celery.exceptions import SoftTimeLimitExceeded
 from django.apps import apps
+from django.conf import settings
 from requests import RequestException
 
 from config import celery_app
 
 
 def image_prediction(image_bytes):
-    url = 'http://ecdysis01.local:8084/predictions/metaformer'
+    if not settings.AI_INFERENCE_URL:
+        return
     files = {'file': image_bytes}
-    response = requests.post(url, files=files)
+    response = requests.post(settings.AI_INFERENCE_URL, files=files)
     response.raise_for_status()
     response = response.json()
     return response
