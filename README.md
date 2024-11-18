@@ -25,6 +25,10 @@ To run commands to manage.py, use this syntax, to the appropriate .yml file
 
     docker compose -f local.yml run --rm django python manage.py mycommand
 
+or to run on Heroku, using the Heroku cli
+
+    heroku run python manage.py shell -a bugbox
+
 ### Flake 8
 
 Sort and format imports
