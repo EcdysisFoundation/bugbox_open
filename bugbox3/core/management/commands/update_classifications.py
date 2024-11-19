@@ -12,7 +12,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         # set max_ai_version_db_id manually as the database ID
         # of the most recent deployed model we want to update to
-        max_ai_version_db_id = 18
+        max_ai_version_db_id = 21
         # get the min_ai_version_db_id as the id of lowest ai_version
         min_ai_version_db_id = self.Specimen.objects.aggregate(Min('ai_version_id', default=0))
         min_ai_version_db_id = min_ai_version_db_id['ai_version_id__min']
@@ -31,23 +31,10 @@ class Command(BaseCommand):
             id_image.delay(s.id)
         specimen_count = len(specimens)
 
-        # also run some non-classified images
-        non_classified_limit = 3000
-        non_classified_specimens = self.Specimen.objects.filter(
-                ai_version_id__isnull=True,
-                acceptance=0)[:non_classified_limit]
-        for s in non_classified_specimens:
-            id_image.delay(s.id)
-
         message = 'sent {0} image classifications through Celery up to model db id {1}. '.format(
             specimen_count, min_ai_version_db_id)
         message += 'Process limited by db id {0} and {1} records'.format(
                 max_ai_version_db_id, record_limit)
-
-        if non_classified_specimens:
-            len_non = str(len(non_classified_specimens))
-            message += ' Sent additional {0} specimens without an AI version id, limited by {1}'.format(
-                len_non, non_classified_limit)
 
         print(message)
         return
