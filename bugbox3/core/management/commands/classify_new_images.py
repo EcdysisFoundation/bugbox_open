@@ -11,11 +11,15 @@ class Command(BaseCommand):
     SpecimenImage = apps.get_model(app_label='samples', model_name='SpecimenImage')
 
     def handle(self, *args, **options):
+        images_notfound = self.SpecimenImage.objects.filter(
+            image_notfound=True
+        )
+        print(len(images_notfound))
+        """
         specimens = self.Specimen.objects.annotate(
             has_images=Exists(self.SpecimenImage.objects.filter(
-                specimen=OuterRef('pk')).exclude(
-                    image_notfound=True
-                ))).filter(
+                specimen=OuterRef('pk'),
+                image_notfound=False))).filter(
             ai_classification__isnull=True,
             acceptance=0,
             has_images=True
@@ -26,3 +30,4 @@ class Command(BaseCommand):
             print('')
         for s in specimens:
             id_image.delay(s.id)
+        """
