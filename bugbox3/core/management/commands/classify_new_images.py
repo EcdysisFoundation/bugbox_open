@@ -11,11 +11,6 @@ class Command(BaseCommand):
     SpecimenImage = apps.get_model(app_label='samples', model_name='SpecimenImage')
 
     def handle(self, *args, **options):
-        images_notfound = self.SpecimenImage.objects.filter(
-            image_notfound=True
-        )
-        print(len(images_notfound))
-        """
         specimens = self.Specimen.objects.annotate(
             has_images=Exists(self.SpecimenImage.objects.filter(
                 specimen=OuterRef('pk'),
@@ -30,4 +25,3 @@ class Command(BaseCommand):
             print('')
         for s in specimens:
             id_image.delay(s.id)
-        """
