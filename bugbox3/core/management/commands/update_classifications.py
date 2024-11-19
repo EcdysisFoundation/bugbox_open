@@ -28,7 +28,7 @@ class Command(BaseCommand):
             else:
                 break
         for s in specimens:
-            id_image.delay(s.uuid)
+            id_image.delay(s.id)
         specimen_count = len(specimens)
 
         # also run some non-classified images
@@ -37,7 +37,7 @@ class Command(BaseCommand):
                 ai_version_id__isnull=True,
                 acceptance=0)[:non_classified_limit]
         for s in non_classified_specimens:
-            id_image.delay(s.uuid)
+            id_image.delay(s.id)
 
         message = 'sent {0} image classifications through Celery up to model db id {1}. '.format(
             specimen_count, min_ai_version_db_id)

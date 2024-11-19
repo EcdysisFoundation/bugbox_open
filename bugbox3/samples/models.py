@@ -231,6 +231,7 @@ class SpecimenImage(Model):
     image_thumbnail = ImageField(null=True, blank=True, upload_to='specimen_images')
     image_thumbnail_medium = ImageField(null=True, blank=True, upload_to='specimen_images')
     image_thumbnail_large = ImageField(null=True, blank=True, upload_to='specimen_images')
+    image_notfound = BooleanField(default=False)
     date_added = DateTimeField(auto_now_add=True)
     uploaded_by_user = ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=SET_NULL)
     object_det_sent = DateTimeField(null=True)

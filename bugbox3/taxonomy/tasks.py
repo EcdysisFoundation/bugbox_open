@@ -20,7 +20,7 @@ def image_prediction(image_bytes):
 
 
 @celery_app.task(autoretry_for=(RequestException,), soft_time_limit=240,
-                 retry_kwargs={'max_retries': 10, 'countdown': 30},
+                 retry_kwargs={'max_retries': 3, 'countdown': 30},
                  retry_backoff=True)
 def id_image(id):
     """Task to run ml model to id the image"""
@@ -34,7 +34,10 @@ def id_image(id):
     if specimen.acceptance != 0:
         print(str(id) + ' is not acceptance = 0, returning...')
         return
-    specimenimage = specimen.specimenimage_set.first()
+    image_set_filtered = specimen.specimenimage_set.exclude(
+        image_notfound=True
+    )
+    specimenimage = image_set_filtered.first()
     if not specimenimage:
         print(str(id) + ' has no SpecimenImage, returning...')
         return
@@ -46,6 +49,10 @@ def id_image(id):
     except FileNotFoundError as e:
         print(e)
         data = None
+        print('setting image_notfound to True')
+        specimenimage.image_notfound = True
+        specimenimage.save()
+
     # dont make changes if we didnt get data
     if not data:
         return
