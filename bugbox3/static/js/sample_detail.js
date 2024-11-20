@@ -140,7 +140,10 @@ $(function () {
 
     // UPPY
     const uppy = new Uppy().use(Dashboard, {
-        trigger: '#uppyImagesUpload'
+        trigger: '#uppyImagesUpload',
+        doneButtonHandler: () => {
+            location.reload()
+        }
     })
     uppy.use(XHRUpload, {
         endpoint: json_context.image_upload_url,
