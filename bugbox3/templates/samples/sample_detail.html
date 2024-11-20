@@ -169,18 +169,8 @@
                     </div>
 
                     <div class="col">
-                        <form enctype="multipart/form-data" action="{{ form_action_url }}" method="POST">
-                            {% csrf_token %}
-                            <label for="id_image" class="form-label">
-                                {% if sample_info.completed %}Sample completed, edit sample to enable{% else %}Add specimens as images{% endif %}
-                            </label>
-                                <input type="file" name="image" accept=".jpg, .png, .jpeg"
-                                    class="form-control"
-                                    multiple required id="id_image" {% if sample_info.completed %} disabled{% endif %}>
-                    </div>
-                    <div class="col">
-                                <input id="submit-input-files" type="submit" value="Submit" class="btn btn-light mt-4 ms-3" {% if sample_info.completed %} disabled{% endif %}>
-                            </form>
+                            <button id="uppyImagesUpload" class="btn btn-light btn-sm mt-4" {% if sample_info.completed %} disabled {% endif %}>
+                                Upload images <br/>as specimens</button>
                     </div>
                     <div class="col">
                         <button type="button" class="btn btn-info btn-sm" id="select-all-btn" {% if sample_info.completed %}disabled{% endif %}>Toggle Select</button>

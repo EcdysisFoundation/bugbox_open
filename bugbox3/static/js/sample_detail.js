@@ -1,6 +1,11 @@
 import $ from 'jquery';
 import DataTable from 'datatables.net-bs5';
 
+import Uppy from '@uppy/core';
+import Dashboard from '@uppy/dashboard';
+import XHRUpload from '@uppy/xhr-upload';
+
+
 $(function () {
     const json_context = JSON.parse(document.getElementById('json_context').textContent);
     let jsonDataInput = document.getElementById('id_json_data');
@@ -8,7 +13,6 @@ $(function () {
     let submitBtn = document.getElementById('submit-btn');
     let moveSubmitBtn = document.getElementById('move-submit-btn');
     let selectAllBtn = document.getElementById('select-all-btn');
-    let submitInputFiles = document.getElementById('submit-input-files');
     let deleteSpecimensModal = document.getElementById('deleteSpecimensModal');
     let moveSpecimensModal = document.getElementById('moveSpecimensModal');
     let classifyAllBtn = document.getElementById('classify-all');
@@ -64,10 +68,6 @@ $(function () {
         }
         json_data.ids = ids
         jsonDataInput.value = JSON.stringify(json_data);
-   })
-
-   submitInputFiles.addEventListener('click', function() {
-    $(this).addClass("disabled")
    })
 
    moveSubmitBtn.addEventListener('click', function() {
@@ -138,5 +138,14 @@ $(function () {
         })
     }
 
-
+    // UPPY
+    const uppy = new Uppy().use(Dashboard, {
+        trigger: '#uppyImagesUpload'
+    })
+    uppy.use(XHRUpload, {
+        endpoint: json_context.image_upload_url,
+        formData: true,
+        fieldName: 'image',
+      })
+    uppy.setMeta({ csrfmiddlewaretoken: json_context.csrf_token });
 })

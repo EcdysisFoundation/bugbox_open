@@ -9,7 +9,7 @@ from .views import (ExperimentSamplePlanCreateView,
                     SiteDeleteView, SiteUpdateView, SpecimenCreateView,
                     SpecimenDeleteView, SpecimensView,
                     SpecimensWithoutImagesFormView, SpecimenUpdateView,
-                    SpecimenView)
+                    SpecimenView, specimen_image_upload)
 from .views_dtables import (ExperimentsDatatablesViewSet,
                             MultiSpecimenDatatablesViewSet,
                             SamplesDatatablesViewSet, SitesDatatablesViewSet,
@@ -49,6 +49,7 @@ urlpatterns = [
      path('specimen-create/<int:sample_id>', SpecimenCreateView.as_view(), name='specimen-create'),
      path('specimen-update/<int:id>', SpecimenUpdateView.as_view(), name='specimen-update'),
      path('specimen-delete/<int:id>/<int:sample_id>', SpecimenDeleteView.as_view(), name='specimen-delete'),
+     path('specimen-image-upload/<int:sample_id>', specimen_image_upload, name='specimen-image-upload'),
      path('multispecimen-images/<int:sample_id>', MultiSpecimeImageView.as_view(), name='multispecimen-images'),
      path('specimens-experiment-sample/<int:id>/<int:sample_id>',
           SpecimensView.as_view(),

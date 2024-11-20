@@ -7,8 +7,8 @@ from django.forms import (CharField, CheckboxInput, ChoiceField, DateField,
                           MultipleChoiceField, Select, SelectMultiple,
                           Textarea)
 
-from ..core.forms import (Html5DateInput, ModelFormMixin, MultipleFileField,
-                          get_submit_layout)
+from ..core.forms import (FileField, Html5DateInput, ModelFormMixin,
+                          MultipleFileField, get_submit_layout)
 from ..libs.ui_helpers import DISABLED_DELETE_CHECK
 from . import constants
 from .models import Experiment, Sample, SamplePlan, Site, SiteVisit, Specimen
@@ -208,7 +208,6 @@ class SampleForm(ModelFormMixin):
 
 class SampleDetailForm(Form):
 
-    image = MultipleFileField(required=False)
     json_data = JSONField(decoder=json.JSONDecoder, required=False)
     move_json_data = JSONField(decoder=json.JSONDecoder, required=False)
 
@@ -308,6 +307,10 @@ class SpecimenForm(ModelFormMixin):
         widget=CheckboxInput,
         choices=constants.TRUE_FALSE_CHOICES
     )
+
+
+class SpecimenImageForm(Form):
+    image = FileField()
 
 
 class SpecimensWithoutImagesForm(Form):

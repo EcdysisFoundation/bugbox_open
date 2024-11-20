@@ -2,11 +2,14 @@ import datetime
 
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
 from django.db import transaction
 from django.forms import inlineformset_factory
+from django.http import JsonResponse
+from django.middleware.csrf import get_token
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils.safestring import mark_safe
@@ -27,8 +30,8 @@ from ..taxonomy.models import Morphospecies
 from . import constants
 from .forms import (ExperimentForm, JSONFieldSpecimensForm, MultiSpecimenForm,
                     SampleDetailForm, SampleForm, SamplePlanForm, SiteForm,
-                    SiteVisitForm, SpecimenForm, SpecimensWithoutImagesForm,
-                    SpecimenViewForm)
+                    SiteVisitForm, SpecimenForm, SpecimenImageForm,
+                    SpecimensWithoutImagesForm, SpecimenViewForm)
 from .models import (Experiment, MultiSpecimenImage, Sample, SamplePlan, Site,
                      SiteVisit, Specimen, SpecimenImage)
 from .models_query import get_sample_plan_descriptions, get_user_choices
@@ -415,7 +418,9 @@ class SampleView(PermissionRequiredMixin, FormView):
                 'samples_datatables_url': samples_datatables_url,
                 'experiment_choices': experiment_choices,
                 'experiment_id': sample.site_visit.site.experiment_id,
-                'experiment_name': sample.site_visit.site.experiment.name
+                'experiment_name': sample.site_visit.site.experiment.name,
+                'image_upload_url': reverse('samples:specimen-image-upload', kwargs={'sample_id': sample.id}),
+                'csrf_token': get_token(self.request)
                 }),
             'form_action_url': reverse(
                 'samples:sample', kwargs={'sample_id': sample.id})
@@ -423,30 +428,8 @@ class SampleView(PermissionRequiredMixin, FormView):
         return context
 
     def form_valid(self, form):
-        files = form.cleaned_data['image']
         json_data = form.cleaned_data['json_data']
         move_json_data = form.cleaned_data['move_json_data']
-        if files:
-            sample = get_object_or_404(Sample, id=self.kwargs['sample_id'])
-            created_images = 0
-            try:
-                for f in files:
-                    specimen = Specimen.objects.create(
-                        sample=sample,
-                        created_by_user=self.request.user)
-                    SpecimenImage.objects.create(
-                        specimen=specimen,
-                        image=f,
-                        uploaded_by_user=self.request.user
-                    )
-                    created_images += 1
-            except Exception:
-                messages.add_message(
-                    self.request,
-                    messages.ERROR,
-                    'Error: An unsupported file may have been selected, please use .jpg or .png')
-                created_images = 0
-            messages.success(self.request, 'Succesfully added {0} new specimens'.format(created_images))
         if json_data:
             if not all([isinstance(v, int) for v in json_data['ids']]):
                 raise ValidationError(mark_safe('non-integers provided in form as ids'))
@@ -467,6 +450,27 @@ class SampleView(PermissionRequiredMixin, FormView):
 
     def get_success_url(self):
         return reverse('samples:sample', kwargs={'sample_id': self.kwargs['sample_id']})
+
+
+@permission_required(IS_RESEARCH)
+def specimen_image_upload(request, sample_id):
+    if request.method == 'POST':
+        sample = get_object_or_404(Sample, id=sample_id)
+        form = SpecimenImageForm(request.POST, request.FILES)
+
+        if form.is_valid():
+            data = form.cleaned_data
+            specimen = Specimen.objects.create(
+                        sample=sample,
+                        created_by_user=request.user)
+            SpecimenImage.objects.create(
+                specimen=specimen,
+                image=data['image'],
+                uploaded_by_user=request.user
+            )
+            return JsonResponse({'success': 'image uploaded successfully'}, status=200)
+        return JsonResponse({'error': form.errors}, status=400)
+    return JsonResponse({'error': "Method Not Allowed"}, status=405)
 
 
 class SampleUpdateView(PermissionRequiredMixin, UpdateView):
