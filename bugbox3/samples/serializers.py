@@ -2,6 +2,7 @@ from django.core.files.storage import default_storage
 from django.urls import reverse
 from rest_framework.serializers import ModelSerializer
 
+from ..core.models import LookupChoices
 from ..libs.ui_helpers import (classify_specimen_button, get_ai_classification,
                                get_classifcation, get_datatables_container,
                                get_datatables_row, get_img_src,
@@ -170,8 +171,10 @@ class SitesDatatablesSerializer(ModelSerializer):
             'Entered by'
         ])
         for s in samples:
-            if s.sample_type in constants.SAMPLE_TYPE_CHOICES_DICT.keys():
-                sample_type = constants.SAMPLE_TYPE_CHOICES_DICT[s.sample_type]
+            if s.sample_type in LookupChoices.objects.get_field_dict_w_blank(
+                    constants.FIELD_SAMPLE_TYPE).keys():
+                sample_type = LookupChoices.objects.get_field_dict_w_blank(
+                    constants.FIELD_SAMPLE_TYPE)[s.sample_type]
             else:
                 sample_type = s.sample_type
             sample_url = reverse('samples:sample', kwargs={'sample_id': s.id})

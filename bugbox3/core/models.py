@@ -1,5 +1,37 @@
-from django.contrib.gis.db.models import (BigIntegerField, CharField, Model,
-                                          MultiPolygonField)
+from django.contrib.gis.db.models import (BigIntegerField, CharField, Manager,
+                                          Model, MultiPolygonField)
+from django.db.models.fields import BLANK_CHOICE_DASH
+
+
+class LookupChoicesManager(Manager):
+
+    def get_field_choices(self, field):
+        choices = [(v.entry, v.display_txt) for v in self.filter(
+            field=field
+        ).order_by('display_txt')]
+        if not choices:
+            choices = [BLANK_CHOICE_DASH[0],]
+        return choices
+
+    def get_field_choices_w_blank(self, field):
+        choices = [(v.entry, v.display_txt) for v in self.filter(
+            field=field
+        ).order_by('display_txt')]
+        return [BLANK_CHOICE_DASH[0]] + choices
+
+    def get_field_dict_w_blank(self, field):
+        return {v[0]: v[1] for v in self.get_field_choices_w_blank(field)}
+
+    def get_field_entries(self, field):
+        return sorted([v for v in self.filter(field=field)])
+
+
+class LookupChoices(Model):
+    field = CharField(max_length=20)
+    entry = CharField(max_length=100)
+    display_txt = CharField(max_length=100)
+
+    objects = LookupChoicesManager()
 
 
 class UsCounties(Model):

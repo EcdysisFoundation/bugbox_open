@@ -19,6 +19,7 @@ from django.views.generic.edit import (CreateView, DeleteView, FormView,
 from rest_framework.reverse import reverse as api_reverse
 
 from ..core import constants as constants_core
+from ..core.models import LookupChoices
 from ..core.permissions import IS_RESEARCH, REVIEW_SPECIMEN_PAGE
 from ..libs.ui_helpers import (calc_image_height, get_datatables_container,
                                get_datatables_row,
@@ -89,7 +90,8 @@ class ExperimentView(PermissionRequiredMixin, TemplateView):
             'experiment': experiment,
             'experiment_sites': experiment_sites,
             'other_experiments': other_experiments,
-            'sample_types': constants.SAMPLE_TYPE_CHOICES,
+            'sample_types': LookupChoices.objects.get_field_choices_w_blank(
+                constants.FIELD_SAMPLE_TYPE),
             'indices': constants.INDICES_CHOICES,
             'export_types': constants.EXPERIMENT_CSV_EXPORT_CHOICES,
             'years': years,
@@ -366,8 +368,10 @@ class SampleView(PermissionRequiredMixin, FormView):
                         constants.SAMPLE_IMAGE_THUMBSIZE, sample.image.height, sample.image.width),
                     'width': constants.SAMPLE_IMAGE_THUMBSIZE
                 }
-        sample_type = constants.SAMPLE_TYPE_CHOICES_DICT[sample.sample_type] \
-            if sample.sample_type in constants.SAMPLE_TYPE_CHOICES_DICT.keys() \
+        sample_type = LookupChoices.objects.get_field_dict_w_blank(
+            constants.FIELD_SAMPLE_TYPE)[sample.sample_type] \
+            if sample.sample_type in LookupChoices.objects.get_field_dict_w_blank(
+            constants.FIELD_SAMPLE_TYPE).keys() \
             else sample.sample_type
         has_data = sample.completed
         if not has_data:
@@ -557,8 +561,10 @@ class SpecimensWithoutImagesFormView(PermissionRequiredMixin, FormView):
             if Specimen.objects.filter(classification__name=m, sample_id=sample.id):
                 existing_names.append(m)
         use_names = [v for v in morpho_names if v not in existing_names]
-        sample_type = constants.SAMPLE_TYPE_CHOICES_DICT[sample.sample_type] \
-            if sample.sample_type in constants.SAMPLE_TYPE_CHOICES_DICT.keys() \
+        sample_type = LookupChoices.objects.get_field_dict_w_blank(
+            constants.FIELD_SAMPLE_TYPE)[sample.sample_type] \
+            if sample.sample_type in LookupChoices.objects.get_field_dict_w_blank(
+            constants.FIELD_SAMPLE_TYPE).keys() \
             else sample.sample_type
         context.update({
             'morpho_names': ', '.join(morpho_names),
@@ -860,8 +866,8 @@ class SpecimensView(PermissionRequiredMixin, FormView):
                 'user_choices': get_user_choices(),
                 'state_choices_dict': constants_core.STATE_CHOICES,
                 'country_choices': constants_core.COUNTRY_CHOICES,
-                'tag_choices': constants.TAG_CHOICES,
-                'sample_type_choices': constants.SAMPLE_TYPE_CHOICES_WO_BLANK,
+                'tag_choices': LookupChoices.objects.get_field_choices(constants.FIELD_SPECIMEN_TAGS),
+                'sample_type_choices': LookupChoices.objects.get_field_choices(constants.FIELD_SAMPLE_TYPE),
                 'recent_year_choices': [(i, i) for i in recent_years]
             }),
             'experiment_name': experiment_name,

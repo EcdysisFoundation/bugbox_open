@@ -1,5 +1,3 @@
-from itertools import chain
-
 from django.db.models.fields import BLANK_CHOICE_DASH
 
 # Fields
@@ -126,7 +124,7 @@ ACCEPTANCE_VALID = (ACCEPTANCE_PENDING, ACCEPTANCE_CONFIRMED, ACCEPTANCE_REJECTE
 ACCEPTANCE_VALUE_LOOKUP = {v[1]: v[0] for v in ACCEPTANCE_CHOICES}
 ACCEPTANCE_LOOKUP = {v[0]: v[1] for v in ACCEPTANCE_CHOICES}
 
-
+# could be used as recomended or starting model choices
 SAMPLE_TYPE_AQUATIC_SWEEP = 'aquatic_sweep'
 SAMPLE_TYPE_BEAT_SHEET_TRAY = 'beat_sheet_tray'
 SAMPLE_TYPE_BEE_BOWL_BLUE = 'bee_bowl_blue'
@@ -142,7 +140,6 @@ SAMPLE_TYPE_SOIL_CORE = 'soil_core'
 SAMPLE_TYPE_SOIL_PROBE = 'soil_probe'
 SAMPLE_TYPE_STICKY_TRAP = 'sticky_trap'
 SAMPLE_TYPE_VEGETATION_SWEEP = 'vegetation_sweep'
-
 SAMPLE_TYPE_CHOICES = (
     BLANK_CHOICE_DASH[0],
     (SAMPLE_TYPE_AQUATIC_SWEEP, 'Aquatic sweep'),
@@ -162,12 +159,6 @@ SAMPLE_TYPE_CHOICES = (
     (SAMPLE_TYPE_VEGETATION_SWEEP, 'Vegetation sweep'),
 )
 
-SAMPLE_TYPE_CHOICES_ALL = [v[0] for v in SAMPLE_TYPE_CHOICES]
-
-SAMPLE_TYPE_CHOICES_WO_BLANK = [v for v in SAMPLE_TYPE_CHOICES if v != BLANK_CHOICE_DASH[0]]
-
-SAMPLE_TYPE_CHOICES_DICT = {v[0]: v[1] for v in SAMPLE_TYPE_CHOICES}
-
 IMAGE_GRID_CHOICE_4_BY_3 = '4-by-3'
 MULTIIMAGE_IMAGE_GRID_CHOICES = (
     (IMAGE_GRID_CHOICE_4_BY_3, IMAGE_GRID_CHOICE_4_BY_3),
@@ -186,6 +177,7 @@ INDICES_CHOICES_ALL = [v[0] for v in INDICES_CHOICES]
 
 INDICES_CHOICES_DICT = {v[0]: v[1] for v in INDICES_CHOICES}
 
+# could be used as recomended or starting model choices
 SITE_HABITAT_TYPES = (
     'alfalfa',
     'almonds',
@@ -235,10 +227,7 @@ SITE_HABITAT_TYPES = (
     'winter wheat',
     'woods',
 )
-
 SITE_HABITAT_TYPE_CHOICES = [(v, v.capitalize()) for v in SITE_HABITAT_TYPES]
-
-SITE_HABITAT_TYPE_CHOICES_W_BLANK = tuple(chain((BLANK_CHOICE_DASH[0],), SITE_HABITAT_TYPE_CHOICES))
 
 SITE_TREATMENT_TYPES = (
     'conventional',
@@ -248,9 +237,8 @@ SITE_TREATMENT_TYPES = (
     'not in list',
 )
 
+# could be used as recomended or starting model choices
 SITE_TREATMENT_CHOICES = [(v, v.capitalize()) for v in SITE_TREATMENT_TYPES]
-
-SITE_TREATMENT_CHOICES_W_BLANK = tuple(chain((BLANK_CHOICE_DASH[0],), SITE_TREATMENT_CHOICES))
 
 #  Form Fields
 
@@ -308,7 +296,6 @@ FORM_FIELDS_SPECIMEN = (
     FIELD_SPECIMEN_ARCHIVAL_IDENTIFIER,
     FIELD_SPECIMEN_ARCHIVAL_PRESERVATION,
     FIELD_SPECIMEN_ARCHIVAL_STORED,
-    FIELD_SPECIMEN_OBJECT_DET_TRAIN,
 )
 
 FORM_FIELDS_SPECIMEN_HIDDEN = (
@@ -355,45 +342,6 @@ FORM_FIELDS_SPECIMEN_HELP = {
     FIELD_SPECIMEN_ACCEPTANCE: 'if acceptance is "Confirmed" the AI Prediction '
                                'will be saved as the "Verified classification"'
 }
-
-TAGS = (
-    'adult',
-    'alate',
-    'apterous',
-    'Bobbie',
-    'brachypterous',
-    'broken',
-    'Cassie',
-    'Cat Wagner',
-    'commensal',
-    'egg',
-    'Erik',
-    'female',
-    'Gabe',
-    'gravid',
-    'juvenile',
-    'Kelton review',
-    'larva',
-    'macropterous',
-    'male',
-    'Mia',
-    'multiple specimens',
-    'mummy',
-    'nymph',
-    'Olivia',
-    'parasite',
-    'parasitized (dryinid)',
-    'parasitized (mermithid)',
-    'parasitized (strepsipteran)',
-    'pollinator',
-    'pupa',
-    'queen',
-    'teneral',
-    'worker',
-    'worker (major)'
-)
-
-TAG_CHOICES = [(v, v) for v in TAGS]
 
 # PERMISSIONS
 PERMISSION_SPECIMEN_REVIEW = 'review_specimen_page'

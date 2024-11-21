@@ -42,8 +42,7 @@ class Experiment(Model):
 
 class SamplePlan(Model):
     experiment = ForeignKey(Experiment, on_delete=CASCADE)
-    sample_type = CharField(max_length=100,
-                            choices=constants.SAMPLE_TYPE_CHOICES_WO_BLANK)
+    sample_type = CharField(max_length=100)
     no_per_date = PositiveSmallIntegerField(null=True, validators=[MaxValueValidator(100)])
     name_no_per_type = CharField(max_length=100, blank=True)
 
@@ -133,8 +132,7 @@ class SiteVisit(Model):
 class Sample(Model):
     uuid = UUIDField(default=uuid.uuid4, unique=True)
     site_visit = ForeignKey(SiteVisit, on_delete=CASCADE)
-    sample_type = CharField(max_length=100, blank=True,
-                            choices=constants.SAMPLE_TYPE_CHOICES)
+    sample_type = CharField(max_length=100, blank=True)
     name_no = CharField(max_length=100, blank=True)
     notes = CharField(max_length=1000, blank=True)
     completed = BooleanField(default=False)
@@ -211,7 +209,7 @@ class Specimen(Model):
     archival_identifier = CharField(max_length=1000, null=True, unique=True, default=None)
     archival_preservation = CharField(max_length=100, blank=True)
     archival_stored = CharField(max_length=100, blank=True)
-    object_det_train = BooleanField(null=True)
+    object_det_train = BooleanField(default=False)
 
     def __str__(self):
         return str(self.uuid)

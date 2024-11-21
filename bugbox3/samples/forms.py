@@ -2,13 +2,13 @@ import json
 
 from crispy_forms.bootstrap import UneditableField
 from crispy_forms.layout import HTML, Column, Field, Fieldset, Row
-from django.forms import (CharField, CheckboxInput, ChoiceField, DateField,
-                          Form, HiddenInput, IntegerField, JSONField,
-                          MultipleChoiceField, Select, SelectMultiple,
-                          Textarea)
+from django.forms import (CharField, ChoiceField, DateField, Form, HiddenInput,
+                          IntegerField, JSONField, MultipleChoiceField, Select,
+                          SelectMultiple, Textarea)
 
 from ..core.forms import (FileField, Html5DateInput, ModelFormMixin,
                           MultipleFileField, get_submit_layout)
+from ..core.models import LookupChoices
 from ..libs.ui_helpers import DISABLED_DELETE_CHECK
 from . import constants
 from .models import Experiment, Sample, SamplePlan, Site, SiteVisit, Specimen
@@ -91,6 +91,12 @@ class SamplePlanForm(ModelFormMixin):
             HTML('</div>')
         ]
 
+    sample_type = ChoiceField(
+        widget=Select,
+        choices=LookupChoices.objects.get_field_choices_w_blank(
+            constants.FIELD_SAMPLE_PLAN_SAMPLE_TYPE)
+    )
+
 
 class SiteForm(ModelFormMixin):
     """
@@ -134,12 +140,14 @@ class SiteForm(ModelFormMixin):
 
     treatment = ChoiceField(
         widget=Select,
-        choices=constants.SITE_TREATMENT_CHOICES_W_BLANK
+        choices=LookupChoices.objects.get_field_choices_w_blank(
+            constants.FIELD_SITE_TREATMENT)
     )
 
     habitat_type = ChoiceField(
         widget=Select,
-        choices=constants.SITE_HABITAT_TYPE_CHOICES_W_BLANK
+        choices=LookupChoices.objects.get_field_choices_w_blank(
+            constants.FIELD_SITE_HABITAT_TYPE)
     )
 
 
@@ -200,6 +208,12 @@ class SampleForm(ModelFormMixin):
             Field(constants.FIELD_SAMPLE_NOTES),
             Field(constants.FIELD_SAMPLE_COMPLETED),
         ]
+
+    sample_type = ChoiceField(
+        widget=Select,
+        choices=LookupChoices.objects.get_field_choices_w_blank(
+            constants.FIELD_SAMPLE_TYPE)
+    )
 
     notes = CharField(
         widget=Textarea
@@ -289,23 +303,18 @@ class SpecimenForm(ModelFormMixin):
             Field(constants.FIELD_SPECIMCEN_SAMPLE),
             Row(*row_1),
             Row(*row_2)
-            # Column(constants.FIELD_SPECIMEN_OBJECT_DET_TRAIN, css_class='mt-5')
         ]
         return v
 
     tags = MultipleChoiceField(
         widget=SelectMultiple,
-        choices=constants.TAG_CHOICES
+        choices=LookupChoices.objects.get_field_choices(
+            constants.FIELD_SPECIMEN_TAGS)
     )
 
     acceptance = ChoiceField(
         widget=Select,
         choices=constants.ACCEPTANCE_CHOICES
-    )
-
-    object_det_train = ChoiceField(
-        widget=CheckboxInput,
-        choices=constants.TRUE_FALSE_CHOICES
     )
 
 

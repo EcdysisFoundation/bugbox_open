@@ -6,6 +6,7 @@ from django.db.models import Case, CharField, F, Func, Value, When
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 
+from ..core.models import LookupChoices
 from ..core.permissions import IS_RESEARCH
 from ..taxonomy.models import Morphospecies
 from ..taxonomy.utils import get_skip_morphospecies_ids
@@ -19,7 +20,7 @@ def experiment_ai_csv(request, id):
     # get query params and sanitize
     experiment = get_object_or_404(Experiment, id=id)
     sample_types = request.GET.getlist('sampleTypes')
-    sample_types = [v for v in sample_types if v in constants.SAMPLE_TYPE_CHOICES_ALL]
+    sample_types = LookupChoices.objects.get_field_entries(constants.FIELD_SAMPLE_TYPE)
     sites = request.GET.getlist('sites')
     if not all([v.isnumeric() for v in sites]):
         return HttpResponse(status=404)
@@ -75,7 +76,7 @@ def experiment_csv(request, id):
     export_type = request.GET.get('export-type')
     export_type = export_type if export_type in constants.EXPERIMENT_CSV_EXPORT_TYPES else None
     sample_types = request.GET.getlist('sampleTypes2')
-    sample_types = [v for v in sample_types if v in constants.SAMPLE_TYPE_CHOICES_ALL]
+    sample_types = LookupChoices.objects.get_field_entries(constants.FIELD_SAMPLE_TYPE)
     include_skip_morph = request.GET.get('include_skip_morph')
     sites = request.GET.getlist('sites2')
     if not all([v.isnumeric() for v in sites]):

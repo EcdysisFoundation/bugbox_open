@@ -1,3 +1,4 @@
+from ..core.models import LookupChoices
 from ..users.models import User
 from . import constants
 from .models import SamplePlan
@@ -15,8 +16,9 @@ def describe_sample_plan(sample_plan):
         i -= 1
     names.sort()
     names_string = ', '.join(names)
-    sample_type = constants.SAMPLE_TYPE_CHOICES_DICT[getattr(
-        sample_plan, constants.FIELD_SAMPLE_PLAN_SAMPLE_TYPE)]
+    sample_type = LookupChoices.objects.get_field_dict_w_blank(
+        constants.FIELD_SAMPLE_TYPE)[getattr(
+            sample_plan, constants.FIELD_SAMPLE_PLAN_SAMPLE_TYPE)]
     return {'description': '{0} {1} ({2}) per sample date'.format(
         no_per_date, sample_type, names_string),
         'no_per_date': no_per_date,
