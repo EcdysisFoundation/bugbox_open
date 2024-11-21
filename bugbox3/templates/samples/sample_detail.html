@@ -169,8 +169,10 @@
                     </div>
 
                     <div class="col">
-                            <button id="uppyImagesUpload" class="btn btn-light btn-sm mt-4" {% if sample_info.completed %} disabled {% endif %}>
+                        <div class="d-grid">
+                            <button id="uppyImagesUpload" class="btn btn-light mt-3" {% if sample_info.completed %} disabled {% endif %}>
                                 Upload images <br/>as specimens</button>
+                                </div>
                     </div>
                     <div class="col">
                         <button type="button" class="btn btn-info btn-sm" id="select-all-btn" {% if sample_info.completed %}disabled{% endif %}>Toggle Select</button>
