@@ -68,22 +68,34 @@
               <a class="nav-link" href="{% url 'about' %}">About<span class="visually-hidden">(current)</span></a>
             </li>
             {% if request.user.is_authenticated %}
-              {% if perms.samples.view_experiment and perms.taxonomy.view_morphospecies %}
+              {% for group in request.user.groups.all %}
+                {% if group.name == 'is_research' %}
+                  <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" id="navDropExperiments" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                      Tools
+                    </a>
+
+                      <ul class="dropdown-menu" aria-labelledby="navDropExperiments">
+                        <li><a class="dropdown-item" href="{% url 'samples:experiments' %}">Experiments</a></li>
+                        <li><a class="dropdown-item" href="{% url 'taxonomy:morphospecies' %}">Morphospecies</a></li>
+                        {% if perms.samples.review_specimen_page %}
+                          <li><a class="dropdown-item" href="{% url 'samples:specimens-experiment-sample' 0 0 %}">Specimens</a></li>
+                        {% endif %}
+                        </ul>
+
+                  </li>
+                {% endif %}
+                {% if group.name == 'is_admin' %}
                 <li class="nav-item dropdown">
                   <a class="nav-link dropdown-toggle" id="navDropExperiments" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    Tools
+                    Admin
                   </a>
-
                     <ul class="dropdown-menu" aria-labelledby="navDropExperiments">
-                      <li><a class="dropdown-item" href="{% url 'samples:experiments' %}">Experiments</a></li>
-                      <li><a class="dropdown-item" href="{% url 'taxonomy:morphospecies' %}">Morphospecies</a></li>
-                      {% if perms.samples.review_specimen_page %}
-                        <li><a class="dropdown-item" href="{% url 'samples:specimens-experiment-sample' 0 0 %}">Specimens</a></li>
-                      {% endif %}
+                      <li><a class="dropdown-item" href="{% url 'core:lookup-choices' %}">Edit Choices</a></li>
                       </ul>
-
                 </li>
-              {% endif %}
+                {% endif %}
+              {% endfor %}
             {% endif %}
             {% if request.user.is_authenticated %}
               <li class="nav-item">

@@ -1,10 +1,13 @@
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Submit
+from crispy_forms.layout import Column, Field, Layout, Row, Submit
 from django.conf import settings
 from django.forms import (ClearableFileInput, DateInput, FileField,
                           HiddenInput, ValidationError)
 from django.forms.models import ModelForm
 from django.utils.safestring import mark_safe
+
+from . import constants
+from .models import LookupChoices
 
 
 class MultipleFileInput(ClearableFileInput):
@@ -129,3 +132,51 @@ def get_submit_layout(helper_layout, kwargs):
     if layout:
         helper_layout.append(layout)
     return helper_layout
+
+
+class LookupChoicesForm(ModelFormMixin):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper.layout = get_submit_layout(self.helper.layout, kwargs)
+
+    class Meta:
+        model = LookupChoices
+        fields = [
+            constants.FIELD_FIELD,
+            constants.FIELD_ENTRY,
+            constants.FIELD_DISPLAY_TXT
+        ]
+
+    required_fields = [
+        constants.FIELD_ENTRY,
+        constants.FIELD_DISPLAY_TXT
+    ]
+    hidden_fields = [constants.FIELD_FIELD]
+
+    def get_primary_layout(self):
+
+        row = [Field(constants.FIELD_FIELD)]
+        if self.instance.id:
+            row += Row(
+                    Column(
+                        Field(
+                            constants.FIELD_ENTRY, readonly=True
+                        ), css_class='form-control-width-medium'),
+                    Column(
+                        constants.FIELD_DISPLAY_TXT, css_class='form-control-width-medium'
+                    )
+                ),
+        else:
+            row += [
+                Field(constants.FIELD_FIELD),
+                Row(
+                    Column(
+                        constants.FIELD_ENTRY, css_class='form-control-width-medium'
+                    ),
+                    Column(
+                        constants.FIELD_DISPLAY_TXT, css_class='form-control-width-medium'
+                    )
+                ),
+            ]
+        return row

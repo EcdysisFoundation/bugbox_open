@@ -2,21 +2,31 @@ from django.contrib.gis.db.models import (BigIntegerField, CharField, Manager,
                                           Model, MultiPolygonField)
 from django.db.models.fields import BLANK_CHOICE_DASH
 
+from .constants import FIELD_DISPLAY_TXT
+
 
 class LookupChoicesManager(Manager):
 
     def get_field_choices(self, field):
         choices = [(v.entry, v.display_txt) for v in self.filter(
             field=field
-        ).order_by('display_txt')]
+        ).order_by(FIELD_DISPLAY_TXT)]
         if not choices:
             choices = [BLANK_CHOICE_DASH[0],]
+        return choices
+
+    def get_field_choices_w_id(self, field):
+        choices = [(v.entry, v.display_txt, v.id) for v in self.filter(
+            field=field
+        ).order_by(FIELD_DISPLAY_TXT)]
+        if not choices:
+            choices = [BLANK_CHOICE_DASH[0], 0]
         return choices
 
     def get_field_choices_w_blank(self, field):
         choices = [(v.entry, v.display_txt) for v in self.filter(
             field=field
-        ).order_by('display_txt')]
+        ).order_by(FIELD_DISPLAY_TXT)]
         return [BLANK_CHOICE_DASH[0]] + choices
 
     def get_field_dict_w_blank(self, field):

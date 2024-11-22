@@ -41,6 +41,10 @@ CHANGE_SITEVISIT = 'samples.change_sitevisit'
 DELETE_SITEVISIT = 'samples.delete_sitevisit'
 VIEW_SITEVISIT = 'samples.view_sitevisit'
 
+ADD_LOOKUPCHOICES = 'core.add_lookupchoices'
+CHANGE_LOOKUPCHOICES = 'core.change_lookupchoices'
+DELETE_LOOKUPCHOICES = 'core.delete_lookkupchoices'
+
 REVIEW_SPECIMEN_PAGE = 'samples.review_specimen_page'
 
 IS_RESEARCH = [
@@ -76,6 +80,12 @@ IS_RESEARCH = [
     CHANGE_SITEVISIT,
     DELETE_SITEVISIT,
     VIEW_SITEVISIT,
+]
+
+IS_ADMIN = [
+    ADD_LOOKUPCHOICES,
+    CHANGE_LOOKUPCHOICES,
+    DELETE_LOOKUPCHOICES,
 ]
 
 

@@ -1,6 +1,5 @@
 import json
 
-from crispy_forms.bootstrap import UneditableField
 from crispy_forms.layout import HTML, Column, Field, Fieldset, Row
 from django.forms import (CharField, ChoiceField, DateField, Form, HiddenInput,
                           IntegerField, JSONField, MultipleChoiceField, Select,
@@ -269,21 +268,21 @@ class SpecimenForm(ModelFormMixin):
         if not self.review_permission:
             row_1 += [
                 Column(
-                    UneditableField(
+                    Field(
                         constants.FIELD_SPECIMEN_ARCHIVAL_IDENTIFIER,
-                        css_class='form-control-width-medium form-control'
+                        css_class='form-control-width-medium', readonly=True
                     )
                 ),
                 Column(
-                    UneditableField(
+                    Field(
                         constants.FIELD_SPECIMEN_ARCHIVAL_PRESERVATION,
-                        css_class='form-control-width-medium form-control'
+                        css_class='form-control-width-medium', readonly=True
                     )
                 ),
                 Column(
-                    UneditableField(
+                    Field(
                         constants.FIELD_SPECIMEN_ARCHIVAL_STORED,
-                        css_class='form-control-width-medium form-control'
+                        css_class='form-control-width-medium', readonly=True
                     )
                 ),
             ]
@@ -295,7 +294,7 @@ class SpecimenForm(ModelFormMixin):
             ]
         row_2 = [Column(constants.FIELD_SPECIMEN_TAGS)]
         if not self.review_permission:
-            row_2 += [Column(UneditableField(constants.FIELD_SPECIMEN_ACCEPTANCE, css_class='form-select'))]
+            row_2 += [Column(Field(constants.FIELD_SPECIMEN_ACCEPTANCE, readonly=True))]
         else:
             row_2 += [Column(constants.FIELD_SPECIMEN_ACCEPTANCE)]
         v = [

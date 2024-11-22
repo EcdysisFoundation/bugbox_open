@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Lookup Choices
+{% endblock title %}
+
+{% block content %}
+
+<div class="container">
+    <div class="row">
+        <div class="col">
+
+            <div class="card bg-light mt-3">
+                <div class="card-body">
+                  <h5 class="card-title">Choices</h5>
+                  <h6 class="card-subtitle mb-2 text-body-secondary">view and edit</h6>
+                  <p class="card-text">
+                    Here you can view customizeable menus for data entry forms.
+                    Select a <b>Field Name</b> and (<i>Table</i>) to display the menu options for that field.
+                    A list of the display text will be shown for that field.
+                    If the value saved to the database differs from the display text, other than its case,
+                    both will be displayed with the format of [ value saved to database ] | [ display text ].
+                    Click on a row to go to its edit page or to create a new entry.
+                  </p>
+
+                </div>
+              </div>
+
+        <div class="accordion accordion-flush mt-3" id="accordionFlushExample">
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne">
+                 <p><b>Tags</b> (<i>Specimen</i>)</p>
+                </button>
+              </h2>
+              <div id="flush-collapseOne" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample">
+                <div class="accordion-body">
+
+                    <ul class="list-group">
+                        {% for v in tags %}
+                            <a href="{% url 'core:lookup-choices-update' v.2 %}" class="list-group-item list-group-item-action">
+                                {% if v.0|lower == v.1|lower %} {{ v.1 }} {% else %} {{ v.0 }} | {{ v.1 }} {% endif %}
+                            </a>
+                        {% endfor %}
+                        <a href="{% url 'core:lookup-choices-create' 'tags' %}" class="list-group-item list-group-item-action">
+                            <i class="bi bi-plus-square"></i>
+                        </a>
+                    </ul>
+
+                </div>
+              </div>
+            </div>
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseTwo" aria-expanded="false" aria-controls="flush-collapseTwo">
+                    <p><b>Habitat Type</b> (<i>Site</i>)</p>
+                </button>
+              </h2>
+              <div id="flush-collapseTwo" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample">
+                <div class="accordion-body">
+
+                    <ul class="list-group">
+                        {% for v in habitat_type %}
+                            <a href="{% url 'core:lookup-choices-update' v.2 %}" class="list-group-item list-group-item-action">
+                                {% if v.0|lower == v.1|lower %} {{ v.1 }} {% else %} {{ v.0 }} | {{ v.1 }} {% endif %}
+                            </a>
+                        {% endfor %}
+                        <a href="{% url 'core:lookup-choices-create' 'habitat_type' %}" class="list-group-item list-group-item-action">
+                            <i class="bi bi-plus-square"></i>
+                        </a>
+                    </ul>
+
+                </div>
+              </div>
+            </div>
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseThree" aria-expanded="false" aria-controls="flush-collapseThree">
+                    <p><b>Treatment</b> (<i>Site</i>)</p>
+                </button>
+              </h2>
+              <div id="flush-collapseThree" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample">
+                <div class="accordion-body">
+
+                    <ul class="list-group">
+                        {% for v in treatment %}
+                            <a href="{% url 'core:lookup-choices-update' v.2 %}" class="list-group-item list-group-item-action">
+                                {% if v.0|lower == v.1|lower %} {{ v.1 }} {% else %} {{ v.0 }} | {{ v.1 }} {% endif %}
+                            </a>
+                        {% endfor %}
+                        <a href="{% url 'core:lookup-choices-create' 'treatment' %}" class="list-group-item list-group-item-action">
+                            <i class="bi bi-plus-square"></i>
+                        </a>
+                    </ul>
+
+                </div>
+              </div>
+            </div>
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseFour" aria-expanded="false" aria-controls="flush-collapseThree">
+                    <p><b>Sample Type</b> (<i>Sample</i> and <i>Sample Plan</i>)</p>
+                  </button>
+                </h2>
+                <div id="flush-collapseFour" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample">
+                  <div class="accordion-body">
+
+                    <ul class="list-group">
+                        {% for v in sample_type %}
+                            <a href="{% url 'core:lookup-choices-update' v.2 %}" class="list-group-item list-group-item-action">
+                                {% if v.0|lower == v.1|lower %} {{ v.1 }} {% else %} {{ v.0 }} | {{ v.1 }} {% endif %}
+                            </a>
+                        {% endfor %}
+                        <a href="{% url 'core:lookup-choices-create' 'sample_type' %}" class="list-group-item list-group-item-action">
+                            <i class="bi bi-plus-square"></i>
+                        </a>
+                    </ul>
+
+                  </div>
+                </div>
+              </div>
+          </div>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,3 +1,18 @@
+from ..samples.constants import (FIELD_SAMPLE_TYPE, FIELD_SITE_HABITAT_TYPE,
+                                 FIELD_SITE_TREATMENT, FIELD_SPECIMEN_TAGS)
+
+# LookupChoices
+
+FIELD_FIELD = 'field'
+FIELD_ENTRY = 'entry'
+FIELD_DISPLAY_TXT = 'display_txt'
+
+VALID_LOOKUP_FIELDS = [
+    FIELD_SITE_HABITAT_TYPE, FIELD_SITE_TREATMENT,
+    FIELD_SAMPLE_TYPE, FIELD_SPECIMEN_TAGS
+]
+
+# Site
 
 CANADA = 'Canada'
 UNITED_STATES = 'United States'
