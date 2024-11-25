@@ -7,33 +7,33 @@ from .constants import FIELD_DISPLAY_TXT
 
 class LookupChoicesManager(Manager):
 
-    def get_field_choices(self, field):
+    def get_field_choices(self, f):
         choices = [(v.entry, v.display_txt) for v in self.filter(
-            field=field
+            field=f
         ).order_by(FIELD_DISPLAY_TXT)]
         if not choices:
             choices = [BLANK_CHOICE_DASH[0],]
         return choices
 
-    def get_field_choices_w_id(self, field):
+    def get_field_choices_w_id(self, f):
         choices = [(v.entry, v.display_txt, v.id) for v in self.filter(
-            field=field
+            field=f
         ).order_by(FIELD_DISPLAY_TXT)]
         if not choices:
             choices = [BLANK_CHOICE_DASH[0], 0]
         return choices
 
-    def get_field_choices_w_blank(self, field):
+    def get_field_choices_w_blank(self, f):
         choices = [(v.entry, v.display_txt) for v in self.filter(
-            field=field
+            field=f
         ).order_by(FIELD_DISPLAY_TXT)]
         return [BLANK_CHOICE_DASH[0]] + choices
 
-    def get_field_dict_w_blank(self, field):
-        return {v[0]: v[1] for v in self.get_field_choices_w_blank(field)}
+    def get_field_dict_w_blank(self, f):
+        return {v[0]: v[1] for v in self.get_field_choices_w_blank(f)}
 
-    def get_field_entries(self, field):
-        return self.filter(field=field).distinct(
+    def get_field_entries(self, f):
+        return self.filter(field=f).distinct(
             'entry').order_by('entry').values_list('entry', flat=True)
 
 
