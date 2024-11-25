@@ -33,7 +33,8 @@ class LookupChoicesManager(Manager):
         return {v[0]: v[1] for v in self.get_field_choices_w_blank(field)}
 
     def get_field_entries(self, field):
-        return sorted([v for v in self.filter(field=field)])
+        return self.filter(field=field).distinct(
+            'entry').order_by('entry').values_list('entry', flat=True)
 
 
 class LookupChoices(Model):
