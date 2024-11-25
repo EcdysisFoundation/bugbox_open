@@ -151,6 +151,10 @@ If specific non-custom image needs built, specificy it individually (referring t
 
     docker compose -f local.yml build SERVICE_NAME
 
+The Django container image is shared with Celery containers, so if any python library changes, build all of them.
+
+    docker compose -f local.yml build django celeryworker celerybeat flower
+
 Bring up containers with images prebuilt
 
     docker compose -f local.yml up --no-build -d
