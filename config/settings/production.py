@@ -104,7 +104,11 @@ EMAIL_SUBJECT_PREFIX = env(
 # https://anymail.readthedocs.io
 INSTALLED_APPS += ["anymail"]  # noqa: F405
 EMAIL_BACKEND = "anymail.backends.amazon_ses.EmailBackend"
-ANYMAIL = {}
+ANYMAIL = {"AMAZON_SES_CLIENT_PARAMS": {
+        "aws_access_key_id": env("DJANGO_AWS_ACCESS_KEY_ID"),
+        "aws_secret_access_key": env("DJANGO_AWS_SECRET_ACCESS_KEY"),
+        "region_name": env("DJANGO_AWS_REGION_NAME"),
+    },}
 
 # LOGGING
 # ------------------------------------------------------------------------------
