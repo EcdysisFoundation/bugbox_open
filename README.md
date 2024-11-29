@@ -7,8 +7,6 @@ Ecdysis bugbox
 
 Development url, .js served in dev mode is http://localhost:3000/
 
-Production url with .js served from /static/ is http://localhost:8002/
-
 ## Settings
 
 Moved to [settings](http://cookiecutter-django.readthedocs.io/en/latest/settings.html).
@@ -25,7 +23,7 @@ To run commands to manage.py, use this syntax, to the appropriate .yml file
 
     docker compose -f local.yml run --rm django python manage.py mycommand
 
-or to run on Heroku, using the Heroku cli
+Or to run on Heroku, using the Heroku cli
 
     heroku run python manage.py shell -a bugbox
 
@@ -39,11 +37,9 @@ Check other Flake8 issues
 
     docker compose -f local.yml exec -T django flake8 bugbox3
 
-### Database backups
+### Database and backups
 
-Database backups are configured with Cookie cutter methods. In our case it is expanded to the local version to aid in development. Seperate AWS IAM users are configured for different envirionments
-
-use bugbox-local user access keys for local.yml use cases, whle bugbox-localserver is for localserver.yml cases. These .yml files should reference a .secrets file in the repo .env directory that defines the environment variables and is gitignored to keep it secret.
+The production database is on Heroku. The following explains about managing local backups for development purposes.
 
 Initiate a backup in docker
 
@@ -81,9 +77,9 @@ bring all services up
 
     docker compose -f local.yml up
 
-Alternatvely to using the AWS CLI, a backup can be downloaded directly from the Ecdysis01 server. This process includes moving the file out and in the docker conatiner.
+Alternatvely to using the AWS CLI, a backup can be downloaded directly from docker. This process includes moving the file out and in the docker conatiner.
 
-With a backup already created in the Ecdysis01 docker container as described above, get the container ID ...
+With a backup already created in the docker container as described above, get the container ID ...
 
     docker compose -f local.yml ps -q postgres
 
@@ -115,11 +111,11 @@ The following details how to deploy this application.
 
 See detailed [cookiecutter-django Docker documentation](http://cookiecutter-django.readthedocs.io/en/latest/deployment-with-docker.html).
 
-Customized for Bugbox.
+#### Deployment to Ecdysis01 server
 
-local.yml is curently the only valid .yml
+local-cloud.yml is the .yml to use. This will establish a local Django app, and Node dev container. The database and filesystem is the production system on Heroku and AWS S3. This is not for development purposes. This is to have a Django instance running on Ecdsyis01 to manage image identifications and other needs to communicate from Ecdysis01 and Heroku database and AWS S3 storage.
 
-Custom images built are pushed to docker hub repo. Standard images used from their source. Always on the Ecdysis01 server, do not build custom docker images there. Django build may fail there at this time. Filesystem space recovery and performance of other running continers are other reasons to not build them there.
+Custom images built locally (not on Ecdysis01) and are pushed to docker hub repo. Standard images used from their source. Always on the Ecdysis01 server, do not build custom docker images there. Django build may fail there at this time. Filesystem space recovery and performance of other running continers are other reasons to not build them there.
 
 Various ports are changed from default due to conflicting ports on Ecdysis01.
 
@@ -149,39 +145,25 @@ On remote pull these down, if new versions were pushed to Docker Hub
 
 If specific non-custom image needs built, specificy it individually (referring to non-custom images when on Ecdysis01)
 
-    docker compose -f local.yml build SERVICE_NAME
+    docker compose -f local-cloud.yml build SERVICE_NAME
 
 The Django container image is shared with Celery containers, so if any python library changes, build all of them.
 
-    docker compose -f local.yml build django celeryworker celerybeat flower
+    docker compose -f local-cloud.yml build django celeryworker celerybeat flower
 
 Bring up containers with images prebuilt
 
-    docker compose -f local.yml up --no-build -d
+    docker compose -f local-cloud.yml up --no-build -d
 
 Open the logs, ctrl-c to escape
 
-    docker compose -f local.yml logs --tail=1000 --follow
+    docker compose -f local-cloud.yml logs --tail=1000 --follow
 
-NODE: If changes are made to webpack built .js, then once deployed and fully started, need to rebuild those files to /static/.
+#### Deployment to Heroku
 
-    docker compose -f local.yml exec -it node sh -c "npm run build"
-
-NODE: Bring the node container down. This is not needed to run the dev port 3000 on production, after "npm run build" is ran.
-
-    docker compose -f local.yml down node
+details to be explained.
 
 ### Torchserve
 
 The image classifications performed from `taxonomy.tasks.image_prediction` are done through a Torchserve model served through Torchserve (see https://github.com/EcdysisFoundation/servemetaformer )
  produced by metaformer_ecdysis (see https://github.com/EcdysisFoundation/metaformer_ecdysis )
-
-
-### Custom Bootstrap Compilation
-
-The generated CSS is set up with automatic Bootstrap recompilation with variables of your choice.
-Bootstrap v5 is installed using npm and customised by tweaking your variables in `static/sass/custom_bootstrap_vars`.
-
-You can find a list of available variables [in the bootstrap source](https://github.com/twbs/bootstrap/blob/v5.1.3/scss/_variables.scss), or get explanations on them in the [Bootstrap docs](https://getbootstrap.com/docs/5.1/customize/sass/).
-
-Bootstrap's javascript as well as its dependencies are concatenated into a single file: `static/js/vendors.js`.
