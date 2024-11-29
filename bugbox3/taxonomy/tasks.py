@@ -1,9 +1,11 @@
 import logging
 
 import requests
+from celery import shared_task
 from celery.exceptions import SoftTimeLimitExceeded
 from django.apps import apps
 from django.conf import settings
+from django.core.management import call_command
 from requests import RequestException
 
 from config import celery_app
@@ -66,3 +68,8 @@ def id_image(id):
     specimen.optional_pred_two = data.get("optional_preds")[1]
     specimen.save()
     return
+
+
+@shared_task
+def run_classify_new_images():
+    call_command('classify_new_images')
