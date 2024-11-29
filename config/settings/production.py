@@ -6,7 +6,8 @@ from .base import env
 # https://docs.djangoproject.com/en/dev/ref/settings/#secret-key
 SECRET_KEY = env("DJANGO_SECRET_KEY")
 # https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = ["localhost", "0.0.0.0", "127.0.0.1", "bugbox-381407baad84.herokuapp.com"]
+ALLOWED_HOSTS = ["localhost", "0.0.0.0", "127.0.0.1", "bugbox-381407baad84.herokuapp.com",
+                 "bugbox.ecdysis.bio"]
 
 # DATABASES
 # ------------------------------------------------------------------------------
@@ -89,12 +90,9 @@ INSTALLED_APPS = ["collectfasta", *INSTALLED_APPS]
 # EMAIL
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#default-from-email
-DEFAULT_FROM_EMAIL = env(
-    "DJANGO_DEFAULT_FROM_EMAIL",
-    default="bugbox3 <noreply@ecdysis.bio>",
-)
+DEFAULT_FROM_EMAIL = "reports@ecdysis.bio"
 # https://docs.djangoproject.com/en/dev/ref/settings/#server-email
-SERVER_EMAIL = env("DJANGO_SERVER_EMAIL", default=DEFAULT_FROM_EMAIL)
+SERVER_EMAIL = "reports@ecdysis.bio"
 # https://docs.djangoproject.com/en/dev/ref/settings/#email-subject-prefix
 EMAIL_SUBJECT_PREFIX = env(
     "DJANGO_EMAIL_SUBJECT_PREFIX",
@@ -103,13 +101,14 @@ EMAIL_SUBJECT_PREFIX = env(
 
 # Anymail
 # ------------------------------------------------------------------------------
-# https://anymail.readthedocs.io/en/stable/installation/#installing-anymail
-# INSTALLED_APPS += ["anymail"]  # noqa: F405
-# https://docs.djangoproject.com/en/dev/ref/settings/#email-backend
-# https://anymail.readthedocs.io/en/stable/installation/#anymail-settings-reference
-# https://anymail.readthedocs.io/en/stable/esps/amazon_ses/
-# EMAIL_BACKEND = "anymail.backends.amazon_ses.EmailBackend"
-# ANYMAIL = {}
+# https://anymail.readthedocs.io
+INSTALLED_APPS += ["anymail"]  # noqa: F405
+EMAIL_BACKEND = "anymail.backends.amazon_ses.EmailBackend"
+ANYMAIL = {"AMAZON_SES_CLIENT_PARAMS": {
+        "aws_access_key_id": env("DJANGO_AWS_ACCESS_KEY_ID"),
+        "aws_secret_access_key": env("DJANGO_AWS_SECRET_ACCESS_KEY"),
+        "region_name": env("DJANGO_AWS_REGION_NAME"),
+    },}
 
 # LOGGING
 # ------------------------------------------------------------------------------

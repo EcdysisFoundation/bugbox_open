@@ -94,42 +94,41 @@ WEBPACK_LOADER["DEFAULT"]["CACHE"] = not DEBUG  # noqa: F405
 ############################
 # USE LOCAL STORAGE IF THE SECTION ENABLED
 # https://docs.djangoproject.com/en/dev/ref/settings/#media-url
-MEDIA_URL = "/media/"
+# MEDIA_URL = "/media/"
 # https://docs.djangoproject.com/en/dev/ref/settings/#static-url
-STATIC_URL = "/static/"
+# STATIC_URL = "/static/"
 
 ###########################
 
 ###########################
 # USE CLOUD STORAGE IF THESE SETTINGS ENABLED
-#aws_s3_domain_media = f"{AWS_STORAGE_BUCKET_NAME_MEDIA}.s3.amazonaws.com"
-#aws_s3_domain_static = f"{AWS_STORAGE_BUCKET_NAME_STATIC}.s3.amazonaws.com"
+aws_s3_domain_media = f"{AWS_STORAGE_BUCKET_NAME_MEDIA}.s3.amazonaws.com"
+aws_s3_domain_static = f"{AWS_STORAGE_BUCKET_NAME_STATIC}.s3.amazonaws.com"
 # STATIC & MEDIA
-#STORAGES = {
-#    "default": {
-#        "BACKEND": "storages.backends.s3.S3Storage",
-#        "OPTIONS": {
-#            "file_overwrite": False,
-#            "bucket_name": AWS_STORAGE_BUCKET_NAME_MEDIA
-#        },
-#    },
-#    "staticfiles": {
-#        "BACKEND": "storages.backends.s3.S3Storage",
-#        "OPTIONS": {
-#            "default_acl": "public-read",
-#            "bucket_name": AWS_STORAGE_BUCKET_NAME_STATIC
-#        },
-#    },
-#}
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": {
+            "file_overwrite": False,
+            "bucket_name": AWS_STORAGE_BUCKET_NAME_MEDIA
+        },
+    },
+    "staticfiles": {
+        "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": {
+            "default_acl": "public-read",
+            "bucket_name": AWS_STORAGE_BUCKET_NAME_STATIC
+        },
+    },
+}
 
-#MEDIA_URL = f"https://{aws_s3_domain_media}/"
-#STATIC_URL = f"https://{aws_s3_domain_static}/"
+MEDIA_URL = f"https://{aws_s3_domain_media}/"
+STATIC_URL = f"https://{aws_s3_domain_static}/"
 
-# enable COLLECTFASTA_STRATEGY when ready, check requirements
 # Collectfasta
 # ------------------------------------------------------------------------------
 # https://github.com/jasongi/collectfasta#installation
-# COLLECTFASTA_STRATEGY = "collectfasta.strategies.boto3.Boto3Strategy"
-# INSTALLED_APPS = ["collectfasta", *INSTALLED_APPS]
+COLLECTFASTA_STRATEGY = "collectfasta.strategies.boto3.Boto3Strategy"
+INSTALLED_APPS = ["collectfasta", *INSTALLED_APPS]
 
 ########################
