@@ -1,8 +1,6 @@
 from .base import *  # noqa
 from .base import env
 
-from celery.schedules import crontab
-
 # GENERAL
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#debug
@@ -97,12 +95,7 @@ if ON_ECDYSIS_SERVER == "YES":
     CELERY_BEAT_SCHEDULE = {
         'run_classify_new_images': {
             'task': 'bugbox3.taxonomy.tasks.run_classify_new_images',
-            'schedule': crontab(hour=_hours, minute=0, day_of_week='*')
-        },
-        'run_update_classifications': {
-            'task': 'bugbox3.taxonomy.tasks.run_update_classifications',
-            'schedule': crontab(hour=15, minute=0, day_of_week='*')
-        }
+            'schedule': 60 * 60 },
     },
 
 # django-webpack-loader
