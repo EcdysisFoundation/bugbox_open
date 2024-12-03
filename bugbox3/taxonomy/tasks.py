@@ -73,8 +73,3 @@ def id_image(id):
 @shared_task
 def run_classify_new_images():
     call_command('classify_new_images')
-
-
-@shared_task
-def run_update_classifications():
-    call_command('update_classifications')
