@@ -23,6 +23,7 @@ $(function () {
 
     var data_table = $('#data-table').DataTable({
         order: [[1, 'desc']],
+        pageLength: 100,
         ordering: false,
         processing: false,
         serverSide: true,

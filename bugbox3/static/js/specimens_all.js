@@ -216,6 +216,7 @@ clearMorphoButton.addEventListener('click', function() {
 
     var specimens_table = $('#specimens-table').DataTable({
         order: [[1, 'desc']],
+        pageLength: 100,
         ordering: false,
         processing: false,
         serverSide: true,

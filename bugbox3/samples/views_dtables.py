@@ -42,12 +42,14 @@ class SamplesDatatablesViewSet(PermissionRequiredMixin, DatatablesModelViewSetMi
     search_vector = [
         constants.FIELD_SAMPLE_TYPE,
         constants.FIELD_SAMPLE_NAME_NO,
-        'site_visit__site__site_name'
+        'site_visit__site__' + constants.FIELD_SITE_SITE_NAME
     ]
 
     def get_queryset(self):
         experiment_id = int(self.kwargs['experiment_id'])
-        return Sample.objects.filter(site_visit__site__experiment_id=experiment_id)
+        return Sample.objects.filter(site_visit__site__experiment_id=experiment_id).order_by(
+            '-site_visit__site__' + constants.FIELD_SITE_SITE_NAME, constants.FIELD_SAMPLE_NAME_NO
+        )
 
 
 class SitesDatatablesViewSet(PermissionRequiredMixin, DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
@@ -64,7 +66,9 @@ class SitesDatatablesViewSet(PermissionRequiredMixin, DatatablesModelViewSetMixi
 
     def get_queryset(self):
         experiment_id = int(self.kwargs['experiment_id'])
-        return Site.objects.filter(experiment_id=experiment_id)
+        return Site.objects.filter(experiment_id=experiment_id).order_by(
+            '-' + constants.FIELD_SITE_SITE_NAME
+        )
 
 
 class SpecimenDatatablesViewSet(PermissionRequiredMixin, DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
