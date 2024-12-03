@@ -93,9 +93,9 @@ ON_ECDYSIS_SERVER = env("ON_ECDYSIS_SERVER", default='NO')
 if ON_ECDYSIS_SERVER == "YES":
     CELERY_BEAT_SCHEDULE = {
         'run_classify_new_images': {
-            'task': 'bugbox3.taxonomy.tasks.run_classify_new_images',
-            'schedule': 60 * 60 },
-    },
+        'task': 'bugbox3.taxonomy.tasks.run_classify_new_images',
+        'schedule': 60 * 60 },
+    }
 
 # django-webpack-loader
 # ------------------------------------------------------------------------------
