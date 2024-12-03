@@ -1,6 +1,8 @@
 from .base import *  # noqa
 from .base import env
 
+from celery.schedules import crontab
+
 # GENERAL
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#debug
@@ -91,11 +93,17 @@ CELERY_RESULT_BACKEND = CELERY_BROKER_URL
 # set this to YES in env variable on ECDYSIS01
 ON_ECDYSIS_SERVER = env("ON_ECDYSIS_SERVER", default='NO')
 if ON_ECDYSIS_SERVER == "YES":
+    _hours = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
     CELERY_BEAT_SCHEDULE = {
         'run_classify_new_images': {
-        'task': 'bugbox3.taxonomy.tasks.run_classify_new_images',
-        'schedule': 60 * 60 },
-    }
+            'task': 'bugbox3.taxonomy.tasks.run_classify_new_images',
+            'schedule': crontab(hour=_hours, minute=0, day_of_week='*')
+        },
+        'run_update_classifications': {
+            'task': 'bugbox3.taxonomy.tasks.run_update_classifications',
+            'schedule': crontab(hour=15, minute=0, day_of_week='*')
+        }
+    },
 
 # django-webpack-loader
 # ------------------------------------------------------------------------------

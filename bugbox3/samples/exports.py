@@ -6,7 +6,6 @@ from django.db.models import Case, CharField, F, Func, Value, When
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 
-from ..core.models import LookupChoices
 from ..core.permissions import IS_RESEARCH
 from ..taxonomy.models import Morphospecies
 from ..taxonomy.utils import get_skip_morphospecies_ids

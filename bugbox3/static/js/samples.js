@@ -51,6 +51,7 @@ $(function () {
 
     var samples_table = $('#samples-table').DataTable({
         order: [[1, 'desc']],
+        pageLength: 25,
         ordering: false,
         processing: false,
         serverSide: true,
