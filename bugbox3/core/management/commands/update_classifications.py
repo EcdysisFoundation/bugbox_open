@@ -16,7 +16,7 @@ class Command(BaseCommand):
         # get the min_ai_version_db_id as the id of lowest ai_version
         min_ai_version_db_id = self.Specimen.objects.aggregate(Min('ai_version_id', default=0))
         min_ai_version_db_id = min_ai_version_db_id['ai_version_id__min']
-        record_limit = 10000
+        record_limit = 30000
         # only update the oldest model version records, limit number of records
         while min_ai_version_db_id < max_ai_version_db_id:
             specimens = self.Specimen.objects.filter(
