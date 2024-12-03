@@ -91,7 +91,6 @@ CELERY_RESULT_BACKEND = CELERY_BROKER_URL
 # set this to YES in env variable on ECDYSIS01
 ON_ECDYSIS_SERVER = env("ON_ECDYSIS_SERVER", default='NO')
 if ON_ECDYSIS_SERVER == "YES":
-    _hours = '0,1,2,3,4,5,6,7,8,9,10,11,12,13,14'
     CELERY_BEAT_SCHEDULE = {
         'run_classify_new_images': {
             'task': 'bugbox3.taxonomy.tasks.run_classify_new_images',
