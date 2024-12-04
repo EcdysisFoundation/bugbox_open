@@ -16,9 +16,13 @@ def image_prediction(image_bytes):
         return
     files = {'file': image_bytes}
     response = requests.post(settings.AI_INFERENCE_URL, files=files)
-    response.raise_for_status()
-    response = response.json()
-    return response
+    try:
+        response.raise_for_status()
+        response = response.json()
+        return response
+    except Exception as e:
+        print('image_prediction didnt get a 200 response, try again later')
+    return None
 
 
 @celery_app.task(autoretry_for=(RequestException,), soft_time_limit=240,
