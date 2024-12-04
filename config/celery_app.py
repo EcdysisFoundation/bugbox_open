@@ -1,6 +1,8 @@
 import os
 
 from celery import Celery
+from celery.schedules import crontab
+from django.conf import settings
 
 # set the default Django settings module for the 'celery' program.
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.local")
@@ -15,3 +17,17 @@ app.config_from_object("django.conf:settings", namespace="CELERY")
 
 # Load task modules from all registered Django app configs.
 app.autodiscover_tasks()
+
+
+
+if settings.ON_ECDYSIS_SERVER == "YES":
+    app.conf.beat_schedule = {
+        'run_classify_new_images': {
+            'task': 'bugbox3.taxonomy.tasks.run_classify_new_images',
+            'schedule': crontab(minute=0)
+        },
+        'run_update_classifications': {
+            'task': 'bugbox3.taxonomy.tasks.run_update_classifications',
+            'schedule': crontab(minute=30)
+        }
+    }
