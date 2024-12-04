@@ -18,8 +18,6 @@ app.config_from_object("django.conf:settings", namespace="CELERY")
 # Load task modules from all registered Django app configs.
 app.autodiscover_tasks()
 
-
-
 if settings.ON_ECDYSIS_SERVER == "YES":
     app.conf.beat_schedule = {
         'run_classify_new_images': {
