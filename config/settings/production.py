@@ -22,6 +22,7 @@ CELERY_RESULT_BACKEND = CELERY_BROKER_URL
 # Set to blank on Heroku config,
 #  so that its aware the URL is not accessible, due to private network.
 AI_INFERENCE_URL = env("AI_INFERENCE_URL")
+ON_ECDYSIS_SERVER = 'NO'
 
 # CACHES
 # ------------------------------------------------------------------------------
