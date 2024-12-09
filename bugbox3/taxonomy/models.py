@@ -1,3 +1,5 @@
+from io import BytesIO
+
 from django.conf import settings
 from django.db.models import (CASCADE, SET_NULL, BooleanField, CharField,
                               DateField, DateTimeField, FloatField, ForeignKey,
@@ -48,15 +50,20 @@ def set_update_thumbs(sender, instance, **kwargs):
 @receiver(post_save, sender=Morphospecies)
 def save_thumbnail(instance, created, **kwargs):
     if created or instance.update_thumbs:
+        buffer = None
         if instance.image:
+            buffer = BytesIO()
             instance.image_thumbnail = resized_thumbnail(
                 instance.image,
                 constants.MORPHPOSPECIES_THUMBSIZE,
-                constants.MORPHPOSPECIES_THUMBSIZE)
+                constants.MORPHPOSPECIES_THUMBSIZE,
+                buffer)
         else:
             instance.image_thumbnail = None
         instance.update_thumbs = None
         instance.save()
+        if buffer:
+            buffer.close()
 
 
 class AiVersion(Model):
