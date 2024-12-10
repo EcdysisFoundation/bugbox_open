@@ -1,4 +1,5 @@
 import uuid
+from io import BytesIO
 
 from django.conf import settings
 from django.contrib.gis.db.models import PointField
@@ -153,15 +154,20 @@ def set_update_thumbs(sender, instance, **kwargs):
 @receiver(post_save, sender=Sample)
 def save_thumbnail(instance, created, **kwargs):
     if created or instance.update_thumbs:
+        buffer = None
         if instance.image:
+            buffer = BytesIO()
             instance.image_thumbnail = resized_thumbnail(
                 instance.image,
                 constants.SAMPLE_IMAGE_THUMBSIZE,
-                constants.SAMPLE_IMAGE_THUMBSIZE)
+                constants.SAMPLE_IMAGE_THUMBSIZE,
+                buffer)
         else:
             instance.image_thumbnail = None
         instance.update_thumbs = None
         instance.save()
+        if buffer:
+            buffer.close()
 
 
 class MultiSpecimenImage(Model):
@@ -179,12 +185,15 @@ class MultiSpecimenImage(Model):
 def save_multi_specimen_image_thumbnail(instance, created, **kwargs):
     # Can only create and delete MultiSpecimenImage.
     if created and instance.image:
+        buffer = BytesIO()
         instance.image_thumbnail = resized_thumbnail(
             instance.image,
             constants.SPECIMEN_IMAGE_THUMBSIZE_MEDIUM,
             constants.SPECIMEN_IMAGE_THUMBSIZE_MEDIUM,
+            buffer,
             'thumbnail')
         instance.save()
+        buffer.close()
 
 
 class Specimen(Model):
@@ -250,21 +259,28 @@ def ensure_single_true_flag(sender, instance, **kwargs):
 def save_specimen_image_thumbnail(instance, created, **kwargs):
     # Can only create and delete SpecimenImage.
     if created and instance.image:
+        a = BytesIO()
+        b = BytesIO()
+        c = BytesIO()
         instance.image_thumbnail = resized_thumbnail(
             instance.image,
             constants.SPECIMEN_IMAGE_THUMBSIZE,
-            constants.SPECIMEN_IMAGE_THUMBSIZE)
+            constants.SPECIMEN_IMAGE_THUMBSIZE,
+            a)
         instance.image_thumbnail_medium = resized_thumbnail(
             instance.image,
             constants.SPECIMEN_IMAGE_THUMBSIZE_MEDIUM,
             constants.SPECIMEN_IMAGE_THUMBSIZE_MEDIUM,
-            'thumbnail_medium')
+            b, 'thumbnail_medium')
         instance.image_thumbnail_large = resized_thumbnail(
             instance.image,
             constants.SPECIMEN_IMAGE_THUMBSIZE_LARGE,
             constants.SPECIMEN_IMAGE_THUMBSIZE_LARGE,
-            'thumbnail_large')
+            c, 'thumbnail_large')
         instance.save()
+        a.close()
+        b.close()
+        c.close()
 
 
 @receiver(post_save, sender=SpecimenImage)

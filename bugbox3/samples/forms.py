@@ -92,7 +92,7 @@ class SamplePlanForm(ModelFormMixin):
 
     sample_type = ChoiceField(
         widget=Select,
-        choices=LookupChoices.objects.get_field_choices_w_blank(
+        choices=lambda: LookupChoices.objects.get_field_choices_w_blank(
             constants.FIELD_SAMPLE_PLAN_SAMPLE_TYPE)
     )
 
@@ -139,13 +139,13 @@ class SiteForm(ModelFormMixin):
 
     treatment = ChoiceField(
         widget=Select,
-        choices=LookupChoices.objects.get_field_choices_w_blank(
+        choices=lambda: LookupChoices.objects.get_field_choices_w_blank(
             constants.FIELD_SITE_TREATMENT)
     )
 
     habitat_type = ChoiceField(
         widget=Select,
-        choices=LookupChoices.objects.get_field_choices_w_blank(
+        choices=lambda: LookupChoices.objects.get_field_choices_w_blank(
             constants.FIELD_SITE_HABITAT_TYPE)
     )
 
@@ -210,7 +210,7 @@ class SampleForm(ModelFormMixin):
 
     sample_type = ChoiceField(
         widget=Select,
-        choices=LookupChoices.objects.get_field_choices_w_blank(
+        choices=lambda: LookupChoices.objects.get_field_choices_w_blank(
             constants.FIELD_SAMPLE_TYPE)
     )
 
@@ -307,7 +307,7 @@ class SpecimenForm(ModelFormMixin):
 
     tags = MultipleChoiceField(
         widget=SelectMultiple,
-        choices=LookupChoices.objects.get_field_choices(
+        choices=lambda: LookupChoices.objects.get_field_choices(
             constants.FIELD_SPECIMEN_TAGS)
     )
 

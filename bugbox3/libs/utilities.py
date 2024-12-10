@@ -57,7 +57,7 @@ IMAGE_TYPES = {
 }
 
 
-def resized_thumbnail(image, width, height, thumbname='thumbnail'):
+def resized_thumbnail(image, width, height, buffer, thumbname='thumbnail'):
     # Open the image using Pillow
     if default_storage.exists(image.name):
         try:
@@ -74,7 +74,6 @@ def resized_thumbnail(image, width, height, thumbname='thumbnail'):
                 # Use the file extension to determine the file type from the image_types dictionary
                 img_format = IMAGE_TYPES[img_suffix.lower()]
                 # Save the resized image into the buffer, noting the correct file type
-                buffer = BytesIO()
                 img.save(buffer, format=img_format)
                 # Wrap the buffer in File object
                 file_object = File(buffer, name=new_filename)
@@ -90,6 +89,7 @@ def crop_img_to_grid(image, grid):
     """
     Return list of [(cropped_image, index),] from image cropped to grid.
     Where index is the position in the grid.
+    TODO: Use of BytesIO in this way may cause memory leak. Is it closed when done?
     """
 
     if default_storage.exists(image.name):
