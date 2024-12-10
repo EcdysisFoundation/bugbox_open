@@ -27,5 +27,9 @@ if settings.ON_ECDYSIS_SERVER == "YES":
         'run_update_classifications': {
             'task': 'bugbox3.taxonomy.tasks.run_update_classifications',
             'schedule': crontab(minute=30)
+        },
+        'run_s3_media_download': {
+            'task': 'bugbox3.taxonomy.tasks.run_s3_media_download',
+            'schedule': crontab(day_of_week=5, hour=22, minute=5)
         }
     }

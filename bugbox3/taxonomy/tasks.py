@@ -78,11 +78,20 @@ def id_image(id):
     return
 
 
+# only run on Ecdysis01
 @shared_task
 def run_classify_new_images():
     call_command('classify_new_images')
 
 
+# only run on Ecdysis01
 @shared_task
 def run_update_classifications():
     call_command('update_classifications')
+
+
+# only run on Ecdysis01
+# will need replaced to be specific to Ecdysis data when more orgs exist
+@shared_task
+def run_s3_media_download():
+    call_command('bash_script s3_media_download.sh')
