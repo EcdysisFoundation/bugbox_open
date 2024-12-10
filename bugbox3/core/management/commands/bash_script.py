@@ -1,5 +1,7 @@
 import subprocess
 
+from django.conf import settings
+
 from django.core.management.base import BaseCommand
 
 # run like
@@ -18,19 +20,22 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        script_path = options['script_path']
-        try:
-            result = subprocess.run(
-                ['bash', script_path],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True
-            )
-            if result.returncode == 0:
-                if options['output']:
-                    self.stdout.write(result.stdout)
-                self.stdout.write('bash_script {0} completed successfully'.format(script_path))
-            else:
-                raise Exception(f"Script execution failed: {result.stderr}")
-        except Exception as e:
-            raise Exception(f"Error running script: {e}")
+        if settings.ON_ECDYSIS_SERVER == 'YES':
+            script_path = options['script_path']
+            try:
+                result = subprocess.run(
+                    ['bash', script_path],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True
+                )
+                if result.returncode == 0:
+                    if options['output']:
+                        self.stdout.write(result.stdout)
+                    self.stdout.write('bash_script {0} completed successfully'.format(script_path))
+                else:
+                    raise Exception(f"Script execution failed: {result.stderr}")
+            except Exception as e:
+                raise Exception(f"Error running script: {e}")
+        else:
+            print('Currently this cmd is only supported on Ecdysis01')
