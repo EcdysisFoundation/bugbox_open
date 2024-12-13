@@ -42,7 +42,7 @@ USE_TZ = True
 LOCALE_PATHS = [str(BASE_DIR / "locale")]
 
 # AI_INFERENCE_URL
-AI_INFERENCE_URL = 'http://ecdysis01.local:8084/predictions/metaformer'
+AI_INFERENCE_URL = 'http://ecdysis01.local:8074/predictions/metaformer'
 
 # DATABASES
 # ------------------------------------------------------------------------------
