@@ -40,11 +40,6 @@ def id_image(id):
     if specimen.acceptance != 0:
         print(str(id) + ' is not acceptance = 0, returning...')
         return
-    AiVersion = apps.get_model(app_label='taxonomy', model_name='AiVersion')
-    ai_version = AiVersion.objects.last()  # replace with or check actual version from server request
-    if specimen.ai_version == ai_version and specimen.ai_classification:
-        # this is already done
-        return
     image_set_filtered = specimen.specimenimage_set.exclude(
         image_notfound=True
     )
@@ -70,7 +65,7 @@ def id_image(id):
     Morphospecie = apps.get_model(app_label='taxonomy', model_name='Morphospecies')
     morphospecie = data.get("morphospecie_id")
     specimen.ai_classification = Morphospecie.objects.get(pk=int(morphospecie))
-    specimen.ai_version = ai_version
+    specimen.ai_model_name = data.get("modelVersion")
     specimen.confidence = float(data.get("confidence"))
     specimen.optional_pred_one = data.get("optional_preds")[0]
     specimen.optional_pred_two = data.get("optional_preds")[1]

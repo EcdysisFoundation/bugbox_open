@@ -73,7 +73,8 @@ class AiVersion(Model):
 
 class AiTraining(Model):
     morphospecies = ForeignKey(Morphospecies, on_delete=CASCADE, null=False)
-    model = ForeignKey(AiVersion, on_delete=CASCADE, null=False)
+    model = ForeignKey(AiVersion, on_delete=CASCADE, null=True)
+    model_name = CharField(max_length=64, blank=True)
     total = IntegerField(null=False)
     precision = FloatField(null=False)
     recall = FloatField(null=False)
