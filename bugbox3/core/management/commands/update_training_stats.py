@@ -1,4 +1,4 @@
-import json
+import csv
 
 from django.apps import apps
 from django.conf import settings
@@ -9,26 +9,51 @@ from django.core.management.base import BaseCommand
 
 class Command(BaseCommand):
     """
-    Select relevant fields in the tables and create .csv from them for model training.
+    Update AiTraining table with new stats.csv file.
     """
     Specimen = apps.get_model(app_label='samples', model_name='Specimen')
     AiTraining = apps.get_model('taxonomy', 'AiTraining')
     Morphospecies = apps.get_model('taxonomy', 'Morphospecies')
 
     def handle(self, *args, **options):
-        if not settings.ON_ECDYSIS_SERVER == 'YES':
+        if settings.ON_ECDYSIS_SERVER == 'YES':
             print('Currently this cmd is only supported on Ecdysis01')
             return
 
-        json_path = 'local_files/training_stats.json'
+        csv_path = 'local_files/dataset_report_stats.csv'
+        model_name = 'model_name'
+        morphospecies_id = 'morphospecies_id'
+        h = ['', 'TP', 'FP', 'TN', 'FN', 'Precision', 'Recall', 'F1', 'Total_samples',
+             model_name, 'morphos_name',
+             'dataset_report_morphos_name', 'dataset_report_train', 'dataset_report_val',
+             'dataset_report_test', 'dataset_report_total_samples']
 
-        with open(json_path, 'r') as file:
-            json_data = json.load(file)
-            version = json_data['version']
-            if not version:
-                print('WARNING: there was no version in the file')
+        with open(csv_path, newline='') as file:
+            reader = csv.reader(file)
+            headers = next(reader)
+            data = [row for row in reader]
+            if headers == h:
+                print('Headers read as expected')
+            else:
+                print('Headers not as expected, got..')
+                print(headers)
+                print('expected...')
+                print(h)
                 return
-            print('Processing training_stats for model_name {0}'.format(version))
+            h[0] = morphospecies_id
+
+            version = [row[h.index(model_name)] for row in data]
+            version = list(set(version))
+            if len(version) != 1:
+                print('More than one model_name version represented in file. Is this an error? got...')
+                print(len)
+                return
+            else:
+                version = version[0]
+
+            print('Processing data for model version {0}'.format(version))
+            print('Checking that model doesnt already have stats data....')
+
             v = self.AiTraining.objects.filter(model_name=version)
             if v:
                 message = 'WARNING: {0} records with model_name = {1} already exist, exiting.'.format(
@@ -37,7 +62,32 @@ class Command(BaseCommand):
                 # or make function to delete existing to update
                 print(message)
                 return
-            obs = [self.AiTraining(**d, model_name=version) for d in json_data['data']]
+
+            obs = []
+            for d in data:
+                try:
+                    obs.append(self.AiTraining(
+                        model_name=version,
+                        morphospecies=self.Morphospecies.objects.get(
+                            id=int(d[h.index(morphospecies_id)])),
+                        total=int(d[h.index('dataset_report_total_samples')]),
+                        precision=float(d[h.index('Precision')]),
+                        recall=float(d[h.index('Recall')]),
+                        f1=float(d[h.index('F1')]),
+                        tp=int(d[h.index('TP')]),
+                        fp=int(d[h.index('FP')]),
+                        tn=int(d[h.index('TN')]),
+                        fn=int(d[h.index('FN')]),
+                        train=int(d[h.index('dataset_report_train')]),
+                        test=int(d[h.index('dataset_report_test')]),
+                        val=int(d[h.index('dataset_report_val')]),
+                    ))
+                except Exception as e:
+                    print('invalid data encountered, exception ...')
+                    print(e)
+                    print('failing row...')
+                    print(d)
+                    return
             created = self.AiTraining.objects.bulk_create(
                     obs)
             print(
