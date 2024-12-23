@@ -16,7 +16,7 @@ class Command(BaseCommand):
     Morphospecies = apps.get_model('taxonomy', 'Morphospecies')
 
     def handle(self, *args, **options):
-        if settings.ON_ECDYSIS_SERVER == 'YES':
+        if settings.ON_ECDYSIS_SERVER != 'YES':
             print('Currently this cmd is only supported on Ecdysis01')
             return
 
