@@ -40,7 +40,7 @@ $(function () {
 
 
           var chart = new ApexCharts(document.querySelector("#ai_accuracy_over_time"), options);
-          if ( json_context.ai_accuracy_over_time.train.length ) {
+          if ( json_context.ai_accuracy_over_time.total.length ) {
             chart.render();
           }
     }

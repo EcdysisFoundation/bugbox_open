@@ -180,16 +180,16 @@ class MorphospeciesDetailView(PermissionRequiredMixin, FormView):
                 }
         ai = AiTraining.objects.filter(morphospecies=morphospecies).select_related('model').order_by('id').all()
         ai_accuracy_over_time = {
-            'precision': [[a.model.entered_date, a.precision] for a in ai],
-            'f1': [[a.model.entered_date, a.f1] for a in ai],
-            'recall': [[a.model.entered_date, a.recall] for a in ai],
-            'train': [a.train for a in ai]
+            'precision': [[a.entered_date, a.precision] for a in ai],
+            'f1': [[a.entered_date, a.f1] for a in ai],
+            'recall': [[a.entered_date, a.recall] for a in ai],
+            'total': [a.train for a in ai]
         }
         context.update({
             'can_edit': self.request.user.has_perm(CHANGE_MORPHOSPECIES),
             'display_name': display_name,
             'morphospecies': morphospecies,
-            'ai_last_train': ai_accuracy_over_time['train'][-1] if ai_accuracy_over_time['train'] else 0,
+            'ai_last_train': ai_accuracy_over_time['total'][-1] if ai_accuracy_over_time['total'] else 0,
             'image_set': image_set,
             'image_count': image_count,
             'img_thumbnail': img_thumbnail,

@@ -157,7 +157,7 @@ def get_classifcation(specimen):
 
 
 def get_probability(specimen):
-    if specimen.confidence and specimen.ai_version:
+    if specimen.confidence and specimen.ai_model_name:
         bg_class = 'bg-danger'
         if specimen.confidence >= 60:
             bg_class = 'bg-success'
@@ -179,7 +179,7 @@ def get_probability_or_user(specimen):
             specimen.classification and not specimen.ai_classification):
         return '<span class="badge text-bg-success">{0}</span>'.format(specimen.reviewer_user)
     else:
-        version = '<p>{0}</p>'.format(specimen.ai_version.version) if specimen.ai_version else ''
+        version = '<p>{0}</p>'.format(specimen.ai_model_name) if specimen.ai_model_name else ''
         return '{0}{1}'.format(get_probability(specimen), version)
 
 
@@ -187,8 +187,8 @@ def get_ai_classification(specimen):
     if not specimen.ai_classification:
         return ''
     version = ''
-    if specimen.ai_version:
-        version = specimen.ai_version.version
+    if specimen.ai_model_name:
+        version = specimen.ai_model_name
     return '<p>{0} {1}{2}</p>'.format(
         specimen.ai_classification.name,
         get_probability(specimen),
