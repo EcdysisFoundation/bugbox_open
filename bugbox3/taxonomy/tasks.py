@@ -62,9 +62,9 @@ def id_image(id):
     # dont make changes if we didnt get data
     if not data:
         return
-    Morphospecie = apps.get_model(app_label='taxonomy', model_name='Morphospecies')
-    morphospecie = data.get("morphospecie_id")
-    specimen.ai_classification = Morphospecie.objects.get(pk=int(morphospecie))
+    Morphospecies = apps.get_model(app_label='taxonomy', model_name='Morphospecies')
+    morphospecies_id = data.get("morphospecies_id")
+    specimen.ai_classification = Morphospecies.objects.get(pk=int(morphospecies_id))
     specimen.ai_model_name = data.get("modelVersion")
     specimen.confidence = float(data.get("confidence"))
     specimen.optional_pred_one = data.get("optional_preds")[0]
