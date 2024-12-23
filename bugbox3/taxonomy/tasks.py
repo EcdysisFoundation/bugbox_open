@@ -21,7 +21,8 @@ def image_prediction(image_bytes):
         response = response.json()
         return response
     except Exception as e:
-        print('image_prediction didnt get a 200 response, try again later... ' + e)
+        print('image_prediction didnt get a 200 response, try again later... ')
+        print(str(e))
     return None
 
 
