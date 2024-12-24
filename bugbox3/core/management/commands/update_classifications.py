@@ -20,8 +20,8 @@ class Command(BaseCommand):
         if not recs:
             recs = 1000
         # The most recent model is determined by the most recent entry into AiTraining
-        current_model_name = self.AiTraining.objects.exclude(model_name='').last().values_list(
-            'model_name', flat=True)
+        current_model_name = self.AiTraining.objects.exclude(model_name='').values_list(
+            'model_name', flat=True).last()
         specimens = self.Specimen.objects.filter(
                 acceptance=0).exclude(ai_model_name=current_model_name)[:recs]
         for s in specimens:
