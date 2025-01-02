@@ -1,7 +1,7 @@
 import os
 import subprocess
 import boto3
-from datetime import datetime
+import datetime
 
 
 def save_backup_s3():
@@ -16,7 +16,7 @@ def save_backup_s3():
     has_all_settings = all([aws_access_key_id, aws_secret_access_key, aws_bucket_name, db_url])
     assert has_all_settings, 'Missing required settings to run backup!'
 
-    backup_filename = datetime.now(datetime.timezone.utc).strftime('%Y-%m-%d.dump')
+    backup_filename = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%d.dump')
     cmd = 'pg_dump -Fc --no-acl --no-owner {url} > {file}'.format(url=db_url, file=backup_filename)
     subprocess.run(cmd, shell=True)
 
