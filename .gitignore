@@ -285,6 +285,7 @@ webpack-stats.json
 
 ### local misc
 local_files/
+db_backups/
 *.csv
 *.json
 

@@ -39,25 +39,15 @@ Check other Flake8 issues
 
 ### Database and backups
 
-The production database is on Heroku. The following explains about managing local backups for development purposes.
+The production database is on Heroku. A copy can be obtained for development purposes. Using local.yml for development, a postgres container is created. To restore a db to is see proceed as follows.
 
-Initiate a backup in docker
+A script, `backup_db_s3.py` is run on Heroku at defined intervals to create long term backups or can be ran as needed to create a backup file and upload to S3.
 
-    docker compose -f local.yml exec postgres backup
+Knowing the BACKUP_FILENAME on S3, use it with the following script to download to local_files.
 
-List backups
+    python db_download_s3_backup.py BACKUP_FILENAME
 
-    docker compose -f local.yml exec postgres backups
-
-Upload backups to S3
-
-    docker compose -f local.yml run --rm awscli upload
-
-Download a specific backup
-
-    docker compose -f local.yml run --rm awscli download BACKUP_FILE
-
-Restore to your database. First bring the containers down...
+Next, bring any running containers down...
 
     docker compose -f local.yml down
 
@@ -65,11 +55,20 @@ bring up the db only
 
     docker compose -f local.yml up postgres -d
 
-restore it to the backup file
+Get the local docker postgres CONTAINER_ID.
 
-    docker compose -f local.yml exec postgres restore BACKUP_FILE
+    docker compose -f local.yml ps -q postgres
 
-After it succesfully restores, bring it down and bring everything back up.
+using the returned CONTAINER_ID, move the backup file from local_files to the container
+
+    docker cp ./local_files/BACKUP_FILENAME CONTAINER_ID:/backups
+
+
+Use the `restore` bash script to restore the db using the backup. It first drops the db, then creates a blank one. As a result numerous 'errors' will report in the output where it tries to drop tables and indexes that do not exist. These can be ignored.
+
+    docker compose -f local.yml exec postgres restore BACKUP_FILENAME
+
+After it succesfully restores, bring the local db down and bring everything back up.
 
     docker compose -f local.yml down
 
@@ -77,27 +76,6 @@ bring all services up
 
     docker compose -f local.yml up
 
-Alternatvely to using the AWS CLI, a backup can be downloaded directly from docker. This process includes moving the file out and in the docker conatiner.
-
-With a backup already created in the docker container as described above, get the container ID ...
-
-    docker compose -f local.yml ps -q postgres
-
-using the returned CONTAINER_ID, move the backup file from the container to a directory named backups in the bugbox3 directory.
-
-    docker cp CONTAINER_ID:/backups/BACKUP_FILE ./backups/BACKUP_FILE
-
-Then use scp to copy this file to local computer.
-
-    scp ecdysis@ecdysis01.local:/srv/bugbox3/backups/BACKUP_FILE backups/BACKUP_FILE
-
-Get the local docker container id.
-
-    docker compose -f local.yml ps -q postgres
-
-Copy the backup to it
-
-    docker cp ./backups/BACKUP_FILE CONTAINER_ID:/backups
 
 ### Live reloading and Sass CSS compilation
 

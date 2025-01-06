@@ -89,13 +89,3 @@ services:
     command: npm run dev
     ports:
       - '3000:3000'
-
-  awscli:
-    build:
-      context: .
-      dockerfile: ./compose/local/aws/Dockerfile
-    env_file:
-      - ./.envs/.local/.django
-      - ./.envs/.local/.secrets
-    volumes:
-      - bugbox3_local_postgres_data_backups:/backups
