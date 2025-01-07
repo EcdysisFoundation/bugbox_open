@@ -16,11 +16,11 @@ Development url, .js served in dev mode is http://localhost:3000/
 
 To run commands to manage.py, use this syntax, to the appropriate .yml file
 
-    docker compose -f local.yml run --rm django python manage.py mycommand
+    docker compose -f local.yml run --rm django python manage.py MY_COMMAND
 
 Or to run on Heroku, using the Heroku cli to run on Production
 
-    heroku run python manage.py shell -a bugbox
+    heroku run python manage.py MY_COMMAND -a bugbox
 
 ### Flake 8
 
