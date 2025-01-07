@@ -6,7 +6,6 @@ from celery.exceptions import SoftTimeLimitExceeded
 from django.apps import apps
 from django.conf import settings
 from django.core.management import call_command
-from requests import RequestException
 
 from config import celery_app
 
@@ -26,7 +25,7 @@ def image_prediction(image_bytes):
     return None
 
 
-@celery_app.task(autoretry_for=(RequestException,), soft_time_limit=240,
+@celery_app.task(autoretry_for=(requests.RequestException,), soft_time_limit=240,
                  retry_kwargs={'max_retries': 3, 'countdown': 30},
                  retry_backoff=True)
 def id_image(id):
@@ -77,17 +76,20 @@ def id_image(id):
 # only run on Ecdysis01
 @shared_task
 def run_classify_new_images():
-    call_command('classify_new_images')
+    if settings.ON_ECDYSIS_SERVER == 'YES':
+        call_command('classify_new_images')
 
 
 # only run on Ecdysis01
 @shared_task
 def run_update_classifications():
-    call_command('update_classifications')
+    if settings.ON_ECDYSIS_SERVER == 'YES':
+        call_command('update_classifications')
 
 
 # only run on Ecdysis01
 # will need replaced to be specific to Ecdysis data when more orgs exist
 @shared_task
 def run_s3_media_download():
-    call_command('bash_script s3_media_download.sh')
+    if settings.ON_ECDYSIS_SERVER == 'YES':
+        call_command('bash_script', 's3_media_download.sh')
