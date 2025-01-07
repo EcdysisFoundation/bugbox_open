@@ -7,7 +7,7 @@
 ###     <1> filename of an existing backup.
 ###
 ### Usage:
-###     $ docker compose -f <environment>.yml (exec |run --rm) postgres restore <1>
+###     $ docker compose -f <environment>.yml run postgres restore <1>
 
 
 set -o errexit
@@ -26,7 +26,7 @@ if [[ -z ${1+x} ]]; then
 fi
 backup_filename="${BACKUP_DIR_PATH}/${1}"
 if [[ ! -f "${backup_filename}" ]]; then
-    message_error "No backup with the specified filename found. Check out the 'backups' maintenance script output to see if there is one and try again."
+    message_error "No backup with the specified filename found. You may need to move it to the docker container."
     exit 1
 fi
 
@@ -47,9 +47,9 @@ message_info "Dropping the database..."
 dropdb "${PGDATABASE}"
 
 message_info "Creating a new database..."
-createdb --owner="${POSTGRES_USER}"
+createdb --owner="${PGUSER}"
 
-message_info "Applying the backup to the new database..."
-gunzip -c "${backup_filename}" | psql "${POSTGRES_DB}"
+message_info "Applying the backup.dump to the new database..."
+pg_restore --verbose --clean --no-acl --no-owner -U ${PGUSER} -d ${PGDATABASE} ${backup_filename}
 
 message_success "The '${POSTGRES_DB}' database has been restored from the '${backup_filename}' backup."

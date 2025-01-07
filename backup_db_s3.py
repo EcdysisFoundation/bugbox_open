@@ -6,7 +6,10 @@ import datetime
 
 def save_backup_s3():
     """
-    Backup Heroku database and save to AWS S3
+    Run to backup db.
+    For Heroku db, use scheduler or with cli using ...
+    heroku run -a bugbox python backup_db_s3.py
+    TODO: Indicate in filename if heroku db or development db.
     """
     aws_access_key_id = os.environ.get('DJANGO_AWS_ACCESS_KEY_ID')
     aws_secret_access_key = os.environ.get('DJANGO_AWS_SECRET_ACCESS_KEY')
@@ -26,6 +29,7 @@ def save_backup_s3():
         aws_secret_access_key=aws_secret_access_key,
     )
     s3_client.upload_file(backup_filename, aws_bucket_name, backup_filename)
+    print('Completed backup and upload of {0}'.format(backup_filename))
 
 
 if __name__ == '__main__':

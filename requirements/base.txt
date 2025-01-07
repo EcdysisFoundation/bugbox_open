@@ -1,29 +1,29 @@
-
-python-slugify==8.0.4  # https://github.com/un33k/python-slugify
-Pillow==10.4.0  # https://github.com/python-pillow/Pillow
+Pillow==11.0.0  # https://github.com/python-pillow/Pillow
 argon2-cffi==23.1.0  # https://github.com/hynek/argon2_cffi
-redis==5.0.8  # https://github.com/redis/redis-py
-hiredis==3.0.0  # https://github.com/redis/hiredis-py
+redis==5.2.1  # https://github.com/redis/redis-py
+hiredis==3.1.0  # https://github.com/redis/hiredis-py
 celery==5.4.0  # pyup: < 6.0  # https://github.com/celery/celery
 django-celery-beat==2.7.0  # https://github.com/celery/django-celery-beat
 flower==2.0.1  # https://github.com/mher/flower
-psycopg[c]==3.2.2  # https://github.com/psycopg/psycopg
-label-studio-sdk==1.0.5
+psycopg[c]==3.2.3  # https://github.com/psycopg/psycopg
+requests==2.32.2
 
 # Django
 # ------------------------------------------------------------------------------
-django==5.0.9  # https://www.djangoproject.com/
+django==5.1.4  # https://www.djangoproject.com/
 django-environ==0.11.2  # https://github.com/joke2k/django-environ
 django-model-utils==5.0.0  # https://github.com/jazzband/django-model-utils
-django-allauth==64.2.1  # https://github.com/pennersr/django-allauth
+django-allauth==65.3.1  # https://github.com/pennersr/django-allauth
 django-crispy-forms==2.3  # https://github.com/django-crispy-forms/django-crispy-forms
-crispy-bootstrap5==2024.2  # https://github.com/django-crispy-forms/crispy-bootstrap5
+crispy-bootstrap5==2024.10  # https://github.com/django-crispy-forms/crispy-bootstrap5
 django-redis==5.4.0  # https://github.com/jazzband/django-redis
 django-webpack-loader==3.1.1  # https://github.com/django-webpack/django-webpack-loader
 djangorestframework==3.15.2
-django-bootstrap5==24.2
+django-bootstrap5==24.3
+django-extensions==3.2.3  # https://github.com/django-extensions/django-extensions
+# django-organizations==2.5.0
 
 # File storage S3
-boto3==1.35.50
-Collectfasta==3.2.0  # https://github.com/jasongi/collectfasta
+boto3==1.35.90
+Collectfasta==3.2.1  # https://github.com/jasongi/collectfasta
 django-storages==1.14.4

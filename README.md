@@ -3,19 +3,14 @@
 Ecdysis bugbox
 
 [![Built with Cookiecutter Django](https://img.shields.io/badge/built%20with-Cookiecutter%20Django-ff69b4.svg?logo=cookiecutter)](https://github.com/cookiecutter/cookiecutter-django/)
-[![Black code style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 
 Development url, .js served in dev mode is http://localhost:3000/
-
-## Settings
-
-Moved to [settings](http://cookiecutter-django.readthedocs.io/en/latest/settings.html).
 
 ## Basic Commands
 
 ### Setting Up Your Users
 
-- To create a **normal user account**, just go to Sign Up and fill out the form. Once you submit it, you'll see a "Verify Your E-mail Address" page. Go to your console to see a simulated email verification message. Copy the link into your browser. Now the user's email should be verified and ready to go.
+- To create a **normal user account** for development, just go to Sign Up and fill out the form. Once you submit it, you'll see a "Verify Your E-mail Address" page. Go to your console to see a simulated email verification message. Copy the link into your browser. Now the user's email should be verified and ready to go.
 
 ### Management, manage.py
 
@@ -23,7 +18,7 @@ To run commands to manage.py, use this syntax, to the appropriate .yml file
 
     docker compose -f local.yml run --rm django python manage.py mycommand
 
-Or to run on Heroku, using the Heroku cli
+Or to run on Heroku, using the Heroku cli to run on Production
 
     heroku run python manage.py shell -a bugbox
 
@@ -39,25 +34,15 @@ Check other Flake8 issues
 
 ### Database and backups
 
-The production database is on Heroku. The following explains about managing local backups for development purposes.
+The production database is on Heroku. A copy can be obtained for development purposes. Using local.yml for development, a postgres container is created. To restore a db to it, proceed as follows.
 
-Initiate a backup in docker
+A script, `backup_db_s3.py` is run on Heroku at defined intervals to create long term backups or can be ran as needed to create a backup file and upload to S3.
 
-    docker compose -f local.yml exec postgres backup
+Knowing the BACKUP_FILENAME on S3, use it with the following script to download to local_files.
 
-List backups
+    python db_download_s3_backup.py BACKUP_FILENAME
 
-    docker compose -f local.yml exec postgres backups
-
-Upload backups to S3
-
-    docker compose -f local.yml run --rm awscli upload
-
-Download a specific backup
-
-    docker compose -f local.yml run --rm awscli download BACKUP_FILE
-
-Restore to your database. First bring the containers down...
+Next, bring any running containers down...
 
     docker compose -f local.yml down
 
@@ -65,11 +50,20 @@ bring up the db only
 
     docker compose -f local.yml up postgres -d
 
-restore it to the backup file
+Get the local docker postgres CONTAINER_ID.
 
-    docker compose -f local.yml exec postgres restore BACKUP_FILE
+    docker compose -f local.yml ps -q postgres
 
-After it succesfully restores, bring it down and bring everything back up.
+using the returned CONTAINER_ID, move the backup file from local_files to the container
+
+    docker cp ./local_files/BACKUP_FILENAME CONTAINER_ID:/backups
+
+
+Use the `restore` bash script to restore the db using the backup. It first drops the db, then creates a blank one. As a result numerous 'errors' will report in the output where it tries to drop tables and indexes that do not exist. These can be ignored.
+
+    docker compose -f local.yml exec postgres restore BACKUP_FILENAME
+
+After it succesfully restores, bring the local db down and bring everything back up.
 
     docker compose -f local.yml down
 
@@ -77,47 +71,22 @@ bring all services up
 
     docker compose -f local.yml up
 
-Alternatvely to using the AWS CLI, a backup can be downloaded directly from docker. This process includes moving the file out and in the docker conatiner.
-
-With a backup already created in the docker container as described above, get the container ID ...
-
-    docker compose -f local.yml ps -q postgres
-
-using the returned CONTAINER_ID, move the backup file from the container to a directory named backups in the bugbox3 directory.
-
-    docker cp CONTAINER_ID:/backups/BACKUP_FILE ./backups/BACKUP_FILE
-
-Then use scp to copy this file to local computer.
-
-    scp ecdysis@ecdysis01.local:/srv/bugbox3/backups/BACKUP_FILE backups/BACKUP_FILE
-
-Get the local docker container id.
-
-    docker compose -f local.yml ps -q postgres
-
-Copy the backup to it
-
-    docker cp ./backups/BACKUP_FILE CONTAINER_ID:/backups
-
-### Live reloading and Sass CSS compilation
-
-Moved to [Live reloading and SASS compilation](https://cookiecutter-django.readthedocs.io/en/latest/developing-locally.html#sass-compilation-live-reloading).
 
 ## Deployment
 
 The following details how to deploy this application.
 
-### Docker and BugBox app
-
-See detailed [cookiecutter-django Docker documentation](http://cookiecutter-django.readthedocs.io/en/latest/deployment-with-docker.html).
-
 #### Deployment to Ecdysis01 server
 
 local-cloud.yml is the .yml to use. This will establish a local Django app, and Node dev container. The database and filesystem is the production system on Heroku and AWS S3. This is not for development purposes. This is to have a Django instance running on Ecdsyis01 to manage image identifications and other needs to communicate from Ecdysis01 and Heroku database and AWS S3 storage.
 
-Custom images built locally (not on Ecdysis01) and are pushed to docker hub repo. Standard images used from their source. Always on the Ecdysis01 server, do not build custom docker images there. Django build may fail there at this time. Filesystem space recovery and performance of other running continers are other reasons to not build them there.
+Custom images built locally (not on Ecdysis01) and are pushed to docker hub repo. Standard images used from their source. Always on the Ecdysis01 server, do not build custom docker images there. Django build may fail there at this time. Filesystem space recovery and performance of other running continers are other reasons to not build them there. Build them locally and push to docker hub.
 
-Various ports are changed from default due to conflicting ports on Ecdysis01.
+The Django container image is shared with Celery containers, so if any python library changes, build all of them, on local dev environment.
+
+    docker compose -f local.yml build django celeryworker celerybeat flower
+
+Note: Various ports are changed from default due to conflicting ports on Ecdysis01.
 
 Locally built custom images. Push these to Docker Hub if changes are made to libraries.
 
@@ -147,10 +116,6 @@ If specific non-custom image needs built, specificy it individually (referring t
 
     docker compose -f local-cloud.yml build SERVICE_NAME
 
-The Django container image is shared with Celery containers, so if any python library changes, build all of them.
-
-    docker compose -f local-cloud.yml build django celeryworker celerybeat flower
-
 Bring up containers with images prebuilt
 
     docker compose -f local-cloud.yml up --no-build -d
@@ -159,9 +124,6 @@ Open the logs, ctrl-c to escape
 
     docker compose -f local-cloud.yml logs --tail=1000 --follow
 
-#### Deployment to Heroku
-
-details to be explained.
 
 ### Torchserve
 
