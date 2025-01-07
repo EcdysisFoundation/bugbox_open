@@ -42,6 +42,7 @@ USE_TZ = True
 LOCALE_PATHS = [str(BASE_DIR / "locale")]
 
 # AI_INFERENCE_URL
+# override this to blank string on Heroku
 AI_INFERENCE_URL = 'http://ecdysis01.local:8074/predictions/metaformer'
 
 # DATABASES
