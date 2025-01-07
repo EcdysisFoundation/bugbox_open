@@ -11,7 +11,7 @@ from ..taxonomy.models import Morphospecies
 from ..taxonomy.utils import get_skip_morphospecies_ids
 from . import constants
 from .calculations import get_indices
-from .models import Experiment, Sample, Specimen
+from .models import Experiment, Sample, Site, Specimen
 
 
 @permission_required(IS_RESEARCH)
@@ -79,6 +79,8 @@ def experiment_csv(request, id):
     if not all([v.isnumeric() for v in sites]):
         return HttpResponse(status=404)
     sites = [int(v) for v in sites]
+    if not sites:
+        sites = Site.objects.filter(experiment_id=experiment.id).values_list('id', flat=True)
     other_experiments = request.GET.getlist('otherExperiments2')
     if not all([v.isnumeric() for v in other_experiments]):
         return HttpResponse(status=404)
