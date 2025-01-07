@@ -74,7 +74,12 @@ bring all services up
 
 ## Deployment
 
-The following details how to deploy this application.
+This application is deployed to Heroku for most user access scenarios at bugbox.ecdysis.bio. It is also deployed on Ecdysis01 for machine learning and inference processes. On Ecdysis01, it also uses the same Heroku database server and AWS S3 storage (see local-cloud.yml). As a result, it is important to use caution in deployment to not create conflicts when there is a potential for two different versions of the app to be running simultanously against the database and storage system. When the deployment includes database migrations the following steps should be followed. Consider other scenarios for their potential to create conflicts.
+
+1. On Ecdsyis01, bring down the app
+2. On Heroku, deploy the new version, ensure migrations run succesfully
+3. Ecdysis01, pull new version from github, pull new docker.io images if applicable
+4. Ecdysis01, bring app back up. No migrations should run because they already ran on Heroku.
 
 #### Deployment to Ecdysis01 server
 

@@ -19,7 +19,7 @@ from django.dispatch import receiver
 from ..core import constants as geo_constants
 from ..core.models import UsCountiesTigerLine
 from ..libs.utilities import resized_thumbnail
-from ..taxonomy.models import AiVersion, Morphospecies
+from ..taxonomy.models import Morphospecies
 from ..taxonomy.tasks import id_image
 from . import constants
 
@@ -202,7 +202,6 @@ class Specimen(Model):
     classification = ForeignKey(Morphospecies, on_delete=SET_NULL, null=True, blank=True)
     ai_classification = ForeignKey(Morphospecies, on_delete=SET_NULL,
                                    null=True, blank=True, related_name="ai")
-    ai_version = ForeignKey(AiVersion, on_delete=SET_NULL, null=True, blank=True)
     ai_model_name = CharField(max_length=64, blank=True)
     sample = ForeignKey(Sample, on_delete=SET_NULL, null=True, blank=True)
     reviewer_user = ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=SET_NULL)
