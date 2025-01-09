@@ -66,14 +66,8 @@ def save_thumbnail(instance, created, **kwargs):
             buffer.close()
 
 
-class AiVersion(Model):
-    version = CharField(max_length=64, unique=True)
-    entered_date = DateField(auto_now_add=True)
-
-
 class AiTraining(Model):
     morphospecies = ForeignKey(Morphospecies, on_delete=CASCADE, null=False)
-    model = ForeignKey(AiVersion, on_delete=CASCADE, null=True)
     model_name = CharField(max_length=64)
     total = IntegerField(null=False)
     precision = FloatField(null=False)
