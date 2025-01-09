@@ -85,7 +85,8 @@ THIRD_PARTY_APPS = [
     "django_celery_beat",
     "webpack_loader",
     "django_bootstrap5",
-    "django_extensions"
+    "django_extensions",
+    "organizations"
 ]
 
 LOCAL_APPS = [

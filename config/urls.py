@@ -4,6 +4,7 @@ from django.contrib import admin
 from django.urls import include, path
 from django.views import defaults as default_views
 from django.views.generic import TemplateView
+from organizations.backends import invitation_backend
 
 urlpatterns = [
     path("", TemplateView.as_view(template_name="pages/about.html"), name="about"),
@@ -16,7 +17,8 @@ urlpatterns = [
     # User management
     path("users/", include("bugbox3.users.urls", namespace="users")),
     path("accounts/", include("allauth.urls")),
-    # Your stuff: custom urls includes go here
+    path("accounts/", include("organizations.urls")),
+    path('invitations/', include(invitation_backend().get_urls())),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 
