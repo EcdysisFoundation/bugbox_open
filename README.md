@@ -130,7 +130,22 @@ Open the logs, ctrl-c to escape
     docker compose -f local-cloud.yml logs --tail=1000 --follow
 
 
-### Torchserve
+## Torchserve
 
 The image classifications performed from `taxonomy.tasks.image_prediction` are done through a Torchserve model served through Torchserve (see https://github.com/EcdysisFoundation/servemetaformer )
  produced by metaformer_ecdysis (see https://github.com/EcdysisFoundation/metaformer_ecdysis )
+
+
+## Organizations
+
+This app uses django-organizations ( https://github.com/bennylope/django-organizations ) to provide user access to the data of organizations they belong to. Therefore, all data access queries a user may be exposed to in the app need to properly check their organization access. Organization access is set at the model `Experiment` level. Each child table has a manager that implemnents the `user_access` function to filter data to the user's organization membership. The following examples show how to apply the filter in views.
+
+    samples = Sample.objects.user_accesss(self.request.user).all()
+
+A get request
+
+    try:
+        sample = Sample.objects.user_access(self.request.user).get(id=self.kwargs['sample_id'])
+    except Sample.DoesNotExist:
+            raise Http404
+

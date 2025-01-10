@@ -10,11 +10,13 @@ from django.core.validators import MaxValueValidator
 from django.db import transaction
 from django.db.models import (CASCADE, SET_NULL, BooleanField, CharField,
                               DateField, DateTimeField, DecimalField,
-                              ForeignKey, ImageField, JSONField, Model,
+                              ForeignKey, ImageField, JSONField,
+                              Manager, Model,
                               PositiveIntegerField, PositiveSmallIntegerField,
                               SlugField, TextField, UUIDField)
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
+from organizations.models import Organization
 
 from ..core import constants as geo_constants
 from ..core.models import UsCountiesTigerLine
@@ -24,7 +26,12 @@ from ..taxonomy.tasks import id_image
 from . import constants
 
 
+class ExperimentManager(Manager):
+    def user_access(self, user):
+        return self.filter(organization__users=user)
+
 class Experiment(Model):
+    organization = ForeignKey(Organization, related_name='experiment', on_delete=CASCADE)
     uuid = UUIDField(default=uuid.uuid4, unique=True)
     name = CharField(max_length=1000, unique=True)
     abbreviation = SlugField(max_length=20, unique=True)
@@ -37,8 +44,15 @@ class Experiment(Model):
     summary = TextField(null=True, blank=True)
     archived = CharField(max_length=3000, blank=True)
 
+    objects = ExperimentManager()
+
     def __str__(self):
         return f'{self.name}'
+
+
+class SamplePlanManager(Manager):
+    def user_access(self, user):
+        return self.filter(experiment__organization__users=user)
 
 
 class SamplePlan(Model):
@@ -47,6 +61,12 @@ class SamplePlan(Model):
     no_per_date = PositiveSmallIntegerField(null=True, validators=[MaxValueValidator(100)])
     name_no_per_type = CharField(max_length=100, blank=True)
 
+    objects = SamplePlanManager()
+
+
+class SiteManager(Manager):
+    def user_access(self, user):
+        return self.filter(experiment__organization__users=user)
 
 class Site(Model):
     experiment = ForeignKey(Experiment, on_delete=CASCADE)
@@ -61,6 +81,8 @@ class Site(Model):
     longitude = DecimalField(max_digits=9, decimal_places=6, null=True)
     latitude = DecimalField(max_digits=9, decimal_places=6, null=True)
     archived = CharField(max_length=3000, blank=True)
+
+    objects = SiteManager()
 
     def save(self, *args, **kwargs):
         """
@@ -91,6 +113,10 @@ class Site(Model):
         return f'{self.site_name}'
 
 
+class SiteVisitManager(Manager):
+    def user_access(self, user):
+        return self.filter(site__experiment__organization__users=user)
+
 class SiteVisit(Model):
     uuid = UUIDField(default=uuid.uuid4, unique=True)
     site = ForeignKey(Site, on_delete=CASCADE)
@@ -98,6 +124,8 @@ class SiteVisit(Model):
     visit_date = DateField()
     sample_with_plan = BooleanField(default=True)
     notes = CharField(max_length=1000, blank=True)
+
+    objects = SiteVisitManager()
 
     @property
     def has_related_data(self):
@@ -130,6 +158,10 @@ class SiteVisit(Model):
                     n = n - 1
 
 
+class SampleManager(Manager):
+    def user_access(self, user):
+        return self.filter(site_visit__site__experiment__organization__users=user)
+
 class Sample(Model):
     uuid = UUIDField(default=uuid.uuid4, unique=True)
     site_visit = ForeignKey(SiteVisit, on_delete=CASCADE)
@@ -141,6 +173,8 @@ class Sample(Model):
     image_thumbnail = ImageField(null=True, blank=True, upload_to='sample_images')
     created_by_user = ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=SET_NULL)
     update_thumbs = BooleanField(null=True)
+
+    objects = SampleManager()
 
 
 @receiver(pre_save, sender=Sample)
@@ -170,6 +204,10 @@ def save_thumbnail(instance, created, **kwargs):
             buffer.close()
 
 
+class MultiSpecimenImageManager(Model):
+    def user_access(self, user):
+        return self.filter(sample__site_visit__site__experiment__organization__users=user)
+
 class MultiSpecimenImage(Model):
     sample = ForeignKey(Sample, on_delete=CASCADE)
     uuid = UUIDField(default=uuid.uuid4, unique=True)
@@ -179,6 +217,8 @@ class MultiSpecimenImage(Model):
     cropped_to_specimen = BooleanField(null=True)
     date_added = DateTimeField(auto_now_add=True)
     uploaded_by_user = ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=SET_NULL)
+
+    objects = MultiSpecimenImageManager()
 
 
 @receiver(post_save, sender=MultiSpecimenImage)
@@ -194,6 +234,12 @@ def save_multi_specimen_image_thumbnail(instance, created, **kwargs):
             'thumbnail')
         instance.save()
         buffer.close()
+
+
+
+class SpecimenManager(Manager):
+    def user_access(self, user):
+        return self.filter(sample__site_visit__site__experiment__organization__users=user)
 
 
 class Specimen(Model):
@@ -220,6 +266,8 @@ class Specimen(Model):
     archival_stored = CharField(max_length=100, blank=True)
     object_det_train = BooleanField(default=False)
 
+    objects = SpecimenManager()
+
     def __str__(self):
         return str(self.uuid)
 
@@ -228,6 +276,10 @@ class Specimen(Model):
             (constants.PERMISSION_SPECIMEN_REVIEW, constants.PERMISSION_SPECIMEN_REVIEW_TXT)
         ]
 
+
+class SpecimenImageManager(Manager):
+    def user_access(self, user):
+        return self.filter(specimen__sample__site_visit__site__experiment__organization__users=user)
 
 class SpecimenImage(Model):
     specimen = ForeignKey(Specimen, on_delete=CASCADE)
@@ -242,6 +294,8 @@ class SpecimenImage(Model):
     date_added = DateTimeField(auto_now_add=True)
     uploaded_by_user = ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=SET_NULL)
     object_det_sent = DateTimeField(null=True)
+
+    objects = SpecimenImageManager()
 
     class Meta:
         ordering = ['-primary_image']
@@ -295,9 +349,16 @@ def classify_new_images(sender, instance, created, **kwargs):
     transaction.on_commit(signal_handler)
 
 
+class TimelineEventManager(Manager):
+    def user_access(self, user):
+        return self.filter(sample__site_visit__site__experiment__organization__users=user)
+
+
 class TimelineEvent(Model):
     specimen = ForeignKey(Specimen, on_delete=CASCADE)
     event_title = CharField(max_length=200)
     date_time = DateTimeField(auto_now_add=True, auto_created=True)
     body = CharField(max_length=1000, blank=True)
     by_user = ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=SET_NULL)
+
+    objects = TimelineEventManager()

@@ -20,8 +20,10 @@ class ExperimentsDatatablesViewSet(PermissionRequiredMixin, DatatablesModelViewS
     permission_required = IS_RESEARCH
 
     serializer_class = ExperimentsDatatablesSerializer
-    queryset = Experiment.objects.all().order_by(constants.FIELD_NAME)
     search_vector = [constants.FIELD_NAME, constants.FIELD_ABBREVIATION]
+
+    def get_queryset(self):
+        return Experiment.objects.user_access(self.request.user).all().order_by(constants.FIELD_NAME)
 
 
 class MultiSpecimenDatatablesViewSet(PermissionRequiredMixin,  DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
@@ -31,7 +33,8 @@ class MultiSpecimenDatatablesViewSet(PermissionRequiredMixin,  DatatablesModelVi
     serializer_class = MultiSpecimenImageDatatablesSerializer
 
     def get_queryset(self):
-        return MultiSpecimenImage.objects.filter(sample_id=int(self.kwargs['sample_id']))
+        return MultiSpecimenImage.objects.user_access(
+            self.request.user).filter(sample_id=int(self.kwargs['sample_id']))
 
 
 class SamplesDatatablesViewSet(PermissionRequiredMixin, DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
@@ -47,7 +50,8 @@ class SamplesDatatablesViewSet(PermissionRequiredMixin, DatatablesModelViewSetMi
 
     def get_queryset(self):
         experiment_id = int(self.kwargs['experiment_id'])
-        return Sample.objects.filter(site_visit__site__experiment_id=experiment_id).order_by(
+        return Sample.objects.user_access(
+            self.request.user).filter(site_visit__site__experiment_id=experiment_id).order_by(
             '-site_visit__site__' + constants.FIELD_SITE_SITE_NAME, constants.FIELD_SAMPLE_NAME_NO
         )
 
@@ -66,7 +70,7 @@ class SitesDatatablesViewSet(PermissionRequiredMixin, DatatablesModelViewSetMixi
 
     def get_queryset(self):
         experiment_id = int(self.kwargs['experiment_id'])
-        return Site.objects.filter(experiment_id=experiment_id).order_by(
+        return Site.objects.user_access(self.request.user).filter(experiment_id=experiment_id).order_by(
             '-' + constants.FIELD_SITE_SITE_NAME
         )
 
@@ -80,7 +84,7 @@ class SpecimenDatatablesViewSet(PermissionRequiredMixin, DatatablesModelViewSetM
 
     def get_queryset(self):
         sample_id = int(self.kwargs['sample_id'])
-        return Specimen.objects.filter(sample_id=sample_id).order_by('-id')
+        return Specimen.objects.user_access(self.request.user).filter(sample_id=sample_id).order_by('-id')
 
 
 class SpecimensAllDatatablesViewSet(PermissionRequiredMixin, DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
@@ -96,7 +100,7 @@ class SpecimensAllDatatablesViewSet(PermissionRequiredMixin, DatatablesModelView
     ]
 
     def get_queryset(self):
-        specimen = Specimen.objects.filter(
+        specimen = Specimen.objects.user_access(self.request.user).filter(
             sample__site_visit__site__experiment__isnull=False
         )
         id = int(self.kwargs['id'])

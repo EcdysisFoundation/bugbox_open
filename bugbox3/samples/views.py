@@ -8,7 +8,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
 from django.db import transaction
 from django.forms import inlineformset_factory
-from django.http import JsonResponse
+from django.http import Http404, JsonResponse
 from django.middleware.csrf import get_token
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
@@ -73,7 +73,12 @@ class ExperimentView(PermissionRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        experiment = get_object_or_404(Experiment.objects.all(), id=kwargs['experiment_id'])
+        try:
+            experiment = Experiment.objects.user_access(
+                self.request.user).get(id=kwargs['experiment_id'])
+        except Experiment.DoesNotExist:
+            raise Http404
+
         if experiment.from_year == experiment.to_year:
             years = str(experiment.from_year)
         else:
@@ -81,10 +86,10 @@ class ExperimentView(PermissionRequiredMixin, TemplateView):
         description = [v['description'] for v in get_sample_plan_descriptions(experiment.id)]
         sites_datatables_url = api_reverse(
             'samples:site-data-list', request=self.request, kwargs=kwargs)
-        experiment_sites = Site.objects.filter(
+        experiment_sites = Site.objects.user_access(self.request.user).filter(
             experiment_id=experiment.id).order_by(
                 constants.FIELD_SITE_SITE_NAME)
-        other_experiments = Experiment.objects.exclude(
+        other_experiments = Experiment.objects.user_access(self.request.user).exclude(
             id=experiment.id).order_by(constants.FIELD_ABBREVIATION)
         context.update({
             'experiment': experiment,
@@ -169,7 +174,13 @@ class ExperimentSamplePlanUpdateView(PermissionRequiredMixin, UpdateView):
         can_delete=True)
 
     def get_object(self, queryset=None):
-        return get_object_or_404(Experiment, id=self.kwargs['experiment_id'])
+        try:
+            experiment = Experiment.objects.user_access(self.request.user).get(
+                id=self.kwargs['experiment_id'])
+        except Experiment.DoesNotExist:
+            raise Http404
+
+        return experiment
 
     def get_context_data(self, **kwargs):
         context = super(ExperimentSamplePlanUpdateView, self).get_context_data(**kwargs)
@@ -216,7 +227,12 @@ class SiteCreateView(PermissionRequiredMixin, CreateView):
 
     def get_context_data(self, **kwargs):
         context = super(SiteCreateView, self).get_context_data(**kwargs)
-        experiment = get_object_or_404(Experiment, id=self.kwargs['experiment_id'])
+        try:
+            experiment = Experiment.objects.user_access(self.request.user).get(
+                id=self.kwargs['experiment_id'])
+        except Experiment.DoesNotExist:
+            raise Http404
+
         context.update({
             'action': self.action,
             'experiment_details': {
@@ -268,11 +284,20 @@ class SiteUpdateView(PermissionRequiredMixin, UpdateView):
     form_set = inlineformset_factory(Site, SiteVisit, form=SiteVisitForm, max_num=formset_total, extra=formset_total)
 
     def get_object(self, queryset=None):
-        return get_object_or_404(Site, id=self.kwargs['site_id'])
+        try:
+            site = Site.objects.user_access(self.request.user).get(
+                id=self.kwargs['site_id'])
+        except Site.DoesNotExist:
+            raise Http404
+        return site
 
     def get_context_data(self, **kwargs):
         context = super(SiteUpdateView, self).get_context_data(**kwargs)
-        experiment = get_object_or_404(Experiment, id=self.object.experiment_id)
+        try:
+            experiment = Experiment.objects.user_access(self.request.user).get(
+                id=self.object.experiment_id)
+        except Experiment.DoesNotExist:
+            raise Http404
         self.experiment = experiment
         context.update({
             'site_id': self.kwargs['site_id'],
@@ -325,7 +350,14 @@ class SiteDeleteView(PermissionRequiredMixin, DeleteView):
     template_name = 'samples/confirm_delete.html'
 
     def get_object(self, queryset=None):
-        return get_object_or_404(Site, id=self.kwargs['id'])
+        try:
+            site = Site.objects.user_access(self.request.user).get(
+                id=self.kwargs['id']
+            )
+        except Site.DoesNotExist:
+            raise Http404
+
+        return site
 
     def get_success_url(self):
         return reverse('samples:experiment', kwargs={'experiment_id': self.kwargs['experiment_id']})
@@ -340,7 +372,10 @@ class SampleView(PermissionRequiredMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        sample = get_object_or_404(Sample, id=self.kwargs['sample_id'])
+        try:
+            sample = Sample.objects.user_access(self.request.user).get(id=self.kwargs['sample_id'])
+        except Sample.DoesNotExist:
+            raise Http404
 
         specimen_datatables_url = api_reverse(
             'samples:specimen-data-list', request=self.request, kwargs=self.kwargs)
@@ -351,7 +386,8 @@ class SampleView(PermissionRequiredMixin, FormView):
         )
         experiment_choices = [(
             api_reverse('samples:sample-data-list', request=self.request, kwargs={'experiment_id': i['id']}),
-            i['name']) for i in Experiment.objects.order_by(constants.FIELD_NAME).values('id', constants.FIELD_NAME)]
+            i['name']) for i in Experiment.objects.user_access(
+                self.request.user).order_by(constants.FIELD_NAME).values('id', constants.FIELD_NAME)]
         img_thumbnail = None
         if sample.image_thumbnail:
             if default_storage.exists(sample.image_thumbnail.name):
@@ -437,12 +473,15 @@ class SampleView(PermissionRequiredMixin, FormView):
         if json_data:
             if not all([isinstance(v, int) for v in json_data['ids']]):
                 raise ValidationError(mark_safe('non-integers provided in form as ids'))
-            Specimen.objects.filter(id__in=json_data['ids']).delete()
+            Specimen.objects.user_access(self.request.user).filter(id__in=json_data['ids']).delete()
             messages.warning(self.request, 'Succesfully deleted {0} specimens'.format(len(json_data['ids'])))
         if move_json_data:
             if move_json_data['move_ids'] and move_json_data['move_sample_id']:
-                s = get_object_or_404(Sample, id=move_json_data['move_sample_id'])
-                Specimen.objects.filter(
+                try:
+                    s = Sample.objects.user_access(self.request.user).get(id=move_json_data['move_sample_id'])
+                except Sample.DoesNotExist:
+                    return Http404
+                Specimen.objects.user_access(self.request.user).filter(
                     id__in=move_json_data['move_ids']).update(sample_id=s.id)
                 messages.warning(self.request, 'Succesfully moved {0} specimens to sample ID {1}'.format(
                     len(move_json_data['move_ids']),
@@ -459,7 +498,10 @@ class SampleView(PermissionRequiredMixin, FormView):
 @permission_required(IS_RESEARCH)
 def specimen_image_upload(request, sample_id):
     if request.method == 'POST':
-        sample = get_object_or_404(Sample, id=sample_id)
+        try:
+            sample = Sample.objects.user_access(request.user).get(id=sample_id)
+        except Sample.DoesNotExist:
+            raise Http404
         form = SpecimenImageForm(request.POST, request.FILES)
 
         if form.is_valid():
@@ -486,7 +528,10 @@ class SampleUpdateView(PermissionRequiredMixin, UpdateView):
     action = 'update'
 
     def get_object(self, queryset=None):
-        return get_object_or_404(Sample, id=self.kwargs['sample_id'])
+        try:
+            return Sample.objects.user_access(self.request.user).get(id=self.kwargs['sample_id'])
+        except Sample.DoesNotExist:
+            raise Http404
 
     def get_context_data(self, **kwargs):
         context = super(SampleUpdateView, self).get_context_data(**kwargs)
@@ -539,7 +584,10 @@ class SampleDeleteView(PermissionRequiredMixin, DeleteView):
     template_name = 'samples/confirm_delete.html'
 
     def get_object(self, queryset=None):
-        return get_object_or_404(Sample, id=self.kwargs['id'])
+        try:
+            return Sample.objects.user_access(self.request.user).get(id=self.kwargs['id'])
+        except Sample.DoesNotExist:
+            raise Http404
 
     def get_success_url(self):
         return reverse('samples:experiment', kwargs={'experiment_id': self.kwargs['experiment_id']})
@@ -554,7 +602,10 @@ class SpecimensWithoutImagesFormView(PermissionRequiredMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        sample = get_object_or_404(Sample, id=self.kwargs['id'])
+        try:
+            sample = Sample.objects.user_access(self.request.user).get(id=self.kwargs['id'])
+        except Sample.DoesNotExist:
+            raise Http404
         morpho_names = [v[taxa_const.FIELD_MORPHO_NAME] for v in taxa_const.SKIP_MORPHOSPECIES]
         existing_names = []
         for m in morpho_names:
@@ -584,7 +635,10 @@ class SpecimensWithoutImagesFormView(PermissionRequiredMixin, FormView):
         return context
 
     def form_valid(self, form):
-        sample = get_object_or_404(Sample, id=self.kwargs['id'])
+        try:
+            sample = Sample.objects.user_access(self.request.user).get(id=self.kwargs['id'])
+        except Sample.DoesNotExist:
+            raise Http404
         entered_names = []
         for v in taxa_const.SKIP_MORPHOSPECIES:
             name = v[taxa_const.FIELD_MORPHO_NAME]
@@ -617,7 +671,10 @@ class SpecimenView(PermissionRequiredMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        specimen = get_object_or_404(Specimen, id=self.kwargs['id'])
+        try:
+            specimen = Specimen.objects.user_access(self.request.user).get(id=self.kwargs['id'])
+        except Specimen.DoesNotExist:
+            raise Http404
         context.update(specimen_view_context(specimen))
         context.update({
             'form_action_url': reverse('samples:specimen', kwargs={'id': specimen.id}),
@@ -636,7 +693,10 @@ class SpecimenView(PermissionRequiredMixin, FormView):
         delete_pick = form.cleaned_data['delete_picker']
         determin_pick = form.cleaned_data['determin_picker']
         if files:
-            specimen = get_object_or_404(Specimen, id=self.kwargs['id'])
+            try:
+                specimen = Specimen.objects.user_access(self.request.user).get(id=self.kwargs['id'])
+            except Specimen.DoesNotExist:
+                raise Http404
             created_images = 0
             try:
                 for f in files:
@@ -655,15 +715,21 @@ class SpecimenView(PermissionRequiredMixin, FormView):
                 created_images = 0
             messages.success(self.request, 'Succesfully added {0} new specimen images'.format(created_images))
         elif primary_pick:
-            image = get_object_or_404(SpecimenImage, id=primary_pick)
+            try:
+                image = SpecimenImage.objects.user_access(self.request.user).get(id=primary_pick)
+            except SpecimenImage.DoesNotExist:
+                raise Http404
             image.primary_image = True
             image.save()
             messages.success(self.request, 'Succesfully set primary image')
         elif delete_pick:
-            SpecimenImage.objects.filter(id=delete_pick).delete()
+            SpecimenImage.objects.user_access(self.request.user).filter(id=delete_pick).delete()
             messages.success(self.request, 'Succesfully deleted image')
         elif determin_pick is not None:
-            specimen = get_object_or_404(Specimen, id=self.kwargs['id'])
+            try:
+                specimen = Specimen.objects.user_access(self.request.user).get(id=self.kwargs['id'])
+            except Specimen.DoesNotExist:
+                raise Http404
             initial = {constants.FIELD_SPECIMEN_ACCEPTANCE: specimen.acceptance}
             specimen.acceptance = determin_pick
             if specimen.acceptance == constants.ACCEPTANCE_CONFIRMED \
@@ -692,7 +758,10 @@ class SpecimenCreateView(PermissionRequiredMixin, CreateView):
 
     def get_context_data(self, **kwargs):
         context = super(SpecimenCreateView, self).get_context_data(**kwargs)
-        sample = get_object_or_404(Sample, id=self.kwargs['sample_id'])
+        try:
+            sample = Sample.objects.user_access(self.request.user).get(id=self.kwargs['sample_id'])
+        except Sample.DoesNotExist:
+            raise Http404
         context.update({
             'form_action_url': reverse('samples:specimen-create', kwargs={'sample_id': sample.id}),
         })
@@ -715,7 +784,10 @@ class SpecimenCreateView(PermissionRequiredMixin, CreateView):
         return context
 
     def form_valid(self, form):
-        sample = get_object_or_404(Sample, id=self.kwargs['sample_id'])
+        try:
+            sample = Sample.objects.user_access(self.request.user).get(id=self.kwargs['sample_id'])
+        except Sample.DoesNotExist:
+            raise Http404
         if not form.instance.classification:
             messages.error(
                 self.request, 'A verified classification is required, please select one to create.')
@@ -737,7 +809,10 @@ class SpecimenUpdateView(PermissionRequiredMixin, UpdateView):
     action = 'update'
 
     def get_object(self, queryset=None):
-        return get_object_or_404(Specimen, id=self.kwargs['id'])
+        try:
+            return Specimen.objects.user_access(self.request.user).get(id=self.kwargs['id'])
+        except Specimen.DoesNotExist:
+            raise Http404
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -803,7 +878,10 @@ class SpecimenDeleteView(PermissionRequiredMixin, DeleteView):
     template_name = 'samples/confirm_delete.html'
 
     def get_object(self, queryset=None):
-        return get_object_or_404(Specimen, id=self.kwargs['id'])
+        try:
+            return Specimen.objects.user_access(self.request.user).get(id=self.kwargs['id'])
+        except Specimen.DoesNotExist:
+            raise Http404
 
     def get_success_url(self):
         return reverse('samples:sample', kwargs={'sample_id': self.kwargs['sample_id']})
@@ -833,11 +911,17 @@ class SpecimensView(PermissionRequiredMixin, FormView):
         if 'id' not in self.kwargs:
             self.kwargs['id'] = 0
         if self.kwargs['id']:
-            experiment_name = get_object_or_404(Experiment, id=self.kwargs['id']).name
+            try:
+                experiment_name = Experiment.objects.user_access(self.request.user).get(id=self.kwargs['id']).name
+            except Experiment.DoesNotExist:
+                raise Http404
         if 'sample_id' not in self.kwargs:
             self.kwargs['sample_id'] = 0
         if self.kwargs['sample_id']:
-            sample_name = get_object_or_404(Sample, id=self.kwargs['sample_id']).name_no
+            try:
+                sample_name = Sample.objects.user_access(self.request.user).get(id=self.kwargs['sample_id']).name_no
+            except Sample.DoesNotExist:
+                raise Http404
         datatables_url = api_reverse('samples:specimen-all-data-list',
                                      request=self.request, kwargs=self.kwargs)
         recent_years = sorted(
@@ -863,7 +947,7 @@ class SpecimensView(PermissionRequiredMixin, FormView):
                 'second_picker_choices': taxa_const.GBIF_RANK_CHOICES_WO_BLANK_LIST,
                 'second_picker_text': 'any rank',
                 'acceptance_choices': constants.ACCEPTANCE_CHOICES,
-                'user_choices': get_user_choices(),
+                'user_choices': get_user_choices(self.request.user),
                 'state_choices_dict': constants_core.STATE_CHOICES,
                 'country_choices': constants_core.COUNTRY_CHOICES,
                 'tag_choices': LookupChoices.objects.get_field_choices(constants.FIELD_SPECIMEN_TAGS),
@@ -897,7 +981,10 @@ class SpecimensView(PermissionRequiredMixin, FormView):
         add_confirm_count = 0
         add_reject_count = 0
         for specimen_id, morhpo_id in new_classifications.items():
-            specimen = get_object_or_404(Specimen, id=specimen_id)
+            try:
+                specimen = Specimen.objects.user_access(self.request.user).get(id=specimen_id)
+            except Specimen.DoesNotExist:
+                raise Http404
             ai_classification_id = specimen.ai_classification.id if specimen.ai_classification else None
             if ai_classification_id == morhpo_id:
                 specimen.acceptance = constants.ACCEPTANCE_CONFIRMED
@@ -918,12 +1005,15 @@ class SpecimensView(PermissionRequiredMixin, FormView):
             if specimen_id in rejected_ids:
                 rejected_ids.remove(specimen_id)
         for i in confirmed_ids:
-            specimen = get_object_or_404(Specimen, id=i)
+            try:
+                specimen = Specimen.objects.user_access(self.request.user).get(id=i)
+            except Specimen.DoesNotExist:
+                raise Http404
             specimen.acceptance = constants.ACCEPTANCE_CONFIRMED
             specimen.classification = specimen.ai_classification
             specimen.reviewer_user = self.request.user
             specimen.save()
-        Specimen.objects.filter(
+        Specimen.objects.user_access(self.request.user).filter(
             id__in=rejected_ids, acceptance=constants.ACCEPTANCE_PENDING).update(
                 acceptance=constants.ACCEPTANCE_REJECTED)
         messages.success(
@@ -951,7 +1041,10 @@ class MultiSpecimeImageView(PermissionRequiredMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        sample = get_object_or_404(Sample, id=self.kwargs['sample_id'])
+        try:
+            sample = Sample.objects.user_access(self.request.user).get(id=self.kwargs['sample_id'])
+        except Sample.DoesNotExist:
+            raise Http404
         datatables_url = api_reverse(
             'samples:multispecimen-data-list', request=self.request, kwargs=self.kwargs
         )
@@ -977,7 +1070,10 @@ class MultiSpecimeImageView(PermissionRequiredMixin, FormView):
         image_4_by_3 = form.cleaned_data['image_4_by_3']
         json_data = form.cleaned_data['json_data']
         json_crop_ids = form.cleaned_data['json_crop_ids']
-        sample = get_object_or_404(Sample, id=self.kwargs['sample_id'])
+        try:
+            sample = Sample.objects.user_access(self.request.user).get(id=self.kwargs['sample_id'])
+        except Sample.DoesNotExist:
+            raise Http404
         if image_4_by_3:
             created_images = 0
             try:
@@ -999,12 +1095,12 @@ class MultiSpecimeImageView(PermissionRequiredMixin, FormView):
         if json_data:
             if not all([isinstance(v, int) for v in json_data['ids']]):
                 raise ValidationError(mark_safe('non-integers provided in form as ids'))
-            MultiSpecimenImage.objects.filter(id__in=json_data['ids']).delete()
+            MultiSpecimenImage.objects.user_access(self.request.user).filter(id__in=json_data['ids']).delete()
             messages.warning(self.request, 'Succesfully deleted {0} images'.format(len(json_data['ids'])))
         if json_crop_ids:
             if not all([isinstance(v, int) for v in json_crop_ids['ids']]):
                 raise ValidationError(mark_safe('non-integers provided in form as ids'))
-            selected_images = MultiSpecimenImage.objects.filter(
+            selected_images = MultiSpecimenImage.objects.user_access(self.request.user).filter(
                 id__in=json_crop_ids['ids']).exclude(cropped_to_specimen=True)
             prev_cropped = len(json_crop_ids['ids']) - len(selected_images)
             for i in selected_images:
