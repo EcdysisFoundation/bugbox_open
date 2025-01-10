@@ -10,10 +10,10 @@ from django.core.validators import MaxValueValidator
 from django.db import transaction
 from django.db.models import (CASCADE, SET_NULL, BooleanField, CharField,
                               DateField, DateTimeField, DecimalField,
-                              ForeignKey, ImageField, JSONField,
-                              Manager, Model,
-                              PositiveIntegerField, PositiveSmallIntegerField,
-                              SlugField, TextField, UUIDField)
+                              ForeignKey, ImageField, JSONField, Manager,
+                              Model, PositiveIntegerField,
+                              PositiveSmallIntegerField, SlugField, TextField,
+                              UUIDField)
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from organizations.models import Organization
@@ -29,6 +29,7 @@ from . import constants
 class ExperimentManager(Manager):
     def user_access(self, user):
         return self.filter(organization__users=user)
+
 
 class Experiment(Model):
     organization = ForeignKey(Organization, related_name='experiment', on_delete=CASCADE)
@@ -67,6 +68,7 @@ class SamplePlan(Model):
 class SiteManager(Manager):
     def user_access(self, user):
         return self.filter(experiment__organization__users=user)
+
 
 class Site(Model):
     experiment = ForeignKey(Experiment, on_delete=CASCADE)
@@ -117,6 +119,7 @@ class SiteVisitManager(Manager):
     def user_access(self, user):
         return self.filter(site__experiment__organization__users=user)
 
+
 class SiteVisit(Model):
     uuid = UUIDField(default=uuid.uuid4, unique=True)
     site = ForeignKey(Site, on_delete=CASCADE)
@@ -161,6 +164,7 @@ class SiteVisit(Model):
 class SampleManager(Manager):
     def user_access(self, user):
         return self.filter(site_visit__site__experiment__organization__users=user)
+
 
 class Sample(Model):
     uuid = UUIDField(default=uuid.uuid4, unique=True)
@@ -208,6 +212,7 @@ class MultiSpecimenImageManager(Model):
     def user_access(self, user):
         return self.filter(sample__site_visit__site__experiment__organization__users=user)
 
+
 class MultiSpecimenImage(Model):
     sample = ForeignKey(Sample, on_delete=CASCADE)
     uuid = UUIDField(default=uuid.uuid4, unique=True)
@@ -234,7 +239,6 @@ def save_multi_specimen_image_thumbnail(instance, created, **kwargs):
             'thumbnail')
         instance.save()
         buffer.close()
-
 
 
 class SpecimenManager(Manager):
@@ -280,6 +284,7 @@ class Specimen(Model):
 class SpecimenImageManager(Manager):
     def user_access(self, user):
         return self.filter(specimen__sample__site_visit__site__experiment__organization__users=user)
+
 
 class SpecimenImage(Model):
     specimen = ForeignKey(Specimen, on_delete=CASCADE)

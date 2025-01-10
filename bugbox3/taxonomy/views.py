@@ -178,7 +178,7 @@ class MorphospeciesDetailView(PermissionRequiredMixin, FormView):
                     'height': morphospecies.image.height,
                     'width': morphospecies.image.width
                 }
-        ai = AiTraining.objects.filter(morphospecies=morphospecies).select_related('model').order_by('id').all()
+        ai = AiTraining.objects.filter(morphospecies=morphospecies).order_by('id').all()
         ai_accuracy_over_time = {
             'precision': [[a.entered_date, a.precision] for a in ai],
             'f1': [[a.entered_date, a.f1] for a in ai],

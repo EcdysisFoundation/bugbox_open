@@ -1,6 +1,6 @@
 from organizations.models import OrganizationUser
+
 from ..core.models import LookupChoices
-from ..users.models import User
 from . import constants
 from .models import SamplePlan
 

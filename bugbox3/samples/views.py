@@ -7,6 +7,7 @@ from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
 from django.db import transaction
+from django.db.models.fields import BLANK_CHOICE_DASH
 from django.forms import inlineformset_factory
 from django.http import Http404, JsonResponse
 from django.middleware.csrf import get_token
@@ -16,6 +17,7 @@ from django.utils.safestring import mark_safe
 from django.views.generic import TemplateView
 from django.views.generic.edit import (CreateView, DeleteView, FormView,
                                        UpdateView)
+from organizations.models import OrganizationUser
 from rest_framework.reverse import reverse as api_reverse
 
 from ..core import constants as constants_core
@@ -132,6 +134,15 @@ class ExperimentSamplePlanCreateView(PermissionRequiredMixin, CreateView):
     sample_plan_form_set = inlineformset_factory(
         Experiment, SamplePlan, form=SamplePlanForm, max_num=formset_total, extra=formset_total)
 
+    def get_form(self, *args, **kwargs):
+        form = super().get_form(*args, **kwargs)
+        org_choices = [BLANK_CHOICE_DASH[0]]
+        orgs = OrganizationUser.objects.filter(
+            user=self.request.user).values('id', 'organization__name')
+        org_choices += [(o['id'], o['organization__name']) for o in orgs]
+        form.fields['organization'].choices = org_choices
+        return form
+
     def get_context_data(self, **kwargs):
         context = super(ExperimentSamplePlanCreateView, self).get_context_data(**kwargs)
         context['json_context'] = get_json_context(get_formsets_display_control_config(
@@ -144,6 +155,12 @@ class ExperimentSamplePlanCreateView(PermissionRequiredMixin, CreateView):
         return context
 
     def form_valid(self, form):
+        # check belongs to org
+        orgs = list(OrganizationUser.objects.filter(
+            user=self.request.user).values_list('organization', flat=True))
+        org = form.cleaned_data['organization'].id
+        if org not in orgs:
+            raise Http404
         context = self.get_context_data()
         formsets = context['formsets']
         with transaction.atomic():

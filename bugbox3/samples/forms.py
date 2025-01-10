@@ -36,6 +36,7 @@ class ExperimentForm(ModelFormMixin):
                 'Experiment',
                 Row(
                     Column(
+                        Row(constants.FIELD_ORGANIZATION),
                         Row(constants.FIELD_NAME),
                         Row(constants.FIELD_ABBREVIATION, css_class='form-control-width-medium'),
                         Row(

@@ -3,8 +3,7 @@ import time
 
 from django.contrib.auth.decorators import permission_required
 from django.db.models import Case, CharField, F, Func, Value, When
-from django.http import HttpResponse, Http404
-from django.shortcuts import get_object_or_404
+from django.http import Http404, HttpResponse
 
 from ..core.permissions import IS_RESEARCH
 from ..taxonomy.models import Morphospecies
