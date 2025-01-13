@@ -23,7 +23,11 @@ class ExperimentsDatatablesViewSet(PermissionRequiredMixin, DatatablesModelViewS
     search_vector = [constants.FIELD_NAME, constants.FIELD_ABBREVIATION]
 
     def get_queryset(self):
-        return Experiment.objects.user_access(self.request.user).all().order_by(constants.FIELD_NAME)
+        org = self.request.query_params.get('org')
+        if org.isnumeric():
+            org = int(org)
+        return Experiment.objects.user_access(self.request.user).filter(
+            organization_id=org).order_by(constants.FIELD_NAME)
 
 
 class MultiSpecimenDatatablesViewSet(PermissionRequiredMixin,  DatatablesModelViewSetMixin, ReadOnlyModelViewSet):

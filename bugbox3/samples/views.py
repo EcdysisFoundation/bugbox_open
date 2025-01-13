@@ -50,10 +50,17 @@ class ExperimentsView(PermissionRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        print(kwargs)
         experiments_datatables_url = api_reverse('samples:experiment-data-list',
                                                  request=self.request, kwargs=kwargs)
+        orgs = OrganizationUser.objects.filter(
+            user=self.request.user).values('id', 'organization__name').order_by('id')
+        org_choices = [(o['id'], o['organization__name']) for o in orgs]
         context.update({
-            'json_context': get_json_context({'experiments_datatables_url': experiments_datatables_url}),
+            'json_context': get_json_context({
+                'experiments_datatables_url': experiments_datatables_url,
+                'org_choices': org_choices
+            }),
             'container_row_header': get_datatables_container(
                 get_datatables_row([
                     'Experiment',
@@ -136,9 +143,11 @@ class ExperimentSamplePlanCreateView(PermissionRequiredMixin, CreateView):
 
     def get_form(self, *args, **kwargs):
         form = super().get_form(*args, **kwargs)
-        org_choices = [BLANK_CHOICE_DASH[0]]
+        org_choices = []
         orgs = OrganizationUser.objects.filter(
-            user=self.request.user).values('id', 'organization__name')
+            user=self.request.user).values('id', 'organization__name').order_by('id')
+        if len(orgs) > 1:
+            org_choices += [BLANK_CHOICE_DASH[0]]
         org_choices += [(o['id'], o['organization__name']) for o in orgs]
         form.fields['organization'].choices = org_choices
         return form
