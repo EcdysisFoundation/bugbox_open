@@ -8,10 +8,6 @@ Development url, .js served in dev mode is http://localhost:3000/
 
 ## Basic Commands
 
-### Setting Up Your Users
-
-- To create a **normal user account** for development, just go to Sign Up and fill out the form. Once you submit it, you'll see a "Verify Your E-mail Address" page. Go to your console to see a simulated email verification message. Copy the link into your browser. Now the user's email should be verified and ready to go.
-
 ### Management, manage.py
 
 To run commands to manage.py, use this syntax, to the appropriate .yml file
@@ -135,6 +131,14 @@ Open the logs, ctrl-c to escape
 The image classifications performed from `taxonomy.tasks.image_prediction` are done through a Torchserve model served through Torchserve (see https://github.com/EcdysisFoundation/servemetaformer )
  produced by metaformer_ecdysis (see https://github.com/EcdysisFoundation/metaformer_ecdysis )
 
+
+## Organizations, Users, Permissions
+
+### Setting Up Your Users
+
+- To create a **normal user account** for development, just go to Sign Up and fill out the form. Once you submit it, you'll see a "Verify Your E-mail Address" page. Go to your console to see a simulated email verification message. Copy the link into your browser. Now the user's email should be verified and ready to go.
+
+- To gain access to most UI features, the user then must be both assigned permissions to access views (see `bugbox3.core.permissions`), and be provided membership to at least one organization. When users are removed from all organizations, they also need their permssions to be revoked.
 
 ## Organizations
 
