@@ -208,7 +208,7 @@ def save_thumbnail(instance, created, **kwargs):
             buffer.close()
 
 
-class MultiSpecimenImageManager(Model):
+class MultiSpecimenImageManager(Manager):
     def user_access(self, user):
         return self.filter(sample__site_visit__site__experiment__organization__users=user)
 
