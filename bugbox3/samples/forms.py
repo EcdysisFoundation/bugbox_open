@@ -19,7 +19,7 @@ class ExperimentForm(ModelFormMixin):
     """
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super(ExperimentForm, self).__init__(*args, **kwargs)
         #  use form tags in template to combine with child form
         self.helper.form_tag = False
 
@@ -66,9 +66,12 @@ class SamplePlanForm(ModelFormMixin):
     """
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        self.request = kwargs.pop('request')
+        super(SamplePlanForm, self).__init__(*args, **kwargs)
         #  use form tags in template to combine with parent form
         self.helper.form_tag = False
+        self.fields[constants.FIELD_SAMPLE_PLAN_SAMPLE_TYPE].choices = lambda: LookupChoices.objects.get_field_choices_w_blank(
+            2, constants.FIELD_SAMPLE_PLAN_SAMPLE_TYPE)
 
     class Meta:
         model = SamplePlan
@@ -93,8 +96,6 @@ class SamplePlanForm(ModelFormMixin):
 
     sample_type = ChoiceField(
         widget=Select,
-        choices=lambda: LookupChoices.objects.get_field_choices_w_blank(
-            constants.FIELD_SAMPLE_PLAN_SAMPLE_TYPE)
     )
 
 
@@ -104,9 +105,14 @@ class SiteForm(ModelFormMixin):
     """
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        self.request = kwargs.pop('request')
+        super(SiteForm, self).__init__(*args, **kwargs)
         #  use form tags in template to combine with child form
         self.helper.form_tag = False
+        self.fields[constants.FIELD_SITE_TREATMENT].choices = lambda: LookupChoices.objects.get_field_choices_w_blank(
+            self.request.user, constants.FIELD_SITE_TREATMENT)
+        self.fields[constants.FIELD_SITE_HABITAT_TYPE].choices = lambda: LookupChoices.objects.get_field_choices_w_blank(
+            self.request.user, constants.FIELD_SITE_HABITAT_TYPE)
 
     class Meta:
         model = Site
@@ -139,15 +145,11 @@ class SiteForm(ModelFormMixin):
         ]
 
     treatment = ChoiceField(
-        widget=Select,
-        choices=lambda: LookupChoices.objects.get_field_choices_w_blank(
-            constants.FIELD_SITE_TREATMENT)
+        widget=Select
     )
 
     habitat_type = ChoiceField(
-        widget=Select,
-        choices=lambda: LookupChoices.objects.get_field_choices_w_blank(
-            constants.FIELD_SITE_HABITAT_TYPE)
+        widget=Select
     )
 
 
@@ -251,7 +253,7 @@ class SpecimenForm(ModelFormMixin):
 
     def __init__(self, *args, **kwargs):
         self.review_permission = kwargs.pop('review_permission', None)
-        super().__init__(*args, **kwargs)
+        super(SpecimenForm, self).__init__(*args, **kwargs)
         self.helper.layout = get_submit_layout(self.helper.layout, kwargs)
         if kwargs['instance'] is None:
             self.fields[constants.FIELD_SPECIMEN_ACCEPTANCE].widget = HiddenInput()

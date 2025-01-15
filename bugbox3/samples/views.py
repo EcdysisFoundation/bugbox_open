@@ -92,7 +92,8 @@ class ExperimentView(PermissionRequiredMixin, TemplateView):
             years = str(experiment.from_year)
         else:
             years = str(experiment.from_year) + ' - ' + str(experiment.to_year)
-        description = [v['description'] for v in get_sample_plan_descriptions(experiment.id)]
+        description = [v['description'] for v in get_sample_plan_descriptions(
+            experiment.id)]
         sites_datatables_url = api_reverse(
             'samples:site-data-list', request=self.request, kwargs=kwargs)
         experiment_sites = Site.objects.user_access(self.request.user).filter(
@@ -105,7 +106,7 @@ class ExperimentView(PermissionRequiredMixin, TemplateView):
             'experiment_sites': experiment_sites,
             'other_experiments': other_experiments,
             'sample_types': LookupChoices.objects.get_field_choices_w_blank(
-                constants.FIELD_SAMPLE_TYPE),
+                experiment.organization_id, constants.FIELD_SAMPLE_TYPE),
             'indices': constants.INDICES_CHOICES,
             'export_types': constants.EXPERIMENT_CSV_EXPORT_CHOICES,
             'years': years,
@@ -159,9 +160,9 @@ class ExperimentSamplePlanCreateView(PermissionRequiredMixin, CreateView):
                     self.formset_total, self.formset_intial))
         context['form_action_url'] = reverse('samples:experiment-sample-plan-create')
         if self.request.POST:
-            context['formsets'] = self.sample_plan_form_set(self.request.POST)
+            context['formsets'] = self.sample_plan_form_set(self.request.POST, form_kwargs={'request': self.request})
         else:
-            context['formsets'] = self.sample_plan_form_set()
+            context['formsets'] = self.sample_plan_form_set(form_kwargs={'request': self.request})
         return context
 
     def form_valid(self, form):
@@ -252,6 +253,11 @@ class SiteCreateView(PermissionRequiredMixin, CreateView):
 
     form_set = inlineformset_factory(Site, SiteVisit, form=SiteVisitForm, max_num=formset_total, extra=formset_total)
 
+    def get_form_kwargs(self):
+        kwargs = super(SiteCreateView, self).get_form_kwargs()
+        kwargs['request'] = self.request
+        return kwargs
+
     def get_context_data(self, **kwargs):
         context = super(SiteCreateView, self).get_context_data(**kwargs)
         try:
@@ -331,7 +337,8 @@ class SiteUpdateView(PermissionRequiredMixin, UpdateView):
             'action': self.action,
             'experiment_details': {
                 'experiment': experiment,
-                'plans': get_sample_plan_descriptions(experiment.id)
+                'plans': get_sample_plan_descriptions(
+                    self.request.user, experiment.id)
             },
             'has_related_data': [
                 i.visit_date for i in SiteVisit.objects.filter(site_id=self.object.id) if i.has_related_data
@@ -432,9 +439,9 @@ class SampleView(PermissionRequiredMixin, FormView):
                     'width': constants.SAMPLE_IMAGE_THUMBSIZE
                 }
         sample_type = LookupChoices.objects.get_field_dict_w_blank(
-            constants.FIELD_SAMPLE_TYPE)[sample.sample_type] \
+            sample.site_visit.site.experiment.organization_id, constants.FIELD_SAMPLE_TYPE)[sample.sample_type] \
             if sample.sample_type in LookupChoices.objects.get_field_dict_w_blank(
-            constants.FIELD_SAMPLE_TYPE).keys() \
+            sample.site_visit.site.experiment.organization_id, constants.FIELD_SAMPLE_TYPE).keys() \
             else sample.sample_type
         has_data = sample.completed
         if not has_data:

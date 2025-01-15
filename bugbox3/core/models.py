@@ -13,33 +13,36 @@ class LookupChoicesManager(Manager):
     def user_access(self, user):
         return self.filter(organization__users=user)
 
-    def get_field_choices(self, f):
+    def get_field_choices(self, user, f):
         choices = [(v.entry, v.display_txt) for v in self.filter(
+            organization__users=user,
             field=f
         ).order_by(FIELD_DISPLAY_TXT)]
         if not choices:
             choices = [BLANK_CHOICE_DASH[0],]
         return choices
 
-    def get_field_choices_w_id(self, f):
+    def get_field_choices_w_id(self, user, f):
         choices = [(v.entry, v.display_txt, v.id) for v in self.filter(
+            organization__users=user,
             field=f
         ).order_by(FIELD_DISPLAY_TXT)]
         if not choices:
             choices = [BLANK_CHOICE_DASH[0], 0]
         return choices
 
-    def get_field_choices_w_blank(self, f):
+    def get_field_choices_w_blank(self, org_id, f):
         choices = [(v.entry, v.display_txt) for v in self.filter(
+            organization_id=org_id,
             field=f
         ).order_by(FIELD_DISPLAY_TXT)]
         return [BLANK_CHOICE_DASH[0]] + choices
 
-    def get_field_dict_w_blank(self, f):
-        return {v[0]: v[1] for v in self.get_field_choices_w_blank(f)}
+    def get_field_dict_w_blank(self, org_id, f):
+        return {v[0]: v[1] for v in self.get_field_choices_w_blank(org_id, f)}
 
-    def get_field_entries(self, f):
-        return self.filter(field=f).distinct(
+    def get_field_entries(self, user, f):
+        return self.filter(organization__users=user, field=f).distinct(
             'entry').order_by('entry').values_list('entry', flat=True)
 
 
