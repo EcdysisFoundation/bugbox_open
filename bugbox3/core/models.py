@@ -1,11 +1,17 @@
-from django.contrib.gis.db.models import (BigIntegerField, CharField, Manager,
+from django.contrib.gis.db.models import (BigIntegerField,
+                                          CASCADE, CharField,
+                                          ForeignKey, Manager,
                                           Model, MultiPolygonField)
 from django.db.models.fields import BLANK_CHOICE_DASH
+from organizations.models import Organization
 
 from .constants import FIELD_DISPLAY_TXT
 
 
 class LookupChoicesManager(Manager):
+
+    def user_access(self, user):
+        return self.filter(organization__users=user)
 
     def get_field_choices(self, f):
         choices = [(v.entry, v.display_txt) for v in self.filter(
@@ -38,6 +44,7 @@ class LookupChoicesManager(Manager):
 
 
 class LookupChoices(Model):
+    organization = ForeignKey(Organization, related_name='lookup_choices', on_delete=CASCADE)
     field = CharField(max_length=20)
     entry = CharField(max_length=100)
     display_txt = CharField(max_length=100)

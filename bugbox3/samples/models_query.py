@@ -1,5 +1,6 @@
+from organizations.models import OrganizationUser
+
 from ..core.models import LookupChoices
-from ..users.models import User
 from . import constants
 from .models import SamplePlan
 
@@ -37,6 +38,7 @@ def get_sample_plan_descriptions(experiment_id):
     return []
 
 
-def get_user_choices():
-    return [(u.id, u.username) for u in User.objects.filter(
-        is_active=True, groups__name__in=['is_research']).order_by('username')]
+def get_user_choices(user):
+    orgs = OrganizationUser.objects.filter(user=user).values_list('organization', flat=True)
+    return [(u.user_id, u.user.username) for u in OrganizationUser.objects.filter(
+        organization__in=orgs).order_by('user__username')]
