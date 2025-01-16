@@ -1,7 +1,6 @@
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.postgres.search import SearchVector
 from django.http import Http404
-from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.views.generic import TemplateView
 from django.views.generic.edit import CreateView, DeleteView, UpdateView

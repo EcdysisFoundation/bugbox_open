@@ -66,12 +66,14 @@ class SamplePlanForm(ModelFormMixin):
     """
 
     def __init__(self, *args, **kwargs):
-        self.request = kwargs.pop('request')
+        self.org_id = kwargs.pop('org_id')
         super(SamplePlanForm, self).__init__(*args, **kwargs)
         #  use form tags in template to combine with parent form
         self.helper.form_tag = False
-        self.fields[constants.FIELD_SAMPLE_PLAN_SAMPLE_TYPE].choices = lambda: LookupChoices.objects.get_field_choices_w_blank(
-            2, constants.FIELD_SAMPLE_PLAN_SAMPLE_TYPE)
+        self.fields[
+            constants.FIELD_SAMPLE_PLAN_SAMPLE_TYPE
+            ].choices = lambda: LookupChoices.objects.get_field_choices_w_blank(
+            self.org_id, constants.FIELD_SAMPLE_PLAN_SAMPLE_TYPE)
 
     class Meta:
         model = SamplePlan
@@ -105,14 +107,18 @@ class SiteForm(ModelFormMixin):
     """
 
     def __init__(self, *args, **kwargs):
-        self.request = kwargs.pop('request')
+        self.org_id = kwargs.pop('org_id')
         super(SiteForm, self).__init__(*args, **kwargs)
         #  use form tags in template to combine with child form
         self.helper.form_tag = False
-        self.fields[constants.FIELD_SITE_TREATMENT].choices = lambda: LookupChoices.objects.get_field_choices_w_blank(
-            self.request.user, constants.FIELD_SITE_TREATMENT)
-        self.fields[constants.FIELD_SITE_HABITAT_TYPE].choices = lambda: LookupChoices.objects.get_field_choices_w_blank(
-            self.request.user, constants.FIELD_SITE_HABITAT_TYPE)
+        self.fields[
+            constants.FIELD_SITE_TREATMENT
+            ].choices = lambda: LookupChoices.objects.get_field_choices_w_blank(
+            self.org_id, constants.FIELD_SITE_TREATMENT)
+        self.fields[
+            constants.FIELD_SITE_HABITAT_TYPE
+            ].choices = lambda: LookupChoices.objects.get_field_choices_w_blank(
+            self.org_id, constants.FIELD_SITE_HABITAT_TYPE)
 
     class Meta:
         model = Site
@@ -253,8 +259,13 @@ class SpecimenForm(ModelFormMixin):
 
     def __init__(self, *args, **kwargs):
         self.review_permission = kwargs.pop('review_permission', None)
+        self.org_id = kwargs.pop('org_id')
         super(SpecimenForm, self).__init__(*args, **kwargs)
         self.helper.layout = get_submit_layout(self.helper.layout, kwargs)
+        self.fields[
+            constants.FIELD_SPECIMEN_TAGS
+            ].choices = lambda: LookupChoices.objects.get_field_choices(
+            self.org_id, constants.FIELD_SPECIMEN_TAGS)
         if kwargs['instance'] is None:
             self.fields[constants.FIELD_SPECIMEN_ACCEPTANCE].widget = HiddenInput()
 
@@ -309,9 +320,7 @@ class SpecimenForm(ModelFormMixin):
         return v
 
     tags = MultipleChoiceField(
-        widget=SelectMultiple,
-        choices=lambda: LookupChoices.objects.get_field_choices(
-            constants.FIELD_SPECIMEN_TAGS)
+        widget=SelectMultiple
     )
 
     acceptance = ChoiceField(

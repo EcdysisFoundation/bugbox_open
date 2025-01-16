@@ -35,7 +35,7 @@ urlpatterns = [
      path('', include(router.urls)),
      path('experiments/', ExperimentsView.as_view(), name='experiments'),
      path('experiment/<int:experiment_id>', ExperimentView.as_view(), name='experiment'),
-     path('experiment-sample-plan-create/',
+     path('experiment-sample-plan-create/<int:org_id>',
           ExperimentSamplePlanCreateView.as_view(), name='experiment-sample-plan-create'),
      path('experiment-sample-plan-update/<int:experiment_id>',
           ExperimentSamplePlanUpdateView.as_view(), name='experiment-sample-plan-update'),

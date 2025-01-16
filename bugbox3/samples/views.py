@@ -7,7 +7,6 @@ from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
 from django.db import transaction
-from django.db.models.fields import BLANK_CHOICE_DASH
 from django.forms import inlineformset_factory
 from django.http import Http404, JsonResponse
 from django.middleware.csrf import get_token
@@ -59,7 +58,10 @@ class ExperimentsView(PermissionRequiredMixin, TemplateView):
         context.update({
             'json_context': get_json_context({
                 'experiments_datatables_url': experiments_datatables_url,
-                'org_choices': org_choices
+                'org_choices': org_choices,
+                'create_experiment_url': reverse(
+                    'samples:experiment-sample-plan-create',
+                    kwargs={'org_id': org_choices[0][0]})
             }),
             'container_row_header': get_datatables_container(
                 get_datatables_row([
@@ -144,25 +146,35 @@ class ExperimentSamplePlanCreateView(PermissionRequiredMixin, CreateView):
 
     def get_form(self, *args, **kwargs):
         form = super().get_form(*args, **kwargs)
-        org_choices = []
         orgs = OrganizationUser.objects.filter(
             user=self.request.user).values(
-                'organization_id', 'organization__name').order_by('organization_id')
-        if len(orgs) > 1:
-            org_choices += [BLANK_CHOICE_DASH[0]]
-        org_choices += [(o['organization_id'], o['organization__name']) for o in orgs]
+                'organization_id', 'organization__name')
+        org_choices = [
+            (o['organization_id'], o['organization__name'])
+            for o in orgs if o['organization_id'] == self.kwargs['org_id']
+        ]
+        if len(org_choices) != 1:
+            raise Http404
         form.fields['organization'].choices = org_choices
         return form
 
     def get_context_data(self, **kwargs):
         context = super(ExperimentSamplePlanCreateView, self).get_context_data(**kwargs)
+        if self.kwargs['org_id'] not in OrganizationUser.objects.filter(
+                user=self.request.user).values_list('organization_id', flat=True):
+            raise Http404
+
         context['json_context'] = get_json_context(get_formsets_display_control_config(
                     self.formset_total, self.formset_intial))
-        context['form_action_url'] = reverse('samples:experiment-sample-plan-create')
+        context['form_action_url'] = reverse(
+            'samples:experiment-sample-plan-create',
+            kwargs={'org_id': self.kwargs['org_id']})
         if self.request.POST:
-            context['formsets'] = self.sample_plan_form_set(self.request.POST, form_kwargs={'request': self.request})
+            context['formsets'] = self.sample_plan_form_set(
+                self.request.POST, form_kwargs={'org_id': self.kwargs['org_id']})
         else:
-            context['formsets'] = self.sample_plan_form_set(form_kwargs={'request': self.request})
+            context['formsets'] = self.sample_plan_form_set(
+                form_kwargs={'org_id': self.kwargs['org_id']})
         return context
 
     def form_valid(self, form):
@@ -255,7 +267,8 @@ class SiteCreateView(PermissionRequiredMixin, CreateView):
 
     def get_form_kwargs(self):
         kwargs = super(SiteCreateView, self).get_form_kwargs()
-        kwargs['request'] = self.request
+        kwargs['org_id'] = Experiment.objects.user_access(self.request.user).get(
+                id=self.kwargs['experiment_id']).organization_id
         return kwargs
 
     def get_context_data(self, **kwargs):
@@ -790,6 +803,15 @@ class SpecimenCreateView(PermissionRequiredMixin, CreateView):
     template_name = 'samples/specimen_create.html'
     action = 'create'
 
+    def get_form_kwargs(self):
+        kwargs = super(SpecimenCreateView, self).get_form_kwargs()
+        try:
+            sample = Sample.objects.user_access(self.request.user).get(id=self.kwargs['sample_id'])
+        except Sample.DoesNotExist:
+            raise Http404
+        kwargs['org_id'] = sample.site_visit.site.experiment.organization_id
+        return kwargs
+
     def get_context_data(self, **kwargs):
         context = super(SpecimenCreateView, self).get_context_data(**kwargs)
         try:
@@ -851,6 +873,7 @@ class SpecimenUpdateView(PermissionRequiredMixin, UpdateView):
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs['review_permission'] = self.request.user.has_perm(REVIEW_SPECIMEN_PAGE)
+        kwargs['org_id'] = self.object.sample.site_visit.site.experiment.organization_id
         return kwargs
 
     def get_context_data(self, **kwargs):
