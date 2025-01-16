@@ -1,10 +1,10 @@
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.postgres.search import SearchVector
 from django.http import Http404
-from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.views.generic import TemplateView
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
+from organizations.models import OrganizationUser
 from rest_framework.response import Response
 
 from ..samples.constants import (FIELD_SAMPLE_TYPE, FIELD_SITE_HABITAT_TYPE,
@@ -67,13 +67,13 @@ class LookupChoicesView(PermissionRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         context.update({
             FIELD_SITE_HABITAT_TYPE: LookupChoices.objects.get_field_choices_w_id(
-                FIELD_SITE_HABITAT_TYPE),
+                self.request.user, FIELD_SITE_HABITAT_TYPE),
             FIELD_SITE_TREATMENT: LookupChoices.objects.get_field_choices_w_id(
-                FIELD_SITE_TREATMENT),
+                self.request.user, FIELD_SITE_TREATMENT),
             FIELD_SPECIMEN_TAGS: LookupChoices.objects.get_field_choices_w_id(
-                FIELD_SPECIMEN_TAGS),
+                self.request.user, FIELD_SPECIMEN_TAGS),
             FIELD_SAMPLE_TYPE: LookupChoices.objects.get_field_choices_w_id(
-                FIELD_SAMPLE_TYPE)
+                self.request.user, FIELD_SAMPLE_TYPE)
         })
         return context
 
@@ -85,6 +85,11 @@ class LookupChoicesCreateView(PermissionRequiredMixin, CreateView):
     form_class = LookupChoicesForm
     template_name = 'core/lookup_choices_form.html'
     action = 'create'
+
+    def get_form_kwargs(self):
+        kwargs = super(LookupChoicesCreateView, self).get_form_kwargs()
+        kwargs['request'] = self.request
+        return kwargs
 
     def get_context_data(self, **kwargs):
         context = super(LookupChoicesCreateView, self).get_context_data(**kwargs)
@@ -100,6 +105,11 @@ class LookupChoicesCreateView(PermissionRequiredMixin, CreateView):
         return context
 
     def form_valid(self, form):
+        orgs = list(OrganizationUser.objects.filter(
+            user=self.request.user).values_list('organization', flat=True))
+        org = form.cleaned_data['organization'].id
+        if org not in orgs:
+            raise Http404
         field = None
         if self.kwargs[constants.FIELD_FIELD] in constants.VALID_LOOKUP_FIELDS:
             field = self.kwargs[constants.FIELD_FIELD]
@@ -121,11 +131,17 @@ class LookupChoicesUpdateView(PermissionRequiredMixin, UpdateView):
     action = 'update'
 
     def get_object(self, queryset=None):
-        return get_object_or_404(LookupChoices, id=self.kwargs['id'])
+        try:
+            return LookupChoices.objects.user_access(self.request.user).get(id=self.kwargs['id'])
+        except LookupChoices.DoesNotExist:
+            raise Http404
 
     def get_context_data(self, **kwargs):
         context = super(LookupChoicesUpdateView, self).get_context_data(**kwargs)
-        choice = get_object_or_404(LookupChoices, id=self.kwargs['id'])
+        try:
+            choice = LookupChoices.objects.user_access(self.request.user).get(id=self.kwargs['id'])
+        except LookupChoices.DoesNotExist:
+            raise Http404
         context.update({
             'field': choice.field,
             'form_action_url': reverse('core:lookup-choices-update', kwargs={'id': choice.id}),
@@ -146,7 +162,10 @@ class LookupChoicesDeleteView(PermissionRequiredMixin, DeleteView):
     template_name = 'samples/confirm_delete.html'
 
     def get_object(self, queryset=None):
-        return get_object_or_404(LookupChoices, id=self.kwargs['id'])
+        try:
+            return LookupChoices.objects.user_access(self.request.user).get(id=self.kwargs['id'])
+        except LookupChoices.DoesNotExist:
+            raise Http404
 
     def get_success_url(self):
         return reverse('core:lookup-choices')
