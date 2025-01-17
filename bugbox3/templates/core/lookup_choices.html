@@ -23,6 +23,16 @@
                     Click on a row to go to its edit page or to create a new entry.
                   </p>
 
+                  <div class="dropdown mt-3">
+                    <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                     Organization: {{ selected_org_name }}
+                    </button>
+                    <ul class="dropdown-menu">
+                      {% for org in org_choices %}
+                        <li><a class="dropdown-item" href="{% url 'core:lookup-choices' org.0 %}">{{ org.1 }}</a></li>
+                      {% endfor %}
+                    </ul>
+                  </div>
                 </div>
               </div>
 
@@ -42,7 +52,7 @@
                                 {% if v.0|lower == v.1|lower %} {{ v.1 }} {% else %} {{ v.0 }} | {{ v.1 }} {% endif %}
                             </a>
                         {% endfor %}
-                        <a href="{% url 'core:lookup-choices-create' 'tags' %}" class="list-group-item list-group-item-action">
+                        <a href="{% url 'core:lookup-choices-create' 'tags' selected_org_id %}" class="list-group-item list-group-item-action">
                             <i class="bi bi-plus-square"></i>
                         </a>
                     </ul>
@@ -65,7 +75,7 @@
                                 {% if v.0|lower == v.1|lower %} {{ v.1 }} {% else %} {{ v.0 }} | {{ v.1 }} {% endif %}
                             </a>
                         {% endfor %}
-                        <a href="{% url 'core:lookup-choices-create' 'habitat_type' %}" class="list-group-item list-group-item-action">
+                        <a href="{% url 'core:lookup-choices-create' 'habitat_type' selected_org_id %}" class="list-group-item list-group-item-action">
                             <i class="bi bi-plus-square"></i>
                         </a>
                     </ul>
@@ -88,7 +98,7 @@
                                 {% if v.0|lower == v.1|lower %} {{ v.1 }} {% else %} {{ v.0 }} | {{ v.1 }} {% endif %}
                             </a>
                         {% endfor %}
-                        <a href="{% url 'core:lookup-choices-create' 'treatment' %}" class="list-group-item list-group-item-action">
+                        <a href="{% url 'core:lookup-choices-create' 'treatment' selected_org_id %}" class="list-group-item list-group-item-action">
                             <i class="bi bi-plus-square"></i>
                         </a>
                     </ul>
@@ -111,7 +121,7 @@
                                 {% if v.0|lower == v.1|lower %} {{ v.1 }} {% else %} {{ v.0 }} | {{ v.1 }} {% endif %}
                             </a>
                         {% endfor %}
-                        <a href="{% url 'core:lookup-choices-create' 'sample_type' %}" class="list-group-item list-group-item-action">
+                        <a href="{% url 'core:lookup-choices-create' 'sample_type' selected_org_id %}" class="list-group-item list-group-item-action">
                             <i class="bi bi-plus-square"></i>
                         </a>
                     </ul>
