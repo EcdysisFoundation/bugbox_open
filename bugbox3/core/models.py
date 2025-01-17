@@ -21,13 +21,11 @@ class LookupChoicesManager(Manager):
             choices = [BLANK_CHOICE_DASH[0],]
         return choices
 
-    def get_field_choices_w_id(self, user, f):
+    def get_field_choices_w_id(self, org_id, f):
         choices = [(v.entry, v.display_txt, v.id) for v in self.filter(
-            organization__users=user,
+            organization_id=org_id,
             field=f
         ).order_by(FIELD_DISPLAY_TXT)]
-        if not choices:
-            choices = [BLANK_CHOICE_DASH[0], 0]
         return choices
 
     def get_field_choices_w_blank(self, org_id, f):
@@ -40,10 +38,6 @@ class LookupChoicesManager(Manager):
     def get_field_dict_w_blank(self, org_id, f):
         return {v[0]: v[1] for v in self.get_field_choices_w_blank(org_id, f)}
 
-    def get_field_entries(self, user, f):
-        return self.filter(organization__users=user, field=f).distinct(
-            'entry').order_by('entry').values_list('entry', flat=True)
-
 
 class LookupChoices(Model):
     organization = ForeignKey(Organization, related_name='lookup_choices', on_delete=CASCADE)
@@ -52,6 +46,9 @@ class LookupChoices(Model):
     display_txt = CharField(max_length=100)
 
     objects = LookupChoicesManager()
+
+    def __str__(self):
+        return str(self.display_txt)
 
 
 class UsCounties(Model):

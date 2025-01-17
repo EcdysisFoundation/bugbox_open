@@ -5,9 +5,9 @@ from .views import (LookupChoicesCreateView, LookupChoicesDeleteView,
 
 app_name = "core"
 urlpatterns = [
-    path('lookup-choices/', LookupChoicesView.as_view(), name='lookup-choices'),
+    path('lookup-choices/<int:org_id>', LookupChoicesView.as_view(), name='lookup-choices'),
     path(
-        'lookup-choices-create/<field>',
+        'lookup-choices-create/<field>/<int:org_id>',
         LookupChoicesCreateView.as_view(),
         name='lookup-choices-create'
     ),

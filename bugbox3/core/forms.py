@@ -145,14 +145,15 @@ class LookupChoicesForm(ModelFormMixin):
         fields = [
             constants.FIELD_FIELD,
             constants.FIELD_ENTRY,
-            constants.FIELD_DISPLAY_TXT
+            constants.FIELD_DISPLAY_TXT,
+            'organization'
         ]
 
     required_fields = [
         constants.FIELD_ENTRY,
         constants.FIELD_DISPLAY_TXT
     ]
-    hidden_fields = [constants.FIELD_FIELD]
+    hidden_fields = [constants.FIELD_FIELD, 'organization']
 
     def get_primary_layout(self):
 
