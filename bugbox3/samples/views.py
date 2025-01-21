@@ -963,15 +963,26 @@ class SpecimensView(PermissionRequiredMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        experiment = None
         experiment_name = None
         sample_name = None
+        orgs = OrganizationUser.objects.filter(
+            user=self.request.user).values_list(
+                'organization_id', flat=True).order_by('organization_id')
+        if not orgs:
+            raise Http404
         if 'id' not in self.kwargs:
             self.kwargs['id'] = 0
         if self.kwargs['id']:
             try:
-                experiment_name = Experiment.objects.user_access(self.request.user).get(id=self.kwargs['id']).name
+                experiment = Experiment.objects.user_access(self.request.user).get(id=self.kwargs['id'])
+                experiment_name = experiment.name
             except Experiment.DoesNotExist:
                 raise Http404
+        if experiment:
+            org_id = experiment.organization_id
+        else:
+            org_id = orgs[0]
         if 'sample_id' not in self.kwargs:
             self.kwargs['sample_id'] = 0
         if self.kwargs['sample_id']:
@@ -1007,8 +1018,10 @@ class SpecimensView(PermissionRequiredMixin, FormView):
                 'user_choices': get_user_choices(self.request.user),
                 'state_choices_dict': constants_core.STATE_CHOICES,
                 'country_choices': constants_core.COUNTRY_CHOICES,
-                'tag_choices': LookupChoices.objects.get_field_choices(constants.FIELD_SPECIMEN_TAGS),
-                'sample_type_choices': LookupChoices.objects.get_field_choices(constants.FIELD_SAMPLE_TYPE),
+                'tag_choices': LookupChoices.objects.get_field_choices(
+                    org_id, constants.FIELD_SPECIMEN_TAGS),
+                'sample_type_choices': LookupChoices.objects.get_field_choices(
+                    org_id, constants.FIELD_SAMPLE_TYPE),
                 'recent_year_choices': [(i, i) for i in recent_years]
             }),
             'experiment_name': experiment_name,
