@@ -580,6 +580,11 @@ class SampleUpdateView(PermissionRequiredMixin, UpdateView):
         except Sample.DoesNotExist:
             raise Http404
 
+    def get_form_kwargs(self):
+        kwargs = super(SampleUpdateView, self).get_form_kwargs()
+        kwargs['org_id'] = self.object.site_visit.site.experiment.organization_id
+        return kwargs
+
     def get_context_data(self, **kwargs):
         context = super(SampleUpdateView, self).get_context_data(**kwargs)
         context['form_action_url'] = reverse('samples:sample-update', kwargs={'sample_id': self.kwargs['sample_id']})
@@ -660,8 +665,10 @@ class SpecimensWithoutImagesFormView(PermissionRequiredMixin, FormView):
                 existing_names.append(m)
         use_names = [v for v in morpho_names if v not in existing_names]
         sample_type = LookupChoices.objects.get_field_dict_w_blank(
+            sample.site_visit.site.experiment.organization_id,
             constants.FIELD_SAMPLE_TYPE)[sample.sample_type] \
             if sample.sample_type in LookupChoices.objects.get_field_dict_w_blank(
+            sample.site_visit.site.experiment.organization_id,
             constants.FIELD_SAMPLE_TYPE).keys() \
             else sample.sample_type
         context.update({
