@@ -1,5 +1,6 @@
 from django.apps import apps
 from django.core.management.base import BaseCommand
+from django.db.models import Exists, OuterRef
 
 from bugbox3.taxonomy.tasks import id_image
 
@@ -22,8 +23,14 @@ class Command(BaseCommand):
         # The most recent model is determined by the most recent entry into AiTraining
         current_model_name = self.AiTraining.objects.exclude(model_name='').values_list(
             'model_name', flat=True).last()
-        specimens = self.Specimen.objects.filter(
-                acceptance=0).exclude(ai_model_name=current_model_name)[:recs]
+        specimens = self.Specimen.objects.annotate(
+                has_images=Exists(self.SpecimenImage.objects.filter(
+                    specimen=OuterRef('pk'),
+                    image_notfound=False))).filter(
+                ai_classification__isnull=True,
+                acceptance=0,
+                has_images=True
+            ).exclude(ai_model_name=current_model_name)[:recs]
         for s in specimens:
             id_image.delay(s.id)
         specimen_count = len(specimens)

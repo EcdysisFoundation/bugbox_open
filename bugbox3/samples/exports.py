@@ -3,8 +3,7 @@ import time
 
 from django.contrib.auth.decorators import permission_required
 from django.db.models import Case, CharField, F, Func, Value, When
-from django.http import HttpResponse
-from django.shortcuts import get_object_or_404
+from django.http import Http404, HttpResponse
 
 from ..core.permissions import IS_RESEARCH
 from ..taxonomy.models import Morphospecies
@@ -17,7 +16,11 @@ from .models import Experiment, Sample, Site, Specimen
 @permission_required(IS_RESEARCH)
 def experiment_ai_csv(request, id):
     # get query params and sanitize
-    experiment = get_object_or_404(Experiment, id=id)
+    try:
+        experiment = Experiment.objects.user_access(request.user).get(id=id)
+    except Experiment.DoesNotExist:
+        raise Http404
+
     sample_types = request.GET.getlist('sampleTypes')
     sites = request.GET.getlist('sites')
     if not all([v.isnumeric() for v in sites]):
@@ -29,7 +32,7 @@ def experiment_ai_csv(request, id):
     other_experiments = [int(v) for v in other_experiments]
     all_exp = other_experiments + [experiment.id]
     headersArr = constants.EXPERIMENT_AI_CSV + ['Top 1 Correct', 'Top 3 Correct']
-    specimens = Specimen.objects.filter(
+    specimens = Specimen.objects.user_access(request.user).filter(
         sample__site_visit__site__experiment_id__in=all_exp,
         sample__sample_type__in=sample_types).exclude(
             acceptance=constants.ACCEPTANCE_PENDING)
@@ -68,7 +71,11 @@ def experiment_ai_csv(request, id):
 @permission_required(IS_RESEARCH)
 def experiment_csv(request, id):
     # get query params and sanitize
-    experiment = get_object_or_404(Experiment, id=id)
+    try:
+        experiment = Experiment.objects.user_access(request.user).get(id=id)
+    except Experiment.DoesNotExist:
+        raise Http404
+
     indices = request.GET.getlist('indices')
     indices = [v for v in indices if v in constants.INDICES_CHOICES_ALL]
     export_type = request.GET.get('export-type')
@@ -99,7 +106,10 @@ def experiment_csv(request, id):
 
     rows = []
     for exp_id in all_exp:
-        this_experiment = get_object_or_404(Experiment, id=exp_id)
+        try:
+            this_experiment = Experiment.objects.user_access(request.user).get(id=exp_id)
+        except Experiment.DoesNotExist:
+            raise Http404
         samples = Sample.objects.filter(
             site_visit__site__experiment_id=exp_id,
             sample_type__in=sample_types

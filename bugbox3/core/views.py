@@ -1,10 +1,10 @@
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.postgres.search import SearchVector
 from django.http import Http404
-from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.views.generic import TemplateView
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
+from organizations.models import OrganizationUser
 from rest_framework.response import Response
 
 from ..samples.constants import (FIELD_SAMPLE_TYPE, FIELD_SITE_HABITAT_TYPE,
@@ -65,15 +65,33 @@ class LookupChoicesView(PermissionRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        orgs = OrganizationUser.objects.filter(
+            user=self.request.user).values(
+                'organization_id', 'organization__name').order_by('organization_id')
+        org_choices = [(o['organization_id'], o['organization__name']) for o in orgs]
+        if (self.kwargs['org_id'] not in [o[0] for o in org_choices]
+                and self.kwargs['org_id'] != 0) \
+                or not org_choices:
+            raise Http404
+        if self.kwargs['org_id'] == 0:
+            selected_org_name = org_choices[0][1]
+            selected_org_id = org_choices[0][0]
+        else:
+            selected_org_name = [o[1] for o in org_choices if o[0] == self.kwargs['org_id']][0]
+            selected_org_id = [o[0] for o in org_choices if o[0] == self.kwargs['org_id']][0]
+
         context.update({
             FIELD_SITE_HABITAT_TYPE: LookupChoices.objects.get_field_choices_w_id(
-                FIELD_SITE_HABITAT_TYPE),
+                selected_org_id, FIELD_SITE_HABITAT_TYPE),
             FIELD_SITE_TREATMENT: LookupChoices.objects.get_field_choices_w_id(
-                FIELD_SITE_TREATMENT),
+                selected_org_id, FIELD_SITE_TREATMENT),
             FIELD_SPECIMEN_TAGS: LookupChoices.objects.get_field_choices_w_id(
-                FIELD_SPECIMEN_TAGS),
+                selected_org_id, FIELD_SPECIMEN_TAGS),
             FIELD_SAMPLE_TYPE: LookupChoices.objects.get_field_choices_w_id(
-                FIELD_SAMPLE_TYPE)
+                selected_org_id, FIELD_SAMPLE_TYPE),
+            'org_choices': org_choices,
+            'selected_org_name': selected_org_name,
+            'selected_org_id': selected_org_id
         })
         return context
 
@@ -88,6 +106,12 @@ class LookupChoicesCreateView(PermissionRequiredMixin, CreateView):
 
     def get_context_data(self, **kwargs):
         context = super(LookupChoicesCreateView, self).get_context_data(**kwargs)
+        try:
+            self.org = OrganizationUser.objects.get(
+                user=self.request.user,
+                organization_id=self.kwargs['org_id'])
+        except OrganizationUser.DoesNotExist:
+            raise Http404
         field = None
         if self.kwargs[constants.FIELD_FIELD] in constants.VALID_LOOKUP_FIELDS:
             field = self.kwargs[constants.FIELD_FIELD]
@@ -95,21 +119,26 @@ class LookupChoicesCreateView(PermissionRequiredMixin, CreateView):
             raise Http404('Page not found')
         context.update({
             constants.FIELD_FIELD: field,
-            'form_action_url': reverse('core:lookup-choices-create', kwargs={constants.FIELD_FIELD: field}),
+            'organization': self.org.organization.name,
+            'form_action_url': reverse(
+                'core:lookup-choices-create',
+                kwargs={constants.FIELD_FIELD: field, 'org_id': self.kwargs['org_id']}),
         })
         return context
 
     def form_valid(self, form):
+        self.get_context_data()
         field = None
         if self.kwargs[constants.FIELD_FIELD] in constants.VALID_LOOKUP_FIELDS:
             field = self.kwargs[constants.FIELD_FIELD]
         if not field:
             raise Http404('Page not found')
         form.instance.field = self.kwargs[constants.FIELD_FIELD]
+        form.instance.organization = self.org.organization
         return super().form_valid(form)
 
     def get_success_url(self):
-        return reverse('core:lookup-choices')
+        return reverse('core:lookup-choices', kwargs={'org_id': self.org.organization_id})
 
 
 class LookupChoicesUpdateView(PermissionRequiredMixin, UpdateView):
@@ -121,22 +150,24 @@ class LookupChoicesUpdateView(PermissionRequiredMixin, UpdateView):
     action = 'update'
 
     def get_object(self, queryset=None):
-        return get_object_or_404(LookupChoices, id=self.kwargs['id'])
+        try:
+            return LookupChoices.objects.user_access(self.request.user).get(id=self.kwargs['id'])
+        except LookupChoices.DoesNotExist:
+            raise Http404
 
     def get_context_data(self, **kwargs):
         context = super(LookupChoicesUpdateView, self).get_context_data(**kwargs)
-        choice = get_object_or_404(LookupChoices, id=self.kwargs['id'])
         context.update({
-            'field': choice.field,
-            'form_action_url': reverse('core:lookup-choices-update', kwargs={'id': choice.id}),
+            'field': self.object.field,
+            'form_action_url': reverse('core:lookup-choices-update', kwargs={'id': self.object.id}),
             'delete_button': '<a href="{0}" class="btn btn-danger" role="button">Delete</a>'.format(
-                reverse('core:lookup-choices-delete', kwargs={'id': choice.id})
+                reverse('core:lookup-choices-delete', kwargs={'id': self.object.id})
             )
         })
         return context
 
     def get_success_url(self):
-        return reverse('core:lookup-choices')
+        return reverse('core:lookup-choices', kwargs={'org_id': self.object.organization_id})
 
 
 class LookupChoicesDeleteView(PermissionRequiredMixin, DeleteView):
@@ -146,7 +177,10 @@ class LookupChoicesDeleteView(PermissionRequiredMixin, DeleteView):
     template_name = 'samples/confirm_delete.html'
 
     def get_object(self, queryset=None):
-        return get_object_or_404(LookupChoices, id=self.kwargs['id'])
+        try:
+            return LookupChoices.objects.user_access(self.request.user).get(id=self.kwargs['id'])
+        except LookupChoices.DoesNotExist:
+            raise Http404
 
     def get_success_url(self):
-        return reverse('core:lookup-choices')
+        return reverse('core:lookup-choices', kwargs={'org_id': self.object.organization_id})

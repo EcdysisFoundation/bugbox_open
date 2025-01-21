@@ -172,9 +172,9 @@ class SitesDatatablesSerializer(ModelSerializer):
         ])
         for s in samples:
             if s.sample_type in LookupChoices.objects.get_field_dict_w_blank(
-                    constants.FIELD_SAMPLE_TYPE).keys():
+                    value.experiment.organization_id, constants.FIELD_SAMPLE_TYPE).keys():
                 sample_type = LookupChoices.objects.get_field_dict_w_blank(
-                    constants.FIELD_SAMPLE_TYPE)[s.sample_type]
+                    value.experiment.organization_id, constants.FIELD_SAMPLE_TYPE)[s.sample_type]
             else:
                 sample_type = s.sample_type
             sample_url = reverse('samples:sample', kwargs={'sample_id': s.id})

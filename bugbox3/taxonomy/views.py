@@ -307,7 +307,10 @@ def classify_specimen(request, id):
 def classify_sample(request, id):
     if not settings.AI_INFERENCE_URL:
         return Http404('The AI_INFERENCE_URL is not avaialble')
-    sample = get_object_or_404(Sample, id=id)
+    try:
+        sample = Sample.objects.user_access(request.user).get(id=id)
+    except Sample.DoesNotExist:
+        raise Http404
     specimen = Specimen.objects.filter(sample=sample, acceptance=0)
     for s in specimen:
         id_image.delay(s.id)

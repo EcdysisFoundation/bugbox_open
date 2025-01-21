@@ -8,10 +8,6 @@ Development url, .js served in dev mode is http://localhost:3000/
 
 ## Basic Commands
 
-### Setting Up Your Users
-
-- To create a **normal user account** for development, just go to Sign Up and fill out the form. Once you submit it, you'll see a "Verify Your E-mail Address" page. Go to your console to see a simulated email verification message. Copy the link into your browser. Now the user's email should be verified and ready to go.
-
 ### Management, manage.py
 
 To run commands to manage.py, use this syntax, to the appropriate .yml file
@@ -130,7 +126,30 @@ Open the logs, ctrl-c to escape
     docker compose -f local-cloud.yml logs --tail=1000 --follow
 
 
-### Torchserve
+## Torchserve
 
 The image classifications performed from `taxonomy.tasks.image_prediction` are done through a Torchserve model served through Torchserve (see https://github.com/EcdysisFoundation/servemetaformer )
  produced by metaformer_ecdysis (see https://github.com/EcdysisFoundation/metaformer_ecdysis )
+
+
+## Organizations, Users, Permissions
+
+### Setting Up Your Users
+
+- To create a **normal user account** for development, just go to Sign Up and fill out the form. Once you submit it, you'll see a "Verify Your E-mail Address" page. Go to your console to see a simulated email verification message. Copy the link into your browser. Now the user's email should be verified and ready to go.
+
+- To gain access to most UI features, the user then must be both assigned permissions to access views (see `bugbox3.core.permissions`), and be provided membership to at least one organization. When users are removed from all organizations, they also need their permssions to be revoked.
+
+## Organizations
+
+This app uses django-organizations ( https://github.com/bennylope/django-organizations ) to provide user access to the data of organizations they belong to. Therefore, all data access queries a user may be exposed to in the app need to properly check their organization access. Organization access is set at the model `Experiment` level. Each child table has a manager that implemnents the `user_access` function to filter data to the user's organization membership. The following examples show how to apply the filter in views.
+
+    samples = Sample.objects.user_accesss(self.request.user).all()
+
+A get request
+
+    try:
+        sample = Sample.objects.user_access(self.request.user).get(id=self.kwargs['sample_id'])
+    except Sample.DoesNotExist:
+            raise Http404
+
