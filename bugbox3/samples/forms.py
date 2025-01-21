@@ -201,8 +201,13 @@ class SiteVisitForm(ModelFormMixin):
 class SampleForm(ModelFormMixin):
 
     def __init__(self, *args, **kwargs):
+        self.org_id = kwargs.pop('org_id')
         super().__init__(*args, **kwargs)
         self.helper.layout = get_submit_layout(self.helper.layout, kwargs)
+        self.fields[
+            constants.FIELD_SAMPLE_TYPE
+            ].choices = lambda: LookupChoices.objects.get_field_choices_w_blank(
+            self.org_id, constants.FIELD_SAMPLE_TYPE)
 
     class Meta:
         model = Sample
@@ -218,9 +223,7 @@ class SampleForm(ModelFormMixin):
         ]
 
     sample_type = ChoiceField(
-        widget=Select,
-        choices=lambda: LookupChoices.objects.get_field_choices_w_blank(
-            constants.FIELD_SAMPLE_TYPE)
+        widget=Select
     )
 
     notes = CharField(
