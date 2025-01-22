@@ -48,7 +48,7 @@ class ExperimentsView(PermissionRequiredMixin, TemplateView):
     template_name = 'samples/experiments.html'
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+        context = super(ExperimentsView, self).get_context_data(**kwargs)
         experiments_datatables_url = api_reverse('samples:experiment-data-list',
                                                  request=self.request, kwargs=kwargs)
         orgs = OrganizationUser.objects.filter(
@@ -83,7 +83,7 @@ class ExperimentView(PermissionRequiredMixin, TemplateView):
     template_name = 'samples/experiment.html'
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+        context = super(ExperimentView, self).get_context_data(**kwargs)
         try:
             experiment = Experiment.objects.user_access(
                 self.request.user).get(id=kwargs['experiment_id'])
@@ -145,7 +145,7 @@ class ExperimentSamplePlanCreateView(PermissionRequiredMixin, CreateView):
         Experiment, SamplePlan, form=SamplePlanForm, max_num=formset_total, extra=formset_total)
 
     def get_form(self, *args, **kwargs):
-        form = super().get_form(*args, **kwargs)
+        form = super(ExperimentSamplePlanCreateView, self).get_form(*args, **kwargs)
         orgs = OrganizationUser.objects.filter(
             user=self.request.user).values(
                 'organization_id', 'organization__name')
@@ -232,9 +232,14 @@ class ExperimentSamplePlanUpdateView(PermissionRequiredMixin, UpdateView):
         context['form_action_url'] = reverse('samples:experiment-sample-plan-update',
                                              kwargs={'experiment_id': self.kwargs['experiment_id']})
         if self.request.POST:
-            context['formsets'] = self.sample_plan_form_set(self.request.POST, instance=self.object)
+            context['formsets'] = self.sample_plan_form_set(
+                self.request.POST,
+                instance=self.object,
+                form_kwargs={'org_id': self.object.organization_id})
         else:
-            context['formsets'] = self.sample_plan_form_set(instance=self.object)
+            context['formsets'] = self.sample_plan_form_set(
+                instance=self.object,
+                form_kwargs={'org_id': self.object.organization_id})
         return context
 
     def form_valid(self, form):
@@ -337,6 +342,11 @@ class SiteUpdateView(PermissionRequiredMixin, UpdateView):
             raise Http404
         return site
 
+    def get_form_kwargs(self):
+        kwargs = super(SiteUpdateView, self).get_form_kwargs()
+        kwargs['org_id'] = self.object.experiment.organization_id
+        return kwargs
+
     def get_context_data(self, **kwargs):
         context = super(SiteUpdateView, self).get_context_data(**kwargs)
         try:
@@ -350,8 +360,7 @@ class SiteUpdateView(PermissionRequiredMixin, UpdateView):
             'action': self.action,
             'experiment_details': {
                 'experiment': experiment,
-                'plans': get_sample_plan_descriptions(
-                    self.request.user, experiment.id)
+                'plans': get_sample_plan_descriptions(experiment.id)
             },
             'has_related_data': [
                 i.visit_date for i in SiteVisit.objects.filter(site_id=self.object.id) if i.has_related_data
@@ -418,7 +427,7 @@ class SampleView(PermissionRequiredMixin, FormView):
     template_name = 'samples/sample_detail.html'
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+        context = super(SampleView, self).get_context_data(**kwargs)
         try:
             sample = Sample.objects.user_access(self.request.user).get(id=self.kwargs['sample_id'])
         except Sample.DoesNotExist:
@@ -653,7 +662,7 @@ class SpecimensWithoutImagesFormView(PermissionRequiredMixin, FormView):
     template_name = 'samples/specimens_wo_images.html'
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+        context = super(SpecimensWithoutImagesFormView, self).get_context_data(**kwargs)
         try:
             sample = Sample.objects.user_access(self.request.user).get(id=self.kwargs['id'])
         except Sample.DoesNotExist:
@@ -724,7 +733,7 @@ class SpecimenView(PermissionRequiredMixin, FormView):
     template_name = 'samples/specimen_detail.html'
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+        context = super(SpecimenView, self).get_context_data(**kwargs)
         try:
             specimen = Specimen.objects.user_access(self.request.user).get(id=self.kwargs['id'])
         except Specimen.DoesNotExist:
@@ -878,7 +887,7 @@ class SpecimenUpdateView(PermissionRequiredMixin, UpdateView):
             raise Http404
 
     def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
+        kwargs = super(SpecimenUpdateView, self).get_form_kwargs()
         kwargs['review_permission'] = self.request.user.has_perm(REVIEW_SPECIMEN_PAGE)
         kwargs['org_id'] = self.object.sample.site_visit.site.experiment.organization_id
         return kwargs
@@ -969,7 +978,7 @@ class SpecimensView(PermissionRequiredMixin, FormView):
     }
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+        context = super(SpecimensView, self).get_context_data(**kwargs)
         experiment = None
         experiment_name = None
         sample_name = None
@@ -1117,7 +1126,7 @@ class MultiSpecimeImageView(PermissionRequiredMixin, FormView):
     template_name = 'samples/multispecimen_form.html'
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+        context = super(MultiSpecimeImageView, self).get_context_data(**kwargs)
         try:
             sample = Sample.objects.user_access(self.request.user).get(id=self.kwargs['sample_id'])
         except Sample.DoesNotExist:
