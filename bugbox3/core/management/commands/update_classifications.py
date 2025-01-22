@@ -14,6 +14,7 @@ class Command(BaseCommand):
         parser.add_argument('--recs', type=int, help='Number of recs to send.')
 
     Specimen = apps.get_model(app_label='samples', model_name='Specimen')
+    SpecimenImage = apps.get_model(app_label='samples', model_name='SpecimenImage')
     AiTraining = apps.get_model(app_label='taxonomy', model_name='AiTraining')
 
     def handle(self, *args, **options):
