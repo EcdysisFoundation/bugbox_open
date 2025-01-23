@@ -17,7 +17,7 @@ from .views_dtables import (ExperimentsDatatablesViewSet,
                             SpecimensAllDatatablesViewSet)
 
 router = DefaultRouter()
-router.register(r'experiments-data', ExperimentsDatatablesViewSet,
+router.register(r'experiments-data/(?P<org_id>[^/]+)', ExperimentsDatatablesViewSet,
                 basename='experiment-data')
 router.register(r'samples-data/(?P<experiment_id>[^/]+)', SamplesDatatablesViewSet,
                 basename='sample-data')
@@ -34,7 +34,7 @@ router.register(r'multispecimens-data/(?P<sample_id>[^/]+)', MultiSpecimenDatata
 app_name = "samples"
 urlpatterns = [
      path('', include(router.urls)),
-     path('experiments/', ExperimentsView.as_view(), name='experiments'),
+     path('experiments/<int:org_id>', ExperimentsView.as_view(), name='experiments'),
      path('experiment/<int:experiment_id>', ExperimentView.as_view(), name='experiment'),
      path('experiment-sample-plan-create/<int:org_id>',
           ExperimentSamplePlanCreateView.as_view(), name='experiment-sample-plan-create'),

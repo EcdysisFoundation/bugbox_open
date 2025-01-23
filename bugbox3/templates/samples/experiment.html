@@ -160,7 +160,7 @@
             <div class="card">
                 <div class="card-header align-items-center bg-ecdysis text-white d-flex justify-content-between">
                     <h5>Experiment: {{experiment.name}} </h5>
-                    <a href="{% url 'samples:experiments' %}" class="btn btn-light">
+                    <a href="{% url 'samples:experiments' experiment.organization_id %}" class="btn btn-light">
                         Experiments
                     </a>
                     <a href="{% url 'samples:experiment-sample-plan-update' experiment.id %}" class="btn btn-light">

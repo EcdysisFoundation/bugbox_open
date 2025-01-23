@@ -76,7 +76,7 @@
                     </a>
 
                       <ul class="dropdown-menu" aria-labelledby="navDropExperiments">
-                        <li><a class="dropdown-item" href="{% url 'samples:experiments' %}">Experiments</a></li>
+                        <li><a class="dropdown-item" href="{% url 'samples:experiments' 0 %}">Experiments</a></li>
                         <li><a class="dropdown-item" href="{% url 'taxonomy:morphospecies' %}">Morphospecies</a></li>
                         {% if perms.samples.review_specimen_page %}
                           <li><a class="dropdown-item" href="{% url 'samples:specimens-experiment-sample' 0 0 0 %}">Specimens</a></li>
