@@ -200,7 +200,7 @@
                 <div class="card-header align-items-center bg-ecdysis text-white d-flex justify-content-between">
                     <h5>Sites and Samples from this Experiment</h5>
                     {% if review_permission %}
-                    <a href="{% url 'samples:specimens-experiment-sample' experiment.id 0 %}" class="btn btn-light">
+                    <a href="{% url 'samples:specimens-experiment-sample' experiment.organization_id experiment.id 0 %}" class="btn btn-light">
                         All Specimens
                     </a>
                     {% endif %}

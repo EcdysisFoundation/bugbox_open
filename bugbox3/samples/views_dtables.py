@@ -103,9 +103,8 @@ class SpecimensAllDatatablesViewSet(PermissionRequiredMixin, DatatablesModelView
     ]
 
     def get_queryset(self):
-        specimen = Specimen.objects.user_access(self.request.user).filter(
-            sample__site_visit__site__experiment__isnull=False
-        )
+        specimen = Specimen.objects.user_access(self.request.user)
+        org_id = int(self.kwargs['org_id'])
         id = int(self.kwargs['id'])
         sample_id = int(self.kwargs['sample_id'])
         if id and not sample_id:
@@ -114,6 +113,10 @@ class SpecimensAllDatatablesViewSet(PermissionRequiredMixin, DatatablesModelView
             specimen = specimen.filter(
                 sample__site_visit__site__experiment__id=id,
                 sample__id=sample_id,
+            )
+        elif org_id:
+            specimen = specimen.filter(
+                sample__site_visit__site__experiment__organization_id=org_id,
             )
         acceptance = self.request.query_params.get('acceptance')
         if acceptance:

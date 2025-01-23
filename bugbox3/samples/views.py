@@ -479,6 +479,7 @@ class SampleView(PermissionRequiredMixin, FormView):
                 'sample_id': sample.id,
                 'experiment_name': sample.site_visit.site.experiment.name,
                 'experiment_id': sample.site_visit.site.experiment_id,
+                'organization_id': sample.site_visit.site.experiment.organization_id,
                 'uuid': sample.uuid,
                 'site': sample.site_visit.site.site_name,
                 'country': sample.site_visit.site.country,
@@ -982,30 +983,53 @@ class SpecimensView(PermissionRequiredMixin, FormView):
         experiment = None
         experiment_name = None
         sample_name = None
-        orgs = OrganizationUser.objects.filter(
-            user=self.request.user).values_list(
-                'organization_id', flat=True).order_by('organization_id')
-        if not orgs:
-            raise Http404
-        if 'id' not in self.kwargs:
-            self.kwargs['id'] = 0
-        if self.kwargs['id']:
+        if self.kwargs['sample_id']:
+            try:
+                sample = Sample.objects.user_access(self.request.user).get(id=self.kwargs['sample_id'])
+                sample_name = sample.name_no
+                org_id = sample.site_visit.site.experiment.organization_id
+                org_choices = [(
+                    sample.site_visit.site.experiment.organization_id,
+                    sample.site_visit.site.experiment.organization.name), ]
+            except Sample.DoesNotExist:
+                raise Http404
+        elif self.kwargs['id']:
             try:
                 experiment = Experiment.objects.user_access(self.request.user).get(id=self.kwargs['id'])
                 experiment_name = experiment.name
+                org_id = experiment.organization_id
+                org_choices = [(experiment.organization_id, experiment.organization.name), ]
             except Experiment.DoesNotExist:
                 raise Http404
-        if experiment:
-            org_id = experiment.organization_id
-        else:
-            org_id = orgs[0]
-        if 'sample_id' not in self.kwargs:
-            self.kwargs['sample_id'] = 0
-        if self.kwargs['sample_id']:
+        elif self.kwargs['org_id']:
             try:
-                sample_name = Sample.objects.user_access(self.request.user).get(id=self.kwargs['sample_id']).name_no
-            except Sample.DoesNotExist:
+                org_user = OrganizationUser.objects.get(user=self.request.user, organization_id=self.kwargs['org_id'])
+                org_id = org_user.organization_id
+                org_choices = [(org_user.organization_id, org_user.organization.name), ]
+            except OrganizationUser.DoesNotExist:
                 raise Http404
+        else:
+            org_users = OrganizationUser.objects.filter(user=self.request.user).values(
+                'organization_id', 'organization__name').order_by('organization_id')
+            org_choices = [(o['organization_id'], o['organization__name']) for o in org_users]
+            if org_users:
+                org_id = org_users[0]['organization_id']
+                org_choices = [(o['organization_id'], o['organization__name']) for o in org_users]
+            else:
+                raise Http404
+        # reset org_id
+        self.kwargs['org_id'] = org_id
+        # get choices for drop down and link
+        org_choices_w_links = [
+            (o[0], 'Organization: ' + str(o[1]), self.request.build_absolute_uri(reverse(
+                'samples:specimens-experiment-sample',
+                kwargs={
+                    'org_id': o[0],
+                    'id': 0,
+                    'sample_id': 0
+                }
+            ))) for o in org_choices
+        ]
         datatables_url = api_reverse('samples:specimen-all-data-list',
                                      request=self.request, kwargs=self.kwargs)
         recent_years = sorted(
@@ -1038,13 +1062,14 @@ class SpecimensView(PermissionRequiredMixin, FormView):
                     org_id, constants.FIELD_SPECIMEN_TAGS),
                 'sample_type_choices': LookupChoices.objects.get_field_choices(
                     org_id, constants.FIELD_SAMPLE_TYPE),
-                'recent_year_choices': [(i, i) for i in recent_years]
+                'recent_year_choices': [(i, i) for i in recent_years],
+                'org_choices': org_choices_w_links
             }),
             'experiment_name': experiment_name,
             'sample_name': sample_name,
             'form_action_url': reverse(
                 'samples:specimens-experiment-sample',
-                kwargs={'id': self.kwargs['id'],
+                kwargs={'org_id': org_id, 'id': self.kwargs['id'],
                         'sample_id': self.kwargs['sample_id']})
         })
         return context
@@ -1112,6 +1137,7 @@ class SpecimensView(PermissionRequiredMixin, FormView):
         return reverse(
             'samples:specimens-experiment-sample',
             kwargs={
+                'org_id': self.kwargs['org_id'],
                 'id': self.kwargs['id'],
                 'sample_id': self.kwargs['sample_id']
             }
