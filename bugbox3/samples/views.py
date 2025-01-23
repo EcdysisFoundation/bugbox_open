@@ -1031,7 +1031,7 @@ class SpecimensView(PermissionRequiredMixin, FormView):
                 'second_picker_choices': taxa_const.GBIF_RANK_CHOICES_WO_BLANK_LIST,
                 'second_picker_text': 'any rank',
                 'acceptance_choices': constants.ACCEPTANCE_CHOICES,
-                'user_choices': get_user_choices(self.request.user),
+                'user_choices': get_user_choices(org_id),
                 'state_choices_dict': constants_core.STATE_CHOICES,
                 'country_choices': constants_core.COUNTRY_CHOICES,
                 'tag_choices': LookupChoices.objects.get_field_choices(

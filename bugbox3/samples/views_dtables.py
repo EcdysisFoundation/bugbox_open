@@ -6,7 +6,6 @@ from ..core.permissions import IS_RESEARCH
 from ..core.views import DatatablesModelViewSetMixin
 from . import constants
 from .models import Experiment, MultiSpecimenImage, Sample, Site, Specimen
-from .models_query import get_user_choices
 from .serializers import (ExperimentsDatatablesSerializer,
                           MultiSpecimenImageDatatablesSerializer,
                           SamplesDatatablesSerializer,
@@ -133,10 +132,7 @@ class SpecimensAllDatatablesViewSet(PermissionRequiredMixin, DatatablesModelView
             )
         user = self.request.query_params.get('user')
         if user:
-            users = [v[0] for v in get_user_choices(user)]
-            user = int(user)
-            if user in users:
-                specimen = specimen.filter(created_by_user_id=user)
+            specimen = specimen.filter(created_by_user_id=int(user))
         state = self.request.query_params.get('state')
         if state:
             specimen = specimen.filter(sample__site_visit__site__state_region=state)
