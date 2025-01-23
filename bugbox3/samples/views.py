@@ -54,7 +54,8 @@ class ExperimentsView(PermissionRequiredMixin, TemplateView):
         orgs = OrganizationUser.objects.filter(
             user=self.request.user).values(
                 'organization_id', 'organization__name').order_by('organization_id')
-        org_choices = [(o['organization_id'], o['organization__name']) for o in orgs]
+        org_choices = [(o['organization_id'], 'Organization: ' + o['organization__name'])
+                       for o in orgs]
         context.update({
             'json_context': get_json_context({
                 'experiments_datatables_url': experiments_datatables_url,
