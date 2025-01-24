@@ -51,16 +51,20 @@ $(function () {
     let $createButton = $(`<a href="${createUrl}" class="btn btn-secondary btn-small" role="button">Add Experiment</a>`)
     $('.create-button').append($createButton)
 
-    let $orgPicker = $(`<select id="org-filter" class="form-select"></select>`)
+    // organization picker
+    let $orgPicker = $(`<select placeholder="Organization" id="org-filter" class="form-select"></select>`)
     $('.org-picker').append($orgPicker)
-    $orgPicker.append(json_context.org_choices.map(value=>`<option value="${value[0]}">${value[1]}</option>`))
-
+    $orgPicker.append(json_context.org_choices.map(value => `<option value="${value[0]}">${value[1]}</option>`))
+    $orgPicker.val(json_context.org_id)
     $orgPicker.on('change', () => {
-        reloadUrl();
-        let createUrlArray = createUrl.split('/');
-        createUrlArray[createUrlArray.length -1] = $orgPicker.val();
-        createUrl = createUrlArray.join('/');
-        $createButton.attr('href', createUrl);
+        let theLink = ''
+        for (var i = 0; i < json_context.org_choices.length; i++) {
+            if (json_context.org_choices[i][0] == String($orgPicker.val())) {
+                theLink = json_context.org_choices[i][2]
+                window.location.replace(theLink)
+                break;
+            }
+        }
     })
 
 

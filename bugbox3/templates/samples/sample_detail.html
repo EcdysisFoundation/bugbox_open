@@ -153,7 +153,7 @@
                     <div class="row">
                     <div class="col">
                         {% if review_permission %}
-                        <a href="{% url 'samples:specimens-experiment-sample' id=sample_info.experiment_id sample_id=sample_info.sample_id %}" class="link-light">
+                        <a href="{% url 'samples:specimens-experiment-sample' org_id=sample_info.organization_id id=sample_info.experiment_id sample_id=sample_info.sample_id %}" class="link-light">
                         {% endif %}
                             <h5>Individual Specimens</h5>
                         {% if review_permission %}

@@ -6,7 +6,6 @@ from ..core.permissions import IS_RESEARCH
 from ..core.views import DatatablesModelViewSetMixin
 from . import constants
 from .models import Experiment, MultiSpecimenImage, Sample, Site, Specimen
-from .models_query import get_user_choices
 from .serializers import (ExperimentsDatatablesSerializer,
                           MultiSpecimenImageDatatablesSerializer,
                           SamplesDatatablesSerializer,
@@ -23,11 +22,9 @@ class ExperimentsDatatablesViewSet(PermissionRequiredMixin, DatatablesModelViewS
     search_vector = [constants.FIELD_NAME, constants.FIELD_ABBREVIATION]
 
     def get_queryset(self):
-        org = self.request.query_params.get('org')
-        if org.isnumeric():
-            org = int(org)
+        org_id = int(self.kwargs['org_id'])
         return Experiment.objects.user_access(self.request.user).filter(
-            organization_id=org).order_by(constants.FIELD_NAME)
+            organization_id=org_id).order_by(constants.FIELD_NAME)
 
 
 class MultiSpecimenDatatablesViewSet(PermissionRequiredMixin,  DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
@@ -104,9 +101,8 @@ class SpecimensAllDatatablesViewSet(PermissionRequiredMixin, DatatablesModelView
     ]
 
     def get_queryset(self):
-        specimen = Specimen.objects.user_access(self.request.user).filter(
-            sample__site_visit__site__experiment__isnull=False
-        )
+        specimen = Specimen.objects.user_access(self.request.user)
+        org_id = int(self.kwargs['org_id'])
         id = int(self.kwargs['id'])
         sample_id = int(self.kwargs['sample_id'])
         if id and not sample_id:
@@ -115,6 +111,10 @@ class SpecimensAllDatatablesViewSet(PermissionRequiredMixin, DatatablesModelView
             specimen = specimen.filter(
                 sample__site_visit__site__experiment__id=id,
                 sample__id=sample_id,
+            )
+        elif org_id:
+            specimen = specimen.filter(
+                sample__site_visit__site__experiment__organization_id=org_id,
             )
         acceptance = self.request.query_params.get('acceptance')
         if acceptance:
@@ -133,10 +133,7 @@ class SpecimensAllDatatablesViewSet(PermissionRequiredMixin, DatatablesModelView
             )
         user = self.request.query_params.get('user')
         if user:
-            users = [v[0] for v in get_user_choices(user)]
-            user = int(user)
-            if user in users:
-                specimen = specimen.filter(created_by_user_id=user)
+            specimen = specimen.filter(created_by_user_id=int(user))
         state = self.request.query_params.get('state')
         if state:
             specimen = specimen.filter(sample__site_visit__site__state_region=state)

@@ -42,7 +42,7 @@ def get_sample_plan_descriptions(experiment_id):
     return []
 
 
-def get_user_choices(user):
-    orgs = OrganizationUser.objects.filter(user=user).values_list('organization', flat=True)
-    return list(set([(u.user_id, u.user.username) for u in OrganizationUser.objects.filter(
-        organization__in=orgs).order_by('user__username')]))
+def get_user_choices(org_id):
+    print(org_id)
+    return [(u.user_id, u.user.username) for u in OrganizationUser.objects.filter(
+        organization_id=org_id).order_by('user__username')]

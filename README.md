@@ -153,3 +153,4 @@ A get request
     except Sample.DoesNotExist:
             raise Http404
 
+When creating new Organizations, these new Organizations will need their LookupChoices populated to be able to create Experiments and use other forms. Populate a default set of LookupChoices to get them started, by running the management command `populate_org_choices`, passing the required argument of the new organization ID.
