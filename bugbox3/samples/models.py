@@ -269,6 +269,7 @@ class Specimen(Model):
     archival_preservation = CharField(max_length=100, blank=True)
     archival_stored = CharField(max_length=100, blank=True)
     object_det_train = BooleanField(default=False)
+    public_image = CharField(max_length=100, blank=True)
 
     objects = SpecimenManager()
 
