@@ -25,8 +25,8 @@ class Command(BaseCommand):
         morphospecies_id = 'morphospecies_id'
         h = ['', 'TP', 'FP', 'TN', 'FN', 'Precision', 'Recall', 'F1', 'Total_samples',
              model_name, 'morphos_name',
-             'dataset_report_morphos_name', 'dataset_report_train', 'dataset_report_val',
-             'dataset_report_test', 'dataset_report_total_samples']
+             'dataset_report_train', 'dataset_report_val',
+             'dataset_report_test', 'dataset_report_morphos_name', 'dataset_report_total_samples']
 
         with open(csv_path, newline='') as file:
             reader = csv.reader(file)
@@ -62,7 +62,7 @@ class Command(BaseCommand):
                 # or make function to delete existing to update
                 print(message)
                 return
-
+            print('No previous entries, continuing ....')
             obs = []
             for d in data:
                 try:

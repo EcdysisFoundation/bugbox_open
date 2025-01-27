@@ -43,7 +43,7 @@ VIEW_SITEVISIT = 'samples.view_sitevisit'
 
 ADD_LOOKUPCHOICES = 'core.add_lookupchoices'
 CHANGE_LOOKUPCHOICES = 'core.change_lookupchoices'
-DELETE_LOOKUPCHOICES = 'core.delete_lookkupchoices'
+DELETE_LOOKUPCHOICES = 'core.delete_lookupchoices'
 
 REVIEW_SPECIMEN_PAGE = 'samples.review_specimen_page'
 
