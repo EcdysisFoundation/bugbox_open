@@ -127,7 +127,9 @@ class MorphospeciesDetailView(PermissionRequiredMixin, FormView):
             display_name = morphospecies.gbif_canonical_name
         else:
             display_name = morphospecies.name
-        image_count = SpecimenImage.objects.filter(specimen__classification=morphospecies).aggregate(
+        image_count = SpecimenImage.objects.filter(
+            specimen__classification=morphospecies,
+            specimen__sample__site_visit__site__experiment__organization_id=samples_constants.ECDYSIS_ORGANIZATION_ID).aggregate(
             reviewed=Count(
                 'pk', distinct=True, filter=~Q(
                     specimen__acceptance=samples_constants.ACCEPTANCE_PENDING)), pending=Count(
@@ -135,7 +137,9 @@ class MorphospeciesDetailView(PermissionRequiredMixin, FormView):
         sum_image_count = image_count['reviewed'] + image_count['pending']
         if sum_image_count:
             archive = 'specimen__' + samples_constants.FIELD_SPECIMEN_ARCHIVAL_IDENTIFIER
-            s_images = SpecimenImage.objects.filter(specimen__classification=morphospecies).order_by(
+            s_images = SpecimenImage.objects.filter(
+                specimen__classification=morphospecies,
+                specimen__sample__site_visit__site__experiment__organization_id=samples_constants.ECDYSIS_ORGANIZATION_ID).order_by(
                 archive, samples_constants.SPECIMEN_IMAGE_PRIMARY)[:2]
             max_width = samples_constants.SPECIMEN_IMAGE_THUMBSIZE_MEDIUM
             for s in s_images:
@@ -147,7 +151,7 @@ class MorphospeciesDetailView(PermissionRequiredMixin, FormView):
                     i = s.image
                 if default_storage.exists(i.name):
                     image_set.append({
-                        'path': get_media_url(i),
+                        'path': get_media_url(i, s.public_image),
                         'width': i.width if i.width <= max_width else max_width,
                         'height': i.height if i.width <= max_width else calc_image_height(max_width, i.height, i.width)
                     })

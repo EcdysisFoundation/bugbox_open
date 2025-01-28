@@ -227,9 +227,11 @@ class SpecimenDatatablesSerializer(ModelSerializer):
             img_exists = True
             specimen_image = value.specimenimage_set.first()
             if specimen_image.image_thumbnail:
-                img_thumbnail = get_img_src(specimen_image.image_thumbnail)
+                img_thumbnail = get_img_src(specimen_image.image_thumbnail, public=specimen_image.public_image)
             else:
-                img_thumbnail = get_img_src(specimen_image.image, constants.SPECIMEN_IMAGE_THUMBSIZE)
+                img_thumbnail = get_img_src(specimen_image.image,
+                                            constants.SPECIMEN_IMAGE_THUMBSIZE,
+                                            public=specimen_image.public_image)
         else:
             img_thumbnail = get_img_src(img_exists)
         link = reverse('samples:specimen', kwargs={'id': value.id})
@@ -264,12 +266,13 @@ class SpecimensAllDatatablesSerializer(ModelSerializer):
         img_thumbnail_large = None
         specimen_image = value.specimenimage_set.first()
         if specimen_image:
-            img_thumbnail = get_img_src(specimen_image.image_thumbnail)
+            img_thumbnail = get_img_src(specimen_image.image_thumbnail, public=specimen_image.public_image)
             if specimen_image.image_thumbnail_large:
                 # dont use get_img_src() here due to modal .js reasons
                 if default_storage.exists(specimen_image.image_thumbnail_large.name):
                     img_thumbnail_large = {
-                        'url': get_media_url(specimen_image.image_thumbnail_large),
+                        'url': get_media_url(
+                            specimen_image.image_thumbnail_large, public=specimen_image.public_image),
                         'width': specimen_image.image_thumbnail_large.width,
                         'height': specimen_image.image_thumbnail_large.height
                     }
@@ -298,3 +301,15 @@ class SpecimensAllDatatablesSerializer(ModelSerializer):
             'edit_link': reverse('samples:specimen-update', kwargs={'id': value.id}),
             'specimen_context': get_specimen_context(value)
         }
+
+
+class CollectionDatatablesSerializer(ModelSerializer):
+
+    class Meta:
+        model = Specimen
+        fields = [
+            constants.FIELD_SPECIMEN_ARCHIVAL_IDENTIFIER
+        ]
+
+    def to_representation(self, value):
+        return value

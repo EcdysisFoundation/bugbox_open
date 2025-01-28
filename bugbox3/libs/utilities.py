@@ -35,13 +35,17 @@ def grid_id_format(v):
     return '-grid-i-[{0}]'.format(v)
 
 
-def get_media_url(file):
+def get_media_url(file, public=False):
     """
     Get media file urls
     """
     if settings.MEDIA_URL == '/media/':
         # assume local storage
         return file.url
+    if public:
+        # if for example SpecimenImage.public_image = True, pass it in
+        # requires acl='public-read' on S3 object
+        return settings.MEDIA_URL + file.name
     return S3_CLIENT.generate_presigned_url(
         'get_object',
         Params={'Bucket': settings.AWS_STORAGE_BUCKET_NAME_MEDIA,

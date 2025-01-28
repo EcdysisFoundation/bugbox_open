@@ -91,7 +91,7 @@ def get_datatables_row(columns, row_styles=None, col_styles=None):
     return result
 
 
-def get_img_src(img_field, resize_width=None, styles=''):
+def get_img_src(img_field, resize_width=None, styles='', public=False):
     """
     Get an html img tag formated from an ImageField.
     Styes should be a string of styes, exampe 'c-1 c-2'
@@ -109,14 +109,14 @@ def get_img_src(img_field, resize_width=None, styles=''):
 
     if img_field and not resize_width:
         return img_src(
-            get_media_url(img_field),
+            get_media_url(img_field, public),
             img_field.width,
             img_field.height,
             str(styles)
         )
     elif img_field and resize_width:
         return img_src(
-            get_media_url(img_field),
+            get_media_url(img_field, public),
             int(resize_width),
             int(resize_width) * (img_field.height / img_field.width),
             str(styles)

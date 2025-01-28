@@ -628,15 +628,16 @@ def specimen_view_context(specimen):
     s_images = SpecimenImage.objects.filter(specimen=specimen)
     if s_images:
         image_set_large = [
-            {'path': get_media_url(i.image_thumbnail_large), 'id': i.id} for i in s_images if i.image_thumbnail_large
+            {'path': get_media_url(
+                i.image_thumbnail_large, i.public_image), 'id': i.id} for i in s_images if i.image_thumbnail_large
         ]
         if not image_set_large:
             image_set_large = [{
-                'path': get_media_url(s_images[0].image),
+                'path': get_media_url(s_images[0].image, s_images[0].public_image),
             }]
         image_set_small = [
             {
-                'path': get_media_url(i.image_thumbnail_medium),
+                'path': get_media_url(i.image_thumbnail_medium, i.public_image),
                 'width': i.image_thumbnail_medium.width * 0.5,
                 'height': i.image_thumbnail_medium.height * 0.5,
                 'id': i.id
