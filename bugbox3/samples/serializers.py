@@ -7,7 +7,7 @@ from ..libs.ui_helpers import (classify_specimen_button, get_ai_classification,
                                get_classifcation, get_datatables_container,
                                get_datatables_row, get_img_captioned,
                                get_img_src, get_probability_or_user,
-                               get_specimen_context)
+                               get_specimen_context, get_specimen_location)
 from ..libs.utilities import get_media_url
 from . import constants
 from .models import (Experiment, MultiSpecimenImage, Sample, SamplePlan, Site,
@@ -315,13 +315,28 @@ class CollectionDatatablesSerializer(ModelSerializer):
     def to_representation(self, value):
         specimen_image = value.specimenimage_set.first()
         if specimen_image:
-            img = get_img_captioned(
+            image = get_img_captioned(
                     specimen_image.image_thumbnail_medium,
                     value.classification.gbif_canonical_name,
                     public=specimen_image.public_image)
         else:
-            img = get_img_src(False)
+            image = get_img_src(False)
+        archival = value.archival_identifier
+        if archival and value.archival_stored:
+            archival += ' | ' + value.archival_stored
+        else:
+            archival = value.archival_stored
         return {
-            'data_row': get_datatables_container(get_datatables_row(
-                [img]))
+            'image': image,
+            'taxonomy': {
+                'gbif_order': value.classification.gbif_order,
+                'gbif_family': value.classification.gbif_family,
+                'species': value.classification.gbif_species
+                if value.classification.gbif_species
+                else value.classification.gbif_genus + ' spp.',
+            },
+            'details': {
+                'visit_date': value.sample.site_visit.visit_date,
+                'location': get_specimen_location(value),
+                'archival': archival}
         }

@@ -6,7 +6,7 @@ from ..core.constants import COUNTRY_LOOKUP
 from ..core.permissions import IS_RESEARCH
 from ..core.views import DatatablesModelViewSetMixin
 from . import constants
-from .models import (Experiment, MultiSpecimenImage, Sample, Site, Specimen)
+from .models import Experiment, MultiSpecimenImage, Sample, Site, Specimen
 from .serializers import (CollectionDatatablesSerializer,
                           ExperimentsDatatablesSerializer,
                           MultiSpecimenImageDatatablesSerializer,
@@ -179,6 +179,7 @@ class CollectionDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelView
         specimen = Specimen.objects.filter(
             sample__site_visit__site__experiment__organization_id=org_id,
             classification_id__isnull=False,
-            sample_id=22991 #temp filter
+            sample_id=22991, #temp filter
+            specimenimage__public_image=True
         ).exclude(acceptance=0).order_by('-id')
         return specimen

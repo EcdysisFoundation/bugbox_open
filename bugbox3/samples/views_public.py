@@ -2,7 +2,6 @@ from django.http import Http404
 from django.views.generic import TemplateView
 from rest_framework.reverse import reverse as api_reverse
 
-from ..libs.ui_helpers import get_datatables_container, get_datatables_row
 from ..libs.utilities import get_json_context
 
 # These can become entries in the Organization model when more orgs have public data.
@@ -23,9 +22,6 @@ class CollectionView(TemplateView):
         context.update({
             'collection': PUBLIC_COLLECTIONS[self.kwargs['org_id']]['collection'],
             'org_name': PUBLIC_COLLECTIONS[self.kwargs['org_id']]['org_name'],
-            'container_row_header': get_datatables_container(
-                get_datatables_row([
-                    'Image'])),
             'json_context': get_json_context({
                 'datatables_url': api_reverse('samples:collection-data-list',
                                               request=self.request, kwargs=kwargs)

@@ -71,7 +71,7 @@ def get_datatables_container(rows, container_styles=None):
     return '<div class="container text-center{0}">{1}</div>'.format(styles, rows)
 
 
-def get_datatables_row(columns, row_styles=None, col_styles=None):
+def get_datatables_row(columns, row_styles=(), col_styles=()):
     """
     Return a stylized row for datatables cell as row with columns
     columns and styles are iterables.
@@ -83,7 +83,7 @@ def get_datatables_row(columns, row_styles=None, col_styles=None):
             row_style += ' {0}'.format(style)
     if col_styles:
         for style in col_styles:
-            col_styles += ' {0}'.format(style)
+            col_style += ' {0}'.format(style)
     result = '<div class="row{0}">'.format(row_style)
     for c in columns:
         result += '<div class="col{0}">{1}</div>'.format(col_style, c)
@@ -100,7 +100,7 @@ def get_img_src(img_field, resize_width=None, styles='', public=False):
         return '<i class="bi bi-question-diamond"></i>'
 
     def img_src(path, width, height, styles):
-        return '<img src="{0}" width="{1}" height="{2}" style="{3}">'.format(
+        return '<img src="{0}" width="{1}" height="{2}" class="{3}">'.format(
             path,
             width,
             height,
@@ -138,7 +138,7 @@ def get_img_captioned(img_field, caption, resize_width=None, public=False):
     return """
             <figure class="figure">
             {0}
-            <figcaption class="figure-caption">{1}</figcaption>
+            <figcaption class="figure-caption text-end fst-italic">{1}</figcaption>
             </figure>
            """.format(src, caption)
 
@@ -229,4 +229,15 @@ def get_specimen_context(specimen):
     )
     return '{0}<br/>{1}<br/>{2}'.format(
         e, specimen.sample.site_visit.visit_date.strftime("%d-%b-%Y"), s
+    )
+
+
+def get_specimen_location(specimen):
+    """
+    Get the location description from a specimen record.
+    """
+    return ', '.join(
+        (specimen.sample.site_visit.site.country,
+         specimen.sample.site_visit.site.state_region,
+         specimen.sample.site_visit.site.county_region)
     )
