@@ -6,8 +6,7 @@ from ..core.constants import COUNTRY_LOOKUP
 from ..core.permissions import IS_RESEARCH
 from ..core.views import DatatablesModelViewSetMixin
 from . import constants
-from .models import (Experiment, MultiSpecimenImage, Sample, Site, Specimen,
-                     SpecimenImage)
+from .models import (Experiment, MultiSpecimenImage, Sample, Site, Specimen)
 from .serializers import (CollectionDatatablesSerializer,
                           ExperimentsDatatablesSerializer,
                           MultiSpecimenImageDatatablesSerializer,
@@ -177,9 +176,9 @@ class CollectionDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelView
         org_id = int(self.kwargs['org_id'])
         if org_id not in PUBLIC_COLLECTIONS.keys():
             raise Http404
-        specimen_image = SpecimenImage.objects.filter(
-            specimen__sample__site_visit__site__experiment__organization_id=org_id,
-            specimen__classification_id__isnull=False,
-            specimen__sample_id=22991 #temp filter
-        ).exclude(specimen__acceptance=0).order_by('-id')
-        return specimen_image
+        specimen = Specimen.objects.filter(
+            sample__site_visit__site__experiment__organization_id=org_id,
+            classification_id__isnull=False,
+            sample_id=22991 #temp filter
+        ).exclude(acceptance=0).order_by('-id')
+        return specimen

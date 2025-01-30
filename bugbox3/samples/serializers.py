@@ -11,7 +11,7 @@ from ..libs.ui_helpers import (classify_specimen_button, get_ai_classification,
 from ..libs.utilities import get_media_url
 from . import constants
 from .models import (Experiment, MultiSpecimenImage, Sample, SamplePlan, Site,
-                     Specimen, SpecimenImage)
+                     Specimen)
 
 
 class ExperimentsDatatablesSerializer(ModelSerializer):
@@ -307,16 +307,21 @@ class SpecimensAllDatatablesSerializer(ModelSerializer):
 class CollectionDatatablesSerializer(ModelSerializer):
 
     class Meta:
-        model = SpecimenImage
+        model = Specimen
         fields = [
-            'specimen__' + constants.FIELD_SPECIMEN_ARCHIVAL_IDENTIFIER
+            constants.FIELD_SPECIMEN_ARCHIVAL_IDENTIFIER
         ]
 
     def to_representation(self, value):
+        specimen_image = value.specimenimage_set.first()
+        if specimen_image:
+            img = get_img_captioned(
+                    specimen_image.image_thumbnail_medium,
+                    value.classification.gbif_canonical_name,
+                    public=specimen_image.public_image)
+        else:
+            img = get_img_src(False)
         return {
             'data_row': get_datatables_container(get_datatables_row(
-                [get_img_captioned(
-                    value.image_thumbnail_medium,
-                    value.specimen.classification.gbif_canonical_name,
-                    public=value.public_image)]))
+                [img]))
         }
