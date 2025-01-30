@@ -10,11 +10,13 @@ from .views import (ExperimentSamplePlanCreateView,
                     SpecimenDeleteView, SpecimensView,
                     SpecimensWithoutImagesFormView, SpecimenUpdateView,
                     SpecimenView, specimen_image_upload)
-from .views_dtables import (ExperimentsDatatablesViewSet,
+from .views_dtables import (CollectionDatatablesViewSet,
+                            ExperimentsDatatablesViewSet,
                             MultiSpecimenDatatablesViewSet,
                             SamplesDatatablesViewSet, SitesDatatablesViewSet,
                             SpecimenDatatablesViewSet,
                             SpecimensAllDatatablesViewSet)
+from .views_public import CollectionView
 
 router = DefaultRouter()
 router.register(r'experiments-data/(?P<org_id>[^/]+)', ExperimentsDatatablesViewSet,
@@ -30,6 +32,8 @@ router.register(r'specimens-all-data/(?P<org_id>[^/]+)/(?P<id>[^/]+)/(?P<sample_
                 basename='specimen-all-data')
 router.register(r'multispecimens-data/(?P<sample_id>[^/]+)', MultiSpecimenDatatablesViewSet,
                 basename='multispecimen-data')
+router.register(r'collections-data/(?P<org_id>[^/]+)', CollectionDatatablesViewSet,
+                basename='collection-data')
 
 app_name = "samples"
 urlpatterns = [
@@ -57,5 +61,6 @@ urlpatterns = [
           name='specimens-experiment-sample'),
      path('specimens-wo-img/<int:id>', SpecimensWithoutImagesFormView.as_view(), name='specimens-wo-img'),
      path('experiment-ai-csv/<int:id>', experiment_ai_csv, name='experiment-ai-csv'),
-     path('experiment-csv/<int:id>', experiment_csv, name='experiment-csv')
+     path('experiment-csv/<int:id>', experiment_csv, name='experiment-csv'),
+     path('collection/<int:org_id>', CollectionView.as_view(), name='collection')
 ]

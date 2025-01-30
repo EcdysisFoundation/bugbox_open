@@ -125,6 +125,24 @@ def get_img_src(img_field, resize_width=None, styles='', public=False):
         return '<i class="bi bi-bug"></i>'
 
 
+def get_img_captioned(img_field, caption, resize_width=None, public=False):
+    """
+    Get the image src with a caption.
+    Styes should be a string of styes, exampe 'c-1 c-2'
+    """
+    src = get_img_src(
+        img_field,
+        resize_width=resize_width,
+        styles='figure-img img-fluid rounded',
+        public=public)
+    return """
+            <figure class="figure">
+            {0}
+            <figcaption class="figure-caption">{1}</figcaption>
+            </figure>
+           """.format(src, caption)
+
+
 def calc_image_height(size, height, width):
     return size * (height / width)
 

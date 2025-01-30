@@ -67,6 +67,9 @@
             <li class="nav-item active">
               <a class="nav-link" href="{% url 'about' %}">About<span class="visually-hidden">(current)</span></a>
             </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'samples:collection' 1 %}">Collection</a>
+            </li>
             {% if request.user.is_authenticated %}
               {% for group in request.user.groups.all %}
                 {% if group.name == 'is_research' %}

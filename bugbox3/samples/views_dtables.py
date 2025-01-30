@@ -1,17 +1,21 @@
 from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.http import Http404
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
 from ..core.constants import COUNTRY_LOOKUP
 from ..core.permissions import IS_RESEARCH
 from ..core.views import DatatablesModelViewSetMixin
 from . import constants
-from .models import Experiment, MultiSpecimenImage, Sample, Site, Specimen
-from .serializers import (ExperimentsDatatablesSerializer,
+from .models import (Experiment, MultiSpecimenImage, Sample, Site, Specimen,
+                     SpecimenImage)
+from .serializers import (CollectionDatatablesSerializer,
+                          ExperimentsDatatablesSerializer,
                           MultiSpecimenImageDatatablesSerializer,
                           SamplesDatatablesSerializer,
                           SitesDatatablesSerializer,
                           SpecimenDatatablesSerializer,
                           SpecimensAllDatatablesSerializer)
+from .views_public import PUBLIC_COLLECTIONS
 
 
 class ExperimentsDatatablesViewSet(PermissionRequiredMixin, DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
@@ -160,3 +164,22 @@ class SpecimensAllDatatablesViewSet(PermissionRequiredMixin, DatatablesModelView
                 if classification_filter.replace(' ', '').isalnum():
                     specimen = specimen.filter(ai_classification__name__icontains=classification_filter)
         return specimen.order_by('-id')
+
+
+class CollectionDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
+
+    serializer_class = CollectionDatatablesSerializer
+    search_vector = [
+        'archival_stored'
+    ]
+
+    def get_queryset(self):
+        org_id = int(self.kwargs['org_id'])
+        if org_id not in PUBLIC_COLLECTIONS.keys():
+            raise Http404
+        specimen_image = SpecimenImage.objects.filter(
+            specimen__sample__site_visit__site__experiment__organization_id=org_id,
+            specimen__classification_id__isnull=False,
+            specimen__sample_id=22991 #temp filter
+        ).exclude(specimen__acceptance=0).order_by('-id')
+        return specimen_image

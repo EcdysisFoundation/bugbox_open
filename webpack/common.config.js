@@ -20,6 +20,7 @@ module.exports = {
     gbif_api: path.resolve(__dirname, '../bugbox3/static/js/gbif_api'),
     specimens_all: path.resolve(__dirname, '../bugbox3/static/js/specimens_all'),
     timeline: path.resolve(__dirname, '../bugbox3/static/js/timeline'),
+    collections: path.resolve(__dirname, '../bugbox3/static/js/collections'),
   },
   output: {
     path: path.resolve(

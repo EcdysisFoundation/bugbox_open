@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% load render_bundle from webpack_loader %}
+
+{% block title %}
+    Collection
+{% endblock title %}
+
+{% block customheadtagcontent %}
+{% render_bundle 'collections' 'js' attrs='defer' %}
+{{ json_context|safe }}
+{% endblock customheadtagcontent %}
+
+{% block content %}
+
+<div class="container">
+
+    <div class="row bg-ecdysis mt-3">
+        <div class="col">
+            <div class="align-items-center bg-ecdysis text-white d-flex justify-content-between">
+                <h2 class="text-light mt-1">Collections: {{ org_name }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="row pb-2 mt-2">
+        <div class="col">
+            <table id="data-table" class="table table-responsive nowrap compact table-hover" width="100%">
+            <thead>
+                <tr>
+                <th>{{ container_row_header|safe }}</th>
+                </tr>
+            </thead>
+            </table>
+        </div>
+    </div>
+
+
+</div>
+
+{% endblock content %}

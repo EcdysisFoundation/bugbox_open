@@ -35,7 +35,6 @@ class Command(BaseCommand):
             aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
         )
 
-
         org_ids = [v[0] for v in self.public_data_orgs]
         org_names = [v[1] for v in self.public_data_orgs]
 
@@ -62,7 +61,7 @@ class Command(BaseCommand):
                     Key=str(getattr(s, file)),
                     ACL='public-read'
                 )
-            s.public_image=True
+            s.public_image = True
             s.save()
 
             thecount += 1

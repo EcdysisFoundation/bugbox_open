@@ -5,12 +5,13 @@ from rest_framework.serializers import ModelSerializer
 from ..core.models import LookupChoices
 from ..libs.ui_helpers import (classify_specimen_button, get_ai_classification,
                                get_classifcation, get_datatables_container,
-                               get_datatables_row, get_img_src,
-                               get_probability_or_user, get_specimen_context)
+                               get_datatables_row, get_img_captioned,
+                               get_img_src, get_probability_or_user,
+                               get_specimen_context)
 from ..libs.utilities import get_media_url
 from . import constants
 from .models import (Experiment, MultiSpecimenImage, Sample, SamplePlan, Site,
-                     Specimen)
+                     Specimen, SpecimenImage)
 
 
 class ExperimentsDatatablesSerializer(ModelSerializer):
@@ -306,10 +307,16 @@ class SpecimensAllDatatablesSerializer(ModelSerializer):
 class CollectionDatatablesSerializer(ModelSerializer):
 
     class Meta:
-        model = Specimen
+        model = SpecimenImage
         fields = [
-            constants.FIELD_SPECIMEN_ARCHIVAL_IDENTIFIER
+            'specimen__' + constants.FIELD_SPECIMEN_ARCHIVAL_IDENTIFIER
         ]
 
     def to_representation(self, value):
-        return value
+        return {
+            'data_row': get_datatables_container(get_datatables_row(
+                [get_img_captioned(
+                    value.image_thumbnail_medium,
+                    value.specimen.classification.gbif_canonical_name,
+                    public=value.public_image)]))
+        }
