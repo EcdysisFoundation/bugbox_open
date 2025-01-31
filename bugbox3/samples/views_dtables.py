@@ -186,8 +186,8 @@ class CollectionDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelView
         specimen = Specimen.objects.filter(
             sample__site_visit__site__experiment__organization_id=org_id,
             classification_id__isnull=False,
-            #sample_id=22991, #temp filter
-            #specimenimage__public_image=True #re-enable this
+            sample_id=22991, #temp filter
+            specimenimage__public_image=True #re-enable this
         )
         archival = self.request.query_params.get('archival')
         if archival:

@@ -29,8 +29,33 @@ function getUrl(dt_url, archival_check) {
     return `${dt_url}${url_str}`
 }
 
+function getImage ( data, type, row ) {
+    let result = ''
+    if (row.img_thumbnail_large) {
+        result += `<button type="button" class="btn" data-bs-toggle="modal"
+                data-bs-target="#imageModal"
+                data-bs-whatever="
+                <img src='${row.img_thumbnail_large.url}'
+                width='${row.img_thumbnail_large.width}'
+                height='${row.img_thumbnail_large.height}'>
+                ">${data}</button>`;
+    } else {
+        result += `${data}`;
+    }
+    return result
+};
+
+
 $(function () {
     const json_context = JSON.parse(document.getElementById('json_context').textContent);
+
+    let imageModal = document.getElementById('imageModal');
+    imageModal.addEventListener('show.bs.modal', event => {
+        const button = event.relatedTarget
+        const thisimage = button.getAttribute('data-bs-whatever')
+        const modalBodyInput = imageModal.querySelector('.modal-body')
+        modalBodyInput.innerHTML = thisimage
+    })
 
     var data_table = $('#data-table').DataTable({
         order: [[1, 'desc']],
@@ -48,6 +73,7 @@ $(function () {
         columns: [
             {
                 data: 'image',
+                render: getImage
             },
             {
                 data: '',

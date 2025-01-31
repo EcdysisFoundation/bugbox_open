@@ -313,12 +313,28 @@ class CollectionDatatablesSerializer(ModelSerializer):
         ]
 
     def to_representation(self, value):
+        img_thumbnail_large = None
         specimen_image = value.specimenimage_set.first()
         if specimen_image:
             image = get_img_captioned(
                     specimen_image.image_thumbnail_medium,
                     value.classification.gbif_canonical_name,
                     public=specimen_image.public_image)
+            if specimen_image.image_thumbnail_large:
+                # dont use get_img_src() here due to modal .js reasons
+                if default_storage.exists(specimen_image.image_thumbnail_large.name):
+                    img_thumbnail_large = {
+                        'url': get_media_url(
+                            specimen_image.image_thumbnail_large, public=specimen_image.public_image),
+                        'width': specimen_image.image_thumbnail_large.width,
+                        'height': specimen_image.image_thumbnail_large.height
+                    }
+                else:
+                    img_thumbnail_large = {
+                        'url': '',
+                        'width': '',
+                        'height': ''
+                    }
         else:
             image = get_img_src(False)
         archival = value.archival_identifier
@@ -328,6 +344,7 @@ class CollectionDatatablesSerializer(ModelSerializer):
             archival = value.archival_stored
         return {
             'image': image,
+            'img_thumbnail_large': img_thumbnail_large,
             'taxonomy': {
                 'gbif_order': value.classification.gbif_order,
                 'gbif_family': value.classification.gbif_family,
