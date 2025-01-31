@@ -13,6 +13,22 @@ function getDescription(data, type, row) {
 `
 }
 
+function getUrl(dt_url, archival_check) {
+    let url_str = ''
+    let params = []
+    if (archival_check.prop("checked")) {
+        params.push('archival=' + archival_check.prop("checked"));
+    }
+    for ( let i = 0; i < params.length; i++) {
+        let sep = '&'
+        if (i == 0) {
+            sep = '?'
+        }
+        url_str += `${sep}${params[i]}`;
+    }
+    return `${dt_url}${url_str}`
+}
+
 $(function () {
     const json_context = JSON.parse(document.getElementById('json_context').textContent);
 
@@ -45,6 +61,22 @@ $(function () {
             }
         ]
     });
+
+    // api_url filters
+
+    function reloadUrl() {
+        data_table.ajax.url( getUrl(
+                json_context.datatables_url,
+                $archivalCheck
+            )).load();
+    }
+
+    let $archivalCheck = $(`<input class="form-check-input" type="checkbox" value="" id="archivalCheck"><label class="form-check-label ms-1" for="archivalCheck"><h4>${json_context.collection}</h4></label>`)
+    $('.archival-check').append($archivalCheck)
+
+    $archivalCheck.on('change', () => {
+        reloadUrl();
+    })
 
 });
 

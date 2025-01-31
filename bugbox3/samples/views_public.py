@@ -20,9 +20,9 @@ class CollectionView(TemplateView):
         if kwargs['org_id'] not in PUBLIC_COLLECTIONS.keys():
             raise Http404
         context.update({
-            'collection': PUBLIC_COLLECTIONS[self.kwargs['org_id']]['collection'],
             'org_name': PUBLIC_COLLECTIONS[self.kwargs['org_id']]['org_name'],
             'json_context': get_json_context({
+                'collection': PUBLIC_COLLECTIONS[self.kwargs['org_id']]['collection'],
                 'datatables_url': api_reverse('samples:collection-data-list',
                                               request=self.request, kwargs=kwargs)
             })
