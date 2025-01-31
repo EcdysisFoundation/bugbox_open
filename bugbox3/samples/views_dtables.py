@@ -5,6 +5,7 @@ from rest_framework.viewsets import ReadOnlyModelViewSet
 from ..core.constants import COUNTRY_LOOKUP
 from ..core.permissions import IS_RESEARCH
 from ..core.views import DatatablesModelViewSetMixin
+from ..taxonomy import constants as constants_tax
 from . import constants
 from .models import Experiment, MultiSpecimenImage, Sample, Site, Specimen
 from .serializers import (CollectionDatatablesSerializer,
@@ -168,9 +169,15 @@ class SpecimensAllDatatablesViewSet(PermissionRequiredMixin, DatatablesModelView
 class CollectionDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
 
     serializer_class = CollectionDatatablesSerializer
-    search_vector = [
-        'archival_stored'
+    classification_const = [
+        constants_tax.FIELD_MORPHO_GBIF_ORDER,
+        constants_tax.FIELD_MORPHO_GBIF_FAMILY,
+        constants_tax.FIELD_MORPHO_GBIF_GENUS,
+        constants_tax.FIELD_MORPHO_GBIF_SPECIES,
     ]
+    search_vector = ['classification__' + v for v in classification_const] + \
+                    [constants.FIELD_SPECIMEN_ARCHIVAL_STORED,
+                     constants.FIELD_SPECIMEN_ARCHIVAL_IDENTIFIER]
 
     def get_queryset(self):
         org_id = int(self.kwargs['org_id'])

@@ -18,7 +18,7 @@ $(function () {
 
     var data_table = $('#data-table').DataTable({
         order: [[1, 'desc']],
-        pageLength: 100,
+        pageLength: 10,
         ordering: false,
         processing: false,
         serverSide: true,
