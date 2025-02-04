@@ -24,6 +24,49 @@
     </div>
 </div>
 
+<div class="modal fade" id="mSelectModal" tabindex="-1" aria-labelledby="mSelectModal" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+
+        <div class="modal-header">
+          <h5>Select Family</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <div class="container">
+                  <div class="row pb-2 mt-2">
+                    <div class="col">
+                        <table id="tax-table" class="table table-responsive nowrap compact" width="100%">
+                        <thead>
+                            <tr>
+                            <th class="visually-hidden">ID</th>
+                            <th>Family</th>
+                            <th>Specimens</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for i in family_choices %}
+                                <tr>
+                                    <td class="visually-hidden">{{ i.0 }}</td>
+                                    <td>{{ i.1 }}</td>
+                                    <td>{{ i.2 }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div class="modal-footer">
+            <div class="select-taxa-button"></div>
+        </div>
+
+      </div>
+    </div>
+</div>
+
 <!-- Page Content -->
 <div class="container">
 
@@ -35,9 +78,12 @@
         </div>
     </div>
 
-    <div class="row">
-        <div class="col mt-2">
+    <div class="row mt-2">
+        <div class="col-9">
             <div class="archival-check"></div>
+        </div>
+        <div class="col-3">
+            <button type="button" class="btn btn-small btn-success" data-bs-toggle="modal" data-bs-target="#mSelectModal">Filter by Family</button>
         </div>
     </div>
 

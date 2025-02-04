@@ -6,6 +6,7 @@ from ..core.constants import COUNTRY_LOOKUP
 from ..core.permissions import IS_RESEARCH
 from ..core.views import DatatablesModelViewSetMixin
 from ..taxonomy import constants as constants_tax
+from ..taxonomy.models_query import get_taxon_entries
 from . import constants
 from .models import Experiment, MultiSpecimenImage, Sample, Site, Specimen
 from .serializers import (CollectionDatatablesSerializer,
@@ -186,8 +187,7 @@ class CollectionDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelView
         specimen = Specimen.objects.filter(
             sample__site_visit__site__experiment__organization_id=org_id,
             classification_id__isnull=False,
-            sample_id=22991, #temp filter
-            specimenimage__public_image=True #re-enable this
+            specimenimage__public_image=True
         )
         archival = self.request.query_params.get('archival')
         if archival:
@@ -195,4 +195,17 @@ class CollectionDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelView
                 archival_identifier__isnull=True,
                 archival_stored=''
             )
+        taxon_filter = self.request.query_params.get('taxon')
+        if taxon_filter:
+            try:
+                tf = int(taxon_filter)
+                t_entries = get_taxon_entries(
+                    org_id,
+                    constants_tax.FIELD_MORPHO_GBIF_FAMILY,
+                    public_image=True)
+                taxon = [t[1] for t in t_entries if t[0] == tf]
+                if taxon:
+                    specimen = specimen.filter(classification__gbif_family=taxon[0])
+            except Exception:
+                raise Http404
         return specimen.exclude(acceptance=0).order_by('-id')

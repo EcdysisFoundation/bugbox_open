@@ -13,11 +13,14 @@ function getDescription(data, type, row) {
 `
 }
 
-function getUrl(dt_url, archival_check) {
+function getUrl(dt_url, archival_check, taxon_filter) {
     let url_str = ''
     let params = []
     if (archival_check.prop("checked")) {
         params.push('archival=' + archival_check.prop("checked"));
+    }
+    if (taxon_filter) {
+        params.push('taxon=' + taxon_filter);
     }
     for ( let i = 0; i < params.length; i++) {
         let sep = '&'
@@ -91,9 +94,16 @@ $(function () {
     // api_url filters
 
     function reloadUrl() {
+        let taxon_data = tax_table.rows('.selected').data();
+        if (taxon_data.length == 1) {
+            taxon_data = taxon_data[0][0]
+        } else {
+            taxon_data = 0
+        }
         data_table.ajax.url( getUrl(
                 json_context.datatables_url,
-                $archivalCheck
+                $archivalCheck,
+                taxon_data
             )).load();
     }
 
@@ -101,6 +111,28 @@ $(function () {
     $('.archival-check').append($archivalCheck)
 
     $archivalCheck.on('change', () => {
+        reloadUrl();
+    })
+
+    var tax_table = $('#tax-table').DataTable();
+
+    tax_table.on( 'click', 'tbody tr', (e) => {
+        //$(this).toggleClass('selected');
+        let classList = e.currentTarget.classList;
+
+        if (classList.contains('selected')) {
+            classList.remove('selected');
+        }
+        else {
+            tax_table.rows('.selected').nodes().each((row) => row.classList.remove('selected'));
+            classList.add('selected');
+    }
+    } );
+
+    //
+    let $selectTaxaButton = $('<button type="button" class="btn btn-info" data-bs-dismiss="modal"  aria-label="Select">Filter to selection</button>')
+    $('.select-taxa-button').append($selectTaxaButton)
+    $selectTaxaButton.on('click', function() {
         reloadUrl();
     })
 
