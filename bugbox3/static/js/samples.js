@@ -53,7 +53,7 @@ $(function () {
         order: [[1, 'desc']],
         pageLength: 25,
         ordering: false,
-        processing: false,
+        processing: true,
         serverSide: true,
         ajax: {
             url: json_context.sites_datatables_url,

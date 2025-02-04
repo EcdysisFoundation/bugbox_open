@@ -32,7 +32,7 @@ $(function () {
     var experiments_table = $('#experiments-table').DataTable({
         order: [[1, 'desc']],
         ordering: false,
-        processing: false,
+        processing: true,
         serverSide: true,
         ajax: {
             url: url,

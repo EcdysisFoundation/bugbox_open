@@ -99,7 +99,7 @@ $(function () {
    let sample_table = new DataTable('#dtsample-table', {
         order: [[1, 'desc']],
         ordering: false,
-        processing: false,
+        processing: true,
         serverSide: true,
         ajax: {
             url: json_context.samples_datatables_url,
