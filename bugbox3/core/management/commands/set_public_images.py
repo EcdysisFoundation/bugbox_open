@@ -10,7 +10,7 @@ from django.core.management.base import BaseCommand
 from django.core.files import File
 
 from ....samples import constants
-from ....libs.utilities import get_media_url
+from ....samples.exports import public_images_export
 
 
 class Command(BaseCommand):
@@ -28,15 +28,6 @@ class Command(BaseCommand):
                    constants.SPECIMEN_IMAGE_IMAGE_THUMBNAIL,
                    constants.SPECIMEN_IMAGE_IMAGE_THUMBNAIL_MEDIUM,
                    constants.SPECIMEN_IMAGE_IMAGE_THUMBNAIL_LARGE)
-
-    temp_max_memory_size = 5 * (2**20)
-    export_title = 'public-images'
-    filename_extension = 'csv'
-
-    export_values = ['id', 'specimen_id', 'image_thumbnail_large']
-    export_values += ['specimen__sample__site_visit__' + v for v in ['visit_date']]
-    export_values += ['specimen__sample__site_visit__site__' + v for v in ['country', 'state_region', 'county_region', 'us_state_county_fips']]
-    export_values += ['specimen__classification__' + v for v in ['gbif_canonical_name', 'gbif_order', 'gbif_family', 'gbif_genus', 'gbif_species']]
 
     def handle(self, *args, **options):
 
@@ -89,29 +80,6 @@ class Command(BaseCommand):
         print('creating export file')
         for org in self.public_data_orgs:
             print('creating export for organization: {0}'.format(org[1]))
-
-            # make filename
-            now = datetime.now(tz=timezone.utc)
-            filename = '__'.join([self.export_title, now.strftime('%Y-%m-%d_%H%M%S')])
-            filename = '%s.%s' % (filename, self.filename_extension)
-
-            # query data
-            data = self.SpecimenImage.objects.filter(
-                specimen__sample__site_visit__site__experiment__organization_id=org[0],
-                specimen__sample__site_visit__site__experiment__organization__name=org[1],
-                public_image=True).values(*self.export_values)
-
-            with SpooledTemporaryFile(mode='w', newline='', max_size=self.temp_max_memory_size) as tmpfile:
-                writer = csv.writer(tmpfile)
-                writer.writerow(self.export_values + ['public_url'])
-                for i in data:
-                    url = settings.MEDIA_URL + i['image_thumbnail_large']
-                    writer.writerow([str(i[v]) for v in self.export_values] + [url])
-                file_obj = File(tmpfile, name=filename)
-                self.Exports.objects.create(
-                    organization_id=org[0],
-                    title=self.export_title,
-                    file=file_obj,
-                )
-
+            filename = public_images_export(org[0])
+            print('created export filename {0}'.format(filename))
         print('Process completed.')
