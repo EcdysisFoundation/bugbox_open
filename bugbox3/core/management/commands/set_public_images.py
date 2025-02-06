@@ -1,13 +1,7 @@
-
-
 import boto3
-import csv
-from datetime import datetime, timezone
-from tempfile import SpooledTemporaryFile
 from django.apps import apps
 from django.conf import settings
 from django.core.management.base import BaseCommand
-from django.core.files import File
 
 from ....samples import constants
 from ....samples.exports import public_images_export
@@ -31,10 +25,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-        #enable when done testing
-        #if settings.ON_ECDYSIS_SERVER != 'YES':
-        #    print('Currently this cmd is only supported on Ecdysis01')
-        #    return
+        if settings.ON_ECDYSIS_SERVER != 'YES':
+            print('Currently this cmd is only supported on Ecdysis01')
+            return
         s3_client = boto3.client(
             's3',
             aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
@@ -48,7 +41,6 @@ class Command(BaseCommand):
             specimen__sample__site_visit__site__experiment__organization_id__in=org_ids,
             specimen__sample__site_visit__site__experiment__organization__name__in=org_names,
             public_image=False,
-            specimen__sample_id=22991, #temp remove when done testing
             specimen__classification__isnull=False).exclude(
                 specimen__acceptance=0
             )
@@ -59,7 +51,7 @@ class Command(BaseCommand):
             print('publishing records')
 
         thecount = 0
-        theincrement = range(0, 1000, 100000)
+        theincrement = range(0, 100000, 1000)
         for s in specimen_images:
             for file in self.image_files:
                 s3_client.put_object_acl(

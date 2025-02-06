@@ -74,6 +74,9 @@
         <div class="col">
             <div class="align-items-center bg-ecdysis text-white d-flex justify-content-between">
                 <h2 class="text-light mt-1">Collections: {{ org_name }}</h2>
+                <a href="{% url 'samples:collection-download' org_id %}" class="btn btn-light">
+                    Download Data
+                </a>
             </div>
         </div>
     </div>

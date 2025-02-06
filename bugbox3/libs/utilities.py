@@ -39,6 +39,8 @@ def get_media_url(file, public=False):
     """
     Get media file urls
     """
+    if not file:
+        return ''
     if settings.MEDIA_URL == '/media/':
         # assume local storage
         return file.url

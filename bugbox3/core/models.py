@@ -1,6 +1,6 @@
 from django.contrib.gis.db.models import (CASCADE, BigIntegerField, CharField,
-                                          DateTimeField, FileField,
-                                          ForeignKey, Manager, Model,
+                                          DateTimeField, FileField, ForeignKey,
+                                          JSONField, Manager, Model,
                                           MultiPolygonField, SlugField)
 from django.db.models.fields import BLANK_CHOICE_DASH
 from organizations.models import Organization
@@ -12,6 +12,7 @@ class Exports(Model):
     organization = ForeignKey(Organization, related_name='exports', on_delete=CASCADE)
     title = SlugField(max_length=30)
     file = FileField(upload_to='exports')
+    description = JSONField(default=dict)
     date_added = DateTimeField(auto_now_add=True)
 
 
