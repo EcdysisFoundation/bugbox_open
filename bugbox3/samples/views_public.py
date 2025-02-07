@@ -57,9 +57,6 @@ class CollectionDownloadView(TemplateView):
         example = None
         example_img = SpecimenImage.objects.filter(
             id=PUBLIC_COLLECTIONS[kwargs['org_id']]['example_img_id']).first()
-        print(get_img_captioned(
-                    example_img.image_thumbnail_medium,
-                    example_img.specimen.classification.gbif_canonical_name))
         if example_img:
             example = {
                 'img_captioned': get_img_captioned(
