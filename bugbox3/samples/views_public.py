@@ -70,9 +70,10 @@ class CollectionDownloadView(TemplateView):
             }
 
         context.update({
-            'download_link': get_media_url(download_file.file),
-            'file_size': download_file.file.size,
-            'description': download_file.description,
+            'download_link': get_media_url(download_file.file)
+            if download_file else '',
+            'file_size': download_file.file.size if download_file else '',
+            'description': download_file.description if download_file else '',
             'example': example,
             'collection': PUBLIC_COLLECTIONS[self.kwargs['org_id']]
         })
