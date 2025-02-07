@@ -218,7 +218,7 @@ clearMorphoButton.addEventListener('click', function() {
         order: [[1, 'desc']],
         pageLength: 100,
         ordering: false,
-        processing: false,
+        processing: true,
         serverSide: true,
         ajax: {
             url: url,
@@ -404,7 +404,7 @@ clearMorphoButton.addEventListener('click', function() {
        let data_table_2 = $('#data-table-2').DataTable({
         order: [[1, 'desc']],
         ordering: false,
-        processing: false,
+        processing: true,
         serverSide: true,
         ajax: {
             url: json_context.datatables_url_2,

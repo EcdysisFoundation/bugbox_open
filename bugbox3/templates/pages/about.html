@@ -5,7 +5,55 @@
 {% endblock title %}
 
 {% block content %}
-      <p>Welcome to the the BugBox database application.</p>
+
+      <div class="container">
+
+            <div class="row">
+                  <div class="col p-5">
+                        <H2>Welcome to the the BugBox database application.</H2>
+
+                        <img src="https://ecdysis-public.s3.us-east-2.amazonaws.com/ecdysis_Final-02.png"
+                        width="300px"
+                        class="col-md-6 float-md-end mb-3 ms-md-3"
+                        alt="Ecdysis Foundation Logo">
+
+                        <p>
+                              BugBox is owned and operated by the Ecdysis Foundation! Visit our homepage at
+                              <a href="https://www.ecdysis.bio/" target="_blank">www.ecdysis.bio</a>.
+                        </p>
+                        <p>
+                              Ecdysis Foundation seeks to transform agriculture with regenerative principles.
+                              Through our <a href="https://www.ecdysis.bio/featured-project" target="_blank">
+                                    1000 Farms Initiative
+                              </a> we generate biological inventories of farm sites in various stages of regenerative adoption.
+                              We are analyzing key factors to show producers the health of their land, how their land compares with others, and how to incorporate
+                              regenerative methods into their agricultural production in order to disseminate these farm-level results back to the farmers and
+                              agricultural communities to inspire change. One aspect of this is collecting and identifying many hundreds of thousands of insects.
+                        </p>
+
+                        <p>
+                              Through this BugBox application, we use artificial intelligence to give preliminary identifications to each insect we collect.
+                              We then review a proportion of identifications and retrain our model to improve it over time.
+                              Much of this is currently behind authentication for staff and collaborators, but we are now making available
+                              to the public over 100,000 identified specimen images through
+                              <a href="{% url 'samples:collection' 1 %}">our collection browser</a>.
+                        </p>
+                  </div>
+            </div>
+
+            <div class="row">
+                  <div class="col pb-5">
+                        <div class="d-flex justify-content-center">
+                        <img src="https://ecdysis-public.s3.us-east-2.amazonaws.com/insectsb-800.jpg"
+                        class="img-fluid"
+                         alt="Picture of a person sampling in a field for insects and another image with an insect under a microscope">
+                        </div>
+                  </div>
+            </div>
+
+
+
+      </div>
 {% endblock content %}
 
 

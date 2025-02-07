@@ -1,16 +1,22 @@
 import csv
 import time
+from datetime import datetime, timezone
+from tempfile import SpooledTemporaryFile
 
+from django.conf import settings
 from django.contrib.auth.decorators import permission_required
+from django.core.files import File
 from django.db.models import Case, CharField, F, Func, Value, When
 from django.http import Http404, HttpResponse
 
+from ..core.models import Exports
 from ..core.permissions import IS_RESEARCH
+from ..taxonomy import constants as constants_tax
 from ..taxonomy.models import Morphospecies
 from ..taxonomy.utils import get_skip_morphospecies_ids
 from . import constants
 from .calculations import get_indices
-from .models import Experiment, Sample, Site, Specimen
+from .models import Experiment, Sample, Site, Specimen, SpecimenImage
 
 
 @permission_required(IS_RESEARCH)
@@ -183,3 +189,86 @@ def experiment_csv(request, id):
     writer.writerows(morpho_headers)
     writer.writerows(rows)
     return response
+
+
+PUBLIC_IMAGES_EXPORT_TITLE = 'public-images-exp'
+
+
+def public_images_export(org_id):
+    """
+    Make an export file of public images, save the record in the db.
+    """
+    if not isinstance(org_id, int):
+        raise TypeError('public_images_export only accepts integers for the org_id')
+    # make filename
+    now = datetime.now(tz=timezone.utc)
+    filename = '__'.join([PUBLIC_IMAGES_EXPORT_TITLE, str(org_id),
+                          now.strftime('%Y-%m-%d_%H%M%S')])
+    filename = '%s.csv' % filename
+
+    # headers and values query columns are the same
+    export_headers = ['id', 'specimen_id', constants.SPECIMEN_IMAGE_IMAGE_THUMBNAIL_LARGE]
+    export_headers = ['specimen__' +
+                      v for v in [constants.FIELD_SPECIMEN_ARCHIVAL_IDENTIFIER,
+                                  constants.FIELD_SPECIMEN_ARCHIVAL_STORED]]
+    export_headers += ['specimen__sample__site_visit__' +
+                       v for v in [constants.FIELD_SITE_VISIT_DATE]]
+    export_headers += ['specimen__sample__site_visit__site__' +
+                       v for v in [constants.FIELD_SITE_COUNTRY,
+                                   constants.FIELD_SITE_STATE_REGION,
+                                   constants.FIELD_SITE_COUNTY_REGION,
+                                   constants.FIELD_SITE_US_STATE_COUNTY_FIPS]]
+    export_headers += ['specimen__classification__' +
+                       v for v in [constants_tax.FIELD_MORPHO_GBIF_CANONICAL_NAME,
+                                   constants_tax.FIELD_MORPHO_GBIF_ORDER,
+                                   constants_tax.FIELD_MORPHO_GBIF_FAMILY,
+                                   constants_tax.FIELD_MORPHO_GBIF_GENUS,
+                                   constants_tax.FIELD_MORPHO_GBIF_SPECIES,
+                                   constants_tax.FIELD_MORPHO_GBIF_RANK]]
+    # query data
+    data = SpecimenImage.objects.filter(
+        specimen__sample__site_visit__site__experiment__organization_id=org_id,
+        public_image=True)
+    data = data.values(*export_headers)
+
+    specimens = set()
+    orders = set()
+    families = set()
+    to_genera = 0
+    to_species = 0
+
+    max_mem_size = 5 * (2**20)  # max memory size before it writes to disk
+    with SpooledTemporaryFile(mode='w+', newline='', max_size=max_mem_size) as tmpfile:
+        writer = csv.writer(tmpfile)
+        writer.writerow(export_headers + ['public_url'])
+        for i in data:
+            specimens.add(i['specimen_id'])
+            orders.add(i['specimen__classification__' + constants_tax.FIELD_MORPHO_GBIF_ORDER])
+            families.add(i['specimen__classification__' + constants_tax.FIELD_MORPHO_GBIF_FAMILY])
+            if i['specimen__classification__' +
+                 constants_tax.FIELD_MORPHO_GBIF_RANK] == constants_tax.GBIF_RANK_GENUS:
+                to_genera += 1
+            if i['specimen__classification__' +
+                 constants_tax.FIELD_MORPHO_GBIF_RANK] == constants_tax.GBIF_RANK_SPECIES:
+                to_species += 1
+            url = settings.MEDIA_URL + i[constants.SPECIMEN_IMAGE_IMAGE_THUMBNAIL_LARGE]
+            writer.writerow([str(i[v]) for v in export_headers] + [url])
+        file_obj = File(tmpfile, name=filename)
+
+        description = {
+            'image_count': len(data),
+            'specimen_count': len(specimens),
+            'order_count': len(orders),
+            'family_count': len(families),
+            'identified_to_genus':  to_genera,
+            'identified_to_species': to_species,
+        }
+
+        Exports.objects.create(
+            organization_id=org_id,
+            title=PUBLIC_IMAGES_EXPORT_TITLE,
+            file=file_obj,
+            description=description
+        )
+    # return the filename only
+    return filename

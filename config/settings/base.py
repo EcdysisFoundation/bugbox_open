@@ -43,7 +43,7 @@ LOCALE_PATHS = [str(BASE_DIR / "locale")]
 
 # AI_INFERENCE_URL
 # override this to blank string on Heroku
-AI_INFERENCE_URL = 'http://ecdysis01.local:8074/predictions/metaformer'
+AI_INFERENCE_URL = 'http://10.147.19.124:8074/predictions/metaformer'
 
 # DATABASES
 # ------------------------------------------------------------------------------
@@ -70,7 +70,7 @@ DJANGO_APPS = [
     "django.contrib.sites",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    # "django.contrib.humanize", # Handy template tags
+    "django.contrib.humanize",
     "django.contrib.admin",
     "django.forms",
     "django.contrib.gis",
@@ -340,6 +340,7 @@ AWS_SECRET_ACCESS_KEY = env("DJANGO_AWS_SECRET_ACCESS_KEY")
 AWS_STORAGE_BUCKET_NAME = env("DJANGO_AWS_STORAGE_BUCKET_NAME")
 AWS_STORAGE_BUCKET_NAME_MEDIA = env("DJANGO_AWS_STORAGE_BUCKET_NAME_MEDIA")
 AWS_STORAGE_BUCKET_NAME_STATIC = env("DJANGO_AWS_STORAGE_BUCKET_NAME_STATIC")
+AWS_STORAGE_BUCKET_NAME_PUBLIC = "ecdysis-public"
 AWS_REGION = env("DJANGO_AWS_REGION_NAME")
 AWS_DEFAULT_REGION = env("DJANGO_AWS_REGION_NAME")
 

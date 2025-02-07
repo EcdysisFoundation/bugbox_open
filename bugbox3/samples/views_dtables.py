@@ -1,17 +1,22 @@
 from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.http import Http404
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
 from ..core.constants import COUNTRY_LOOKUP
 from ..core.permissions import IS_RESEARCH
 from ..core.views import DatatablesModelViewSetMixin
+from ..taxonomy import constants as constants_tax
+from ..taxonomy.models_query import get_taxon_entries
 from . import constants
 from .models import Experiment, MultiSpecimenImage, Sample, Site, Specimen
-from .serializers import (ExperimentsDatatablesSerializer,
+from .serializers import (CollectionDatatablesSerializer,
+                          ExperimentsDatatablesSerializer,
                           MultiSpecimenImageDatatablesSerializer,
                           SamplesDatatablesSerializer,
                           SitesDatatablesSerializer,
                           SpecimenDatatablesSerializer,
                           SpecimensAllDatatablesSerializer)
+from .views_public import PUBLIC_COLLECTIONS
 
 
 class ExperimentsDatatablesViewSet(PermissionRequiredMixin, DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
@@ -160,3 +165,47 @@ class SpecimensAllDatatablesViewSet(PermissionRequiredMixin, DatatablesModelView
                 if classification_filter.replace(' ', '').isalnum():
                     specimen = specimen.filter(ai_classification__name__icontains=classification_filter)
         return specimen.order_by('-id')
+
+
+class CollectionDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
+
+    serializer_class = CollectionDatatablesSerializer
+    classification_const = [
+        constants_tax.FIELD_MORPHO_GBIF_ORDER,
+        constants_tax.FIELD_MORPHO_GBIF_FAMILY,
+        constants_tax.FIELD_MORPHO_GBIF_GENUS,
+        constants_tax.FIELD_MORPHO_GBIF_SPECIES,
+    ]
+    search_vector = ['classification__' + v for v in classification_const] + \
+                    [constants.FIELD_SPECIMEN_ARCHIVAL_STORED,
+                     constants.FIELD_SPECIMEN_ARCHIVAL_IDENTIFIER]
+
+    def get_queryset(self):
+        org_id = int(self.kwargs['org_id'])
+        if org_id not in PUBLIC_COLLECTIONS.keys():
+            raise Http404
+        specimen = Specimen.objects.filter(
+            sample__site_visit__site__experiment__organization_id=org_id,
+            classification_id__isnull=False,
+            specimenimage__public_image=True
+        )
+        archival = self.request.query_params.get('archival')
+        if archival:
+            specimen = specimen.exclude(
+                archival_identifier__isnull=True,
+                archival_stored=''
+            )
+        taxon_filter = self.request.query_params.get('taxon')
+        if taxon_filter:
+            try:
+                tf = int(taxon_filter)
+                t_entries = get_taxon_entries(
+                    org_id,
+                    constants_tax.FIELD_MORPHO_GBIF_FAMILY,
+                    public_image=True)
+                taxon = [t[1] for t in t_entries if t[0] == tf]
+                if taxon:
+                    specimen = specimen.filter(classification__gbif_family=taxon[0])
+            except Exception:
+                raise Http404
+        return specimen.exclude(acceptance=0).order_by('-id')

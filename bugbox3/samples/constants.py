@@ -1,5 +1,7 @@
 from django.db.models.fields import BLANK_CHOICE_DASH
 
+ECDYSIS_ORGANIZATION_ID = 1
+
 # Fields
 
 FIELD_ORGANIZATION = 'organization'
@@ -102,6 +104,7 @@ SPECIMEN_IMAGE_PRIMARY = 'primary_image'
 SPECIMEN_IMAGE_IMAGE = 'image'
 SPECIMEN_IMAGE_IMAGE_THUMBNAIL = 'image_thumbnail'
 SPECIMEN_IMAGE_IMAGE_THUMBNAIL_MEDIUM = 'image_thumbnail_medium'
+SPECIMEN_IMAGE_IMAGE_THUMBNAIL_LARGE = 'image_thumbnail_large'
 SPECIMEN_IMAGE_DATE_ADDED = 'date_added'
 
 #  Model Choices

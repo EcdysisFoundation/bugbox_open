@@ -291,6 +291,7 @@ class SpecimenImage(Model):
     multispecimen_image_uuid = UUIDField(null=True)
     multispecimen_image_index = PositiveSmallIntegerField(null=True)
     primary_image = BooleanField(default=False)
+    public_image = BooleanField(default=False)
     image = ImageField(upload_to='specimen_images')
     image_thumbnail = ImageField(null=True, blank=True, upload_to='specimen_images')
     image_thumbnail_medium = ImageField(null=True, blank=True, upload_to='specimen_images')
@@ -316,7 +317,7 @@ def ensure_single_true_flag(sender, instance, **kwargs):
 
 @receiver(post_save, sender=SpecimenImage)
 def save_specimen_image_thumbnail(instance, created, **kwargs):
-    # Can only create and delete SpecimenImage.
+    # Can only create and delete SpecimenImage image files through UI.
     if created and instance.image:
         a = BytesIO()
         b = BytesIO()

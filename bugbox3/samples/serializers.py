@@ -5,8 +5,9 @@ from rest_framework.serializers import ModelSerializer
 from ..core.models import LookupChoices
 from ..libs.ui_helpers import (classify_specimen_button, get_ai_classification,
                                get_classifcation, get_datatables_container,
-                               get_datatables_row, get_img_src,
-                               get_probability_or_user, get_specimen_context)
+                               get_datatables_row, get_img_captioned,
+                               get_img_src, get_probability_or_user,
+                               get_specimen_context, get_specimen_location)
 from ..libs.utilities import get_media_url
 from . import constants
 from .models import (Experiment, MultiSpecimenImage, Sample, SamplePlan, Site,
@@ -227,9 +228,11 @@ class SpecimenDatatablesSerializer(ModelSerializer):
             img_exists = True
             specimen_image = value.specimenimage_set.first()
             if specimen_image.image_thumbnail:
-                img_thumbnail = get_img_src(specimen_image.image_thumbnail)
+                img_thumbnail = get_img_src(specimen_image.image_thumbnail, public=specimen_image.public_image)
             else:
-                img_thumbnail = get_img_src(specimen_image.image, constants.SPECIMEN_IMAGE_THUMBSIZE)
+                img_thumbnail = get_img_src(specimen_image.image,
+                                            constants.SPECIMEN_IMAGE_THUMBSIZE,
+                                            public=specimen_image.public_image)
         else:
             img_thumbnail = get_img_src(img_exists)
         link = reverse('samples:specimen', kwargs={'id': value.id})
@@ -264,12 +267,13 @@ class SpecimensAllDatatablesSerializer(ModelSerializer):
         img_thumbnail_large = None
         specimen_image = value.specimenimage_set.first()
         if specimen_image:
-            img_thumbnail = get_img_src(specimen_image.image_thumbnail)
+            img_thumbnail = get_img_src(specimen_image.image_thumbnail, public=specimen_image.public_image)
             if specimen_image.image_thumbnail_large:
                 # dont use get_img_src() here due to modal .js reasons
                 if default_storage.exists(specimen_image.image_thumbnail_large.name):
                     img_thumbnail_large = {
-                        'url': get_media_url(specimen_image.image_thumbnail_large),
+                        'url': get_media_url(
+                            specimen_image.image_thumbnail_large, public=specimen_image.public_image),
                         'width': specimen_image.image_thumbnail_large.width,
                         'height': specimen_image.image_thumbnail_large.height
                     }
@@ -297,4 +301,59 @@ class SpecimensAllDatatablesSerializer(ModelSerializer):
             'view_link': reverse('samples:specimen', kwargs={'id': value.id}),
             'edit_link': reverse('samples:specimen-update', kwargs={'id': value.id}),
             'specimen_context': get_specimen_context(value)
+        }
+
+
+class CollectionDatatablesSerializer(ModelSerializer):
+
+    class Meta:
+        model = Specimen
+        fields = [
+            constants.FIELD_SPECIMEN_ARCHIVAL_IDENTIFIER
+        ]
+
+    def to_representation(self, value):
+        img_thumbnail_large = None
+        specimen_image = value.specimenimage_set.first()
+        if specimen_image:
+            image = get_img_captioned(
+                    specimen_image.image_thumbnail_medium,
+                    value.classification.gbif_canonical_name,
+                    public=specimen_image.public_image)
+            if specimen_image.image_thumbnail_large:
+                # dont use get_img_src() here due to modal .js reasons
+                if default_storage.exists(specimen_image.image_thumbnail_large.name):
+                    img_thumbnail_large = {
+                        'url': get_media_url(
+                            specimen_image.image_thumbnail_large, public=specimen_image.public_image),
+                        'width': specimen_image.image_thumbnail_large.width,
+                        'height': specimen_image.image_thumbnail_large.height
+                    }
+                else:
+                    img_thumbnail_large = {
+                        'url': '',
+                        'width': '',
+                        'height': ''
+                    }
+        else:
+            image = get_img_src(False)
+        archival = value.archival_identifier
+        if archival and value.archival_stored:
+            archival += ' | ' + value.archival_stored
+        else:
+            archival = value.archival_stored
+        return {
+            'image': image,
+            'img_thumbnail_large': img_thumbnail_large,
+            'taxonomy': {
+                'gbif_order': value.classification.gbif_order,
+                'gbif_family': value.classification.gbif_family,
+                'species': value.classification.gbif_species
+                if value.classification.gbif_species
+                else value.classification.gbif_genus + ' spp.',
+            },
+            'details': {
+                'visit_date': value.sample.site_visit.visit_date,
+                'location': get_specimen_location(value),
+                'archival': archival}
         }
