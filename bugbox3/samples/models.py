@@ -292,6 +292,7 @@ class SpecimenImage(Model):
     multispecimen_image_index = PositiveSmallIntegerField(null=True)
     primary_image = BooleanField(default=False)
     public_image = BooleanField(default=False)
+    downloaded_image = BooleanField(default=False)
     image = ImageField(upload_to='specimen_images')
     image_thumbnail = ImageField(null=True, blank=True, upload_to='specimen_images')
     image_thumbnail_medium = ImageField(null=True, blank=True, upload_to='specimen_images')
