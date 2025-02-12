@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('samples', '0017_remove_specimen_public_image_and_more'),
+        ('samples', '0018_experiment_exported_file_status_and_more'),
     ]
 
     operations = [
