@@ -393,9 +393,22 @@ EXP_CSV_TYPE_ALL = 'all'
 EXP_CSV_TYPE_REVIEWED = 'reviewed-only'
 EXP_CSV_TYPE_AI = 'ai-only'
 EXPERIMENT_CSV_EXPORT_CHOICES = (
-    (EXP_CSV_TYPE_ALL, 'Reviewd and AI (all)'),
-    (EXP_CSV_TYPE_REVIEWED, 'Reviewed only'),
-    (EXP_CSV_TYPE_AI, 'AI only'),
+    (
+        EXP_CSV_TYPE_ALL, 'Mixed Expert/AI Classifications',
+        "Includes all specimens. Specimens are classified according to human expert identifications "
+        "when available, and according to AI identifications when human expert identifications are "
+        "not available."
+    ),
+    (
+        EXP_CSV_TYPE_REVIEWED, 'Expert Classifications Only',
+        "Includes only specimens that have been reviewed by a human expert. "
+        "Specimens are classified according to human expert identifications."
+    ),
+    (
+        EXP_CSV_TYPE_AI, 'AI Classifications Only',
+        "Includes all specimens."
+        " Specimens are classified according to AI identifications"
+    ),
 )
 
 EXPERIMENT_CSV_EXPORT_TYPES = [v[0] for v in EXPERIMENT_CSV_EXPORT_CHOICES]
