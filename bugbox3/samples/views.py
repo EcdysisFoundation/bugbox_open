@@ -138,6 +138,9 @@ class ExperimentView(PermissionRequiredMixin, TemplateView):
             'json_context': get_json_context(
                 {'sites_datatables_url': sites_datatables_url})
         })
+
+        context["last_exported_file"] = get_media_url(experiment.last_exported_file) if experiment.last_exported_file else None
+
         return context
 
 

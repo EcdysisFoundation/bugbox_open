@@ -12,7 +12,7 @@ from django.db.models import (CASCADE, SET_NULL, BooleanField, CharField,
                               DateField, DateTimeField, DecimalField,
                               ForeignKey, ImageField, JSONField, Manager,
                               Model, PositiveIntegerField,
-                              PositiveSmallIntegerField, SlugField, TextField,
+                              PositiveSmallIntegerField, SlugField, TextField, FileField, 
                               UUIDField)
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
@@ -44,6 +44,8 @@ class Experiment(Model):
     completed = BooleanField(default=False)
     summary = TextField(null=True, blank=True)
     archived = CharField(max_length=3000, blank=True)
+    last_exported_file = FileField(max_length=100, upload_to='experiment/exported_data/', null=True, blank=True)
+    exported_file_status = CharField(max_length=40, null=True, blank=True)
 
     objects = ExperimentManager()
 
