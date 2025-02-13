@@ -71,7 +71,7 @@ def get_datatables_container(rows, container_styles=None):
     return '<div class="container text-center{0}">{1}</div>'.format(styles, rows)
 
 
-def get_datatables_row(columns, row_styles=None, col_styles=None):
+def get_datatables_row(columns, row_styles=(), col_styles=()):
     """
     Return a stylized row for datatables cell as row with columns
     columns and styles are iterables.
@@ -83,7 +83,7 @@ def get_datatables_row(columns, row_styles=None, col_styles=None):
             row_style += ' {0}'.format(style)
     if col_styles:
         for style in col_styles:
-            col_styles += ' {0}'.format(style)
+            col_style += ' {0}'.format(style)
     result = '<div class="row{0}">'.format(row_style)
     for c in columns:
         result += '<div class="col{0}">{1}</div>'.format(col_style, c)
@@ -91,7 +91,7 @@ def get_datatables_row(columns, row_styles=None, col_styles=None):
     return result
 
 
-def get_img_src(img_field, resize_width=None, styles=''):
+def get_img_src(img_field, resize_width=None, styles='', public=False):
     """
     Get an html img tag formated from an ImageField.
     Styes should be a string of styes, exampe 'c-1 c-2'
@@ -100,7 +100,7 @@ def get_img_src(img_field, resize_width=None, styles=''):
         return '<i class="bi bi-question-diamond"></i>'
 
     def img_src(path, width, height, styles):
-        return '<img src="{0}" width="{1}" height="{2}" style="{3}">'.format(
+        return '<img src="{0}" width="{1}" height="{2}" class="{3}">'.format(
             path,
             width,
             height,
@@ -109,20 +109,38 @@ def get_img_src(img_field, resize_width=None, styles=''):
 
     if img_field and not resize_width:
         return img_src(
-            get_media_url(img_field),
+            get_media_url(img_field, public),
             img_field.width,
             img_field.height,
             str(styles)
         )
     elif img_field and resize_width:
         return img_src(
-            get_media_url(img_field),
+            get_media_url(img_field, public),
             int(resize_width),
             int(resize_width) * (img_field.height / img_field.width),
             str(styles)
         )
     else:
         return '<i class="bi bi-bug"></i>'
+
+
+def get_img_captioned(img_field, caption, resize_width=None, public=False):
+    """
+    Get the image src with a caption.
+    Styes should be a string of styes, exampe 'c-1 c-2'
+    """
+    src = get_img_src(
+        img_field,
+        resize_width=resize_width,
+        styles='figure-img img-fluid rounded',
+        public=public)
+    return """
+            <figure class="figure">
+            {0}
+            <figcaption class="figure-caption text-end fst-italic">{1}</figcaption>
+            </figure>
+           """.format(src, caption)
 
 
 def calc_image_height(size, height, width):
@@ -211,4 +229,15 @@ def get_specimen_context(specimen):
     )
     return '{0}<br/>{1}<br/>{2}'.format(
         e, specimen.sample.site_visit.visit_date.strftime("%d-%b-%Y"), s
+    )
+
+
+def get_specimen_location(specimen):
+    """
+    Get the location description from a specimen record.
+    """
+    return ', '.join(
+        (specimen.sample.site_visit.site.country,
+         specimen.sample.site_visit.site.state_region,
+         specimen.sample.site_visit.site.county_region)
     )

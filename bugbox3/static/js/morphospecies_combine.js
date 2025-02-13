@@ -8,7 +8,7 @@ $(function () {
     var data_table = $('#data-table').DataTable({
         order: [[1, 'desc']],
         ordering: false,
-        processing: false,
+        processing: true,
         serverSide: true,
         ajax: {
             url: json_context.datatables_url,

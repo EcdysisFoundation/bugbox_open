@@ -1,5 +1,7 @@
 from django.db.models.fields import BLANK_CHOICE_DASH
 
+ECDYSIS_ORGANIZATION_ID = 1
+
 # Fields
 
 FIELD_ORGANIZATION = 'organization'
@@ -102,6 +104,7 @@ SPECIMEN_IMAGE_PRIMARY = 'primary_image'
 SPECIMEN_IMAGE_IMAGE = 'image'
 SPECIMEN_IMAGE_IMAGE_THUMBNAIL = 'image_thumbnail'
 SPECIMEN_IMAGE_IMAGE_THUMBNAIL_MEDIUM = 'image_thumbnail_medium'
+SPECIMEN_IMAGE_IMAGE_THUMBNAIL_LARGE = 'image_thumbnail_large'
 SPECIMEN_IMAGE_DATE_ADDED = 'date_added'
 
 #  Model Choices
@@ -390,9 +393,22 @@ EXP_CSV_TYPE_ALL = 'all'
 EXP_CSV_TYPE_REVIEWED = 'reviewed-only'
 EXP_CSV_TYPE_AI = 'ai-only'
 EXPERIMENT_CSV_EXPORT_CHOICES = (
-    (EXP_CSV_TYPE_ALL, 'Reviewd and AI (all)'),
-    (EXP_CSV_TYPE_REVIEWED, 'Reviewed only'),
-    (EXP_CSV_TYPE_AI, 'AI only'),
+    (
+        EXP_CSV_TYPE_ALL, 'Mixed Expert/AI Classifications',
+        "Includes all specimens. Specimens are classified according to human expert identifications "
+        "when available, and according to AI identifications when human expert identifications are "
+        "not available."
+    ),
+    (
+        EXP_CSV_TYPE_REVIEWED, 'Expert Classifications Only',
+        "Includes only specimens that have been reviewed by a human expert. "
+        "Specimens are classified according to human expert identifications."
+    ),
+    (
+        EXP_CSV_TYPE_AI, 'AI Classifications Only',
+        "Includes all specimens."
+        " Specimens are classified according to AI identifications"
+    ),
 )
 
 EXPERIMENT_CSV_EXPORT_TYPES = [v[0] for v in EXPERIMENT_CSV_EXPORT_CHOICES]

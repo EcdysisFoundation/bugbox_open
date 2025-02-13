@@ -1,4 +1,5 @@
 from django.apps import apps
+from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.db.models import Exists, OuterRef
 
@@ -18,6 +19,9 @@ class Command(BaseCommand):
     AiTraining = apps.get_model(app_label='taxonomy', model_name='AiTraining')
 
     def handle(self, *args, **options):
+        if settings.ON_ECDYSIS_SERVER != 'YES':
+            print('Currently this cmd is only supported on Ecdysis01')
+            return
         recs = options.get('recs')
         if not recs:
             recs = 1000
@@ -28,7 +32,6 @@ class Command(BaseCommand):
                 has_images=Exists(self.SpecimenImage.objects.filter(
                     specimen=OuterRef('pk'),
                     image_notfound=False))).filter(
-                ai_classification__isnull=True,
                 acceptance=0,
                 has_images=True
             ).exclude(ai_model_name=current_model_name)[:recs]

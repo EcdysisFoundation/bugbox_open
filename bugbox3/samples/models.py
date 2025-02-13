@@ -10,8 +10,8 @@ from django.core.validators import MaxValueValidator
 from django.db import transaction
 from django.db.models import (CASCADE, SET_NULL, BooleanField, CharField,
                               DateField, DateTimeField, DecimalField,
-                              ForeignKey, ImageField, JSONField, Manager,
-                              Model, PositiveIntegerField,
+                              FileField, ForeignKey, ImageField, JSONField,
+                              Manager, Model, PositiveIntegerField,
                               PositiveSmallIntegerField, SlugField, TextField,
                               UUIDField)
 from django.db.models.signals import post_save, pre_save
@@ -44,6 +44,8 @@ class Experiment(Model):
     completed = BooleanField(default=False)
     summary = TextField(null=True, blank=True)
     archived = CharField(max_length=3000, blank=True)
+    last_exported_file = FileField(max_length=100, upload_to='experiment/exported_data/', null=True, blank=True)
+    exported_file_status = CharField(max_length=40, null=True, blank=True)
 
     objects = ExperimentManager()
 
@@ -291,6 +293,8 @@ class SpecimenImage(Model):
     multispecimen_image_uuid = UUIDField(null=True)
     multispecimen_image_index = PositiveSmallIntegerField(null=True)
     primary_image = BooleanField(default=False)
+    public_image = BooleanField(default=False)
+    downloaded_image = BooleanField(default=False)
     image = ImageField(upload_to='specimen_images')
     image_thumbnail = ImageField(null=True, blank=True, upload_to='specimen_images')
     image_thumbnail_medium = ImageField(null=True, blank=True, upload_to='specimen_images')
@@ -316,7 +320,7 @@ def ensure_single_true_flag(sender, instance, **kwargs):
 
 @receiver(post_save, sender=SpecimenImage)
 def save_specimen_image_thumbnail(instance, created, **kwargs):
-    # Can only create and delete SpecimenImage.
+    # Can only create and delete SpecimenImage image files through UI.
     if created and instance.image:
         a = BytesIO()
         b = BytesIO()

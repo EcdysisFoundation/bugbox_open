@@ -67,6 +67,9 @@
             <li class="nav-item active">
               <a class="nav-link" href="{% url 'about' %}">About<span class="visually-hidden">(current)</span></a>
             </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'samples:collection' 1 %}">Collections</a>
+            </li>
             {% if request.user.is_authenticated %}
               {% for group in request.user.groups.all %}
                 {% if group.name == 'is_research' %}
@@ -155,6 +158,23 @@
     {% block content %}
       <p>base.html content area.</p>
     {% endblock content %}
+    {% block footer %}
+    <div class="container">
+      <div class="row mb-4 mt-2">
+        <div class="col">
+          <div class="d-flex justify-content-center">
+          <ul class="list-group list-group-horizontal">
+            <li class="list-group-item"><a href="https://www.ecdysis.bio/" target="_blank"><i class="bi bi-house-door"></i> Ecdysis Foundation</a></li>
+            <li class="list-group-item"><a href="https://www.ecdysis.bio/contact-us"><i class="bi bi-envelope"></i> Contact Us</a></li>
+            <li class="list-group-item"><a href="{% url 'core:read-eula' %}"><i class="bi bi-info-circle"></i> Terms of Use</a></li>
+            <li class="list-group-item">©{% now "Y" %} Ecdysis Foundation</li>
+          </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% endblock footer %}
   </div>
   <!-- /container -->
   {% block modal %}
