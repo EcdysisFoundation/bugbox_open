@@ -29,7 +29,6 @@ def experiment_ai_csv(request, id):
     sample_types = request.GET.getlist('sampleTypes')
     sites = request.GET.getlist('sites')
     other_experiments = request.GET.getlist('otherExperiments')
-    level = request.GET.get('level')
 
     if not all([v.isnumeric() for v in sites]):
         return HttpResponse(status=404)
@@ -44,10 +43,6 @@ def experiment_ai_csv(request, id):
         sample__site_visit__site__experiment_id__in=all_exp,
         sample__sample_type__in=sample_types).exclude(
             acceptance=constants.ACCEPTANCE_PENDING)
-
-    if level:
-        specimens = specimens.filter(classification__gbif_family='family')
-
     if not other_experiments:
         specimens = specimens.filter(
             sample__site_visit__site__in=sites)

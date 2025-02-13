@@ -26,12 +26,6 @@
                 <form id="exportForm" action="{% url 'samples:experiment-ai-csv' experiment.id %}">
                     {% csrf_token %}
                     <h5>Sites</h5>
-                    <div class="mb-3">
-                      <select class="form-select" name="level" aria-label="Level" required>
-                        <option selected>Morphospecies-level</option>
-                        <option value="family">Family-level</option>
-                      </select>
-                    </div>
                     <div class="form-check">
                         <input class="form-check-input" id="check-all_sites" type="checkbox" checked="checked" >
                         <label class="form-check-label" for="check-all_sites">
