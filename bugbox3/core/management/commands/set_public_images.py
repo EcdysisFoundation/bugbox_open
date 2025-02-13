@@ -64,7 +64,7 @@ class Command(BaseCommand):
 
             thecount += 1
             if thecount in theincrement:
-                print('Processed {0} records, continuing....'.join(thecount))
+                print('Processed {0} records, continuing....'.format(thecount))
 
         if specimen_images:
             print('selected images are now public')
