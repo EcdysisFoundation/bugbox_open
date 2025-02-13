@@ -2,7 +2,8 @@ from allauth.account.forms import SignupForm
 from allauth.socialaccount.forms import SignupForm as SocialSignupForm
 from django.contrib.auth import forms as admin_forms
 from django.contrib.auth import get_user_model
-from django.forms import CharField
+from django.core.exceptions import ValidationError
+from django.forms import BooleanField, CharField, Form
 from django.utils.translation import gettext_lazy as _
 
 User = get_user_model()
@@ -41,3 +42,16 @@ class UserSocialSignupForm(SocialSignupForm):
     Default fields will be added automatically.
     See UserSignupForm otherwise.
     """
+
+
+class EulaForm(Form):
+    """
+    form for user to agree to terms of service
+    """
+    agree_to_terms = BooleanField(required=False)
+
+    def clean_agree_to_terms(self):
+        if not self.cleaned_data['agree_to_terms']:
+            raise ValidationError('You must agree to terms to proceed.')
+
+        return self.cleaned_data['agree_to_terms']
