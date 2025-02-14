@@ -18,7 +18,7 @@ from io import StringIO
 User = get_user_model()
 
 
-@shared_task
+@shared_task(soft_time_limit=500)
 def export_csv(user_id, experiment_id, indices, export_type, sample_types, include_skip_morph, sites, other_experiments, level):
     user = User.objects.get(pk=user_id)
     experiment = Experiment.objects.user_access(user).get(id=experiment_id)

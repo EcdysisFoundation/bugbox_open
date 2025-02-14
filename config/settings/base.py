@@ -329,7 +329,7 @@ WEBPACK_LOADER = {
     }
 }
 
-DATA_UPLOAD_MAX_NUMBER_FILES = 400
+DATA_UPLOAD_MAX_NUMBER_FILES = 2000
 
 # AWS S3
 # ------------------------------------------------------------------------------
