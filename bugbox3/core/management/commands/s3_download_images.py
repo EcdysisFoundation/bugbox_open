@@ -38,7 +38,6 @@ class Command(BaseCommand):
             specimen__sample__site_visit__site__experiment__organization_id__in=org_ids,
             specimen__sample__site_visit__site__experiment__organization__name__in=org_names,
             downloaded_image=False,
-            specimen__sample_id=26296  # Remove after testing, limits to a single sample
             )
 
         # inventory specimen_images to see which have already been downloaded.
@@ -46,7 +45,6 @@ class Command(BaseCommand):
             # only check full size image for now, but download all sizes
             local_path = self.local_storage + s.image.name
             if os.path.isfile(local_path):
-                print('this image is here')
                 # image already downloaded, so set to true and dont download
                 s.downloaded_image = True
                 s.save()
