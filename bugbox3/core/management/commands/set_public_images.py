@@ -3,6 +3,7 @@ from django.apps import apps
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
+from ....libs.utilities import save_specimen_img_thumbs
 from ....samples import constants
 from ....samples.exports import public_images_export
 
@@ -53,6 +54,8 @@ class Command(BaseCommand):
         thecount = 0
         theincrement = range(0, 100000, 1000)
         for s in specimen_images:
+            # check for thumbnails and save them if they dont exist.
+            save_specimen_img_thumbs(s)
             for file in self.image_files:
                 s3_client.put_object_acl(
                     Bucket=settings.AWS_STORAGE_BUCKET_NAME_MEDIA,
