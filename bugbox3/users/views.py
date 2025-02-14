@@ -1,9 +1,14 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
+from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
-from django.views.generic import DetailView, RedirectView, UpdateView
+from django.views.generic import (DetailView, FormView, RedirectView,
+                                  TemplateView, UpdateView)
+
+from .forms import EulaForm
+from .models import Eula
 
 User = get_user_model()
 
@@ -41,3 +46,45 @@ class UserRedirectView(LoginRequiredMixin, RedirectView):
 
 
 user_redirect_view = UserRedirectView.as_view()
+
+
+class EulaView(LoginRequiredMixin, FormView):
+    """
+    View for the eula agreement
+    """
+    template_name = 'core/eula.html'
+    form_class = EulaForm
+    success_url = '/'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        eula = Eula.objects.order_by('-timestamp').first()
+        context.update({
+            'eula_text': eula.eula_text if eula else 'EULA Placeholder',
+            'effective_date': eula.timestamp if eula else ''
+        })
+        return context
+
+    def form_valid(self, form):
+        """
+        Overwrite user agreed to eula to be true
+        """
+        self.request.user.agreed_to_eula = True
+        self.request.user.save()
+        return HttpResponseRedirect(self.success_url)
+
+
+class EulaReadView(TemplateView):
+    """
+    View of the EULA without a form.
+    """
+    template_name = 'core/eula_read.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        eula = Eula.objects.order_by('-timestamp').first()
+        context.update({
+            'eula_text': eula.eula_text if eula else 'EULA Placeholder',
+            'effective_date': eula.timestamp if eula else ''
+        })
+        return context

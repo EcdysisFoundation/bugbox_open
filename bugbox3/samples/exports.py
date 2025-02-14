@@ -8,16 +8,13 @@ from django.contrib.auth.decorators import permission_required
 from django.core.files import File
 from django.db.models import Case, CharField, F, Func, Value, When
 from django.http import Http404, HttpResponse
+from django.shortcuts import redirect
 
 from ..core.models import Exports
 from ..core.permissions import IS_RESEARCH
 from ..taxonomy import constants as constants_tax
-from ..taxonomy.models import Morphospecies
-from ..taxonomy.utils import get_skip_morphospecies_ids
 from . import constants
-from .calculations import get_indices
-from .models import Experiment, Sample, Site, Specimen, SpecimenImage
-from django.shortcuts import redirect
+from .models import Experiment, Specimen, SpecimenImage
 from .tasks import export_csv
 
 
@@ -31,6 +28,8 @@ def experiment_ai_csv(request, id):
 
     sample_types = request.GET.getlist('sampleTypes')
     sites = request.GET.getlist('sites')
+    other_experiments = request.GET.getlist('otherExperiments')
+
     if not all([v.isnumeric() for v in sites]):
         return HttpResponse(status=404)
     sites = [int(v) for v in sites]
@@ -55,14 +54,14 @@ def experiment_ai_csv(request, id):
              default=0, output_field=CharField()),
         Case(When(classification=F(constants.FIELD_SPECIMEN_AI_CLASSIFICATION), then=1),
              When(classification__name=Func(
-                F(constants.FIELD_SPECIMEN_OPTIONAL_PRED_ONE),
-                Value('class_op'),
-                function='jsonb_extract_path_text',
+                 F(constants.FIELD_SPECIMEN_OPTIONAL_PRED_ONE),
+                 Value('class_op'),
+                 function='jsonb_extract_path_text',
              ), then=1),
              When(classification__name=Func(
-                F(constants.FIELD_SPECIMEN_OPTIONAL_PRED_TWO),
-                Value('class_op'),
-                function='jsonb_extract_path_text',
+                 F(constants.FIELD_SPECIMEN_OPTIONAL_PRED_TWO),
+                 Value('class_op'),
+                 function='jsonb_extract_path_text',
              ), then=1),
              default=0, output_field=CharField())
     )
@@ -94,14 +93,12 @@ def experiment_csv(request, id):
         include_skip_morph = request.POST.get('include_skip_morph')
         sites = request.POST.getlist('sites2')
         other_experiments = request.POST.getlist('otherExperiments2')
-        level = request.POST.get('level', None)
 
-        export_csv.delay(request.user.pk, id, indices, export_type, sample_types, include_skip_morph, sites, other_experiments, level)
+        export_csv.delay(request.user.pk, id, indices, export_type, sample_types,
+                         include_skip_morph, sites, other_experiments)
 
         return redirect('samples:experiment', experiment_id=id)
-
     raise Http404
-
 
 
 PUBLIC_IMAGES_EXPORT_TITLE = 'public-images-exp'

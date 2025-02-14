@@ -83,6 +83,8 @@
             <div class="modal-body">
                 <form id="exportForm2" action="{% url 'samples:experiment-csv' experiment.id %}" method="POST">
                   {% csrf_token %}
+                <form id="exportForm2" action="{% url 'samples:experiment-csv' experiment.id %}" method="POST">
+                  {% csrf_token %}
 
                   <div class="mb-3">
                     <select class="form-select" id="export-type" name="export-type" aria-label="select export variables" required>
@@ -265,6 +267,20 @@
     <div class="col-3">
         <button class="btn btn-link" data-bs-toggle="modal" data-bs-target="#exportModal2">Export Experiment Data</button>
     </div>
+
+    {% if experiment.exported_file_status == 'pending' %}
+      <div class="col-3">
+        Exporting File...
+      </div>
+    {% elif experiment.exported_file_status == 'error' %}
+      <div class="col-3">
+        Exporting Error
+      </div>
+    {% elif experiment.exported_file_status == 'success' %}
+      <div class="col-3">
+        <a class="btn btn-link" href="{{last_exported_file}}">Exported File</a>
+      </div>
+    {% endif %}
 
     {% if experiment.exported_file_status == 'pending' %}
       <div class="col-3">

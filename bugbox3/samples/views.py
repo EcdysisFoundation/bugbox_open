@@ -139,7 +139,11 @@ class ExperimentView(PermissionRequiredMixin, TemplateView):
                 {'sites_datatables_url': sites_datatables_url})
         })
 
-        context["last_exported_file"] = get_media_url(experiment.last_exported_file) if experiment.last_exported_file else None
+        context["last_exported_file"] = (
+            get_media_url(experiment.last_exported_file)
+            if experiment.last_exported_file
+            else None
+        )
 
         return context
 
@@ -179,7 +183,7 @@ class ExperimentSamplePlanCreateView(PermissionRequiredMixin, CreateView):
             raise Http404
 
         context['json_context'] = get_json_context(get_formsets_display_control_config(
-                    self.formset_total, self.formset_intial))
+            self.formset_total, self.formset_intial))
         context['form_action_url'] = reverse(
             'samples:experiment-sample-plan-create',
             kwargs={'org_id': self.kwargs['org_id']})
@@ -242,7 +246,7 @@ class ExperimentSamplePlanUpdateView(PermissionRequiredMixin, UpdateView):
         if sample_plan_count < 1:
             sample_plan_count = 1
         context['json_context'] = get_json_context(get_formsets_display_control_config(
-                    self.formset_total, sample_plan_count))
+            self.formset_total, sample_plan_count))
         context['form_action_url'] = reverse('samples:experiment-sample-plan-update',
                                              kwargs={'experiment_id': self.kwargs['experiment_id']})
         if self.request.POST:
@@ -287,7 +291,7 @@ class SiteCreateView(PermissionRequiredMixin, CreateView):
     def get_form_kwargs(self):
         kwargs = super(SiteCreateView, self).get_form_kwargs()
         kwargs['org_id'] = Experiment.objects.user_access(self.request.user).get(
-                id=self.kwargs['experiment_id']).organization_id
+            id=self.kwargs['experiment_id']).organization_id
         return kwargs
 
     def get_context_data(self, **kwargs):
@@ -305,7 +309,7 @@ class SiteCreateView(PermissionRequiredMixin, CreateView):
                 'plans': get_sample_plan_descriptions(experiment.id)
             },
             'json_context': get_json_context(get_formsets_display_control_config(
-                    self.formset_total, experiment.date_per_site)),
+                self.formset_total, experiment.date_per_site)),
             'form_action_url': reverse(
                 'samples:site-create', kwargs={'experiment_id': self.kwargs['experiment_id']})
         })
@@ -384,7 +388,7 @@ class SiteUpdateView(PermissionRequiredMixin, UpdateView):
         if site_visit_count < 1:
             site_visit_count = 1
         context['json_context'] = get_json_context(get_formsets_display_control_config(
-                    self.formset_total, site_visit_count))
+            self.formset_total, site_visit_count))
         context['form_action_url'] = reverse(
             'samples:site-update', kwargs={'site_id': self.kwargs['site_id']})
         self.experiment = experiment
@@ -532,7 +536,7 @@ class SampleView(PermissionRequiredMixin, FormView):
                 'experiment_name': sample.site_visit.site.experiment.name,
                 'image_upload_url': reverse('samples:specimen-image-upload', kwargs={'sample_id': sample.id}),
                 'csrf_token': get_token(self.request)
-                }),
+            }),
             'form_action_url': reverse(
                 'samples:sample', kwargs={'sample_id': sample.id})
         })
@@ -578,8 +582,8 @@ def specimen_image_upload(request, sample_id):
         if form.is_valid():
             data = form.cleaned_data
             specimen = Specimen.objects.create(
-                        sample=sample,
-                        created_by_user=request.user)
+                sample=sample,
+                created_by_user=request.user)
             SpecimenImage.objects.create(
                 specimen=specimen,
                 image=data['image'],

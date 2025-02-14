@@ -46,6 +46,8 @@ class Experiment(Model):
     archived = CharField(max_length=3000, blank=True)
     last_exported_file = FileField(max_length=100, upload_to='experiment/exported_data/', null=True, blank=True)
     exported_file_status = CharField(max_length=40, null=True, blank=True)
+    last_exported_file = FileField(max_length=100, upload_to='experiment/exported_data/', null=True, blank=True)
+    exported_file_status = CharField(max_length=40, null=True, blank=True)
 
     objects = ExperimentManager()
 
@@ -294,6 +296,7 @@ class SpecimenImage(Model):
     multispecimen_image_index = PositiveSmallIntegerField(null=True)
     primary_image = BooleanField(default=False)
     public_image = BooleanField(default=False)
+    downloaded_image = BooleanField(default=False)
     image = ImageField(upload_to='specimen_images')
     image_thumbnail = ImageField(null=True, blank=True, upload_to='specimen_images')
     image_thumbnail_medium = ImageField(null=True, blank=True, upload_to='specimen_images')
