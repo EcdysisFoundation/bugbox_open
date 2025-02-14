@@ -2,6 +2,7 @@ import boto3
 from django.apps import apps
 from django.conf import settings
 from django.core.management.base import BaseCommand
+from django.db.models import Q
 
 from ....libs.utilities import save_specimen_img_thumbs
 from ....samples import constants
@@ -38,6 +39,14 @@ class Command(BaseCommand):
         org_ids = [v[0] for v in self.public_data_orgs]
         org_names = [v[1] for v in self.public_data_orgs]
 
+        # check for missing thumbnails first, since there should be very few
+        imgs_missing_thumbs = self.SpecimenImage.objects.filter(
+            Q(image_thumbnail='') | Q(image_thumbnail_medium='') | Q(image_thumbnail_large='')
+        )
+        for i in imgs_missing_thumbs:
+            # check for thumbnails and save them if they dont exist.
+            save_specimen_img_thumbs(i)
+
         specimen_images = self.SpecimenImage.objects.filter(
             specimen__sample__site_visit__site__experiment__organization_id__in=org_ids,
             specimen__sample__site_visit__site__experiment__organization__name__in=org_names,
@@ -54,8 +63,6 @@ class Command(BaseCommand):
         thecount = 0
         theincrement = range(0, 100000, 1000)
         for s in specimen_images:
-            # check for thumbnails and save them if they dont exist.
-            save_specimen_img_thumbs(s)
             for file in self.image_files:
                 s3_client.put_object_acl(
                     Bucket=settings.AWS_STORAGE_BUCKET_NAME_MEDIA,
