@@ -410,6 +410,7 @@ EXPERIMENT_CSV_EXPORT_CHOICES = (
         " Specimens are classified according to AI identifications"
     ),
 )
+EXP_CSV_TYPE_FAMILY = 'family'
 
 EXPERIMENT_CSV_EXPORT_TYPES = [v[0] for v in EXPERIMENT_CSV_EXPORT_CHOICES]
 

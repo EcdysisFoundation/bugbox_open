@@ -34,6 +34,7 @@ class Morphospecies(Model):
     image = ImageField(upload_to='morpho_images/', null=True, blank=True)
     image_thumbnail = ImageField(upload_to='morpho_images/', null=True, blank=True)
     update_thumbs = BooleanField(null=True)
+    exclude_from_export = BooleanField(default=False)
 
     def __str__(self):
         return str(self.name)

@@ -1,28 +1,28 @@
-import csv
-import time
-from io import StringIO
-
 from celery import shared_task
+from django.apps import apps
+from django.conf import settings
+from . import constants
+from .models import Site, Experiment, Sample
+from ..taxonomy.utils import get_skip_morphospecies_ids
+from ..taxonomy.models import Morphospecies
+from .calculations import get_indices
+import time
+import csv
+import os
+from django.core.files.storage import default_storage
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
+from io import StringIO
 
-from ..taxonomy.models import Morphospecies
-from ..taxonomy.utils import get_skip_morphospecies_ids
-from . import constants
-from .calculations import get_indices
-from .models import Experiment, Sample, Site
 
 User = get_user_model()
 
 
-@shared_task
-def export_csv(
-    user_id, experiment_id, indices,
-    export_type, sample_types, include_skip_morph,
-    sites, other_experiments
-):
+@shared_task(soft_time_limit=500)
+def export_csv(user_id, experiment_id, indices, export_type, sample_types, include_skip_morph, sites, other_experiments, level):
     user = User.objects.get(pk=user_id)
     experiment = Experiment.objects.user_access(user).get(id=experiment_id)
+
 
     indices = [v for v in indices if v in constants.INDICES_CHOICES_ALL]
     export_type = export_type if export_type in constants.EXPERIMENT_CSV_EXPORT_TYPES else None
@@ -80,6 +80,7 @@ def export_csv(
                 constants.EXP_HEAD_ARR_SAMPLE_COMPLETED: sample.completed,
                 unknown_species: 0  # starting count
             }
+            family_data = {}
             for specimen in specimens.all():
                 if export_type == constants.EXP_CSV_TYPE_AI:
                     morphospecies_id = specimen.ai_classification_id
@@ -96,22 +97,30 @@ def export_csv(
                         morphospecies_id = specimen.ai_classification_id
                 if morphospecies_id:
                     morpho = Morphospecies.objects.get(id=morphospecies_id)
+                    if morpho.exclude_from_export:
+                        print(f"Excluded from export: {morpho}")
+                        continue
                     name = morpho.name
-                    morpho_headers[0][name] = morpho.gbif_order
-                    morpho_headers[1][name] = morpho.gbif_family
-                    morpho_headers[2][name] = morpho.gbif_species if morpho.gbif_species else morpho.gbif_genus
+                    family = morpho.gbif_family
                 else:
                     name = unknown_species
-                    morpho_headers[0][name] = ''
-                    morpho_headers[1][name] = ''
-                    morpho_headers[2][name] = ''
+                    family = unknown_species
                 all_species.add(name)
                 total = 1 + specimen.partial_count
-                if name in row.keys():
-                    row[name] += total
+                if level == constants.EXP_CSV_TYPE_FAMILY:
+                    if family in family_data:
+                        family_data[family] += total
+                    else:
+                        family_data[family] = total
                 else:
-                    row[name] = total
+                    if name in row.keys():
+                        row[name] += total
+                    else:
+                        row[name] = total
                 n += 1 + specimen.partial_count
+            if level == constants.EXP_CSV_TYPE_FAMILY:
+                for family, count in family_data.items():
+                    row[family] = count
             if indices:
                 indice_results = get_indices(n, row, headers_arr)
                 for i in indices:
@@ -133,11 +142,14 @@ def export_csv(
 
     # Use StringIO for in-memory CSV content
     csv_buffer = StringIO()
-
-    # Write CSV content to the buffer
-    writer = csv.DictWriter(csv_buffer, headers_arr + [unknown_species] + sorted(list(all_species)), 0)
+    if level == constants.EXP_CSV_TYPE_FAMILY:
+        headers = headers_arr + [unknown_species] + sorted(family_data.keys())
+    else:
+        headers = headers_arr + [unknown_species] + sorted(list(all_species))
+    writer = csv.DictWriter(csv_buffer, headers, 0)
     writer.writeheader()
-    writer.writerows(morpho_headers)
+    if level != constants.EXP_CSV_TYPE_FAMILY:
+        writer.writerows(morpho_headers)
     writer.writerows(rows)
 
     # Save the CSV content to the storage
