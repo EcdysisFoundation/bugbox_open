@@ -350,7 +350,8 @@ class CollectionDatatablesSerializer(ModelSerializer):
                 'gbif_family': value.classification.gbif_family,
                 'species': value.classification.gbif_species
                 if value.classification.gbif_species
-                else value.classification.gbif_genus + ' spp.',
+                else value.classification.gbif_genus + ' spp.'
+                if value.classification.gbif_genus else '',
             },
             'details': {
                 'visit_date': value.sample.site_visit.visit_date,
