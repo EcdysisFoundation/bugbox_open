@@ -20,7 +20,7 @@ from organizations.models import Organization
 
 from ..core import constants as geo_constants
 from ..core.models import UsCountiesTigerLine
-from ..libs.utilities import resized_thumbnail
+from ..libs.utilities import resized_thumbnail, save_specimen_img_thumbs
 from ..taxonomy.models import Morphospecies
 from ..taxonomy.tasks import id_image
 from . import constants
@@ -322,28 +322,7 @@ def ensure_single_true_flag(sender, instance, **kwargs):
 def save_specimen_image_thumbnail(instance, created, **kwargs):
     # Can only create and delete SpecimenImage image files through UI.
     if created and instance.image:
-        a = BytesIO()
-        b = BytesIO()
-        c = BytesIO()
-        instance.image_thumbnail = resized_thumbnail(
-            instance.image,
-            constants.SPECIMEN_IMAGE_THUMBSIZE,
-            constants.SPECIMEN_IMAGE_THUMBSIZE,
-            a)
-        instance.image_thumbnail_medium = resized_thumbnail(
-            instance.image,
-            constants.SPECIMEN_IMAGE_THUMBSIZE_MEDIUM,
-            constants.SPECIMEN_IMAGE_THUMBSIZE_MEDIUM,
-            b, 'thumbnail_medium')
-        instance.image_thumbnail_large = resized_thumbnail(
-            instance.image,
-            constants.SPECIMEN_IMAGE_THUMBSIZE_LARGE,
-            constants.SPECIMEN_IMAGE_THUMBSIZE_LARGE,
-            c, 'thumbnail_large')
-        instance.save()
-        a.close()
-        b.close()
-        c.close()
+        save_specimen_img_thumbs(instance)
 
 
 @receiver(post_save, sender=SpecimenImage)

@@ -125,6 +125,10 @@ Open the logs, ctrl-c to escape
 
     docker compose -f local-cloud.yml logs --tail=1000 --follow
 
+### Special power outage start up info on Ecdysis01.
+
+If there is a power outage, or the Ecdysis01 server otherwise is restarted, the app has to be restarted there, starting with the Torchserve first, so that bugbox app doesnt generate a bunch of errors when it first comes up and finds that it cannot connect to Torchserve. See section below on starting Torchserve, waiting till it is full accessible to the bring up bugbox. Clear the docker network first with `docker compose -f local-cloud.yml down` then bring the containers back with `--no-build -d` as explained above, afer Torchserve fully starts.
+
 
 ## Torchserve
 

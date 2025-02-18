@@ -120,9 +120,9 @@ def public_images_export(org_id):
 
     # headers and values query columns are the same
     export_headers = ['id', 'specimen_id', constants.SPECIMEN_IMAGE_IMAGE_THUMBNAIL_LARGE]
-    export_headers = ['specimen__' +
-                      v for v in [constants.FIELD_SPECIMEN_ARCHIVAL_IDENTIFIER,
-                                  constants.FIELD_SPECIMEN_ARCHIVAL_STORED]]
+    export_headers += ['specimen__' +
+                       v for v in [constants.FIELD_SPECIMEN_ARCHIVAL_IDENTIFIER,
+                                   constants.FIELD_SPECIMEN_ARCHIVAL_STORED]]
     export_headers += ['specimen__sample__site_visit__' +
                        v for v in [constants.FIELD_SITE_VISIT_DATE]]
     export_headers += ['specimen__sample__site_visit__site__' +
