@@ -6,8 +6,6 @@ from django.utils.translation import gettext_lazy as _
 
 from bugbox3.users.forms import UserAdminChangeForm, UserAdminCreationForm
 
-from .models import Eula
-
 User = get_user_model()
 
 if settings.DJANGO_ADMIN_FORCE_ALLAUTH:
@@ -39,13 +37,3 @@ class UserAdmin(auth_admin.UserAdmin):
     )
     list_display = ["username", "name", "is_superuser"]
     search_fields = ["name"]
-
-
-@admin.register(Eula)
-class EulaAdmin(admin.ModelAdmin):
-    """
-    Admin for the EULA model.
-    """
-    list_display = [
-        'timestamp', 'eula_text'
-    ]

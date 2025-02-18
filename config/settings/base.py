@@ -148,7 +148,6 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "allauth.account.middleware.AccountMiddleware",
-    "bugbox3.core.eula_middleware.EULAMiddleware",
 ]
 
 REST_FRAMEWORK = {
@@ -330,7 +329,7 @@ WEBPACK_LOADER = {
     }
 }
 
-DATA_UPLOAD_MAX_NUMBER_FILES = 2000
+DATA_UPLOAD_MAX_NUMBER_FILES = 400
 
 # AWS S3
 # ------------------------------------------------------------------------------
@@ -366,3 +365,5 @@ AWS_S3_REGION_NAME = env("DJANGO_AWS_S3_REGION_NAME", default=None)
 # ------------------------------------------------------------------------------
 LABEL_STUDIO_URL = 'http://localhost:8090'
 LABEL_STUDIO_DEFAULT_URL = 'http://localhost:8090'
+
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 2000

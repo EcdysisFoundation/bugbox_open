@@ -7,7 +7,6 @@ django-celery-beat==2.7.0  # https://github.com/celery/django-celery-beat
 flower==2.0.1  # https://github.com/mher/flower
 psycopg[c]==3.2.3  # https://github.com/psycopg/psycopg
 requests==2.32.2
-markdown==3.7
 
 # Django
 # ------------------------------------------------------------------------------

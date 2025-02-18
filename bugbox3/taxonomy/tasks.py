@@ -88,7 +88,8 @@ def run_update_classifications():
 
 
 # only run on Ecdysis01
+# will need replaced to be specific to Ecdysis data when more orgs exist
 @shared_task
 def run_s3_media_download():
     if settings.ON_ECDYSIS_SERVER == 'YES':
-        call_command('s3_download_images')
+        call_command('bash_script', 's3_media_download.sh')
