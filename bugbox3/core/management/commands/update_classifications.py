@@ -32,7 +32,6 @@ class Command(BaseCommand):
                 has_images=Exists(self.SpecimenImage.objects.filter(
                     specimen=OuterRef('pk'),
                     image_notfound=False))).filter(
-                ai_classification__isnull=True,
                 acceptance=0,
                 has_images=True
             ).exclude(ai_model_name=current_model_name)[:recs]

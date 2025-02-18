@@ -148,6 +148,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "allauth.account.middleware.AccountMiddleware",
+    "bugbox3.core.eula_middleware.EULAMiddleware",
 ]
 
 REST_FRAMEWORK = {
