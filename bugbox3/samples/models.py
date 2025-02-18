@@ -10,9 +10,9 @@ from django.core.validators import MaxValueValidator
 from django.db import transaction
 from django.db.models import (CASCADE, SET_NULL, BooleanField, CharField,
                               DateField, DateTimeField, DecimalField,
-                              FileField, ForeignKey, ImageField, JSONField,
-                              Manager, Model, PositiveIntegerField,
-                              PositiveSmallIntegerField, SlugField, TextField,
+                              ForeignKey, ImageField, JSONField, Manager,
+                              Model, PositiveIntegerField,
+                              PositiveSmallIntegerField, SlugField, TextField, FileField, 
                               UUIDField)
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver

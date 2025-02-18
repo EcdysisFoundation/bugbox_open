@@ -62,7 +62,8 @@ class MorphospeciesUpdateForm(MorphospeciesFormMixin):
                 Column(constants.FIELD_MORPHO_GBIF_SPECIES),
             ),
             Field(constants.FIELD_MORPHO_NOTE),
-            Field(constants.FIELD_MORPHO_IMAGE)
+            Field(constants.FIELD_MORPHO_IMAGE),
+            Field(constants.FIELD_MORPHO_EXCLUDE)
         ]
 
 

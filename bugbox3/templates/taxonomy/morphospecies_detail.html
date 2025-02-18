@@ -90,6 +90,7 @@
                                 <li class="list-group-item d-flex justify-content-between align-items-start"><b>Subfamily:</b> {{ morphospecies.subfamily }}</li>
                                 <li class="list-group-item d-flex justify-content-between align-items-start"><b>Genus:</b> {{ morphospecies.gbif_genus }}</li>
                                 <li class="list-group-item d-flex justify-content-between align-items-start"><b>Species:</b> <i>{{ morphospecies.gbif_species }}</i></li>
+                                <li class="list-group-item d-flex justify-content-between align-items-start"><b>Exclude:</b> <i>{% if morphospecies.exclude_from_export %}Yes{% else %}No{% endif %}</i></li>
                                 <hr/>
                                     <li class="list-group-item"><b>specimens</b></li>
                                 <li class="list-group-item">
