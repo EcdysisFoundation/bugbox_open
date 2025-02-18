@@ -86,7 +86,7 @@ def resized_thumbnail(image, width, height, buffer, thumbname='thumbnail'):
                 # return the new resized
                 return file_object
         except Exception:
-            print('Warning: Exception encountered for file {}'.format(image.path))
+            print('Warning: Exception encountered for file {0}'.format(image.name))
     else:
         return None
 

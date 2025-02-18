@@ -1,28 +1,26 @@
-from celery import shared_task
-from django.apps import apps
-from django.conf import settings
-from . import constants
-from .models import Site, Experiment, Sample
-from ..taxonomy.utils import get_skip_morphospecies_ids
-from ..taxonomy.models import Morphospecies
-from .calculations import get_indices
-import time
 import csv
-import os
-from django.core.files.storage import default_storage
-from django.contrib.auth import get_user_model
-from django.core.files.base import ContentFile
+import time
 from io import StringIO
 
+from celery import shared_task
+from django.contrib.auth import get_user_model
+from django.core.files.base import ContentFile
+
+from ..taxonomy.models import Morphospecies
+from ..taxonomy.utils import get_skip_morphospecies_ids
+from . import constants
+from .calculations import get_indices
+from .models import Experiment, Sample, Site
 
 User = get_user_model()
 
 
 @shared_task(soft_time_limit=500)
-def export_csv(user_id, experiment_id, indices, export_type, sample_types, include_skip_morph, sites, other_experiments, level):
+def export_csv(
+        user_id, experiment_id, indices, export_type, sample_types,
+        include_skip_morph, sites, other_experiments, level):
     user = User.objects.get(pk=user_id)
     experiment = Experiment.objects.user_access(user).get(id=experiment_id)
-
 
     indices = [v for v in indices if v in constants.INDICES_CHOICES_ALL]
     export_type = export_type if export_type in constants.EXPERIMENT_CSV_EXPORT_TYPES else None

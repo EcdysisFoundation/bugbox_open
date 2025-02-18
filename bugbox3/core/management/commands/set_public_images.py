@@ -1,4 +1,5 @@
 import boto3
+import botocore
 from django.apps import apps
 from django.conf import settings
 from django.core.management.base import BaseCommand
@@ -64,11 +65,18 @@ class Command(BaseCommand):
         theincrement = range(0, 100000, 1000)
         for s in specimen_images:
             for file in self.image_files:
-                s3_client.put_object_acl(
-                    Bucket=settings.AWS_STORAGE_BUCKET_NAME_MEDIA,
-                    Key=str(getattr(s, file)),
-                    ACL='public-read'
-                )
+                key = str(getattr(s, file))
+                if key:
+                    try:
+                        s3_client.put_object_acl(
+                            Bucket=settings.AWS_STORAGE_BUCKET_NAME_MEDIA,
+                            Key=key,
+                            ACL='public-read'
+                        )
+                    except botocore.exceptions.ClientError as error:
+                        print(s.id)
+                        raise error
+
             s.public_image = True
             s.save()
 
