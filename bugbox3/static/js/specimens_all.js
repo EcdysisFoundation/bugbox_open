@@ -136,7 +136,7 @@ function formatColDiv (col) {
 
 function get_archival (row) {
     if (row.archival_identifier) {
-        return `${row.archival_identifier}<br/>${row.archival_preservation}<br/>${row.archival_stored}`
+        return `${row.archival_identifier}<br/>${row.archival_stored}`
     } else {
         return ''
     }

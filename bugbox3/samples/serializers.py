@@ -287,7 +287,6 @@ class SpecimensAllDatatablesSerializer(ModelSerializer):
             img_thumbnail = get_img_src(False)
         return {
             'archival_identifier': value.archival_identifier,
-            'archival_preservation': value.archival_preservation,
             'archival_stored': value.archival_stored,
             'img_thumbnail': img_thumbnail,
             'img_thumbnail_large': img_thumbnail_large,
