@@ -487,7 +487,7 @@ class SampleView(PermissionRequiredMixin, FormView):
         if not has_data:
             if Specimen.objects.filter(sample_id=sample.id).first():
                 has_data = True
-        d_none = 'd-none' if not settings.AI_INFERENCE_URL else ''
+        d_none = ' d-none' if not settings.AI_INFERENCE_URL else ''
         classify_btn = '<a href="{0}"'.format(
             reverse('taxonomy:classify-sample', kwargs={'id': sample.id})) + \
             ' class="btn btn-sm btn-outline-danger{0}"'.format(d_none) + \

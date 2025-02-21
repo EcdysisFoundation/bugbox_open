@@ -95,12 +95,13 @@ def experiment_csv(request, id):
         other_experiments = request.POST.getlist('otherExperiments2')
         level = request.POST.get('level', None)
 
-        export_csv.delay(request.user.pk, id, indices, export_type, sample_types, include_skip_morph, sites, other_experiments, level)
+        export_csv.delay(
+            request.user.pk, id, indices, export_type, sample_types,
+            include_skip_morph, sites, other_experiments, level)
 
         return redirect('samples:experiment', experiment_id=id)
 
     raise Http404
-
 
 
 PUBLIC_IMAGES_EXPORT_TITLE = 'public-images-exp'
