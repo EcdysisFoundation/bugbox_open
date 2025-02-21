@@ -132,7 +132,7 @@ class SpecimensAllDatatablesViewSet(PermissionRequiredMixin, DatatablesModelView
         archival = self.request.query_params.get('archival')
         if archival:
             specimen = specimen.exclude(
-                archival_identifier__isnull=True,
+                archival_identifier='',
                 archival_preservation='',
                 archival_stored=''
             )
@@ -192,7 +192,7 @@ class CollectionDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelView
         archival = self.request.query_params.get('archival')
         if archival:
             specimen = specimen.exclude(
-                archival_identifier__isnull=True,
+                archival_identifier='',
                 archival_stored=''
             )
         taxon_filter = self.request.query_params.get('taxon')
