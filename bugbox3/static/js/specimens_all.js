@@ -167,7 +167,7 @@ function getRow ( data, type, row ) {
         row.specimen_context
     )
     // classification
-    cols += formatColDiv(row.classification_name)
+    cols += formatColDiv(`${row.classification_name}<br/>${row.gbif_canonical_name}`)
 
     // ai_classification
     cols += formatColDiv(row.ai_classification)
