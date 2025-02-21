@@ -192,25 +192,27 @@ def get_probability(specimen):
         return ''
 
 
+def get_version(specimen):
+    if specimen.ai_model_name:
+        return 'MorphoMF v' + specimen.ai_model_name
+    return ''
+
+
 def get_probability_or_user(specimen):
     if specimen.acceptance == constants.ACCEPTANCE_REJECTED or (
             specimen.classification and not specimen.ai_classification):
         return '<span class="badge text-bg-success">{0}</span>'.format(specimen.reviewer_user)
     else:
-        version = '<p>{0}</p>'.format(specimen.ai_model_name) if specimen.ai_model_name else ''
-        return '{0}{1}'.format(get_probability(specimen), version)
+        return '{0}{1}'.format(get_probability(specimen), get_version(specimen))
 
 
 def get_ai_classification(specimen):
     if not specimen.ai_classification:
         return ''
-    version = ''
-    if specimen.ai_model_name:
-        version = specimen.ai_model_name
-    return '<p>{0} {1}{2}</p>'.format(
+    return '<p>{0}{1}{2}</p>'.format(
         specimen.ai_classification.name,
         get_probability(specimen),
-        version)
+        get_version(specimen))
 
 
 def get_specimen_context(specimen):
