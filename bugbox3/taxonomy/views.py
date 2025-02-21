@@ -66,11 +66,12 @@ class MorphospeciesPickerViewSet(PermissionRequiredMixin, DatatablesModelViewSet
     )
 
     def get_queryset(self):
+        morphospecies = Morphospecies.objects.filter(defunt_date__isnull=True)
         if self.request.query_params.get('first_filter'):
             gbif_rank = self.request.query_params.get('first_filter')
             if gbif_rank in constants.GBIF_RANK_VALUES:
-                return Morphospecies.objects.filter(gbif_rank=gbif_rank).order_by(constants.FIELD_MORPHO_NAME)
-        return Morphospecies.objects.all().order_by(constants.FIELD_MORPHO_NAME)
+                return morphospecies.filter(gbif_rank=gbif_rank).order_by(constants.FIELD_MORPHO_NAME)
+        return morphospecies.order_by(constants.FIELD_MORPHO_NAME)
 
 
 class MophospeciesView(PermissionRequiredMixin, TemplateView):

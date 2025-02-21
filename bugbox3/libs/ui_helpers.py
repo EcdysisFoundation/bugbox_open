@@ -3,6 +3,7 @@ from django.core.files.storage import default_storage
 from django.urls import reverse
 
 from bugbox3.samples import constants
+from bugbox3.taxonomy import constants as constants_tax
 
 from .utilities import get_media_url
 
@@ -159,13 +160,22 @@ def classify_specimen_button(specimen, img_exists):
            'class="btn btn-sm btn-outline-danger{0}">Classify</a>'.format(disabled)
 
 
+def get_canonical_name(moprhospecies):
+    if moprhospecies.gbif_rank == constants_tax.GBIF_RANK_SPECIES:
+        return '<i>{0}</i>'.format(moprhospecies.gbif_canonical_name)
+    return moprhospecies.gbif_canonical_name
+
+
 def get_classifcation(specimen):
     if specimen.acceptance and specimen.classification:
-        return specimen.classification.name
+        return '{0}<br/>{1}'.format(
+            specimen.classification.name, get_canonical_name(specimen.classification))
     elif specimen.classification and not specimen.ai_classification:
-        return specimen.classification.name
+        return '{0}<br/>{1}'.format(
+            specimen.classification.name, get_canonical_name(specimen.classification))
     elif specimen.acceptance != constants.ACCEPTANCE_REJECTED and specimen.ai_classification:
-        return specimen.ai_classification.name
+        return '{0}<br/>{1}'.format(
+            specimen.ai_classification.name, get_canonical_name(specimen.ai_classification))
     elif specimen.specimenimage_set.first() and specimen.acceptance == constants.ACCEPTANCE_PENDING:
         return constants.ACCEPTANCE_LOOKUP[specimen.acceptance]
     elif specimen.specimenimage_set.first() and specimen.acceptance == constants.ACCEPTANCE_REJECTED:
@@ -192,25 +202,39 @@ def get_probability(specimen):
         return ''
 
 
+def get_version(specimen):
+    if specimen.ai_model_name:
+        return 'MorphoMF v' + specimen.ai_model_name
+    return ''
+
+
 def get_probability_or_user(specimen):
     if specimen.acceptance == constants.ACCEPTANCE_REJECTED or (
             specimen.classification and not specimen.ai_classification):
         return '<span class="badge text-bg-success">{0}</span>'.format(specimen.reviewer_user)
     else:
-        version = '<p>{0}</p>'.format(specimen.ai_model_name) if specimen.ai_model_name else ''
-        return '{0}{1}'.format(get_probability(specimen), version)
+        return '{0}{1}'.format(get_probability(specimen), get_version(specimen))
 
 
 def get_ai_classification(specimen):
     if not specimen.ai_classification:
         return ''
-    version = ''
-    if specimen.ai_model_name:
-        version = specimen.ai_model_name
-    return '<p>{0} {1}{2}</p>'.format(
+    return '<p>{0}<br/>{1}{2}{3}</p>'.format(
         specimen.ai_classification.name,
+        get_canonical_name(specimen.ai_classification),
         get_probability(specimen),
-        version)
+        get_version(specimen))
+
+
+def get_sample_discription(sample):
+    lim = 35
+    x = '{0}, {1}, {2}'.format(
+        sample.name_no,
+        sample.site_visit.site.site_name,
+        sample.sample_type)
+    if len(x) > lim:
+        x = x[:lim] + '...'
+    return x
 
 
 def get_specimen_context(specimen):
@@ -225,7 +249,7 @@ def get_specimen_context(specimen):
     s = '<a href="{0}" target="_blank">{1}</a>'.format(
          reverse('samples:sample', kwargs={
                  'sample_id': specimen.sample.id}),
-         specimen.sample.name_no
+         get_sample_discription(specimen.sample)
     )
     return '{0}<br/>{1}<br/>{2}'.format(
         e, specimen.sample.site_visit.visit_date.strftime("%d-%b-%Y"), s
