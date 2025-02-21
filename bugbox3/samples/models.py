@@ -267,7 +267,7 @@ class Specimen(Model):
     optional_pred_two = JSONField(default=None, null=True, blank=True)
     tags = ArrayField(CharField(max_length=1000, blank=True), default=list)
     acceptance = PositiveSmallIntegerField(choices=constants.ACCEPTANCE_CHOICES, blank=True, default=0)
-    archival_identifier = CharField(max_length=1000, null=True, unique=True, default=None)
+    archival_identifier = CharField(max_length=1000, blank=True)
     archival_preservation = CharField(max_length=100, blank=True)
     archival_stored = CharField(max_length=100, blank=True)
     object_det_train = BooleanField(default=False)
