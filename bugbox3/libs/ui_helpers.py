@@ -226,6 +226,17 @@ def get_ai_classification(specimen):
         get_version(specimen))
 
 
+def get_sample_discription(sample):
+    lim = 35
+    x = '{0}, {1}, {2}'.format(
+        sample.name_no,
+        sample.site_visit.site.site_name,
+        sample.sample_type)
+    if len(x) > lim:
+        x = x[:lim] + '...'
+    return x
+
+
 def get_specimen_context(specimen):
     """
     Get a description with links of the specimen context for display as html.
@@ -238,7 +249,7 @@ def get_specimen_context(specimen):
     s = '<a href="{0}" target="_blank">{1}</a>'.format(
          reverse('samples:sample', kwargs={
                  'sample_id': specimen.sample.id}),
-         specimen.sample.name_no
+         get_sample_discription(specimen.sample)
     )
     return '{0}<br/>{1}<br/>{2}'.format(
         e, specimen.sample.site_visit.visit_date.strftime("%d-%b-%Y"), s
