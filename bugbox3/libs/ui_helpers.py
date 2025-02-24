@@ -229,9 +229,9 @@ def get_ai_classification(specimen):
 def get_sample_discription(sample):
     lim = 35
     x = '{0}, {1}, {2}'.format(
-        sample.name_no,
         sample.site_visit.site.site_name,
-        sample.sample_type)
+        sample.sample_type,
+        sample.name_no)
     if len(x) > lim:
         x = x[:lim] + '...'
     return x
