@@ -3,8 +3,6 @@ import json
 import subprocess
 import boto3  # requires local install
 
-
-import subprocess
 import platform
 
 
