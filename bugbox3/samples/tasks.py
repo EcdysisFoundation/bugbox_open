@@ -2,6 +2,10 @@ import csv
 import time
 from io import StringIO
 
+import csv
+import time
+from io import StringIO
+
 from celery import shared_task
 from django.apps import apps
 from django.conf import settings

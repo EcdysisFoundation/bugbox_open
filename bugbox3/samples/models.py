@@ -21,6 +21,7 @@ from organizations.models import Organization
 from ..core import constants as geo_constants
 from ..core.models import UsCountiesTigerLine
 from ..libs.utilities import resized_thumbnail, save_specimen_img_thumbs
+from ..libs.utilities import resized_thumbnail, save_specimen_img_thumbs
 from ..taxonomy.models import Morphospecies
 from ..taxonomy.tasks import id_image
 from . import constants
