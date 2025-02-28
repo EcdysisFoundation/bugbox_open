@@ -4,9 +4,14 @@ import subprocess
 import boto3  # requires local install
 
 
+import subprocess
+import platform
+
+
 def run(cmd):
-    output = subprocess.check_output(cmd.split())
-    return output.decode()
+    use_shell = platform.system() == "Windows"
+    output = subprocess.check_output(cmd, shell=use_shell, text=True)
+    return output
 
 
 def download_backup(filename):

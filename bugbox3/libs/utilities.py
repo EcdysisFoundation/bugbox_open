@@ -9,7 +9,7 @@ from django.core.files.storage import default_storage
 from django.core.serializers.json import DjangoJSONEncoder
 from PIL import Image
 
-from ..samples.constants import IMAGE_GRID_CHOICE_4_BY_3
+from ..samples import constants
 
 S3_CLIENT = boto3.client(
         's3',
@@ -86,7 +86,7 @@ def resized_thumbnail(image, width, height, buffer, thumbname='thumbnail'):
                 # return the new resized
                 return file_object
         except Exception:
-            print('Warning: Exception encountered for file {}'.format(image.path))
+            print('Warning: Exception encountered for file {0}'.format(image.name))
     else:
         return None
 
@@ -106,7 +106,7 @@ def crop_img_to_grid(image, grid):
         img_format = IMAGE_TYPES[img_suffix.lower()]
         width, height = image.width, image.height
         with Image.open(image) as img:
-            if grid == IMAGE_GRID_CHOICE_4_BY_3:
+            if grid == constants.IMAGE_GRID_CHOICE_4_BY_3:
                 grid_params = [
                     [0, 0, width * (1/4), height * (1/3)],
                     [width * (1/4), 0, width * (2/4), height * (1/3)],
@@ -140,3 +140,40 @@ def crop_img_to_grid(image, grid):
                 result.append((file_object, i))
             return result
     return None
+
+
+def save_specimen_img_thumbs(instance):
+    """
+    If a thumbnail size doesnt exist, make it.
+    If they all exist, do as little as possible.
+    """
+    a = None
+    b = None
+    c = None
+    if not instance.image_thumbnail:
+        a = BytesIO()
+        instance.image_thumbnail = resized_thumbnail(
+            instance.image,
+            constants.SPECIMEN_IMAGE_THUMBSIZE,
+            constants.SPECIMEN_IMAGE_THUMBSIZE,
+            a)
+    if not instance.image_thumbnail_medium:
+        b = BytesIO()
+        instance.image_thumbnail_medium = resized_thumbnail(
+            instance.image,
+            constants.SPECIMEN_IMAGE_THUMBSIZE_MEDIUM,
+            constants.SPECIMEN_IMAGE_THUMBSIZE_MEDIUM,
+            b, 'thumbnail_medium')
+    if not instance.image_thumbnail_large:
+        c = BytesIO()
+        instance.image_thumbnail_large = resized_thumbnail(
+            instance.image,
+            constants.SPECIMEN_IMAGE_THUMBSIZE_LARGE,
+            constants.SPECIMEN_IMAGE_THUMBSIZE_LARGE,
+            c, 'thumbnail_large')
+    if any((a, b, c)):
+        instance.save()
+        for i in (a, b, c):
+            if i:
+                i.close()
+    return

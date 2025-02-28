@@ -4,10 +4,11 @@ from rest_framework.serializers import ModelSerializer
 
 from ..core.models import LookupChoices
 from ..libs.ui_helpers import (classify_specimen_button, get_ai_classification,
-                               get_classifcation, get_datatables_container,
-                               get_datatables_row, get_img_captioned,
-                               get_img_src, get_probability_or_user,
-                               get_specimen_context, get_specimen_location)
+                               get_canonical_name, get_classifcation,
+                               get_datatables_container, get_datatables_row,
+                               get_img_captioned, get_img_src,
+                               get_probability_or_user, get_specimen_context,
+                               get_specimen_location)
 from ..libs.utilities import get_media_url
 from . import constants
 from .models import (Experiment, MultiSpecimenImage, Sample, SamplePlan, Site,
@@ -287,7 +288,6 @@ class SpecimensAllDatatablesSerializer(ModelSerializer):
             img_thumbnail = get_img_src(False)
         return {
             'archival_identifier': value.archival_identifier,
-            'archival_preservation': value.archival_preservation,
             'archival_stored': value.archival_stored,
             'img_thumbnail': img_thumbnail,
             'img_thumbnail_large': img_thumbnail_large,
@@ -297,6 +297,7 @@ class SpecimensAllDatatablesSerializer(ModelSerializer):
             'ai_classification_name': value.ai_classification.name if value.ai_classification else '',
             'ai_classification': get_ai_classification(value),
             'classification_name': value.classification.name if value.classification else '',
+            'gbif_canonical_name': get_canonical_name(value.classification) if value.classification else '',
             'classification_id': value.classification.id if value.classification else '',
             'view_link': reverse('samples:specimen', kwargs={'id': value.id}),
             'edit_link': reverse('samples:specimen-update', kwargs={'id': value.id}),
@@ -350,7 +351,8 @@ class CollectionDatatablesSerializer(ModelSerializer):
                 'gbif_family': value.classification.gbif_family,
                 'species': value.classification.gbif_species
                 if value.classification.gbif_species
-                else value.classification.gbif_genus + ' spp.',
+                else value.classification.gbif_genus + ' spp.'
+                if value.classification.gbif_genus else '',
             },
             'details': {
                 'visit_date': value.sample.site_visit.visit_date,

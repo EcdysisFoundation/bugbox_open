@@ -170,17 +170,34 @@ MULTIIMAGE_IMAGE_GRID_CHOICES = (
 )
 
 INDICES_CHOICES = (
-    ('abundance', "Abundance"),
-    ('species_richness', "Species Richness"),
+    ('hill_numbers', "Hill Numbers"),
     ('shannons_h', "Shannon's H"),
-    ('simpsons', "Simpson's (1-D)"),
-    ('hill_shannon', "Hill-Shannon"),
-    ('hill_simpson', "Hill-Simpson"),
+    ('simpsons_d', "Simpson's D"),
+    ('simpsons_d_prime', "Simpson’s D’ (Bias-Corrected)"),
+    ('gini_simpson', "Gini-Simpson’s 1-D"),
+    ('chao1', "Chao1 (Bias-Corrected)"),
+    ('absolute_effective_diversity', "Absolute Effective Diversity (AED)"),
 )
 
-INDICES_CHOICES_ALL = [v[0] for v in INDICES_CHOICES]
+INDICES_ALWAYS_INCLUDED = ['abundance', 'species_richness']
+
+INDICES_CHOICES_ALL = INDICES_ALWAYS_INCLUDED + [v[0] for v in INDICES_CHOICES] + ['hill_H0', 'hill_H1', 'hill_H2', 'hill_inf']
 
 INDICES_CHOICES_DICT = {v[0]: v[1] for v in INDICES_CHOICES}
+
+INDICES_DESCRIPTIONS = {
+    'hill_numbers': "Hill numbers are a family of diversity indices that combine species richness and evenness. They include measures like richness, exponential Shannon, and inverse Simpson, providing various ways to express community diversity.",
+    'shannons_h': "Shannon’s H quantifies the uncertainty in predicting the species identity of an individual randomly chosen from the sample, accounting for both species richness and evenness in the distribution of individuals.",
+    'simpsons_d': "Simpson’s D measures the probability that two randomly selected individuals from a sample belong to the same species, with lower value indicating higher diversity",
+    'simpsons_d_prime': "Simpson’s D’ is a bias-corrected version of Simpson’s D, providing a more reliable estimate of diversity by adjusting for biases in smaller samples. (Lower value means higher diversity)",
+    'gini_simpson': "Gini-Simpson’s 1-D index is derived from the Gini coefficient and measures the probability that two individuals from a community will belong to different species, with higher values indicating higher diversity.",
+    'chao1': "Chao1 is an estimator for species richness that accounts for undetected species, providing a more accurate estimate of true species richness, particularly in small or incomplete samples.",
+    'absolute_effective_diversity': "Absolute Effective Diversity (AED) adjusts for unequal sampling efforts and species abundance, emphasizing the actual diversity in an ecosystem without overemphasizing rare or dominant species.",
+    'abundance': "Abundance is the total count of individuals across all species in a community, giving a sense of how populous the ecosystem is, regardless of species types.",
+    'species_richness': "Species richness simply counts how many distinct species are present in a community, giving an idea of the biodiversity, independent of how many individuals each species has."
+}
+
+
 
 # could be used as recomended or starting model choices
 SITE_HABITAT_TYPES = (

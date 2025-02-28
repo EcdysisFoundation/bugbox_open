@@ -12,7 +12,7 @@ from django.db.models import (CASCADE, SET_NULL, BooleanField, CharField,
                               DateField, DateTimeField, DecimalField,
                               ForeignKey, ImageField, JSONField, Manager,
                               Model, PositiveIntegerField,
-                              PositiveSmallIntegerField, SlugField, TextField, FileField, 
+                              PositiveSmallIntegerField, SlugField, TextField, FileField,
                               UUIDField)
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
@@ -20,7 +20,7 @@ from organizations.models import Organization
 
 from ..core import constants as geo_constants
 from ..core.models import UsCountiesTigerLine
-from ..libs.utilities import resized_thumbnail
+from ..libs.utilities import resized_thumbnail, save_specimen_img_thumbs
 from ..taxonomy.models import Morphospecies
 from ..taxonomy.tasks import id_image
 from . import constants
@@ -44,13 +44,22 @@ class Experiment(Model):
     completed = BooleanField(default=False)
     summary = TextField(null=True, blank=True)
     archived = CharField(max_length=3000, blank=True)
-    last_exported_file = FileField(max_length=100, upload_to='experiment/exported_data/', null=True, blank=True)
-    exported_file_status = CharField(max_length=40, null=True, blank=True)
 
     objects = ExperimentManager()
 
     def __str__(self):
         return f'{self.name}'
+
+
+class UserExperimentFile(Model):
+    experiment = ForeignKey(Experiment, on_delete=CASCADE)
+    user = ForeignKey(settings.AUTH_USER_MODEL, on_delete=CASCADE)
+    file = FileField(max_length=100, upload_to='experiment/exported_data/')
+    exported_file_status = CharField(max_length=40, null=True, blank=True)
+    date_uploaded = DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.experiment.name} - {self.user.username}'
 
 
 class SamplePlanManager(Manager):
@@ -267,7 +276,7 @@ class Specimen(Model):
     optional_pred_two = JSONField(default=None, null=True, blank=True)
     tags = ArrayField(CharField(max_length=1000, blank=True), default=list)
     acceptance = PositiveSmallIntegerField(choices=constants.ACCEPTANCE_CHOICES, blank=True, default=0)
-    archival_identifier = CharField(max_length=1000, null=True, unique=True, default=None)
+    archival_identifier = CharField(max_length=1000, blank=True)
     archival_preservation = CharField(max_length=100, blank=True)
     archival_stored = CharField(max_length=100, blank=True)
     object_det_train = BooleanField(default=False)
@@ -322,28 +331,7 @@ def ensure_single_true_flag(sender, instance, **kwargs):
 def save_specimen_image_thumbnail(instance, created, **kwargs):
     # Can only create and delete SpecimenImage image files through UI.
     if created and instance.image:
-        a = BytesIO()
-        b = BytesIO()
-        c = BytesIO()
-        instance.image_thumbnail = resized_thumbnail(
-            instance.image,
-            constants.SPECIMEN_IMAGE_THUMBSIZE,
-            constants.SPECIMEN_IMAGE_THUMBSIZE,
-            a)
-        instance.image_thumbnail_medium = resized_thumbnail(
-            instance.image,
-            constants.SPECIMEN_IMAGE_THUMBSIZE_MEDIUM,
-            constants.SPECIMEN_IMAGE_THUMBSIZE_MEDIUM,
-            b, 'thumbnail_medium')
-        instance.image_thumbnail_large = resized_thumbnail(
-            instance.image,
-            constants.SPECIMEN_IMAGE_THUMBSIZE_LARGE,
-            constants.SPECIMEN_IMAGE_THUMBSIZE_LARGE,
-            c, 'thumbnail_large')
-        instance.save()
-        a.close()
-        b.close()
-        c.close()
+        save_specimen_img_thumbs(instance)
 
 
 @receiver(post_save, sender=SpecimenImage)

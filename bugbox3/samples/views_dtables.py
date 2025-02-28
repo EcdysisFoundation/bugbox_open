@@ -99,11 +99,14 @@ class SpecimensAllDatatablesViewSet(PermissionRequiredMixin, DatatablesModelView
 
     serializer_class = SpecimensAllDatatablesSerializer
     search_vector = [
-        'classification__name',
-        'ai_classification__name',
-        'archival_identifier',
-        'archival_stored'
-    ]
+        'classification__' + v for v in
+        [constants_tax.FIELD_MORPHO_NAME,
+         constants_tax.FIELD_MORPHO_GBIF_CANONICAL_NAME]] + \
+        ['ai_classification__' + v for v in
+         [constants_tax.FIELD_MORPHO_NAME,
+          constants_tax.FIELD_MORPHO_GBIF_CANONICAL_NAME]] + \
+        [constants.FIELD_SPECIMEN_ARCHIVAL_IDENTIFIER,
+         constants.FIELD_SPECIMEN_ARCHIVAL_STORED]
 
     def get_queryset(self):
         specimen = Specimen.objects.user_access(self.request.user)
@@ -132,7 +135,7 @@ class SpecimensAllDatatablesViewSet(PermissionRequiredMixin, DatatablesModelView
         archival = self.request.query_params.get('archival')
         if archival:
             specimen = specimen.exclude(
-                archival_identifier__isnull=True,
+                archival_identifier='',
                 archival_preservation='',
                 archival_stored=''
             )
@@ -192,7 +195,7 @@ class CollectionDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelView
         archival = self.request.query_params.get('archival')
         if archival:
             specimen = specimen.exclude(
-                archival_identifier__isnull=True,
+                archival_identifier='',
                 archival_stored=''
             )
         taxon_filter = self.request.query_params.get('taxon')

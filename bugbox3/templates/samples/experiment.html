@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load render_bundle from webpack_loader %}
+{% load custom_filters %}
 
 {% block title %}
     Experiment
@@ -134,11 +135,13 @@
                     </div>
                     {% for i in indices %}
                         <div class="form-check">
-                            <input class="form-check-input ms-2" id="indices-{{i.0}}" value="{{i.0}}" type="checkbox" name="indices">
-                                <label class="form-check-label ms-2" for="indices-{{i.0}}">{{i.1}}
+                            <input class="form-check-input ms-2" id="indices-{{ i.0 }}" value="{{ i.0 }}" type="checkbox" name="indices">
+                            <label class="form-check-label ms-2" for="indices-{{ i.0 }}" data-bs-toggle="tooltip" title="{{ indices_descriptions|get_item:i.0 }}">
+                                {{ i.1 }}
                             </label>
                         </div>
                     {% endfor %}
+                
                         <h5 class="mt-3">Include other experiments</h5>
                             <input class="form-check-input" id="check-all_otherExperiments2" type="checkbox">
                                 <label class="form-check-label" for="check-all_otherExperiments2">Check All</label>
@@ -266,15 +269,15 @@
         <button class="btn btn-link" data-bs-toggle="modal" data-bs-target="#exportModal2">Export Experiment Data</button>
     </div>
 
-    {% if experiment.exported_file_status == 'pending' %}
+    {% if last_exported_file_status == 'pending' %}
       <div class="col-3">
         Exporting File...
       </div>
-    {% elif experiment.exported_file_status == 'error' %}
+    {% elif last_exported_file_status == 'error' %}
       <div class="col-3">
         Exporting Error
       </div>
-    {% elif experiment.exported_file_status == 'success' %}
+    {% elif last_exported_file_status == 'success' %}
       <div class="col-3">
         <a class="btn btn-link" href="{{last_exported_file}}">Exported File</a>
       </div>

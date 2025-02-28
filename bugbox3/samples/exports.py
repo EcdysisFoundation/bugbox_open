@@ -14,7 +14,7 @@ from ..core.models import Exports
 from ..core.permissions import IS_RESEARCH
 from ..taxonomy import constants as constants_tax
 from . import constants
-from .models import Experiment, Specimen, SpecimenImage
+from .models import Experiment, Specimen, SpecimenImage, UserExperimentFile
 from .tasks import export_csv
 
 
@@ -84,10 +84,17 @@ def experiment_csv(request, id):
         except Experiment.DoesNotExist:
             raise Http404
 
-        experiment.exported_file_status = 'pending'
-        experiment.save()
+        user_experiment_file, created = UserExperimentFile.objects.get_or_create(user=request.user, experiment=experiment)
+        user_experiment_file.exported_file_status = 'pending'
+        user_experiment_file.save()
 
         indices = request.POST.getlist('indices')
+        indices = constants.INDICES_ALWAYS_INCLUDED + [idx for idx in indices if idx not in constants.INDICES_ALWAYS_INCLUDED]
+        # Expand "Hill Numbers" into its four components
+        if 'hill_numbers' in indices:
+            indices.remove('hill_numbers')
+            indices.extend(['hill_H0', 'hill_H1', 'hill_H2', 'hill_inf'])  # Add all four Hill numbers
+        print("Indices being processed in export_csv:", indices)
         export_type = request.POST.get('export-type')
         sample_types = request.POST.getlist('sampleTypes2')
         include_skip_morph = request.POST.get('include_skip_morph')
@@ -95,12 +102,11 @@ def experiment_csv(request, id):
         other_experiments = request.POST.getlist('otherExperiments2')
         level = request.POST.get('level', None)
 
-        export_csv.delay(request.user.pk, id, indices, export_type, sample_types, include_skip_morph, sites, other_experiments, level)
+        export_csv.delay(request.user.pk, id, indices, export_type, sample_types, include_skip_morph, sites, other_experiments)
 
         return redirect('samples:experiment', experiment_id=id)
 
     raise Http404
-
 
 
 PUBLIC_IMAGES_EXPORT_TITLE = 'public-images-exp'
@@ -120,9 +126,9 @@ def public_images_export(org_id):
 
     # headers and values query columns are the same
     export_headers = ['id', 'specimen_id', constants.SPECIMEN_IMAGE_IMAGE_THUMBNAIL_LARGE]
-    export_headers = ['specimen__' +
-                      v for v in [constants.FIELD_SPECIMEN_ARCHIVAL_IDENTIFIER,
-                                  constants.FIELD_SPECIMEN_ARCHIVAL_STORED]]
+    export_headers += ['specimen__' +
+                       v for v in [constants.FIELD_SPECIMEN_ARCHIVAL_IDENTIFIER,
+                                   constants.FIELD_SPECIMEN_ARCHIVAL_STORED]]
     export_headers += ['specimen__sample__site_visit__' +
                        v for v in [constants.FIELD_SITE_VISIT_DATE]]
     export_headers += ['specimen__sample__site_visit__site__' +
