@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Lookup Choices
+{% endblock title %}
+
+{% block content %}
+
+<div class="container">
+    <div class="row">
+        <div class="col">
+
+            <div class="card bg-light mt-3">
+                <div class="card-body">
+                  <h5 class="card-title">Member list</h5>
+                  <h6 class="card-subtitle mb-2 text-body-secondary">view and delete</h6>
+                  <p class="card-text">
+                    Here you can view the member entries for the organization. Members can be removed from the organization by an administrator, if they are not also an administrator.
+                    A removed, or deleted, member can no longer access the organization, but their entered data will remain. To add new members, please contact Ecdysis Foundation.
+                  </p>
+
+                  <div class="dropdown mt-3">
+                    <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                     Organization: {{ selected_org_name }}
+                    </button>
+                    <ul class="dropdown-menu">
+                      {% for org in org_choices %}
+                        <li><a class="dropdown-item" href="{% url 'core:org-members' org.0 %}">{{ org.1 }}</a></li>
+                      {% endfor %}
+                    </ul>
+                  </div>
+                </div>
+
+                <ul class="list-group list-group-flush">
+                    {% for u in users %}
+                        <li class="list-group-item">
+
+                            {% if u.is_admin %}
+                            <a class="btn btn-secondary btn-sm disabled" role="button" aria-disabled="true">Is Admin</a>
+                            {% elif is_admin %}
+                            <a href="{% url 'core:member-delete' u.id selected_org_id %}" class="btn btn-danger btn-sm" tabindex="-1" role="button" aria-disabled="true">Remove</a>
+                            {% endif %}
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                            {{ u.user.username }} {% if u.user.name %}({{ u.user.name }}){% endif %}
+                        </li>
+                    {% endfor %}
+                  </ul>
+
+              </div>
+
+        </div>
+    </div>
+</div>
+
+{% endblock content %}
