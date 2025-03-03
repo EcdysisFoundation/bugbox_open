@@ -44,13 +44,22 @@ class Experiment(Model):
     completed = BooleanField(default=False)
     summary = TextField(null=True, blank=True)
     archived = CharField(max_length=3000, blank=True)
-    last_exported_file = FileField(max_length=100, upload_to='experiment/exported_data/', null=True, blank=True)
-    exported_file_status = CharField(max_length=40, null=True, blank=True)
 
     objects = ExperimentManager()
 
     def __str__(self):
         return f'{self.name}'
+
+
+class UserExperimentFile(Model):
+    experiment = ForeignKey(Experiment, on_delete=CASCADE)
+    user = ForeignKey(settings.AUTH_USER_MODEL, on_delete=CASCADE)
+    file = FileField(max_length=100, upload_to='experiment/exported_data/')
+    exported_file_status = CharField(max_length=40, null=True, blank=True)
+    date_uploaded = DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.experiment.name} - {self.user.username}'
 
 
 class SamplePlanManager(Manager):

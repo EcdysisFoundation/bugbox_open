@@ -90,12 +90,13 @@
                 {% endif %}
                 {% if group.name == 'is_admin' %}
                 <li class="nav-item dropdown">
-                  <a class="nav-link dropdown-toggle" id="navDropExperiments" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  <a class="nav-link dropdown-toggle" id="navDropAdmin" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                     Admin
                   </a>
-                    <ul class="dropdown-menu" aria-labelledby="navDropExperiments">
+                    <ul class="dropdown-menu" aria-labelledby="navDropAdmin">
                       <li><a class="dropdown-item" href="{% url 'core:lookup-choices' 0 %}">Edit Choices</a></li>
-                      </ul>
+                      <li><a class="dropdown-item" href="{% url 'core:org-members' 0 %}">Member List</a></li>
+                    </ul>
                 </li>
                 {% endif %}
               {% endfor %}
