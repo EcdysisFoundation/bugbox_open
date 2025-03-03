@@ -10,9 +10,9 @@ from django.core.validators import MaxValueValidator
 from django.db import transaction
 from django.db.models import (CASCADE, SET_NULL, BooleanField, CharField,
                               DateField, DateTimeField, DecimalField,
-                              ForeignKey, ImageField, JSONField, Manager,
-                              Model, PositiveIntegerField,
-                              PositiveSmallIntegerField, SlugField, TextField, FileField,
+                              FileField, ForeignKey, ImageField, JSONField,
+                              Manager, Model, PositiveIntegerField,
+                              PositiveSmallIntegerField, SlugField, TextField,
                               UUIDField)
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
@@ -20,7 +20,6 @@ from organizations.models import Organization
 
 from ..core import constants as geo_constants
 from ..core.models import UsCountiesTigerLine
-from ..libs.utilities import resized_thumbnail, save_specimen_img_thumbs
 from ..libs.utilities import resized_thumbnail, save_specimen_img_thumbs
 from ..taxonomy.models import Morphospecies
 from ..taxonomy.tasks import id_image

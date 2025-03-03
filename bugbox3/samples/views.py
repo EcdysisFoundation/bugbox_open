@@ -141,7 +141,10 @@ class ExperimentView(PermissionRequiredMixin, TemplateView):
                 {'sites_datatables_url': sites_datatables_url})
         })
 
-        user_experiment_file, created = UserExperimentFile.objects.get_or_create(user=self.request.user, experiment=experiment)
+        user_experiment_file, created = UserExperimentFile.objects.get_or_create(
+            user=self.request.user,
+            experiment=experiment
+        )
 
         print(user_experiment_file.exported_file_status)
 

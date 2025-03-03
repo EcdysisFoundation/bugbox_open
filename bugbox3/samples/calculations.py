@@ -1,5 +1,6 @@
 import math
 
+
 def get_indices(n, row, non_species_keys):
     shannons_h = 0
     simpsons_d = 0
@@ -34,7 +35,6 @@ def get_indices(n, row, non_species_keys):
     hill_numbers['H1'] = math.exp(shannons_h)
     hill_numbers['H2'] = 1 / simpsons_d if simpsons_d else 0
     hill_numbers['H∞'] = n / max_abundance if max_abundance else 0
-
     aed = hill_numbers['H0'] + (hill_numbers['H1'] ** 2) / (2 * hill_numbers['H2'])
 
     return {
@@ -43,11 +43,11 @@ def get_indices(n, row, non_species_keys):
         'shannons_h': shannons_h,
         'simpsons_d': simpsons_d,
         'simpsons_d_prime': simpsons_d_prime,
-        'gini_simpson': gini_simpson,  
+        'gini_simpson': gini_simpson,
         'hill_H0': species_count,
         'hill_H1': math.exp(shannons_h),
         'hill_H2': 1 / simpsons_d if simpsons_d else 0,
         'hill_inf': hill_numbers['H∞'],
         'chao1': species_count + (n1 * (n1 - 1)) / (2 * (n2 + 1)) if n2 > 0 else species_count,
-        'absolute_effective_diversity': aed  
+        'absolute_effective_diversity': aed
     }
