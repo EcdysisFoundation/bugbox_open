@@ -1,7 +1,8 @@
+from django.contrib import messages
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.postgres.search import SearchVector
 from django.core.exceptions import PermissionDenied
-from django.http import Http404
+from django.http import Http404, HttpResponseRedirect
 from django.urls import reverse
 from django.views.generic import TemplateView
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
@@ -248,6 +249,20 @@ class OrgMemberDeleteView(PermissionRequiredMixin, DeleteView):
             'object_description': self.object.user.name
         })
         return context
+
+    def form_valid(self, form):
+        obj = self.get_object()
+        user = obj.user
+        super().form_valid(form)
+        other_memberships = OrganizationUser.objects.filter(
+            user_id=obj.user.id)
+        if not len(other_memberships):
+            # clear all permissions when there are no other memberships
+            user.groups.clear()
+            user.user_permissions.clear()
+        messages.success(
+            self.request, 'Succesfully removed member {0}'.format(user.name))
+        return HttpResponseRedirect(self.get_success_url())
 
     def get_success_url(self):
         return reverse('core:org-members', kwargs={'org_id': self.kwargs['org_id']})
