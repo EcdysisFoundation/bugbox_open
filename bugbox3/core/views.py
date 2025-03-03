@@ -1,5 +1,6 @@
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.postgres.search import SearchVector
+from django.core.exceptions import PermissionDenied
 from django.http import Http404
 from django.urls import reverse
 from django.views.generic import TemplateView
@@ -184,3 +185,69 @@ class LookupChoicesDeleteView(PermissionRequiredMixin, DeleteView):
 
     def get_success_url(self):
         return reverse('core:lookup-choices', kwargs={'org_id': self.object.organization_id})
+
+
+class OrgMembersView(PermissionRequiredMixin, TemplateView):
+
+    permission_required = IS_ADMIN
+
+    template_name = 'core/org_members.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        orgs = OrganizationUser.objects.filter(
+            user=self.request.user).values(
+                'organization_id', 'organization__name').order_by('organization_id')
+        org_choices = [(o['organization_id'], o['organization__name']) for o in orgs]
+        if (self.kwargs['org_id'] not in [o[0] for o in org_choices]
+                and self.kwargs['org_id'] != 0) \
+                or not org_choices:
+            raise Http404
+        if self.kwargs['org_id'] == 0:
+            selected_org_name = org_choices[0][1]
+            selected_org_id = org_choices[0][0]
+        else:
+            selected_org_name = [o[1] for o in org_choices if o[0] == self.kwargs['org_id']][0]
+            selected_org_id = [o[0] for o in org_choices if o[0] == self.kwargs['org_id']][0]
+        users = OrganizationUser.objects.filter(
+            organization_id=selected_org_id).order_by('-is_admin', 'user__username')
+        u = OrganizationUser.objects.get(user_id=self.request.user, organization_id=selected_org_id)
+        context.update({
+            'org_choices': org_choices,
+            'selected_org_name': selected_org_name,
+            'selected_org_id': selected_org_id,
+            'users': users,
+            'is_admin': u.is_admin
+        })
+        return context
+
+
+class OrgMemberDeleteView(PermissionRequiredMixin, DeleteView):
+
+    permission_required = IS_ADMIN
+
+    model = OrganizationUser
+    template_name = 'core/confirm_delete.html'
+
+    def get_object(self, queryset=None):
+        try:
+            u = OrganizationUser.objects.get(user_id=self.request.user, organization_id=self.kwargs['org_id'])
+        except OrganizationUser.DoesNotExist:
+            raise Http404
+        if not u.is_admin:
+            raise PermissionDenied
+        try:
+            return OrganizationUser.objects.get(id=self.kwargs['id'])
+        except OrganizationUser.DoesNotExist:
+            raise Http404
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            'object_name': 'Member',
+            'object_description': self.object.user.name
+        })
+        return context
+
+    def get_success_url(self):
+        return reverse('core:org-members', kwargs={'org_id': self.kwargs['org_id']})
