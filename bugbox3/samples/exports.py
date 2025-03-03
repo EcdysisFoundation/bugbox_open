@@ -92,8 +92,7 @@ def experiment_csv(request, id):
         user_experiment_file.save()
         indices = request.POST.getlist('indices')
         # include abundance and species_richness first.
-        indices = constants.INDICES_ALWAYS_INCLUDED
-        + [idx for idx in indices if idx not in constants.INDICES_ALWAYS_INCLUDED]
+        indices = constants.INDICES_ALWAYS_INCLUDED + [idx for idx in indices if idx not in constants.INDICES_ALWAYS_INCLUDED]
         # Expand "Hill Numbers" into its four components
         if 'hill_numbers' in indices:
             indices.remove('hill_numbers')
