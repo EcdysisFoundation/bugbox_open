@@ -14,7 +14,7 @@ from ..core.models import Exports
 from ..core.permissions import IS_RESEARCH
 from ..taxonomy import constants as constants_tax
 from . import constants
-from .models import Experiment, Specimen, SpecimenImage
+from .models import Experiment, Specimen, SpecimenImage, UserExperimentFile
 from .tasks import export_csv
 
 
@@ -77,27 +77,45 @@ def experiment_ai_csv(request, id):
 
 @permission_required(IS_RESEARCH)
 def experiment_csv(request, id):
-    # get query params and sanitize
     if request.method == 'POST':
         try:
             experiment = Experiment.objects.user_access(request.user).get(id=id)
         except Experiment.DoesNotExist:
             raise Http404
 
-        experiment.exported_file_status = 'pending'
-        experiment.save()
+        user_experiment_file, created = UserExperimentFile.objects.get_or_create(
+            user=request.user,
+            experiment=experiment
+        )
 
+        user_experiment_file.exported_file_status = 'pending'
+        user_experiment_file.save()
         indices = request.POST.getlist('indices')
+        # include abundance and species_richness first.
+        indices = constants.INDICES_ALWAYS_INCLUDED + [idx for idx in indices if idx not in constants.INDICES_ALWAYS_INCLUDED]
+        # Expand "Hill Numbers" into its four components
+        if 'hill_numbers' in indices:
+            indices.remove('hill_numbers')
+            indices.extend(['hill_H0', 'hill_H1', 'hill_H2', 'hill_inf'])
+        print("Indices being processed in export_csv:", indices)
         export_type = request.POST.get('export-type')
         sample_types = request.POST.getlist('sampleTypes2')
         include_skip_morph = request.POST.get('include_skip_morph')
         sites = request.POST.getlist('sites2')
         other_experiments = request.POST.getlist('otherExperiments2')
-        level = request.POST.get('level', None)
+        level = request.POST.get('level', 'morphospecies')
 
         export_csv.delay(
-            request.user.pk, id, indices, export_type, sample_types,
-            include_skip_morph, sites, other_experiments, level)
+            request.user.pk,
+            id,
+            indices,
+            export_type,
+            sample_types,
+            include_skip_morph,
+            sites,
+            other_experiments,
+            level
+        )
 
         return redirect('samples:experiment', experiment_id=id)
 

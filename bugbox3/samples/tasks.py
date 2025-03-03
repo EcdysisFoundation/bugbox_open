@@ -1,6 +1,6 @@
 import csv
 import time
-from io import StringIO
+from tempfile import NamedTemporaryFile
 
 from celery import shared_task
 from django.contrib.auth import get_user_model
@@ -10,64 +10,72 @@ from ..taxonomy.models import Morphospecies
 from ..taxonomy.utils import get_skip_morphospecies_ids
 from . import constants
 from .calculations import get_indices
-from .models import Experiment, Sample, Site
+from .models import Experiment, Sample, Site, UserExperimentFile
 
 User = get_user_model()
 
 
-@shared_task(soft_time_limit=500)
+@shared_task(soft_time_limit=1500, hard_time_limit=2000)
 def export_csv(
-        user_id, experiment_id, indices, export_type, sample_types,
-        include_skip_morph, sites, other_experiments, level):
+    user_id,
+    experiment_id,
+    indices,
+    export_type,
+    sample_types,
+    include_skip_morph,
+    sites,
+    other_experiments,
+    level
+):
     user = User.objects.get(pk=user_id)
     experiment = Experiment.objects.user_access(user).get(id=experiment_id)
 
     indices = [v for v in indices if v in constants.INDICES_CHOICES_ALL]
     export_type = export_type if export_type in constants.EXPERIMENT_CSV_EXPORT_TYPES else None
     if not all([v.isnumeric() for v in sites]):
-        # return HttpResponse(status=404)
-        None
-    sites = [int(v) for v in sites]
-    if not sites:
-        sites = Site.objects.filter(experiment_id=experiment.id).values_list('id', flat=True)
+        None  # Handle invalid input
+    sites = (
+                [int(v) for v in sites]
+                if sites
+                else Site.objects.filter(experiment_id=experiment.id).values_list('id', flat=True))
+
     if not all([v.isnumeric() for v in other_experiments]):
-        # return HttpResponse(status=404)
-        None
+        None  # Handle invalid input
     other_experiments = [int(v) for v in other_experiments]
     all_exp = other_experiments + [experiment.id]
+
     headers_arr = constants.EXP_HEADERS_ARR + indices
     morpho_headers = [dict.fromkeys(headers_arr, '') for _ in range(3)]
     unknown_species = 'Not identified'
     if export_type == constants.EXP_CSV_TYPE_REVIEWED:
         unknown_species += ' or reviewed'
-    if not include_skip_morph:
-        skip_morphospecies_ids = get_skip_morphospecies_ids()
-    else:
-        skip_morphospecies_ids = []
+    skip_morphospecies_ids = get_skip_morphospecies_ids() if not include_skip_morph else []
     all_species = {unknown_species}
+
+    # Normalize level – if not "family", default to "morphospecies"
+    if level != "family":
+        level = "morphospecies"
 
     rows = []
     for exp_id in all_exp:
         try:
             this_experiment = Experiment.objects.user_access(user).get(id=exp_id)
         except Experiment.DoesNotExist:
-            # raise Http404
-            None
+            continue  # Skip non-existent experiments
+
         samples = Sample.objects.filter(
             site_visit__site__experiment_id=exp_id,
             sample_type__in=sample_types
         )
         if not other_experiments:
-            samples = samples.filter(
-                site_visit__site__in=sites
-            )
+            samples = samples.filter(site_visit__site__in=sites)
         for sample in samples:
             specimens = sample.specimen_set
             if not include_skip_morph and export_type != constants.EXP_CSV_TYPE_AI:
                 specimens = specimens.exclude(classification_id__in=skip_morphospecies_ids)
             if not specimens.count() and not sample.completed:
-                # indicates a planned sample that was not actually taken or completed
-                continue
+                continue  # Skip incomplete/planned samples
+
             n = 0
             row = {
                 constants.EXP_HEAD_ARR_EXPERIMENT: this_experiment.name,
@@ -76,86 +84,81 @@ def export_csv(
                 constants.EXP_HEAD_ARR_SAMPLE_TYPE: sample.sample_type,
                 constants.EXP_HEAD_ARR_SAMPLE_NAME: sample.name_no,
                 constants.EXP_HEAD_ARR_SAMPLE_COMPLETED: sample.completed,
-                unknown_species: 0  # starting count
+                unknown_species: 0  # Starting count
             }
-            family_data = {}
             for specimen in specimens.all():
                 if export_type == constants.EXP_CSV_TYPE_AI:
                     morphospecies_id = specimen.ai_classification_id
                 elif export_type == constants.EXP_CSV_TYPE_REVIEWED:
-                    if specimen.acceptance == constants.ACCEPTANCE_PENDING and specimen.ai_classification:
-                        morphospecies_id = None
-                    else:
-                        morphospecies_id = specimen.classification_id
+                    morphospecies_id = (
+                        None
+                        if specimen.acceptance == constants.ACCEPTANCE_PENDING and specimen.ai_classification
+                        else specimen.classification_id
+                    )
+
                 else:
-                    # must be the all selection, prioritize classifcation_id
-                    if specimen.classification_id:
-                        morphospecies_id = specimen.classification_id
-                    else:
-                        morphospecies_id = specimen.ai_classification_id
+                    morphospecies_id = (
+                        specimen.classification_id
+                        if specimen.classification_id
+                        else specimen.ai_classification_id
+                    )
+
                 if morphospecies_id:
                     morpho = Morphospecies.objects.get(id=morphospecies_id)
-                    if morpho.exclude_from_export:
-                        print(f"Excluded from export: {morpho}")
-                        continue
-                    name = morpho.name
-                    family = morpho.gbif_family
+                    if morpho.gbif_class == "Arachnida":
+
+                        if "Mites" in morpho.name or "Acari" in morpho.name:
+                            continue
+
+                    if level == "family":
+                        name = morpho.gbif_family if morpho.gbif_family else "Unspecified Family"
+                        morpho_headers[0][name] = morpho.gbif_order
+                        morpho_headers[1][name] = morpho.gbif_family
+                        morpho_headers[2][name] = ""
+                    else:
+                        if morpho.exclude_from_export:
+                            print(f"Excluded from export (exclude_from_export=True): {morpho.name}")
+                            continue
+                        name = morpho.name
+                        morpho_headers[0][name] = morpho.gbif_order
+                        morpho_headers[1][name] = morpho.gbif_family
+                        morpho_headers[2][name] = morpho.gbif_species if morpho.gbif_species else morpho.gbif_genus
                 else:
                     name = unknown_species
-                    family = unknown_species
+                    morpho_headers[0][name] = ''
+                    morpho_headers[1][name] = ''
+                    morpho_headers[2][name] = ''
                 all_species.add(name)
                 total = 1 + specimen.partial_count
-                if level == constants.EXP_CSV_TYPE_FAMILY:
-                    if family in family_data:
-                        family_data[family] += total
-                    else:
-                        family_data[family] = total
-                else:
-                    if name in row.keys():
-                        row[name] += total
-                    else:
-                        row[name] = total
-                n += 1 + specimen.partial_count
-            if level == constants.EXP_CSV_TYPE_FAMILY:
-                for family, count in family_data.items():
-                    row[family] = count
+                row[name] = row.get(name, 0) + total
+                n += total
             if indices:
                 indice_results = get_indices(n, row, headers_arr)
                 for i in indices:
-                    row[i] = indice_results[i]
-
+                    print(f"Writing {i}: {indice_results.get(i, '')}")
+                    row[i] = indice_results.get(i, '')
             rows.append(row)
-    timestr = time.strftime("%Y%m%d-%H%M%S")
-    all_species.remove(unknown_species)  # moving unknown to the front
-    # response = HttpResponse(content_type='text/csv')
-    # response['Content-Disposition'] = 'attachment; filename="{0}-{1}.csv"'.format(
-    #     experiment.abbreviation, timestr)
-    # writer = csv.DictWriter(response, headers_arr + [unknown_species] + sorted(list(all_species)), 0)
-    # writer.writeheader()
-    # writer.writerows(morpho_headers)
-    # writer.writerows(rows)
-    # return response
 
+    timestr = time.strftime("%Y%m%d-%H%M%S")
+    all_species.remove(unknown_species)  # Moving unknown to the front
     file_name = f"{experiment.abbreviation}-{timestr}.csv"
 
-    # Use StringIO for in-memory CSV content
-    csv_buffer = StringIO()
-    if level == constants.EXP_CSV_TYPE_FAMILY:
-        headers = headers_arr + [unknown_species] + sorted(family_data.keys())
-    else:
-        headers = headers_arr + [unknown_species] + sorted(list(all_species))
-    writer = csv.DictWriter(csv_buffer, headers, 0)
-    writer.writeheader()
-    if level != constants.EXP_CSV_TYPE_FAMILY:
+    # Using NamedTemporaryFile for memory efficiency
+    with NamedTemporaryFile(delete=False, mode='w+', suffix='.csv') as temp_file:
+        # Sort the species (or family) columns;
+        final_fieldnames = headers_arr + [unknown_species] + sorted(list(all_species))
+        writer = csv.DictWriter(temp_file, fieldnames=final_fieldnames)
+
+        writer.writeheader()
         writer.writerows(morpho_headers)
-    writer.writerows(rows)
+        for row in rows:
+            writer.writerow(row)
+        temp_file.flush()
 
-    # Save the CSV content to the storage
-    csv_content = csv_buffer.getvalue()
-    csv_buffer.close()
+    with open(temp_file.name, 'rb') as f:
+        user_experiment_file, created = UserExperimentFile.objects.get_or_create(user=user, experiment=experiment)
+        user_experiment_file.file.save(file_name, ContentFile(f.read()), save=True)
+        user_experiment_file.exported_file_status = 'success'
+        user_experiment_file.save()
 
-    experiment.last_exported_file = ContentFile(csv_content, name=file_name)
-    experiment.exported_file_status = 'success'
-    experiment.save()
-
-    return experiment.last_exported_file.url
+    return user_experiment_file.file.url

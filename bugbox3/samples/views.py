@@ -35,7 +35,7 @@ from .forms import (ExperimentForm, JSONFieldSpecimensForm, MultiSpecimenForm,
                     SiteVisitForm, SpecimenForm, SpecimenImageForm,
                     SpecimensWithoutImagesForm, SpecimenViewForm)
 from .models import (Experiment, MultiSpecimenImage, Sample, SamplePlan, Site,
-                     SiteVisit, Specimen, SpecimenImage)
+                     SiteVisit, Specimen, SpecimenImage, UserExperimentFile)
 from .models_query import get_sample_plan_descriptions, get_user_choices
 from .timeline_events import (audit_specimen_update, audit_specimen_view,
                               audit_upload_images, timeline_events)
@@ -121,6 +121,8 @@ class ExperimentView(PermissionRequiredMixin, TemplateView):
             'sample_types': LookupChoices.objects.get_field_choices_w_blank(
                 experiment.organization_id, constants.FIELD_SAMPLE_TYPE),
             'indices': constants.INDICES_CHOICES,
+            'indices_descriptions': constants.INDICES_DESCRIPTIONS,
+            'default_indices': constants.INDICES_ALWAYS_INCLUDED,
             'export_types': constants.EXPERIMENT_CSV_EXPORT_CHOICES,
             'years': years,
             'sample_plan_descriptions': description,
@@ -139,11 +141,19 @@ class ExperimentView(PermissionRequiredMixin, TemplateView):
                 {'sites_datatables_url': sites_datatables_url})
         })
 
+        user_experiment_file, created = UserExperimentFile.objects.get_or_create(
+            user=self.request.user,
+            experiment=experiment
+        )
+
+        print(user_experiment_file.exported_file_status)
+
         context["last_exported_file"] = (
-            get_media_url(experiment.last_exported_file)
-            if experiment.last_exported_file
+            get_media_url(user_experiment_file.file)
+            if user_experiment_file.file
             else None
         )
+        context["last_exported_file_status"] = user_experiment_file.exported_file_status
 
         return context
 
