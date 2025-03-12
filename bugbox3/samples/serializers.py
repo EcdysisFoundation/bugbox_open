@@ -169,10 +169,12 @@ class SitesDatatablesSerializer(ModelSerializer):
             'Sample Type',
             'Sample Name',
             'Specimens',
+            'Completed',
             'Reviewed',
             'Entered by'
         ])
         for s in samples:
+            completed_checkbox = '<i class="bi bi-check-circle-fill text-success"></i>' if s.completed else '<i class="bi bi-x-circle-fill text-danger"></i>'
             if s.sample_type in LookupChoices.objects.get_field_dict_w_blank(
                     value.experiment.organization_id, constants.FIELD_SAMPLE_TYPE).keys():
                 sample_type = LookupChoices.objects.get_field_dict_w_blank(
@@ -183,13 +185,16 @@ class SitesDatatablesSerializer(ModelSerializer):
             rows += get_datatables_row([
                 self.get_orphaned(s, sample_plans) + self.get_note(s) +
                 s.site_visit.visit_date.strftime("%d-%b-%Y"),
+                sample_type,
                 '<a href="{0}" class="link-success">{1} <i class="bi bi-bug-fill"></i></a>'.format(
-                    sample_url, sample_type),
-                s.name_no,
+                    sample_url, s.name_no
+                ),
                 self.get_observations(s.id),
+                completed_checkbox,
                 self.get_reviewed(s.id),
                 s.created_by_user
             ])
+
         return get_datatables_container(rows)
 
     def get_data_row(self, value):

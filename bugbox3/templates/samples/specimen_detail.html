@@ -144,13 +144,16 @@
             <div class="card">
                 <div class="card-header align-items-center bg-ecdysis text-white d-flex justify-content-between">
                     <div class="col-md-8">
-                        <h5><a href="{% url 'samples:experiment' specimen.sample.site_visit.site.experiment.id %}" class="link-light">
-                            {{ specimen.sample.site_visit.site.experiment}}</a> -
-                            Site: <a href="{% url 'samples:site-update' specimen.sample.site_visit.site.id %}" class="link-light">
+                      <h5>
+                        <a href="{% url 'samples:experiment' specimen.sample.site_visit.site.experiment.id %}" class="link-light">
+                            {{ specimen.sample.site_visit.site.experiment }}</a> -
+                        Site: <a href="{% url 'samples:site-update' specimen.sample.site_visit.site.id %}" class="link-light">
                             {{ specimen.sample.site_visit.site.site_name }}</a> -
-                            {{ specimen.sample.site_visit.visit_date }}
-                            Sample: <a href="{% url 'samples:sample' specimen.sample.id %}" class="link-light">{{ specimen.sample.name_no }}</a>
-                        </h5>
+                        {{ specimen.sample.site_visit.visit_date }}
+                        Sample: <a href="{% url 'samples:sample' specimen.sample.id %}" class="link-light">
+                            {{ specimen.sample.name_no }}</a>
+                        ({{ specimen.sample.sample_type }})
+                    </h5>                    
                     </div>
                     <div class="col">
                         <a href="{% url 'samples:specimen-update' specimen.id %}" class="btn btn-light">
@@ -166,127 +169,131 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    <div class="row">
-                        <div class="col-7">
-                            <div id="carouselControls" class="carousel slide" data-bs-ride="carousel">
-                                <div class="carousel-inner">
-                                    {% for i in image_set_large %}
-                                        <div class="carousel-item{% if forloop.first %} active{% endif %}" data-bs-interval="1000000">
-                                            <img src="{{ i.path }}" class="d-block w-100" alt="insect">
-                                        </div>
-                                    {% endfor %}
-                                </div>
-                                <button class="carousel-control-prev" type="button" data-bs-target="#carouselControls" data-bs-slide="prev">
-                                  <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                                  <span class="visually-hidden">Previous</span>
-                                </button>
-                                <button class="carousel-control-next" type="button" data-bs-target="#carouselControls" data-bs-slide="next">
-                                  <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                                  <span class="visually-hidden">Next</span>
-                                </button>
-                              </div>
+                  <div class="row">
+                    <div class="col-md-5">
+                        <ul class="list-group list-group-flush">
+                          <li class="list-group-item">
+                              <b>Name:</b>
+                              {% if selected_classification.id %}
+                                <a href="{% url 'taxonomy:morphospecies-detail' selected_classification.id %}">{{ selected_classification.name }}</a>
+                              {% else %}
+                                {{ selected_classification.name }}
+                              {% endif %}
+                          </li>
+                          <li class="list-group-item">
+                            <b>Canonical Name:</b> {% if selected_classification.gbif_rank == 'SPECIES' %}<i>{% endif %}
+                            {{ selected_classification.gbif_canonical_name }}
+                            {% if selected_classification.gbif_rank == 'SPECIES' %}</i>{% endif %}
+                        </li>
+                          <li class="list-group-item"><b>Class:</b> {{ selected_classification.gbif_class }}</li>
+                          <li class="list-group-item"><b>Order:</b> {{ selected_classification.gbif_order }}</li>
+                          <li class="list-group-item"><b>Family:</b> {{ selected_classification.gbif_family }}</li>
+                          <li class="list-group-item"><b>Genus:</b> <i>{{ selected_classification.gbif_genus }}</i></li>
+                          <li class="list-group-item"><b>Species:</b> <i>{{ selected_classification.gbif_species }}</i></li>
+                          <li class="list-group-item"><b>Determined by:</b>
+                              {% if specimen.reviewer_user %}
+                                {{ specimen.reviewer_user }}
+                              {% elif specimen.ai_classification and not specimen.classification %}
+                                BugBox
+                              {% endif %}
+                          </li>
+                          <hr/>
+                          <li class="list-group-item">AI Prediction
+                            {% if acceptance != '' %}
+                            <button type="button" class="btn btn-sm ms-3
+                              {% if specimen.acceptance == 0 %}
+                                btn-info
+                              {% elif specimen.acceptance == 1 %}
+                                btn-success
+                              {% elif specimen.acceptance == 2 %}
+                                btn-warning
+                              {% endif %}
+                            "
+                            {% if ai_classification.name and review_permission %}
+                            data-bs-toggle="modal" data-bs-target="#confirmRejectModal"
+                            {% else %}
+                              disabled
+                            {% endif %}
+                            >
+                              {{ acceptance }}</button>
+                            {% endif %}
 
-                              <hr/>
-                            {% for i in image_set_small %}
-                                <img src="{{i.path}}" width="{{ i.width }}" height="{{ i.height }}" class="mb-2">
+                          </li>
+                          <li class="list-group-item">
+                              <b>AI Model Used:</b> 
+                              {% if specimen.ai_model_name %}
+                                  MorphoMF v{{ specimen.ai_model_name }}
+                              {% else %}
+                                  Unknown Model
+                              {% endif %}
+                          </li>                        
+                          <li class="list-group-item"><b>Primary prediction:</b> {{ ai_classification.name }}</li>
+                          <li class="list-group-item">{{ probability|safe }}</li>
+                          <li class="list-group-item"><b>Secondary prediction:</b> {{ specimen.optional_pred_one.class_op }} </li>
+                          <li class="list-group-item"><b>Tertiary prediction:</b> {{ specimen.optional_pred_two.class_op }}</li>
+                          <hr/>
+                          <li class="list-group-item"><b>Partial count:</b> {{ specimen.partial_count }}</li>
+                          <li class="list-group-item"><b>Tags:</b>
+                            {% for t in specimen.tags %}
+                            <span class="badge rounded-pill text-bg-primary">{{t}}</span>
                             {% endfor %}
-
-                            <form enctype="multipart/form-data" action="{{ form_action_url }}" method="POST">
-                                {% csrf_token %}
-                                <label for="image_files" class="form-label">
-                                    Add Specimen Images
-                                </label>
-                                <input type="file" name="image_files" accept=".jpg, .png, .jpeg"
-                                    class="form-control"
-                                    multiple id="image_files">
-                                <input type="submit" value="Submit" class="btn btn-secondary mt-2 ms-3">
-                            </form>
-                                {% if image_set_small %}
-                                    <button type="button" class="btn btn-info mt-3 mb-5" data-bs-toggle="modal" data-bs-target="#setPrimaryModal">
-                                        Set Primary Image
-                                    </button>
-                                    <button type="button" class="btn btn-warning mt-3 mb-5" data-bs-toggle="modal" data-bs-target="#deleteModal">
-                                      Delete Image
-                                  </button>
-                                {% endif %}
-
-                        </div>
-                        <div class="col-5">
-                            <ul class="list-group list-group-flush">
-                                <li class="list-group-item">
-                                    <b>Name:</b>
-                                    {% if selected_classification.id %}
-                                      <a href="{% url 'taxonomy:morphospecies-detail' selected_classification.id %}">{{ selected_classification.name }}</a>
-                                    {% else %}
-                                      {{ selected_classification.name }}
-                                    {% endif %}
-                                </li>
-                                <li class="list-group-item">
-                                  <b>Canonical Name:</b> {% if selected_classification.gbif_rank == 'SPECIES' %}<i>{% endif %}
-                                  {{ selected_classification.gbif_canonical_name }}
-                                  {% if selected_classification.gbif_rank == 'SPECIES' %}</i>{% endif %}
-                              </li>
-                                <li class="list-group-item"><b>Class:</b> {{ selected_classification.gbif_class }}</li>
-                                <li class="list-group-item"><b>Order:</b> {{ selected_classification.gbif_order }}</li>
-                                <li class="list-group-item"><b>Family:</b> {{ selected_classification.gbif_family }}</li>
-                                <li class="list-group-item"><b>Genus:</b> <i>{{ selected_classification.gbif_genus }}</i></li>
-                                <li class="list-group-item"><b>Species:</b> <i>{{ selected_classification.gbif_species }}</i></li>
-                                <li class="list-group-item"><b>Determined by:</b>
-                                    {% if specimen.reviewer_user %}
-                                      {{ specimen.reviewer_user }}
-                                    {% elif specimen.ai_classification and not specimen.classification %}
-                                      BugBox
-                                    {% endif %}
-                                </li>
-                                <hr/>
-                                <li class="list-group-item">AI Prediction
-                                  {% if acceptance != '' %}
-                                  <button type="button" class="btn btn-sm ms-3
-                                    {% if specimen.acceptance == 0 %}
-                                      btn-info
-                                    {% elif specimen.acceptance == 1 %}
-                                      btn-success
-                                    {% elif specimen.acceptance == 2 %}
-                                      btn-warning
-                                    {% endif %}
-                                  "
-                                  {% if ai_classification.name and review_permission %}
-                                  data-bs-toggle="modal" data-bs-target="#confirmRejectModal"
-                                  {% else %}
-                                    disabled
-                                  {% endif %}
-                                  >
-                                    {{ acceptance }}</button>
-                                  {% endif %}
-
-                                </li>
-                                <li class="list-group-item"><b>Primary prediction:</b>
-                                    {{ ai_classification.name }}
-                                </li>
-                                <li class="list-group-item">{{ probability|safe }}</li>
-                                <li class="list-group-item"><b>Secondary prediction:</b> {{ specimen.optional_pred_one.class_op }} </li>
-                                <li class="list-group-item"><b>Tertiary prediction:</b> {{ specimen.optional_pred_two.class_op }}</li>
-                                <hr/>
-                                <li class="list-group-item"><b>Partial count:</b> {{ specimen.partial_count }}</li>
-                                <li class="list-group-item"><b>Tags:</b>
-                                  {% for t in specimen.tags %}
-                                  <span class="badge rounded-pill text-bg-primary">{{t}}</span>
-                                  {% endfor %}
-                                </li>
-                                {% if specimen.archival_identifier %}
-                                    <hr/>
-                                    <li class="list-group-item">Collection information:</li>
-                                    <li class="list-group-item"><b>Archival identifier:</b> {{ specimen.archival_identifier }}</li>
-                                    <li class="list-group-item"><b>Archival preservation:</b> {{ specimen.archival_preservation }}</li>
-                                    <li class="list-group-item"><b>Archival stored:</b> {{ specimen.archival_stored }}</li>
-                                {% endif %}
-                                {% if specimen.object_det_train %}
-                                  <li class="list-group-item">* Selected for object detection model training</li>
-                                {% endif %}
-                            </ul>
-                        </div>
+                          </li>
+                          {% if specimen.archival_identifier %}
+                              <hr/>
+                              <li class="list-group-item">Collection information:</li>
+                              <li class="list-group-item"><b>Archival identifier:</b> {{ specimen.archival_identifier }}</li>
+                              <li class="list-group-item"><b>Archival preservation:</b> {{ specimen.archival_preservation }}</li>
+                              <li class="list-group-item"><b>Archival stored:</b> {{ specimen.archival_stored }}</li>
+                          {% endif %}
+                          {% if specimen.object_det_train %}
+                            <li class="list-group-item">* Selected for object detection model training</li>
+                          {% endif %}
+                      </ul>
                     </div>
-
+                
+                    <div class="col-md-7">
+                        <div id="carouselControls" class="carousel slide" data-bs-ride="carousel">
+                            <div class="carousel-inner">
+                                {% for i in image_set_large %}
+                                    <div class="carousel-item{% if forloop.first %} active{% endif %}" data-bs-interval="1000000">
+                                        <img src="{{ i.path }}" class="d-block w-100" alt="insect">
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            <button class="carousel-control-prev" type="button" data-bs-target="#carouselControls" data-bs-slide="prev">
+                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Previous</span>
+                            </button>
+                            <button class="carousel-control-next" type="button" data-bs-target="#carouselControls" data-bs-slide="next">
+                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Next</span>
+                            </button>
+                        </div>
+                
+                        <hr/>
+                        {% for i in image_set_small %}
+                            <img src="{{i.path}}" width="{{ i.width }}" height="{{ i.height }}" class="mb-2">
+                        {% endfor %}
+                
+                        <form enctype="multipart/form-data" action="{{ form_action_url }}" method="POST">
+                            {% csrf_token %}
+                            <label for="image_files" class="form-label">
+                                Add Specimen Images
+                            </label>
+                            <input type="file" name="image_files" accept=".jpg, .png, .jpeg" class="form-control" multiple id="image_files">
+                            <input type="submit" value="Submit" class="btn btn-secondary mt-2 ms-3">
+                        </form>
+                
+                        {% if image_set_small %}
+                            <button type="button" class="btn btn-info mt-3 mb-5" data-bs-toggle="modal" data-bs-target="#setPrimaryModal">
+                                Set Primary Image
+                            </button>
+                            <button type="button" class="btn btn-warning mt-3 mb-5" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                                Delete Image
+                            </button>
+                        {% endif %}
+                    </div>
+                  </div>
                 </div>
             </div>
         </div>
