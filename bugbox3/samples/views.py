@@ -513,6 +513,8 @@ class SampleView(PermissionRequiredMixin, FormView):
                 'country': sample.site_visit.site.country,
                 'state': sample.site_visit.site.state_region,
                 'county': sample.site_visit.site.county_region,
+                'habitat': sample.site_visit.site.habitat_type,
+                'treatment': sample.site_visit.site.treatment,
                 'visit_date': sample.site_visit.visit_date.strftime("%d-%b-%Y"),
                 'sample_type': sample_type,
                 'name_no': sample.name_no,

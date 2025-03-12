@@ -87,65 +87,92 @@
                     <div class="col-md-6">
                         <h5>{{ sample_info.site }} - {{ sample_info.visit_date }} - {{ sample_info.sample_type }} {{ sample_info.name_no }}</h5>
                     </div>
-                    <div class="col">
-                        <a href="{% url 'samples:experiment' sample_info.experiment_id %}" class="btn btn-light">
-                            Experiment
-                        </a>
-                    </div>
-                    <div class="col">
-                        <a href="{% url 'samples:sample-update' sample_info.sample_id %}" class="btn btn-light">
-                            Edit Sample
-                        </a>
-                    </div>
-                    <div class="col">
-                        <a href="{% url 'samples:sample-delete' sample_info.sample_id sample_info.experiment_id %}" class="btn btn-danger
-                        {% if sample_info.has_data %} disabled{% endif %}">
-                          Delete Sample
-                        </a>
+                    <div class="col-auto">
+                        <a href="{% url 'samples:experiment' sample_info.experiment_id %}" class="btn btn-light">Experiment</a>
+                        <a href="{% url 'samples:sample-update' sample_info.sample_id %}" class="btn btn-light">Edit Sample</a>
+                        <a href="{% url 'samples:sample-delete' sample_info.sample_id sample_info.experiment_id %}" 
+                            class="btn btn-danger {% if sample_info.has_data %} disabled{% endif %}">Delete Sample</a>
                     </div>
                 </div>
+    
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-8">
-                            <p class="card-text"><b>Experiment:</b> {{sample_info.experiment_name }}</p>
-                            <p class="card-text"><b>UUID:</b> {{ sample_info.uuid }}</p>
-                            <p class="card-text"><b>Site:</b> {{ sample_info.site }}</p>
-                            <p class="card-text"><b>Country:</b> {{ sample_info.country }}</p>
-                            <p class="card-text"><b>State:</b> {{ sample_info.state }}</p>
-                            <p class="card-text"><b>County:</b> {{ sample_info.county }}</p>
-                            <p class="card-text"><b>Date:</b> {{ sample_info.visit_date }}</p>
-                            <p class="card-text"><b>Type:</b> {{ sample_info.sample_type }}</p>
-                            <p class="card-text"><b>Name/NO:</b> {{ sample_info.name_no }}</p>
-                            <p class="card-text"><b>Entered By:</b> {{ sample_info.entered_by }}</p>
-                            <p class="card-text"><b>Notes:</b> {{ sample_info.notes }}</p>
-                            <p class="card-text"><b>Completed:</b> {{ sample_info.completed }}</p>
+                            <table class="table table-bordered table-sm">
+                                <tbody>
+                                    <tr>
+                                        <th>Experiment:</th>
+                                        <td>{{ sample_info.experiment_name }}</td>
+                                        <th>Entered By:</th>
+                                        <td>{{ sample_info.entered_by }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>UUID:</th>
+                                        <td colspan="3">{{ sample_info.uuid }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Site:</th>
+                                        <td>{{ sample_info.site }}</td>
+                                        <th>Completed:</th>
+                                        <td>{{ sample_info.completed }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Location:</th>
+                                        <td colspan="3">{{ sample_info.country }}, {{ sample_info.state }}, {{ sample_info.county }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Habitat:</th>
+                                        <td>{{ sample_info.habitat }}</td>
+                                        <th>Treatment:</th>
+                                        <td>{{ sample_info.treatment }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Date:</th>
+                                        <td>{{ sample_info.visit_date }}</td>
+                                        <th>Type:</th>
+                                        <td>{{ sample_info.sample_type }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Name/NO:</th>
+                                        <td colspan="3">{{ sample_info.name_no }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Notes:</th>
+                                        <td colspan="3">{{ sample_info.notes }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
-                        <div class="col-md-4">
-                            <p class="card-text mt-5"><b>Sample Label:</b>
-                                {% if sample_info.img_thumbnail %}
-                                </br>
-                                <img src="{{sample_info.img_thumbnail.path}}" width="{{ sample_info.img_thumbnail.width }}" height="{{ sample_info.img_thumbnail.height }}">
-                                {% else %}
-                                <a href="{% url 'samples:sample-update' sample_info.sample_id %}" class="btn btn-light"><i class="bi bi-plus-lg"></i></a>
-                                {% endif %}
-                            </p>
+                
+                        <div class="col-md-4 text-center">
+                            <p class="card-text"><b>Sample Label:</b></p>
+                            {% if sample_info.img_thumbnail %}
+                                <img src="{{ sample_info.img_thumbnail.path }}" width="{{ sample_info.img_thumbnail.width }}" height="{{ sample_info.img_thumbnail.height }}">
+                            {% else %}
+                                <a href="{% url 'samples:sample-update' sample_info.sample_id %}" class="btn btn-light">
+                                    <i class="bi bi-plus-lg"></i>
+                                </a>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
+                
+    
+                <!-- Multi-Specimen Images Section -->
                 <div class="card-header align-items-center bg-ecdysis text-white d-flex justify-content-between">
-                        <div class="col-3">
-                            <h5>Multi-Specimen Images</h5>
-                        </div>
-                        <div class="col">
-                            <a href="{% url 'samples:multispecimen-images' sample_info.sample_id %}" class="btn btn-light">
+                    <div class="col-auto">
+                        <h5>Multi-Specimen Images</h5>
+                    </div>
+                    <div class="col-auto">
+                        <a href="{% url 'samples:multispecimen-images' sample_info.sample_id %}" class="btn btn-light">
                             Add / View Multi-Specimen Images
-                            </a>
-                        </div>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-
+    
     <div class="row">
         <div class="col-12 mb-3 mt-2 p-0">
             <div class="card">
