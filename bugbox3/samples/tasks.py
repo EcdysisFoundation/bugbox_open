@@ -29,7 +29,6 @@ def export_csv(
 ):
     user = User.objects.get(pk=user_id)
     experiment = Experiment.objects.user_access(user).get(id=experiment_id)
-
     indices = [v for v in indices if v in constants.INDICES_CHOICES_ALL]
     export_type = export_type if export_type in constants.EXPERIMENT_CSV_EXPORT_TYPES else None
     if not all([v.isnumeric() for v in sites]):
@@ -79,6 +78,8 @@ def export_csv(
             n = 0
             row = {
                 constants.EXP_HEAD_ARR_EXPERIMENT: this_experiment.name,
+                constants.EXP_HEAD_ARR_HABITAT: sample.site_visit.site.habitat_type,
+                constants.EXP_HEAD_ARR_TREATMENT: sample.site_visit.site.treatment,
                 constants.EXP_HEAD_ARR_SITE: sample.site_visit.site.site_name,
                 constants.EXP_HEAD_ARR_DATE: sample.site_visit.visit_date.strftime("%d-%b-%Y"),
                 constants.EXP_HEAD_ARR_SAMPLE_TYPE: sample.sample_type,
