@@ -64,7 +64,7 @@
             <div class="card">
                 <div class="card-header align-items-center bg-ecdysis text-white d-flex justify-content-between">
                     <h2 class="text-light mt-1">{{ morphospecies.name }}</h2>
-                    <a href="{% url 'taxonomy:morphospecies' %}" class="btn btn-light btn-small" role="button">Morphospecies</a>
+                    <a href="{% url 'taxonomy:morphospecies' %}" class="btn btn-light btn-small" role="button">Morphospecies List</a>
                     {% if not morphospecies.defunt_date %}
                         {% if can_edit %}
                             <button type="button" class="btn btn-small btn-light" data-bs-toggle="modal" data-bs-target="#mSelectModal">Combine</button>
