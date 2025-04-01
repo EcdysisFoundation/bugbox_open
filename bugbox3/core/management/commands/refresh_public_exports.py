@@ -2,16 +2,14 @@ from django.core.management.base import BaseCommand
 
 from ....samples.exports import (public_all_img_export,
                                  public_reviewed_img_export)
+from ....samples.views_public import PUBLIC_DATA_ORGS
 
 
 class Command(BaseCommand):
 
-    # this is also defined in set_public_images
-    public_data_orgs = [(1, 'Ecdysis Foundation'), ]
-
     def handle(self, *args, **options):
 
-        for org in self.public_data_orgs:
+        for org in PUBLIC_DATA_ORGS:
             print('creating export for organization: {0}'.format(org[1]))
             filename = public_reviewed_img_export(org[0])
             print('created export filename {0}'.format(filename))

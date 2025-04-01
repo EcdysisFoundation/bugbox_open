@@ -13,6 +13,7 @@ from ..taxonomy.models_query import get_taxon_entries
 
 # These can become entries in the Organization model when more orgs have public data.
 ECDYSIS_COLLECTION = 'The Mark F. Longfellow Ecological Reference Collection'
+PUBLIC_DATA_ORGS = [(1, 'Ecdysis Foundation'), ]
 PUBLIC_COLLECTIONS = {1: {
     'org_name': 'Ecdysis Foundation',
     'collection': ECDYSIS_COLLECTION,
