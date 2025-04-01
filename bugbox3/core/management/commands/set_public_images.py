@@ -7,7 +7,7 @@ from django.db.models import Q
 
 from ....libs.utilities import save_specimen_img_thumbs
 from ....samples import constants
-from ....samples.exports import public_images_export
+from ....samples.exports import public_reviewed_img_export
 
 
 class Command(BaseCommand):
@@ -90,6 +90,6 @@ class Command(BaseCommand):
         print('creating export file')
         for org in self.public_data_orgs:
             print('creating export for organization: {0}'.format(org[1]))
-            filename = public_images_export(org[0])
+            filename = public_reviewed_img_export(org[0])
             print('created export filename {0}'.format(filename))
         print('Process completed.')

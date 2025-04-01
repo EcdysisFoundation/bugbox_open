@@ -5,7 +5,8 @@ from rest_framework.reverse import reverse as api_reverse
 from ..core.models import Exports
 from ..libs.ui_helpers import get_img_captioned, get_specimen_location
 from ..libs.utilities import get_json_context, get_media_url
-from ..samples.exports import PUBLIC_IMAGES_EXPORT_TITLE
+from ..samples.exports import (PUBLIC_ALL_IMAGES_EXPORT_TITLE,
+                               PUBLIC_IMAGES_EXPORT_TITLE)
 from ..samples.models import SpecimenImage
 from ..taxonomy import constants as constants_tax
 from ..taxonomy.models_query import get_taxon_entries
@@ -54,6 +55,9 @@ class CollectionDownloadView(TemplateView):
         download_file = Exports.objects.filter(
             organization_id=kwargs['org_id'],
             title=PUBLIC_IMAGES_EXPORT_TITLE).order_by('date_added').last()
+        all_download_file = Exports.objects.filter(
+            organization_id=kwargs['org_id'],
+            title=PUBLIC_ALL_IMAGES_EXPORT_TITLE).order_by('date_added').last()
         example = None
         example_img = SpecimenImage.objects.filter(
             id=PUBLIC_COLLECTIONS[kwargs['org_id']]['example_img_id']).first()
@@ -72,8 +76,14 @@ class CollectionDownloadView(TemplateView):
         context.update({
             'download_link': get_media_url(download_file.file)
             if download_file else '',
+            'download_date_added': download_file.date_added if download_file else '',
             'file_size': download_file.file.size if download_file else '',
             'description': download_file.description if download_file else '',
+            'all_download_link': get_media_url(all_download_file.file)
+            if all_download_file else '',
+            'all_file_size': all_download_file.file.size if all_download_file else '',
+            'all_description': all_download_file.description if all_download_file else '',
+            'all_download_date_added': all_download_file.date_added if all_download_file else '',
             'example': example,
             'collection': PUBLIC_COLLECTIONS[self.kwargs['org_id']]
         })
