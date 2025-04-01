@@ -174,7 +174,8 @@ class SitesDatatablesSerializer(ModelSerializer):
             'Entered by'
         ])
         for s in samples:
-            completed_checkbox = '<i class="bi bi-check-circle-fill text-success"></i>' if s.completed else '<i class="bi bi-x-circle-fill text-danger"></i>'
+            completed_checkbox = '<i class="bi bi-check-circle-fill text-success"></i>' \
+                if s.completed else '<i class="bi bi-x-circle-fill text-danger"></i>'
             if s.sample_type in LookupChoices.objects.get_field_dict_w_blank(
                     value.experiment.organization_id, constants.FIELD_SAMPLE_TYPE).keys():
                 sample_type = LookupChoices.objects.get_field_dict_w_blank(
