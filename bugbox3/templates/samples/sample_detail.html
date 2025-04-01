@@ -93,52 +93,60 @@
                         <a href="{% url 'samples:sample-delete' sample_info.sample_id sample_info.experiment_id %}" 
                             class="btn btn-danger {% if sample_info.has_data %} disabled{% endif %}">Delete Sample</a>
                     </div>
-                </div>
-    
+                </div>                            
+                
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-8">
-                            <table class="table table-bordered table-sm">
+                            <table class="table table-sm" style="border-collapse: collapse; width: 100%;">
                                 <tbody>
                                     <tr>
-                                        <th>Experiment:</th>
-                                        <td>{{ sample_info.experiment_name }}</td>
-                                        <th>Entered By:</th>
-                                        <td>{{ sample_info.entered_by }}</td>
+                                        <th style="border: none;">Experiment:</th>
+                                        <td style="border: none;">{{ sample_info.experiment_name }}</td>
+                                        <th style="border: none;">Sample Type:</th>
+                                        <td style="border: none;">{{ sample_info.sample_type }}</td>
                                     </tr>
                                     <tr>
-                                        <th>UUID:</th>
-                                        <td colspan="3">{{ sample_info.uuid }}</td>
+                                        <th style="border: none;">Site:</th>
+                                        <td style="border: none;">{{ sample_info.site }}</td>
+                                        <th style="border: none;">Name/No:</th>
+                                        <td style="border: none;">{{ sample_info.name_no }}</td>
                                     </tr>
                                     <tr>
-                                        <th>Site:</th>
-                                        <td>{{ sample_info.site }}</td>
-                                        <th>Completed:</th>
-                                        <td>{{ sample_info.completed }}</td>
+                                        <th style="border: none;">Location:</th>
+                                        <td colspan="3" style="border: none;">{{ sample_info.country }}, {{ sample_info.state }}, {{ sample_info.county }}</td>
                                     </tr>
                                     <tr>
-                                        <th>Location:</th>
-                                        <td colspan="3">{{ sample_info.country }}, {{ sample_info.state }}, {{ sample_info.county }}</td>
+                                        <td colspan="4" style="border: none;">
+                                            <div style="border-bottom: 2px solid black; width: 43%; margin-left: auto;"></div>
+                                        </td>
                                     </tr>
                                     <tr>
-                                        <th>Habitat:</th>
-                                        <td>{{ sample_info.habitat }}</td>
-                                        <th>Treatment:</th>
-                                        <td>{{ sample_info.treatment }}</td>
+                                        <th style="border: none;">Date:</th>
+                                        <td style="border: none;">{{ sample_info.visit_date }}</td>
+                                        <th style="border: none;">Completed:</th>
+                                        <td style="border: none;">{{ sample_info.completed }}</td>
                                     </tr>
                                     <tr>
-                                        <th>Date:</th>
-                                        <td>{{ sample_info.visit_date }}</td>
-                                        <th>Type:</th>
-                                        <td>{{ sample_info.sample_type }}</td>
+                                        <th style="border: none;">Habitat:</th>
+                                        <td style="border: none;">{{ sample_info.habitat }}</td>
+                                        <th style="border: none;">Entered By:</th>
+                                        <td style="border: none;">{{ sample_info.entered_by }}</td>
                                     </tr>
                                     <tr>
-                                        <th>Name/NO:</th>
-                                        <td colspan="3">{{ sample_info.name_no }}</td>
+                                        <th style="border: none;">Treatment:</th>
+                                        <td colspan="3" style="border: none;">{{ sample_info.treatment }}</td>
                                     </tr>
                                     <tr>
-                                        <th>Notes:</th>
-                                        <td colspan="3">{{ sample_info.notes }}</td>
+                                        <td colspan="4" style="border-bottom: 2px solid black;"></td> <!-- Black divider line -->
+                                    </tr>
+                                    <tr>
+                                        <th style="border: none;">UUID:</th>
+                                        <td colspan="3" style="border: none;">{{ sample_info.uuid }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th style="border: none;">Notes:</th>
+                                        <td colspan="3" style="border: none;">{{ sample_info.notes }}</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -156,8 +164,7 @@
                         </div>
                     </div>
                 </div>
-                
-    
+
                 <!-- Multi-Specimen Images Section -->
                 <div class="card-header align-items-center bg-ecdysis text-white d-flex justify-content-between">
                     <div class="col-auto">

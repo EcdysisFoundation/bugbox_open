@@ -20,7 +20,7 @@
         <div class="col">
             <div class="align-items-center bg-ecdysis text-white d-flex justify-content-between">
                 <h2 class="text-light mt-1">Add Morphospecies</h2>
-                <a href="{% url 'taxonomy:morphospecies' %}" class="btn btn-light btn-small" role="button">Morphospecies</a>
+                <a href="{% url 'taxonomy:morphospecies' %}" class="btn btn-light btn-small" role="button">Morphospecies List</a>
             </div>
         </div>
     </div>
@@ -35,39 +35,29 @@
         </div>
     </div>
 
-    <div class="row mb-2">
-        <div class="col">
-            <input type="text" class="form-control" id="gbif-input" name="gbif-input">
-        </div>
-        <div class="col">
-            <div class="search-button"></div>
-        </div>
-    </div>
-
-    <div class="row mb-2">
-        <div class="col">
+    <div class="row mb-4">
+        <!-- Left column: search input and form -->
+        <div class="col-md-6">
+            <div class="row mb-2">
+                <div class="col">
+                    <input type="text" class="form-control" id="gbif-input" name="gbif-input">
+                </div>
+                <div class="col">
+                    <div class="search-button"></div>
+                    <div class="select-gbif-button mt-4"></div>
+                </div>
+            </div>
             <form enctype="multipart/form-data" action="{{ form_action_url }}" method="POST">
-            {% crispy form %}
+                {% crispy form %}
             </form>
         </div>
-        <div class="col">
-            <div class="select-gbif-button mt-4"></div>
-        </div>
-    </div>
-
-    <div class="row mb-4">
-        <div class="col-4">
+        <!-- Right column: GBIF results -->
+        <div class="col-md-6">
             <div class="list-group" id="gbif-list" role="tablist"></div>
-        </div>
-        <div class="col-8">
-            <div class="tab-content" id="gbif-nav-tabContent">
-            </div>
+            <div class="tab-content" id="gbif-nav-tabContent"></div>
         </div>
     </div>
-
+    
 </div>
-
-
-
 
 {% endblock %}
