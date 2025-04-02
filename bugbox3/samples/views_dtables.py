@@ -191,7 +191,7 @@ class CollectionDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelView
             sample__site_visit__site__experiment__organization_id=org_id,
             classification_id__isnull=False,
             specimenimage__public_image=True
-        )
+        ).exclude(acceptance=0)
         archival = self.request.query_params.get('archival')
         if archival:
             specimen = specimen.exclude(
