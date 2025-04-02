@@ -256,7 +256,7 @@ def public_all_img_export(org_id):
         file_obj = File(tmpfile, name=filename)
 
         description = {
-            'image_count': len(data),
+            'image_count': len(data) + len(reviewed_data),
             'specimen_count': len(specimens),
             'order_count': len(orders),
             'family_count': len(families),
