@@ -7,7 +7,7 @@ from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 
 from ..taxonomy.models import Morphospecies
-from ..taxonomy.utils import get_skip_morphospecies_ids
+from ..taxonomy.utils import get_skip_morphospecies_ids, get_immature_morphospecies_ids
 from . import constants
 from .calculations import get_indices
 from .models import Experiment, Sample, Site, UserExperimentFile
@@ -22,7 +22,7 @@ def export_csv(
     indices,
     export_type,
     sample_types,
-    include_skip_morph,
+    include_immatures_skipped,
     sites,
     other_experiments,
     level
@@ -46,9 +46,17 @@ def export_csv(
     headers_arr = constants.EXP_HEADERS_ARR + indices
     morpho_headers = [dict.fromkeys(headers_arr, '') for _ in range(3)]
     unknown_species = 'Not identified'
+    skip_morphospecies_ids = get_skip_morphospecies_ids()
+    immature_morphospecies_ids = get_immature_morphospecies_ids()
+
+    if include_immatures_skipped:
+        skip_morphospecies_ids = []
+        immature_morphospecies_ids = []
+
     if export_type == constants.EXP_CSV_TYPE_REVIEWED:
         unknown_species += ' or reviewed'
-    skip_morphospecies_ids = get_skip_morphospecies_ids() if not include_skip_morph else []
+
+
     all_species = {unknown_species}
 
     # Normalize level – if not "family", default to "morphospecies"
@@ -70,8 +78,9 @@ def export_csv(
             samples = samples.filter(site_visit__site__in=sites)
         for sample in samples:
             specimens = sample.specimen_set
-            if not include_skip_morph and export_type != constants.EXP_CSV_TYPE_AI:
-                specimens = specimens.exclude(classification_id__in=skip_morphospecies_ids)
+            if not include_immatures_skipped and export_type != constants.EXP_CSV_TYPE_AI:
+                specimens = specimens.exclude(classification_id__in=skip_morphospecies_ids + immature_morphospecies_ids)
+
             if not specimens.count() and not sample.completed:
                 continue  # Skip incomplete/planned samples
 
@@ -118,8 +127,14 @@ def export_csv(
                         morpho_headers[2][name] = ""
                     else:
                         if morpho.exclude_from_export:
-                            print(f"Excluded from export (exclude_from_export=True): {morpho.name}")
-                            continue
+                            is_immature = morpho.id in immature_morphospecies_ids or "immature" in morpho.name.lower()
+                            is_skipped = morpho.id in skip_morphospecies_ids
+                            if include_immatures_skipped and (is_immature or is_skipped):
+                                print(f"Override exclude_from_export: including {morpho.name}")
+                            else:
+                                print(f"Excluded from export (exclude_from_export=True): {morpho.name}")
+                                continue
+
                         name = morpho.name
                         morpho_headers[0][name] = morpho.gbif_order
                         morpho_headers[1][name] = morpho.gbif_family
