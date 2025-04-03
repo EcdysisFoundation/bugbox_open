@@ -54,9 +54,13 @@ class Command(BaseCommand):
         imgs_missing_thumbs = self.SpecimenImage.objects.filter(
             Q(image_thumbnail='') | Q(image_thumbnail_medium='') | Q(image_thumbnail_large='')
         )
-        for i in imgs_missing_thumbs:
-            # check for thumbnails and save them if they dont exist.
-            save_specimen_img_thumbs(i)
+        if imgs_missing_thumbs:
+            print('{0} images dont have thumbnails'.format(len(imgs_missing_thumbs)))
+            print('skipping fixing these for now')
+            # Note: disabled creating new thumbnails till figure out why some wont regenerate.
+            # for i in imgs_missing_thumbs:
+            #    # check for thumbnails and save them if they dont exist.
+            #    save_specimen_img_thumbs(i)
 
         # Process reviewed images
         specimen_images = self.SpecimenImage.objects.filter(
