@@ -96,6 +96,7 @@ def export_csv(
                 constants.EXP_HEAD_ARR_SAMPLE_COMPLETED: sample.completed,
                 unknown_species: 0  # Starting count
             }
+            excluded_names_in_row = set()
             for specimen in specimens.all():
                 if export_type == constants.EXP_CSV_TYPE_AI:
                     morphospecies_id = specimen.ai_classification_id
@@ -144,16 +145,31 @@ def export_csv(
                     morpho_headers[0][name] = ''
                     morpho_headers[1][name] = ''
                     morpho_headers[2][name] = ''
+                
                 all_species.add(name)
                 total = 1 + specimen.partial_count
                 row[name] = row.get(name, 0) + total
                 n += total
+
+                if morphospecies_id in immature_morphospecies_ids or morphospecies_id in skip_morphospecies_ids:
+                    excluded_names_in_row.add(name)
+
             if indices:
-                indice_results = get_indices(n, row, headers_arr)
-                for i in indices:
-                    print(f"Writing {i}: {indice_results.get(i, '')}")
-                    row[i] = indice_results.get(i, '')
+                    excluded_names_for_indices = excluded_names_in_row.union({unknown_species})
+
+                    row_for_indices = {
+                        k: v for k, v in row.items()
+                        if k not in excluded_names_for_indices and k not in constants.EXP_HEADERS_ARR + indices
+                    }
+
+                    n_for_indices = sum(row_for_indices.values())
+
+                    indice_results = get_indices(n_for_indices, row_for_indices, headers_arr)
+                    for i in indices:
+                        print(f"Writing {i}: {indice_results.get(i, '')}")
+                        row[i] = indice_results.get(i, '')
             rows.append(row)
+
 
     timestr = time.strftime("%Y%m%d-%H%M%S")
     all_species.remove(unknown_species)  # Moving unknown to the front
