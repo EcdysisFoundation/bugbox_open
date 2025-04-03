@@ -100,7 +100,7 @@ def experiment_csv(request, id):
         print("Indices being processed in export_csv:", indices)
         export_type = request.POST.get('export-type')
         sample_types = request.POST.getlist('sampleTypes2')
-        include_skip_morph = request.POST.get('include_skip_morph')
+        include_immatures_skipped = request.POST.get('include_immatures_skipped')
         sites = request.POST.getlist('sites2')
         other_experiments = request.POST.getlist('otherExperiments2')
         level = request.POST.get('level', 'morphospecies')
@@ -111,7 +111,7 @@ def experiment_csv(request, id):
             indices,
             export_type,
             sample_types,
-            include_skip_morph,
+            include_immatures_skipped,
             sites,
             other_experiments,
             level

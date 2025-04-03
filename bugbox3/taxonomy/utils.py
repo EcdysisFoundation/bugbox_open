@@ -24,3 +24,10 @@ def get_skip_morphospecies_ids():
         Q(gbif_order__in=orders) |
         Q(name__in=names)
     ).values_list('id', flat=True))
+
+def get_immature_morphospecies_ids():
+    return list(
+        Morphospecies.objects.filter(
+            Q(name__icontains="immature")
+        ).values_list("id", flat=True)
+    )
