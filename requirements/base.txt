@@ -28,4 +28,3 @@ django-organizations==2.5.0
 boto3==1.35.90
 Collectfasta==3.2.1  # https://github.com/jasongi/collectfasta
 django-storages==1.14.4
-pygbif==0.6.3
