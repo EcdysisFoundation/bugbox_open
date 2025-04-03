@@ -22,3 +22,9 @@ factory-boy==3.3.1  # https://github.com/FactoryBoy/factory_boy
 
 django-debug-toolbar==4.4.6  # https://github.com/jazzband/django-debug-toolbar
 pytest-django==4.9.0  # https://github.com/pytest-dev/pytest-django
+
+pygbif==0.6.3
+requests_cache
+gbif-dl==0.1.1
+pandas
+openpyxl
