@@ -7,7 +7,7 @@ from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 
 from ..taxonomy.models import Morphospecies
-from ..taxonomy.utils import get_skip_morphospecies_ids
+from ..taxonomy.utils import get_skip_morphospecies_ids, get_immature_morphospecies_ids
 from . import constants
 from .calculations import get_indices
 from .models import Experiment, Sample, Site, UserExperimentFile
@@ -22,7 +22,7 @@ def export_csv(
     indices,
     export_type,
     sample_types,
-    include_skip_morph,
+    include_immatures_skipped,
     sites,
     other_experiments,
     level
@@ -46,9 +46,17 @@ def export_csv(
     headers_arr = constants.EXP_HEADERS_ARR + indices
     morpho_headers = [dict.fromkeys(headers_arr, '') for _ in range(3)]
     unknown_species = 'Not identified'
+    skip_morphospecies_ids = get_skip_morphospecies_ids()
+    immature_morphospecies_ids = get_immature_morphospecies_ids()
+
+    if include_immatures_skipped:
+        skip_morphospecies_ids = []
+        immature_morphospecies_ids = []
+
     if export_type == constants.EXP_CSV_TYPE_REVIEWED:
         unknown_species += ' or reviewed'
-    skip_morphospecies_ids = get_skip_morphospecies_ids() if not include_skip_morph else []
+
+
     all_species = {unknown_species}
 
     # Normalize level – if not "family", default to "morphospecies"
@@ -70,8 +78,9 @@ def export_csv(
             samples = samples.filter(site_visit__site__in=sites)
         for sample in samples:
             specimens = sample.specimen_set
-            if not include_skip_morph and export_type != constants.EXP_CSV_TYPE_AI:
-                specimens = specimens.exclude(classification_id__in=skip_morphospecies_ids)
+            if not include_immatures_skipped and export_type != constants.EXP_CSV_TYPE_AI:
+                specimens = specimens.exclude(classification_id__in=skip_morphospecies_ids + immature_morphospecies_ids)
+
             if not specimens.count() and not sample.completed:
                 continue  # Skip incomplete/planned samples
 
@@ -87,6 +96,7 @@ def export_csv(
                 constants.EXP_HEAD_ARR_SAMPLE_COMPLETED: sample.completed,
                 unknown_species: 0  # Starting count
             }
+            excluded_names_in_row = set()
             for specimen in specimens.all():
                 if export_type == constants.EXP_CSV_TYPE_AI:
                     morphospecies_id = specimen.ai_classification_id
@@ -118,8 +128,14 @@ def export_csv(
                         morpho_headers[2][name] = ""
                     else:
                         if morpho.exclude_from_export:
-                            print(f"Excluded from export (exclude_from_export=True): {morpho.name}")
-                            continue
+                            is_immature = morpho.id in immature_morphospecies_ids or "immature" in morpho.name.lower()
+                            is_skipped = morpho.id in skip_morphospecies_ids
+                            if include_immatures_skipped and (is_immature or is_skipped):
+                                print(f"Override exclude_from_export: including {morpho.name}")
+                            else:
+                                print(f"Excluded from export (exclude_from_export=True): {morpho.name}")
+                                continue
+
                         name = morpho.name
                         morpho_headers[0][name] = morpho.gbif_order
                         morpho_headers[1][name] = morpho.gbif_family
@@ -129,16 +145,31 @@ def export_csv(
                     morpho_headers[0][name] = ''
                     morpho_headers[1][name] = ''
                     morpho_headers[2][name] = ''
+                
                 all_species.add(name)
                 total = 1 + specimen.partial_count
                 row[name] = row.get(name, 0) + total
                 n += total
+
+                if morphospecies_id in immature_morphospecies_ids or morphospecies_id in skip_morphospecies_ids:
+                    excluded_names_in_row.add(name)
+
             if indices:
-                indice_results = get_indices(n, row, headers_arr)
-                for i in indices:
-                    print(f"Writing {i}: {indice_results.get(i, '')}")
-                    row[i] = indice_results.get(i, '')
+                    excluded_names_for_indices = excluded_names_in_row.union({unknown_species})
+
+                    row_for_indices = {
+                        k: v for k, v in row.items()
+                        if k not in excluded_names_for_indices and k not in constants.EXP_HEADERS_ARR + indices
+                    }
+
+                    n_for_indices = sum(row_for_indices.values())
+
+                    indice_results = get_indices(n_for_indices, row_for_indices, headers_arr)
+                    for i in indices:
+                        print(f"Writing {i}: {indice_results.get(i, '')}")
+                        row[i] = indice_results.get(i, '')
             rows.append(row)
+
 
     timestr = time.strftime("%Y%m%d-%H%M%S")
     all_species.remove(unknown_species)  # Moving unknown to the front
