@@ -31,5 +31,13 @@ if settings.ON_ECDYSIS_SERVER == "YES":
         'run_s3_media_download': {
             'task': 'bugbox3.taxonomy.tasks.run_s3_media_download',
             'schedule': crontab(day_of_week=5, hour=22, minute=5)
+        },
+        'run_set_public_images':  {
+            'task': 'bugbox3.taxonomy.tasks.run_set_public_images',
+            'schedule': crontab(hour=20)
+        },
+        'run_refresh_public_exports': {
+            'task': 'bugbox3.taxonomy.tasks.run_refresh_public_exports',
+            'schedule': crontab(day_of_week=5, hour=21, minute=5)
         }
     }

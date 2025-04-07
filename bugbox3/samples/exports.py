@@ -1,8 +1,8 @@
 import csv
-import pandas as pd
 import time
 from tempfile import SpooledTemporaryFile
 
+import pandas as pd
 from django.conf import settings
 from django.contrib.auth.decorators import permission_required
 from django.core.files import File
@@ -156,7 +156,6 @@ def get_public_export_headers(classification=constants.FIELD_SPECIMEN_CLASSIFICA
     out_headers = [v.replace('specimen__', '') for v in out_headers]
 
     rename_lookup = {query_fields[i]: v for i, v in enumerate(out_headers)}
-
 
     return {
         'query_fields': query_fields,

@@ -5,7 +5,6 @@ from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.db.models import Q
 
-from ....libs.utilities import save_specimen_img_thumbs
 from ....samples import constants
 from ....samples.views_public import PUBLIC_DATA_ORGS
 
@@ -92,7 +91,7 @@ class Command(BaseCommand):
             print('selected reviewed images are now public')
 
         # Process non-reviwed images, with a limit
-        image_limit = 100000
+        image_limit = 10000
         specimen_images = self.SpecimenImage.objects.filter(
             specimen__sample__site_visit__site__experiment__organization_id__in=org_ids,
             specimen__sample__site_visit__site__experiment__organization__name__in=org_names,
