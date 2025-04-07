@@ -1,12 +1,11 @@
 import csv
 import pandas as pd
 import time
-from tempfile import SpooledTemporaryFile, NamedTemporaryFile
+from tempfile import SpooledTemporaryFile
 
 from django.conf import settings
 from django.contrib.auth.decorators import permission_required
 from django.core.files import File
-from django.core.files.base import ContentFile
 from django.db.models import Case, CharField, F, Func, Value, When
 from django.http import Http404, HttpResponse
 from django.shortcuts import redirect
@@ -170,7 +169,7 @@ def public_reviewed_images_q(org_id, query_fields):
     return SpecimenImage.objects.filter(
         specimen__sample__site_visit__site__experiment__organization_id=org_id,
         specimen__classification_id__isnull=False,
-        public_image=True).exclude(specimen__acceptance=0).values(*query_fields)[:10]
+        public_image=True).exclude(specimen__acceptance=0).values(*query_fields)
 
 
 def get_public_media_url(row):
@@ -193,32 +192,19 @@ def public_reviewed_img_export(org_id):
     if not isinstance(org_id, int):
         raise TypeError('public_images_export only accepts integers for the org_id')
 
-    filename = get_filename_org_timestamp(PUBLIC_IMAGES_EXPORT_TITLE, org_id, 'csv')
+    filename = get_filename_org_timestamp(PUBLIC_IMAGES_EXPORT_TITLE, org_id, 'csv.gzip')
     headers = get_public_export_headers(constants.FIELD_SPECIMEN_CLASSIFICATION)
     data = public_reviewed_images_q(org_id, headers['query_fields'])
-
-    specimens = set()
-    orders = set()
-    families = set()
+    df = pd.DataFrame.from_records(data)
+    df['reviewed'] = 'TRUE'
+    df = df.rename(columns=data['rename_lookup'])
+    df['public_url'] = df.apply(get_public_media_url, axis=1)
+    description = get_public_description(df)
 
     max_mem_size = 5 * (2**20)  # max memory size before it writes to disk
-    with SpooledTemporaryFile(mode='w+', newline='', max_size=max_mem_size) as tmpfile:
-        writer = csv.writer(tmpfile)
-        writer.writerow(headers['out_headers'] + ['reviewed', 'public_url'])
-        for i in data:
-            specimens.add(i['specimen_id'])
-            orders.add(i['specimen__classification__' + constants_tax.FIELD_MORPHO_GBIF_ORDER])
-            families.add(i['specimen__classification__' + constants_tax.FIELD_MORPHO_GBIF_FAMILY])
-            url = settings.MEDIA_URL + i[constants.SPECIMEN_IMAGE_IMAGE_THUMBNAIL_LARGE]
-            writer.writerow([str(i[v]) for v in headers['query_fields']] + ['True', url])
+    with SpooledTemporaryFile(mode='wb', newline='', max_size=max_mem_size) as tmpfile:
+        df.to_csv(tmpfile, compression={'method': 'gzip'}, index=False)
         file_obj = File(tmpfile, name=filename)
-
-        description = {
-            'image_count': len(data),
-            'specimen_count': len(specimens),
-            'order_count': len(orders),
-            'family_count': len(families),
-        }
 
         Exports.objects.create(
             organization_id=org_id,
@@ -249,8 +235,8 @@ def public_all_img_export(org_id):
         specimen__sample__site_visit__site__experiment__organization_id=org_id,
         specimen__ai_classification_id__isnull=False,
         specimen__acceptance=0,
-        #public_image=True
-        ).values(*headers['query_fields'])[:10]
+        public_image=True
+        ).values(*headers['query_fields'])
     df2 = pd.DataFrame.from_records(data)
     df2['reviewed'] = 'FALSE'
     df2 = df2.rename(columns=headers['rename_lookup'])
@@ -264,10 +250,7 @@ def public_all_img_export(org_id):
     max_mem_size = 5 * (2**20)  # max memory size before it writes to disk
     with SpooledTemporaryFile(mode='wb', newline='', max_size=max_mem_size) as tempfile:
         df.to_csv(tempfile, compression={'method': 'gzip'}, index=False)
-        print('Made file')
-        # print(temp_file.name)
         file_obj = File(tempfile, name=filename)
-        print(file_obj.name)
         Exports.objects.create(
             organization_id=org_id,
             title=PUBLIC_ALL_IMAGES_EXPORT_TITLE,
