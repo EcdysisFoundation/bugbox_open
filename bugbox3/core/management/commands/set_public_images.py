@@ -27,6 +27,10 @@ class Command(BaseCommand):
             aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
         )
 
+
+    def add_arguments(self, parser):
+        parser.add_argument('--limit', type=int, help='Number of recs to send.')
+
     def make_public_acl(self, s, file):
         key = str(getattr(s, file))
         if key:
@@ -45,6 +49,10 @@ class Command(BaseCommand):
         if settings.ON_ECDYSIS_SERVER != 'YES':
             print('Currently this cmd is only supported on Ecdysis01')
             return
+
+        limit = options.get('limit')
+        if not limit:
+            recs = 10000
 
         org_ids = [v[0] for v in PUBLIC_DATA_ORGS]
         org_names = [v[1] for v in PUBLIC_DATA_ORGS]
@@ -68,12 +76,12 @@ class Command(BaseCommand):
             public_image=False,
             specimen__classification__isnull=False).exclude(
                 specimen__acceptance=0
-            )
+            )[:limit]
 
         if not specimen_images:
             print('No reviewed images found to make public.')
         else:
-            print('Publishing newly reviewed images.')
+            print('Publishing {0} newly reviewed images. Limit set at {1}'.format(len(specimen_images), limit))
 
         thecount = 0
         theincrement = range(0, 100000, 1000)
@@ -91,18 +99,17 @@ class Command(BaseCommand):
             print('selected reviewed images are now public')
 
         # Process non-reviwed images, with a limit
-        image_limit = 10000
         specimen_images = self.SpecimenImage.objects.filter(
             specimen__sample__site_visit__site__experiment__organization_id__in=org_ids,
             specimen__sample__site_visit__site__experiment__organization__name__in=org_names,
             public_image=False,
             specimen__acceptance=0,
-            specimen__ai_classification__isnull=False)[:image_limit]
+            specimen__ai_classification__isnull=False)[:limit]
 
         if not specimen_images:
             print('No other images found to make public.')
         else:
-            print('Publishing {0} images. Limit set at {1}'.format(len(specimen_images), image_limit))
+            print('Publishing {0} images. Limit set at {1}'.format(len(specimen_images), limit))
 
         thecount = 0
         for s in specimen_images:
