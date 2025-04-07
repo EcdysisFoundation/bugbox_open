@@ -38,6 +38,6 @@ if settings.ON_ECDYSIS_SERVER == "YES":
         },
         'run_refresh_public_exports': {
             'task': 'bugbox3.taxonomy.tasks.run_refresh_public_exports',
-            'schedule': crontab(day_of_week=5, hour=21, minute=5)
+            'schedule': crontab(day_of_month=1, hour=21, minute=5)
         }
     }
