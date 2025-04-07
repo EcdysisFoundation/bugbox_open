@@ -190,8 +190,8 @@ def public_reviewed_img_export(org_id):
     """
     if not isinstance(org_id, int):
         raise TypeError('public_images_export only accepts integers for the org_id')
-
-    filename = get_filename_org_timestamp(PUBLIC_IMAGES_EXPORT_TITLE, org_id, 'csv.gzip')
+    compression_method = 'zip'
+    filename = get_filename_org_timestamp(PUBLIC_IMAGES_EXPORT_TITLE, org_id, 'csv.' + compression_method)
     headers = get_public_export_headers(constants.FIELD_SPECIMEN_CLASSIFICATION)
     data = public_reviewed_images_q(org_id, headers['query_fields'])
     df = pd.DataFrame.from_records(data)
@@ -202,7 +202,7 @@ def public_reviewed_img_export(org_id):
 
     max_mem_size = 5 * (2**20)  # max memory size before it writes to disk
     with SpooledTemporaryFile(mode='wb', newline='', max_size=max_mem_size) as tmpfile:
-        df.to_csv(tmpfile, compression={'method': 'gzip'}, index=False)
+        df.to_csv(tmpfile, compression={'method': compression_method}, index=False)
         file_obj = File(tmpfile, name=filename)
 
         Exports.objects.create(
@@ -219,7 +219,8 @@ def public_all_img_export(org_id):
     if not isinstance(org_id, int):
         raise TypeError('public_images_export only accepts integers for the org_id')
 
-    filename = get_filename_org_timestamp(PUBLIC_ALL_IMAGES_EXPORT_TITLE, org_id, 'csv.gzip')
+    compression_method = 'zip'
+    filename = get_filename_org_timestamp(PUBLIC_ALL_IMAGES_EXPORT_TITLE, org_id, 'csv.' + compression_method)
 
     # get reviewed data
     reviewed_headers = get_public_export_headers(constants.FIELD_SPECIMEN_CLASSIFICATION)
@@ -248,7 +249,7 @@ def public_all_img_export(org_id):
 
     max_mem_size = 5 * (2**20)  # max memory size before it writes to disk
     with SpooledTemporaryFile(mode='wb', newline='', max_size=max_mem_size) as tempfile:
-        df.to_csv(tempfile, compression={'method': 'gzip'}, index=False)
+        df.to_csv(tempfile, compression={'method': compression_method}, index=False)
         file_obj = File(tempfile, name=filename)
         Exports.objects.create(
             organization_id=org_id,
