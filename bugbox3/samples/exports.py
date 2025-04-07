@@ -196,7 +196,7 @@ def public_reviewed_img_export(org_id):
     data = public_reviewed_images_q(org_id, headers['query_fields'])
     df = pd.DataFrame.from_records(data)
     df['reviewed'] = 'TRUE'
-    df = df.rename(columns=data['rename_lookup'])
+    df = df.rename(columns=headers['rename_lookup'])
     df['public_url'] = df.apply(get_public_media_url, axis=1)
     description = get_public_description(df)
 
