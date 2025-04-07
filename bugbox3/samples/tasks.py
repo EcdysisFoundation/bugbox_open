@@ -7,7 +7,8 @@ from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 
 from ..taxonomy.models import Morphospecies
-from ..taxonomy.utils import get_skip_morphospecies_ids, get_immature_morphospecies_ids
+from ..taxonomy.utils import (get_immature_morphospecies_ids,
+                              get_skip_morphospecies_ids)
 from . import constants
 from .calculations import get_indices
 from .models import Experiment, Sample, Site, UserExperimentFile
@@ -56,7 +57,6 @@ def export_csv(
     if export_type == constants.EXP_CSV_TYPE_REVIEWED:
         unknown_species += ' or reviewed'
 
-
     all_species = {unknown_species}
 
     # Normalize level – if not "family", default to "morphospecies"
@@ -79,7 +79,8 @@ def export_csv(
         for sample in samples:
             specimens = sample.specimen_set
             if not include_immatures_skipped and export_type != constants.EXP_CSV_TYPE_AI:
-                specimens = specimens.exclude(classification_id__in=skip_morphospecies_ids + immature_morphospecies_ids)
+                specimens = specimens.exclude(
+                    classification_id__in=skip_morphospecies_ids + immature_morphospecies_ids)
 
             if not specimens.count() and not sample.completed:
                 continue  # Skip incomplete/planned samples
@@ -145,7 +146,7 @@ def export_csv(
                     morpho_headers[0][name] = ''
                     morpho_headers[1][name] = ''
                     morpho_headers[2][name] = ''
-                
+
                 all_species.add(name)
                 total = 1 + specimen.partial_count
                 row[name] = row.get(name, 0) + total
@@ -155,21 +156,20 @@ def export_csv(
                     excluded_names_in_row.add(name)
 
             if indices:
-                    excluded_names_for_indices = excluded_names_in_row.union({unknown_species})
+                excluded_names_for_indices = excluded_names_in_row.union({unknown_species})
 
-                    row_for_indices = {
-                        k: v for k, v in row.items()
-                        if k not in excluded_names_for_indices and k not in constants.EXP_HEADERS_ARR + indices
-                    }
+                row_for_indices = {
+                    k: v for k, v in row.items()
+                    if k not in excluded_names_for_indices and k not in constants.EXP_HEADERS_ARR + indices
+                }
 
-                    n_for_indices = sum(row_for_indices.values())
+                n_for_indices = sum(row_for_indices.values())
 
-                    indice_results = get_indices(n_for_indices, row_for_indices, headers_arr)
-                    for i in indices:
-                        print(f"Writing {i}: {indice_results.get(i, '')}")
-                        row[i] = indice_results.get(i, '')
+                indice_results = get_indices(n_for_indices, row_for_indices, headers_arr)
+                for i in indices:
+                    print(f"Writing {i}: {indice_results.get(i, '')}")
+                    row[i] = indice_results.get(i, '')
             rows.append(row)
-
 
     timestr = time.strftime("%Y%m%d-%H%M%S")
     all_species.remove(unknown_species)  # Moving unknown to the front
