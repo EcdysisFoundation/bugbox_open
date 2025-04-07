@@ -25,6 +25,7 @@ def get_skip_morphospecies_ids():
         Q(name__in=names)
     ).values_list('id', flat=True))
 
+
 def get_immature_morphospecies_ids():
     return list(
         Morphospecies.objects.filter(
