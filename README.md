@@ -33,6 +33,7 @@ Check other Flake8 issues
 The production database is on Heroku. A copy can be obtained for development purposes. Using local.yml for development, a postgres container is created. To restore a db to it, proceed as follows.
 
 A script, `backup_db_s3.py` is run on Heroku at defined intervals to create long term backups or can be ran as needed to create a backup file and upload to S3.
+The file is named with the date, for example 2025-04-11.dump generated the morning of April 11, 2025.
 
 Knowing the BACKUP_FILENAME on S3, use it with the following script to download to local_files.
 
