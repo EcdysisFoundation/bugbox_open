@@ -8,7 +8,10 @@ import platform
 
 def run(cmd):
     use_shell = platform.system() == "Windows"
-    output = subprocess.check_output(cmd, shell=use_shell, text=True)
+    if use_shell:
+        output = subprocess.check_output(cmd, shell=use_shell, text=True)
+    else:
+        output = subprocess.check_output(cmd.split()).decode()
     return output
 
 
