@@ -52,7 +52,7 @@ class Command(BaseCommand):
 
         limit = options.get('limit')
         if not limit:
-            recs = 10000
+            limit = 10000
 
         org_ids = [v[0] for v in PUBLIC_DATA_ORGS]
         org_names = [v[1] for v in PUBLIC_DATA_ORGS]

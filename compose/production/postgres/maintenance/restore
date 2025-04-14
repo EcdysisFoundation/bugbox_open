@@ -49,6 +49,9 @@ dropdb "${PGDATABASE}"
 message_info "Creating a new database..."
 createdb --owner="${PGUSER}"
 
+message_info "Your version of pg_restore is ..."
+pg_restore --version
+
 message_info "Applying the backup.dump to the new database..."
 pg_restore --verbose --clean --no-acl --no-owner -U ${PGUSER} -d ${PGDATABASE} ${backup_filename}
 
