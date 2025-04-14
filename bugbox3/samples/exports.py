@@ -200,8 +200,9 @@ def public_reviewed_img_export(org_id):
     df['public_url'] = df.apply(get_public_media_url, axis=1)
     description = get_public_description(df)
 
-    max_mem_size = 5 * (2**20)  # max memory size before it writes to disk
-    with SpooledTemporaryFile(mode='wb', newline='', max_size=max_mem_size) as tmpfile:
+    # max memory size very high due to error when writing to disk
+    max_mem_size = 5000 * (2**20)  # max memory size before it writes to disk
+    with SpooledTemporaryFile(mode='wb', max_size=max_mem_size) as tmpfile:
         df.to_csv(tmpfile, compression={'method': compression_method}, index=False)
         file_obj = File(tmpfile, name=filename)
 
@@ -247,8 +248,9 @@ def public_all_img_export(org_id):
     df['public_url'] = df.apply(get_public_media_url, axis=1)
     description = get_public_description(df)
 
-    max_mem_size = 5 * (2**20)  # max memory size before it writes to disk
-    with SpooledTemporaryFile(mode='wb', newline='', max_size=max_mem_size) as tempfile:
+    # max memory size very high due to error when writing to disk
+    max_mem_size = 5000 * (2**20)  # max memory size before it writes to disk
+    with SpooledTemporaryFile(mode='wb', max_size=max_mem_size) as tempfile:
         df.to_csv(tempfile, compression={'method': compression_method}, index=False)
         file_obj = File(tempfile, name=filename)
         Exports.objects.create(
