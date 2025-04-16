@@ -144,7 +144,8 @@ def get_public_export_headers(classification=constants.FIELD_SPECIMEN_CLASSIFICA
                                  constants.FIELD_SITE_COUNTY_REGION,
                                  constants.FIELD_SITE_US_STATE_COUNTY_FIPS]]
     query_fields += ['specimen__' + c + '__' +
-                     v for v in [constants_tax.FIELD_MORPHO_GBIF_ORDER,
+                     v for v in [constants_tax.FIELD_MORPHO_GBIF_CLASS,
+                                 constants_tax.FIELD_MORPHO_GBIF_ORDER,
                                  constants_tax.FIELD_MORPHO_GBIF_FAMILY,
                                  constants_tax.FIELD_MORPHO_GBIF_GENUS,
                                  constants_tax.FIELD_MORPHO_GBIF_SPECIES]]
