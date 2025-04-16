@@ -56,7 +56,7 @@ using the returned CONTAINER_ID, move the backup file from local_files to the co
     docker cp ./local_files/BACKUP_FILENAME CONTAINER_ID:/backups
 
 
-Use the `restore` bash script to restore the db using the backup. It first drops the db, then creates a blank one. As a result numerous 'errors' will report in the output where it tries to drop tables and indexes that do not exist. These can be ignored.
+Use the `restore` bash script to restore the db using the backup.
 
     docker compose -f local.yml exec postgres restore BACKUP_FILENAME
 
