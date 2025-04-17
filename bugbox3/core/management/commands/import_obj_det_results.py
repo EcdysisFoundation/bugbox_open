@@ -31,19 +31,13 @@ class Command(BaseCommand):
                     if si.object_det_updated_at == thedate:
                         skipped += 1
                         continue
-                si.object_det_label=d['label']
-                si.object_det_annotation_id=d['annotation_id']
-                si.object_det_id=d['id']
-                si.object_det_updated_at=d['updated_at']
+                si.object_det_label = d['label']
+                si.object_det_annotation_id = d['annotation_id']
+                si.object_det_id = d['id']
+                si.object_det_updated_at = d['updated_at']
                 si.save()
                 saved += 1
 
             print('Completed, saved {0} new annotations, skipped {1}'.format(
                 saved, skipped
             ))
-
-
-
-
-
-
