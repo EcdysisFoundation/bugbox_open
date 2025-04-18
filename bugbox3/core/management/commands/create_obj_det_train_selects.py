@@ -1,5 +1,5 @@
 import json
-
+from django.core.serializers.json import DjangoJSONEncoder
 from django.apps import apps
 from django.core import serializers
 from django.core.management.base import BaseCommand
@@ -29,11 +29,18 @@ class Command(BaseCommand):
                 'specimen__classification__gbif_order').order_by(
                     'specimen__classification__gbif_order').values_list(
                     'specimen__classification__gbif_order', flat=True)
+        fields = [
+            'id',
+            'specimen_id',
+            'image',
+            'specimen__classification__gbif_canonical_name',
+            'specimen__classification__gbif_order',
+            'object_det_label'
+        ]
 
-        fields = ['id', 'specimen_id', 'image', 'specimen__classification__gbif_canonical_name',
-                  'specimen__classification__gbif_order', 'object_det_label']
+        q = q.values(*fields)
+        serialized_data = json.dumps(list(q), cls=DjangoJSONEncoder)
 
-        serialized_data = serializers.serialize('json', q, fields=fields)
         # Parse the serialized data to ensure proper JSON formatting
         data = json.loads(serialized_data)
 
