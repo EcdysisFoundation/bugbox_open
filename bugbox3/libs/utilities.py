@@ -1,4 +1,5 @@
 import json
+from datetime import datetime, timezone
 from io import BytesIO
 from pathlib import Path
 
@@ -29,6 +30,16 @@ def get_json_context(context_dict):
         return '<script id="json_context" type="application/json">%s</script>' % thejson
     else:
         return None
+
+
+def get_filename_org_timestamp(title, org_id, ext):
+    """
+    Return a filename formated with title, organization_id, and file extension.
+    """
+    now = datetime.now(tz=timezone.utc)
+    filename = '__'.join([title, str(org_id),
+                          now.strftime('%Y-%m-%d_%H%M%S')])
+    return '{0}.{1}'.format(filename, ext)
 
 
 def grid_id_format(v):

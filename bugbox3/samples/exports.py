@@ -1,8 +1,8 @@
 import csv
 import time
-from datetime import datetime, timezone
 from tempfile import SpooledTemporaryFile
 
+import pandas as pd
 from django.conf import settings
 from django.contrib.auth.decorators import permission_required
 from django.core.files import File
@@ -12,6 +12,7 @@ from django.shortcuts import redirect
 
 from ..core.models import Exports
 from ..core.permissions import IS_RESEARCH
+from ..libs.utilities import get_filename_org_timestamp
 from ..taxonomy import constants as constants_tax
 from . import constants
 from .models import Experiment, Specimen, SpecimenImage, UserExperimentFile
@@ -92,7 +93,8 @@ def experiment_csv(request, id):
         user_experiment_file.save()
         indices = request.POST.getlist('indices')
         # include abundance and species_richness first.
-        indices = constants.INDICES_ALWAYS_INCLUDED + [idx for idx in indices if idx not in constants.INDICES_ALWAYS_INCLUDED]
+        indices = constants.INDICES_ALWAYS_INCLUDED + \
+            [idx for idx in indices if idx not in constants.INDICES_ALWAYS_INCLUDED]
         # Expand "Hill Numbers" into its four components
         if 'hill_numbers' in indices:
             indices.remove('hill_numbers')
@@ -122,78 +124,88 @@ def experiment_csv(request, id):
     raise Http404
 
 
-PUBLIC_IMAGES_EXPORT_TITLE = 'public-images-exp'
+PUBLIC_IMAGES_EXPORT_TITLE = 'public-reviewed-img-exp'
+PUBLIC_ALL_IMAGES_EXPORT_TITLE = 'public-all-img-exp'
 
 
-def public_images_export(org_id):
+def get_public_export_headers(classification=constants.FIELD_SPECIMEN_CLASSIFICATION):
+    c = classification
+    if c not in (constants.FIELD_SPECIMEN_CLASSIFICATION, constants.FIELD_SPECIMEN_AI_CLASSIFICATION):
+        return None
+    query_fields = ['id', 'specimen_id', constants.SPECIMEN_IMAGE_IMAGE_THUMBNAIL_LARGE]
+    query_fields += ['specimen__' +
+                     v for v in [constants.FIELD_SPECIMEN_ARCHIVAL_IDENTIFIER,
+                                 constants.FIELD_SPECIMEN_ARCHIVAL_STORED]]
+    query_fields += ['specimen__sample__site_visit__' +
+                     v for v in [constants.FIELD_SITE_VISIT_DATE]]
+    query_fields += ['specimen__sample__site_visit__site__' +
+                     v for v in [constants.FIELD_SITE_COUNTRY,
+                                 constants.FIELD_SITE_STATE_REGION,
+                                 constants.FIELD_SITE_COUNTY_REGION,
+                                 constants.FIELD_SITE_US_STATE_COUNTY_FIPS]]
+    query_fields += ['specimen__' + c + '__' +
+                     v for v in [constants_tax.FIELD_MORPHO_GBIF_CLASS,
+                                 constants_tax.FIELD_MORPHO_GBIF_ORDER,
+                                 constants_tax.FIELD_MORPHO_GBIF_FAMILY,
+                                 constants_tax.FIELD_MORPHO_GBIF_GENUS,
+                                 constants_tax.FIELD_MORPHO_GBIF_SPECIES]]
+
+    out_headers = query_fields
+    out_headers = [v.replace('specimen__' + c + '__', '') for v in out_headers]
+    out_headers = [v.replace('specimen__sample__site_visit__site__', '') for v in out_headers]
+    out_headers = [v.replace('specimen__sample__site_visit__', '') for v in out_headers]
+    out_headers = [v.replace('specimen__', '') for v in out_headers]
+
+    rename_lookup = {query_fields[i]: v for i, v in enumerate(out_headers)}
+
+    return {
+        'query_fields': query_fields,
+        'out_headers': out_headers,
+        'rename_lookup': rename_lookup
+    }
+
+
+def public_reviewed_images_q(org_id, query_fields):
+    return SpecimenImage.objects.filter(
+        specimen__sample__site_visit__site__experiment__organization_id=org_id,
+        specimen__classification_id__isnull=False,
+        public_image=True).exclude(specimen__acceptance=0).values(*query_fields)
+
+
+def get_public_media_url(row):
+    return settings.MEDIA_URL + row[constants.SPECIMEN_IMAGE_IMAGE_THUMBNAIL_LARGE]
+
+
+def get_public_description(df):
+    return {
+            'image_count': len(df),
+            'specimen_count': df['specimen_id'].nunique(),
+            'order_count': df[constants_tax.FIELD_MORPHO_GBIF_ORDER].nunique(),
+            'family_count': df[constants_tax.FIELD_MORPHO_GBIF_FAMILY].nunique(),
+        }
+
+
+def public_reviewed_img_export(org_id):
     """
     Make an export file of public images, save the record in the db.
     """
     if not isinstance(org_id, int):
         raise TypeError('public_images_export only accepts integers for the org_id')
-    # make filename
-    now = datetime.now(tz=timezone.utc)
-    filename = '__'.join([PUBLIC_IMAGES_EXPORT_TITLE, str(org_id),
-                          now.strftime('%Y-%m-%d_%H%M%S')])
-    filename = '%s.csv' % filename
+    compression_method = 'zip'
+    filename = get_filename_org_timestamp(PUBLIC_IMAGES_EXPORT_TITLE, org_id, 'csv.' + compression_method)
+    headers = get_public_export_headers(constants.FIELD_SPECIMEN_CLASSIFICATION)
+    data = public_reviewed_images_q(org_id, headers['query_fields'])
+    df = pd.DataFrame.from_records(data)
+    df['reviewed'] = 'TRUE'
+    df = df.rename(columns=headers['rename_lookup'])
+    df['public_url'] = df.apply(get_public_media_url, axis=1)
+    description = get_public_description(df)
 
-    # headers and values query columns are the same
-    export_headers = ['id', 'specimen_id', constants.SPECIMEN_IMAGE_IMAGE_THUMBNAIL_LARGE]
-    export_headers += ['specimen__' +
-                       v for v in [constants.FIELD_SPECIMEN_ARCHIVAL_IDENTIFIER,
-                                   constants.FIELD_SPECIMEN_ARCHIVAL_STORED]]
-    export_headers += ['specimen__sample__site_visit__' +
-                       v for v in [constants.FIELD_SITE_VISIT_DATE]]
-    export_headers += ['specimen__sample__site_visit__site__' +
-                       v for v in [constants.FIELD_SITE_COUNTRY,
-                                   constants.FIELD_SITE_STATE_REGION,
-                                   constants.FIELD_SITE_COUNTY_REGION,
-                                   constants.FIELD_SITE_US_STATE_COUNTY_FIPS]]
-    export_headers += ['specimen__classification__' +
-                       v for v in [constants_tax.FIELD_MORPHO_GBIF_CANONICAL_NAME,
-                                   constants_tax.FIELD_MORPHO_GBIF_ORDER,
-                                   constants_tax.FIELD_MORPHO_GBIF_FAMILY,
-                                   constants_tax.FIELD_MORPHO_GBIF_GENUS,
-                                   constants_tax.FIELD_MORPHO_GBIF_SPECIES,
-                                   constants_tax.FIELD_MORPHO_GBIF_RANK]]
-    # query data
-    data = SpecimenImage.objects.filter(
-        specimen__sample__site_visit__site__experiment__organization_id=org_id,
-        public_image=True)
-    data = data.values(*export_headers)
-
-    specimens = set()
-    orders = set()
-    families = set()
-    to_genera = 0
-    to_species = 0
-
-    max_mem_size = 5 * (2**20)  # max memory size before it writes to disk
-    with SpooledTemporaryFile(mode='w+', newline='', max_size=max_mem_size) as tmpfile:
-        writer = csv.writer(tmpfile)
-        writer.writerow(export_headers + ['public_url'])
-        for i in data:
-            specimens.add(i['specimen_id'])
-            orders.add(i['specimen__classification__' + constants_tax.FIELD_MORPHO_GBIF_ORDER])
-            families.add(i['specimen__classification__' + constants_tax.FIELD_MORPHO_GBIF_FAMILY])
-            if i['specimen__classification__' +
-                 constants_tax.FIELD_MORPHO_GBIF_RANK] == constants_tax.GBIF_RANK_GENUS:
-                to_genera += 1
-            if i['specimen__classification__' +
-                 constants_tax.FIELD_MORPHO_GBIF_RANK] == constants_tax.GBIF_RANK_SPECIES:
-                to_species += 1
-            url = settings.MEDIA_URL + i[constants.SPECIMEN_IMAGE_IMAGE_THUMBNAIL_LARGE]
-            writer.writerow([str(i[v]) for v in export_headers] + [url])
+    # max memory size very high due to error when writing to disk
+    max_mem_size = 5000 * (2**20)  # max memory size before it writes to disk
+    with SpooledTemporaryFile(mode='wb', max_size=max_mem_size) as tmpfile:
+        df.to_csv(tmpfile, compression={'method': compression_method}, index=False)
         file_obj = File(tmpfile, name=filename)
-
-        description = {
-            'image_count': len(data),
-            'specimen_count': len(specimens),
-            'order_count': len(orders),
-            'family_count': len(families),
-            'identified_to_genus':  to_genera,
-            'identified_to_species': to_species,
-        }
 
         Exports.objects.create(
             organization_id=org_id,
@@ -201,5 +213,53 @@ def public_images_export(org_id):
             file=file_obj,
             description=description
         )
+    # return the filename only
+    return filename
+
+
+def public_all_img_export(org_id):
+    if not isinstance(org_id, int):
+        raise TypeError('public_images_export only accepts integers for the org_id')
+
+    compression_method = 'zip'
+    filename = get_filename_org_timestamp(PUBLIC_ALL_IMAGES_EXPORT_TITLE, org_id, 'csv.' + compression_method)
+
+    # get reviewed data
+    reviewed_headers = get_public_export_headers(constants.FIELD_SPECIMEN_CLASSIFICATION)
+    reviewed_data = public_reviewed_images_q(org_id, reviewed_headers['query_fields'])
+    df = pd.DataFrame.from_records(reviewed_data)
+    df['reviewed'] = 'TRUE'
+    df = df.rename(columns=reviewed_headers['rename_lookup'])
+
+    # get the rest of the data
+    headers = get_public_export_headers(constants.FIELD_SPECIMEN_AI_CLASSIFICATION)
+    data = SpecimenImage.objects.filter(
+        specimen__sample__site_visit__site__experiment__organization_id=org_id,
+        specimen__ai_classification_id__isnull=False,
+        specimen__acceptance=0,
+        public_image=True
+        ).values(*headers['query_fields'])
+    df2 = pd.DataFrame.from_records(data)
+    df2['reviewed'] = 'FALSE'
+    df2 = df2.rename(columns=headers['rename_lookup'])
+
+    # combine the two
+    df = pd.concat([df, df2])
+
+    df['public_url'] = df.apply(get_public_media_url, axis=1)
+    description = get_public_description(df)
+
+    # max memory size very high due to error when writing to disk
+    max_mem_size = 5000 * (2**20)  # max memory size before it writes to disk
+    with SpooledTemporaryFile(mode='wb', max_size=max_mem_size) as tempfile:
+        df.to_csv(tempfile, compression={'method': compression_method}, index=False)
+        file_obj = File(tempfile, name=filename)
+        Exports.objects.create(
+            organization_id=org_id,
+            title=PUBLIC_ALL_IMAGES_EXPORT_TITLE,
+            file=file_obj,
+            description=description
+        )
+
     # return the filename only
     return filename

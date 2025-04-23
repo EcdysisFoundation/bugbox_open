@@ -92,3 +92,17 @@ def run_update_classifications():
 def run_s3_media_download():
     if settings.ON_ECDYSIS_SERVER == 'YES':
         call_command('s3_download_images')
+
+
+# only run on Ecdysis01
+@shared_task
+def run_set_public_images():
+    if settings.ON_ECDYSIS_SERVER == 'YES':
+        call_command('set_public_images')
+
+
+# only run on Ecdysis01
+@shared_task
+def run_refresh_public_exports():
+    if settings.ON_ECDYSIS_SERVER == 'YES':
+        call_command('refresh_public_exports')
