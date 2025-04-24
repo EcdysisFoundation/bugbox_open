@@ -311,9 +311,17 @@ class SpecimenForm(ModelFormMixin):
             ]
         row_2 = [Column(constants.FIELD_SPECIMEN_TAGS)]
         if not self.review_permission:
-            row_2 += [Column(Field(constants.FIELD_SPECIMEN_ACCEPTANCE, readonly=True))]
+            row_2 += [
+                Column(
+                    Field(constants.FIELD_SPECIMEN_ACCEPTANCE, readonly=True),
+                    Field(constants.FIELD_SPECIMEN_OBJECT_DET_TRAIN, readonly=True)
+                )]
         else:
-            row_2 += [Column(constants.FIELD_SPECIMEN_ACCEPTANCE)]
+            row_2 += [
+                Column(
+                    Field(constants.FIELD_SPECIMEN_ACCEPTANCE),
+                    Field(constants.FIELD_SPECIMEN_OBJECT_DET_TRAIN)
+                )]
         v = [
             Field(constants.FIELD_SPECIMEN_CLASSIFICATION),
             Field(constants.FIELD_SPECIMCEN_SAMPLE),
