@@ -12,6 +12,8 @@ GBIF_OCCURRENCE_API = "https://api.gbif.org/v1/occurrence/search"
 class Command(BaseCommand):
     help = "Populate GBIFImageRecord table and link/create Morphospecies based on Excel and GBIF API"
 
+    MAX_IMAGES_PER_TAXON = 500
+
     def handle(self, *args, **kwargs):
         entries = self.load_taxon_keys(EXCEL_FILE_PATH)
         if not entries:
@@ -20,7 +22,6 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS(f"[DONE] Loaded {len(entries)} entries."))
 
-        # Caching
         existing_urls = set(GBIFImageRecord.objects.values_list("image_url", flat=True))
         morpho_cache = {m.name.lower(): m for m in Morphospecies.objects.all()}
         species_info_cache = {}
@@ -31,82 +32,102 @@ class Command(BaseCommand):
 
             self.stdout.write(self.style.NOTICE(f"📡 Fetching GBIF records for taxonKey: {taxon_key}"))
 
-            params = {
-                "taxonKey": taxon_key,
-                "mediaType": "StillImage",
-                "hasCoordinate": "true",
-                "limit": 300
-            }
+            images_buffer = []
+            offset = 0
+            while len(images_buffer) < self.MAX_IMAGES_PER_TAXON:
+                params = {
+                    "taxonKey": taxon_key,
+                    "mediaType": "StillImage",
+                    "hasCoordinate": "true",
+                    "limit": 300,
+                    "offset": offset
+                }
 
-            try:
-                response = requests.get(GBIF_OCCURRENCE_API, params=params, timeout=10)
-                response.raise_for_status()
-                results = response.json().get("results", [])
+                try:
+                    response = requests.get(GBIF_OCCURRENCE_API, params=params, timeout=10)
+                    response.raise_for_status()
+                    results = response.json().get("results", [])
 
-                for record in results:
-                    species_key = record.get("speciesKey")
-                    genus_key = record.get("genusKey")
+                    if not results:
+                        break
 
-                    for media in record.get("media", []):
-                        image_url = media.get("identifier")
-                        if not image_url or image_url in existing_urls:
-                            continue
+                    for record in results:
+                        species_key = record.get("speciesKey")
+                        genus_key = record.get("genusKey")
 
-                        morpho = None
-                        if morpho_name:
-                            morpho = morpho_cache.get(morpho_name.lower())
-                        else:
-                            key = species_key or genus_key or taxon_key
-                            if key not in species_info_cache:
-                                species_info_cache[key] = self.get_species_info(key)
-                            gbif_info = species_info_cache[key]
-                            canonical_name = gbif_info.get("canonicalName")
+                        for media in record.get("media", []):
+                            image_url = media.get("identifier")
+                            if not image_url or image_url in existing_urls:
+                                continue
 
-                            if canonical_name:
-                                morpho, created = Morphospecies.objects.get_or_create(
-                                    name=canonical_name,
-                                    defaults={
-                                        "gbif_key": key,
-                                        "gbif_rank": gbif_info.get("rank", ""),
-                                        "gbif_class": gbif_info.get("class", ""),
-                                        "gbif_order": gbif_info.get("order", ""),
-                                        "gbif_family": gbif_info.get("family", ""),
-                                        "gbif_genus": gbif_info.get("genus", ""),
-                                        "gbif_species": gbif_info.get("species", ""),
-                                        "gbif_canonical_name": canonical_name,
-                                        "gbif_scientific_name": gbif_info.get("scientificName", ""),
-                                        "decimal_latitude": record.get("decimalLatitude"),
-                                        "decimal_longitude": record.get("decimalLongitude"),
-                                    }
-                                )
-                                if not created:
-                                    updated = False
-                                    if not morpho.gbif_key and key:
-                                        morpho.gbif_key = key
-                                        updated = True
-                                    if not morpho.decimal_latitude and record.get("decimalLatitude"):
-                                        morpho.decimal_latitude = record.get("decimalLatitude")
-                                        updated = True
-                                    if not morpho.decimal_longitude and record.get("decimalLongitude"):
-                                        morpho.decimal_longitude = record.get("decimalLongitude")
-                                        updated = True
-                                    if updated:
-                                        morpho.save()
-                                        self.stdout.write(self.style.SUCCESS(f"[DONE] Updated morphospecies: {canonical_name}"))
+                            images_buffer.append((record, media, species_key, genus_key))
+                            existing_urls.add(image_url)
 
-                        GBIFImageRecord.objects.create(
-                            gbif_taxon_key=species_key or genus_key or taxon_key,
-                            scientific_name=record.get("scientificName"),
-                            image_url=image_url,
-                            media_type=media.get("type"),
-                            license=media.get("license"),
-                            morphospecies=morpho,
-                            downloaded_image=False
+                            if len(images_buffer) >= self.MAX_IMAGES_PER_TAXON:
+                                break
+
+                    offset += 300
+                except Exception as e:
+                    self.stdout.write(self.style.ERROR(f"[X] Failed for taxonKey {taxon_key}: {e}"))
+                    break
+
+            for record, media, species_key, genus_key in images_buffer:
+                image_url = media.get("identifier")
+                morpho = None
+
+                if morpho_name:
+                    morpho = morpho_cache.get(morpho_name.lower())
+                else:
+                    key = species_key or genus_key or taxon_key
+                    if key not in species_info_cache:
+                        species_info_cache[key] = self.get_species_info(key)
+                    gbif_info = species_info_cache[key]
+                    canonical_name = gbif_info.get("canonicalName")
+
+                    if canonical_name:
+                        morpho, created = Morphospecies.objects.get_or_create(
+                            name=canonical_name,
+                            defaults={
+                                "gbif_key": key,
+                                "gbif_rank": gbif_info.get("rank", ""),
+                                "gbif_class": gbif_info.get("class", ""),
+                                "gbif_order": gbif_info.get("order", ""),
+                                "gbif_family": gbif_info.get("family", ""),
+                                "gbif_genus": gbif_info.get("genus", ""),
+                                "gbif_species": gbif_info.get("species", ""),
+                                "gbif_canonical_name": canonical_name,
+                                "gbif_scientific_name": gbif_info.get("scientificName", "")
+                            }
                         )
-                        existing_urls.add(image_url)
+                        if not created:
+                            updated = False
+                            if not morpho.gbif_key and key:
+                                morpho.gbif_key = key
+                                updated = True
+                            if not morpho.gbif_rank and gbif_info.get("rank"):
+                                morpho.gbif_rank = gbif_info.get("rank")
+                                updated = True
+                            if not morpho.gbif_canonical_name and gbif_info.get("canonicalName"):
+                                morpho.gbif_canonical_name = gbif_info.get("canonicalName")
+                                updated = True
+                            if not morpho.gbif_scientific_name and gbif_info.get("scientificName"):
+                                morpho.gbif_scientific_name = gbif_info.get("scientificName")
+                                updated = True
+                            if updated:
+                                morpho.save()
+                                self.stdout.write(self.style.SUCCESS(f"[UPDATED] Morphospecies: {morpho.name}"))
 
-            except Exception as e:
-                self.stdout.write(self.style.ERROR(f"[X] Failed for taxonKey {taxon_key}: {e}"))
+                GBIFImageRecord.objects.create(
+                    gbif_taxon_key=species_key or genus_key or taxon_key,
+                    scientific_name=record.get("scientificName"),
+                    image_url=image_url,
+                    media_type=media.get("type"),
+                    license=media.get("license"),
+                    morphospecies=morpho,
+                    downloaded_image=False,
+                    decimal_latitude=record.get("decimalLatitude"),
+                    decimal_longitude=record.get("decimalLongitude")
+                )
 
     def load_taxon_keys(self, file_path):
         try:
