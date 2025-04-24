@@ -27,7 +27,6 @@ class Command(BaseCommand):
             aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
         )
 
-
     def add_arguments(self, parser):
         parser.add_argument('--limit', type=int, help='Number of recs to send.')
 
