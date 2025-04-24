@@ -1,7 +1,8 @@
 import json
-from django.core.serializers.json import DjangoJSONEncoder
+
 from django.apps import apps
 from django.core.management.base import BaseCommand
+from django.core.serializers.json import DjangoJSONEncoder
 
 from bugbox3.samples.constants import ACCEPTANCE_PENDING
 
