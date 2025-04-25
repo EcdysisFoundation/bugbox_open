@@ -3,7 +3,7 @@ from io import BytesIO
 from django.conf import settings
 from django.db.models import (CASCADE, SET_NULL, BooleanField, CharField,
                               DateField, DateTimeField, FloatField, ForeignKey,
-                              ImageField, IntegerField, Model)
+                              ImageField, IntegerField, Model, BigIntegerField)
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 
@@ -35,8 +35,6 @@ class Morphospecies(Model):
     image_thumbnail = ImageField(upload_to='morpho_images/', null=True, blank=True)
     update_thumbs = BooleanField(null=True)
     exclude_from_export = BooleanField(default=False)
-    decimal_latitude = FloatField(null=True, blank=True)
-    decimal_longitude = FloatField(null=True, blank=True)
     class Meta:
         app_label = 'taxonomy'
 
@@ -95,6 +93,9 @@ class GBIFImageRecord(Model):
     license = CharField(max_length=255, blank=True, null=True)
     morphospecies = ForeignKey(Morphospecies, null=True, blank=True, on_delete=SET_NULL)
     date_fetched = DateTimeField(auto_now_add=True)
+    decimal_latitude = FloatField(null=True, blank=True)
+    decimal_longitude = FloatField(null=True, blank=True)
+    occurrence_id = BigIntegerField(null=True, blank=True)
     downloaded_image = BooleanField(default=False)
 
     class Meta:
