@@ -232,6 +232,14 @@ INDICES_DESCRIPTIONS = {
     )
 }
 
+ACARI_GBIF_ORDERS = {
+    "Holothyrida",
+    "Mesostigmata",
+    "Opilioacarida",
+    "Sarcoptiformes",
+    "Trombidiformes"
+}
+
 # could be used as recomended or starting model choices
 SITE_HABITAT_TYPES = (
     'alfalfa',
