@@ -3,7 +3,7 @@ from io import BytesIO
 from django.conf import settings
 from django.db.models import (CASCADE, SET_NULL, BooleanField, CharField,
                               DateField, DateTimeField, FloatField, ForeignKey,
-                              ImageField, IntegerField, Model)
+                              ImageField, IntegerField, Model, BigIntegerField)
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 
@@ -35,6 +35,8 @@ class Morphospecies(Model):
     image_thumbnail = ImageField(upload_to='morpho_images/', null=True, blank=True)
     update_thumbs = BooleanField(null=True)
     exclude_from_export = BooleanField(default=False)
+    class Meta:
+        app_label = 'taxonomy'
 
     def __str__(self):
         return str(self.name)
@@ -82,3 +84,21 @@ class AiTraining(Model):
     test = IntegerField(null=False)
     val = IntegerField(null=False)
     entered_date = DateField(auto_now_add=True)
+
+class GBIFImageRecord(Model):
+    gbif_taxon_key = IntegerField()
+    scientific_name = CharField(max_length=255)
+    image_url = CharField(max_length=500)
+    media_type = CharField(max_length=100, blank=True, null=True)
+    license = CharField(max_length=255, blank=True, null=True)
+    morphospecies = ForeignKey(Morphospecies, null=True, blank=True, on_delete=SET_NULL)
+    date_fetched = DateTimeField(auto_now_add=True)
+    decimal_latitude = FloatField(null=True, blank=True)
+    decimal_longitude = FloatField(null=True, blank=True)
+    occurrence_id = BigIntegerField(null=True, blank=True)
+    downloaded_image = BooleanField(default=False)
+
+    class Meta:
+        app_label = 'taxonomy'
+    def __str__(self):
+        return f"{self.scientific_name} ({self.gbif_taxon_key})"
