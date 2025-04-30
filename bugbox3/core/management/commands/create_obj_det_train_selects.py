@@ -4,7 +4,7 @@ from django.apps import apps
 from django.core.management.base import BaseCommand
 from django.core.serializers.json import DjangoJSONEncoder
 
-from bugbox3.samples.constants import ACCEPTANCE_PENDING
+from bugbox3.samples import constants
 
 
 class Command(BaseCommand):
@@ -23,7 +23,8 @@ class Command(BaseCommand):
         q = self.SpecimenImage.objects.filter(
             specimen__classification_id__isnull=False,
             downloaded_image=True,
-            object_det_updated_at__isnull=False).exclude(specimen__acceptance=ACCEPTANCE_PENDING)
+            object_det_updated_at__isnull=False).exclude(
+                specimen__acceptance=constants.ACCEPTANCE_PENDING)
 
         orders = q.distinct(
                 'specimen__classification__gbif_order').order_by(
@@ -32,10 +33,10 @@ class Command(BaseCommand):
         fields = [
             'id',
             'specimen_id',
-            'image',
+            constants.SPECIMEN_IMAGE_IMAGE_THUMBNAIL_LARGE,
             'specimen__classification__gbif_canonical_name',
             'specimen__classification__gbif_order',
-            'object_det_label'
+            constants.SPECIMEN_IMAGE_OBJECT_DET_LABEL
         ]
 
         q = q.values(*fields)
