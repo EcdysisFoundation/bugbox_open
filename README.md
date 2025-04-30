@@ -159,3 +159,18 @@ A get request
             raise Http404
 
 When creating new Organizations, these new Organizations will need their LookupChoices populated to be able to create Experiments and use other forms. Populate a default set of LookupChoices to get them started, by running the management command `populate_org_choices`, passing the required argument of the new organization ID.
+
+
+## Ecdysis02 management commands
+
+When running management commands on Ecdysis02, be the command is..
+
+    docker compose -f local-cloud.yml run --rm django python manage.py MY_COMMAND
+
+Several management commands and tasks are specific to Ecdysis02. Some of these are scheduled through the Celery Beat schedule. Details about some specific commands are below.
+
+### Object Detection Training.
+
+We can annotate images for object detection through Label Studio, see https://github.com/EcdysisFoundation/label-studio which is hosted at http://ecdysis01.local:8080/
+
+Command `send_label_studio` selects images with criteria to set `Specimen.object_det_train` to True for select criteria, then sends selected images to Label Studio. After they are annotated, export the JSON-MIN format. With it moved to Ecdysis01, example `scp obj_det_export.json ecdysis@ecdysis01.local:/srv/bugbox3/local_files/obj_det_export.json`, and then run `import_obj_det_results`. This stores the annotations in our database. Then to export all annotations, use `create_obj_det_train_selects` to create a json file formatted for use with  https://github.com/EcdysisFoundation/ultralytics .
