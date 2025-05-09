@@ -106,6 +106,7 @@ SPECIMEN_IMAGE_IMAGE_THUMBNAIL = 'image_thumbnail'
 SPECIMEN_IMAGE_IMAGE_THUMBNAIL_MEDIUM = 'image_thumbnail_medium'
 SPECIMEN_IMAGE_IMAGE_THUMBNAIL_LARGE = 'image_thumbnail_large'
 SPECIMEN_IMAGE_DATE_ADDED = 'date_added'
+SPECIMEN_IMAGE_OBJECT_DET_LABEL = 'object_det_label'
 
 #  Model Choices
 
