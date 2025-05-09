@@ -95,7 +95,7 @@ def get_datatables_row(columns, row_styles=(), col_styles=()):
 def get_img_src(img_field, resize_width=None, styles='', public=False):
     """
     Get an html img tag formated from an ImageField.
-    Styes should be a string of styes, exampe 'c-1 c-2'
+    Styles should be a string of styles, example 'c-1 c-2'
     """
     if img_field and not default_storage.exists(img_field.name):
         return '<i class="bi bi-question-diamond"></i>'
@@ -109,6 +109,8 @@ def get_img_src(img_field, resize_width=None, styles='', public=False):
         )
 
     if img_field and not resize_width:
+        if img_field.width is None or img_field.height is None:
+            return '<i class="bi bi-exclamation-triangle"></i>'
         return img_src(
             get_media_url(img_field, public),
             img_field.width,
@@ -116,10 +118,12 @@ def get_img_src(img_field, resize_width=None, styles='', public=False):
             str(styles)
         )
     elif img_field and resize_width:
+        if img_field.width is None or img_field.height is None or img_field.width == 0:
+            return '<i class="bi bi-exclamation-triangle"></i>'
         return img_src(
             get_media_url(img_field, public),
             int(resize_width),
-            int(resize_width) * (img_field.height / img_field.width),
+            int(resize_width * (img_field.height / img_field.width)),
             str(styles)
         )
     else:
