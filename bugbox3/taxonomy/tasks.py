@@ -18,7 +18,7 @@ def image_prediction(image_bytes):
     try:
         response.raise_for_status()
         response = response.json()
-        return response
+        return response[0]
     except Exception as e:
         print('image_prediction didnt get a 200 response, try again later... ')
         print(str(e))
