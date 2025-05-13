@@ -22,7 +22,7 @@ if settings.ON_ECDYSIS_SERVER == "YES":
     app.conf.beat_schedule = {
         'run_classify_new_images': {
             'task': 'bugbox3.taxonomy.tasks.run_classify_new_images',
-            'schedule': crontab(minute=0)
+            'schedule': crontab(minute='*/15')
         },
         'run_update_classifications': {
             'task': 'bugbox3.taxonomy.tasks.run_update_classifications',
