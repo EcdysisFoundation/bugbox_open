@@ -50,82 +50,50 @@
 </head>
 <body>
   <div class="mb-1">
-    <nav class="navbar navbar-expand-md navbar-dark bg-ecdysis">
-      <div class="container-fluid">
-        <button class="navbar-toggler navbar-toggler-right"
-                type="button"
-                data-bs-toggle="collapse"
-                data-bs-target="#navbarSupportedContent"
-                aria-controls="navbarSupportedContent"
-                aria-expanded="false"
-                aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <a class="navbar-brand" href="{% url 'about' %}"><img src="{% static 'images/logo/logo-light-51x50.png' %}" alt="logo dragonfly"/></a>
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-          <ul class="navbar-nav mr-auto">
-            <li class="nav-item active">
-              <a class="nav-link" href="{% url 'about' %}">About<span class="visually-hidden">(current)</span></a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'samples:collection' 1 %}">Collections</a>
-            </li>
-            {% if request.user.is_authenticated %}
-              {% for group in request.user.groups.all %}
-                {% if group.name == 'is_research' %}
-                  <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" id="navDropExperiments" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                      Tools
-                    </a>
+<div class="custom-navbar">
+  <a href="{% url 'about' %}"><img src="{% static 'images/logo/logo-light-51x50.png' %}" alt="logo dragonfly" style="height: 32px; vertical-align: middle;" /></a>
+  <a href="{% url 'about' %}">About</a>
+  <a href="{% url 'samples:collection' 1 %}">Collections</a>
 
-                      <ul class="dropdown-menu" aria-labelledby="navDropExperiments">
-                        <li><a class="dropdown-item" href="{% url 'samples:experiments' 0 %}">Experiments</a></li>
-                        <li><a class="dropdown-item" href="{% url 'taxonomy:morphospecies' %}">Morphospecies</a></li>
-                        {% if perms.samples.review_specimen_page %}
-                          <li><a class="dropdown-item" href="{% url 'samples:specimens-experiment-sample' 0 0 0 %}">Specimens</a></li>
-                        {% endif %}
-                        </ul>
-
-                  </li>
-                {% endif %}
-                {% if group.name == 'is_admin' %}
-                <li class="nav-item dropdown">
-                  <a class="nav-link dropdown-toggle" id="navDropAdmin" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    Admin
-                  </a>
-                    <ul class="dropdown-menu" aria-labelledby="navDropAdmin">
-                      <li><a class="dropdown-item" href="{% url 'core:lookup-choices' 0 %}">Edit Choices</a></li>
-                      <li><a class="dropdown-item" href="{% url 'core:org-members' 0 %}">Member List</a></li>
-                    </ul>
-                </li>
-                {% endif %}
-              {% endfor %}
+  {% if request.user.is_authenticated %}
+    {% for group in request.user.groups.all %}
+      {% if group.name == 'is_research' %}
+        <div class="dropdown-hover">
+          <a href="#">Tools ▼</a>
+          <div class="dropdown-menu">
+            <a href="{% url 'samples:experiments' 0 %}">Experiments</a>
+            <a href="{% url 'taxonomy:morphospecies' %}">Morphospecies</a>
+            {% if perms.samples.review_specimen_page %}
+              <a href="{% url 'samples:specimens-experiment-sample' 0 0 0 %}">Specimens</a>
             {% endif %}
-            {% if request.user.is_authenticated %}
-              <li class="nav-item">
-                <a class="nav-link"
-                   href="{% url 'users:detail' request.user.username %}">{% translate "My Profile" %}</a>
-              </li>
-              <li class="nav-item">
-                {# URL provided by django-allauth/account/urls.py #}
-                <a class="nav-link" href="{% url 'account_logout' %}">{% translate "Sign Out" %}</a>
-              </li>
-            {% else %}
-              {% if ACCOUNT_ALLOW_REGISTRATION %}
-                <li class="nav-item">
-                  {# URL provided by django-allauth/account/urls.py #}
-                  <a id="sign-up-link" class="nav-link" href="{% url 'account_signup' %}">{% translate "Sign Up" %}</a>
-                </li>
-              {% endif %}
-              <li class="nav-item">
-                {# URL provided by django-allauth/account/urls.py #}
-                <a id="log-in-link" class="nav-link" href="{% url 'account_login' %}">{% translate "Sign In" %}</a>
-              </li>
-            {% endif %}
-          </ul>
+          </div>
         </div>
-      </div>
-    </nav>
+      {% endif %}
+      {% if group.name == 'is_admin' %}
+        <div class="dropdown-hover">
+          <a href="#">Admin ▼</a>
+          <div class="dropdown-menu">
+            <a href="{% url 'core:lookup-choices' 0 %}">Edit Choices</a>
+            <a href="{% url 'core:org-members' 0 %}">Member List</a>
+          </div>
+        </div>
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+
+  {% if request.user.is_authenticated %}
+    <a href="{% url 'users:detail' request.user.username %}">{% translate "My Profile" %}</a>
+    {# URL provided by django-allauth/account/urls.py #}
+    <a href="{% url 'account_logout' %}">{% translate "Sign Out" %}</a>
+  {% else %}
+    {% if ACCOUNT_ALLOW_REGISTRATION %}
+      <a href="{% url 'account_signup' %}">{% translate "Sign Up" %}</a>
+    {% endif %}
+    {# URL provided by django-allauth/account/urls.py #}
+    <a href="{% url 'account_login' %}">{% translate "Sign In" %}</a>
+  {% endif %}
+</div>
+
   </div>
   <div class="container">
     {% if messages %}
