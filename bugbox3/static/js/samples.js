@@ -44,7 +44,7 @@ $(function () {
         })
     }
     document.querySelector('#check-all_indices').onchange = (e) => {
-        document.querySelectorAll('[name=indices').forEach(el => {
+        document.querySelectorAll('[name=indices]').forEach(el => {
             el.checked = e.target.checked
         })
     }
