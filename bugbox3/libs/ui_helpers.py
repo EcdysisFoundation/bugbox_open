@@ -72,22 +72,23 @@ def get_datatables_container(rows, container_styles=None):
     return '<div class="container text-center{0}">{1}</div>'.format(styles, rows)
 
 
-def get_datatables_row(columns, row_styles=(), col_styles=()):
+def get_datatables_row(columns, row_styles=(), col_styles=('text-center',)):
     """
     Return a stylized row for datatables cell as row with columns
     columns and styles are iterables.
+    Applies default center alignment to all columns unless overridden.
     """
     row_style = ''
     col_style = ''
     if row_styles:
         for style in row_styles:
-            row_style += ' {0}'.format(style)
+            row_style += f' {style}'
     if col_styles:
         for style in col_styles:
-            col_style += ' {0}'.format(style)
-    result = '<div class="row{0}">'.format(row_style)
+            col_style += f' {style}'
+    result = f'<div class="row{row_style}">'
     for c in columns:
-        result += '<div class="col{0}">{1}</div>'.format(col_style, c)
+        result += f'<div class="col{col_style}">{c}</div>'
     result += '</div></div>'
     return result
 
