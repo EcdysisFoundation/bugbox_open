@@ -18,8 +18,7 @@ from django.views.generic.edit import (CreateView, DeleteView, FormView,
                                        UpdateView)
 from organizations.models import OrganizationUser
 from rest_framework.reverse import reverse as api_reverse
-from django.contrib.auth import get_user_model
-from django.db.models import Count
+from samples.utils import resolve_entered_by
 
 from ..core import constants as constants_core
 from ..core.models import LookupChoices
@@ -504,62 +503,7 @@ class SampleView(PermissionRequiredMixin, FormView):
             reverse('taxonomy:classify-sample', kwargs={'id': sample.id})) + \
             ' class="btn btn-sm btn-outline-danger{0}"'.format(d_none) + \
             ' role="button" id="classify-all">Classify All</a>'
-
-        User = get_user_model()
-        entered_by = "Unknown"
-
-        # Specimen image uploads count
-        specimen_uploader = (
-            SpecimenImage.objects
-            .filter(specimen__sample=sample, uploaded_by_user__isnull=False)
-            .values('uploaded_by_user')
-            .annotate(count=Count('id'))
-            .order_by('-count')
-            .first()
-        )
-
-        # Multi-specimen image uploads count
-        multi_uploader = (
-            MultiSpecimenImage.objects
-            .filter(sample=sample, uploaded_by_user__isnull=False)
-            .values('uploaded_by_user')
-            .annotate(count=Count('id'))
-            .order_by('-count')
-            .first()
-        )
-
-        def get_user_display(user_id):
-            try:
-                u = User.objects.get(id=user_id)
-                if hasattr(u, "name") and u.name.strip():
-                    return u.name.strip()
-                elif u.username:
-                    return u.username
-                elif u.email:
-                    return u.email
-                else:
-                    return "Unknown"
-            except User.DoesNotExist:
-                return "Unknown"
-
-        # Resolving best uploader
-        if specimen_uploader and multi_uploader:
-            if specimen_uploader['count'] >= multi_uploader['count']:
-                entered_by = get_user_display(specimen_uploader['uploaded_by_user'])
-            else:
-                entered_by = get_user_display(multi_uploader['uploaded_by_user'])
-        elif specimen_uploader:
-            entered_by = get_user_display(specimen_uploader['uploaded_by_user'])
-        elif multi_uploader:
-            entered_by = get_user_display(multi_uploader['uploaded_by_user'])
-
-        # Fallback to label image uploader (that's stored as sample.created_by_user)
-        elif sample.created_by_user:
-            entered_by = get_user_display(sample.created_by_user.id)
-
-        # Fallback to site creator
-        elif getattr(sample.site_visit.site, 'created_by', None):
-            entered_by = get_user_display(sample.site_visit.site.created_by.id)
+        entered_by = resolve_entered_by(sample)
         context.update({
             'sample_info': {
                 'sample_id': sample.id,
