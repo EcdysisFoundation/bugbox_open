@@ -18,6 +18,7 @@ from django.views.generic.edit import (CreateView, DeleteView, FormView,
                                        UpdateView)
 from organizations.models import OrganizationUser
 from rest_framework.reverse import reverse as api_reverse
+from samples.utils import resolve_entered_by
 
 from ..core import constants as constants_core
 from ..core.models import LookupChoices
@@ -502,6 +503,7 @@ class SampleView(PermissionRequiredMixin, FormView):
             reverse('taxonomy:classify-sample', kwargs={'id': sample.id})) + \
             ' class="btn btn-sm btn-outline-danger{0}"'.format(d_none) + \
             ' role="button" id="classify-all">Classify All</a>'
+        entered_by = resolve_entered_by(sample)
         context.update({
             'sample_info': {
                 'sample_id': sample.id,
@@ -518,7 +520,7 @@ class SampleView(PermissionRequiredMixin, FormView):
                 'visit_date': sample.site_visit.visit_date.strftime("%d-%b-%Y"),
                 'sample_type': sample_type,
                 'name_no': sample.name_no,
-                'entered_by': sample.created_by_user,
+                'entered_by': entered_by,
                 'notes': sample.notes,
                 'completed': sample.completed,
                 'img_thumbnail': img_thumbnail,
