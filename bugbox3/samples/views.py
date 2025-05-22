@@ -18,7 +18,7 @@ from django.views.generic.edit import (CreateView, DeleteView, FormView,
                                        UpdateView)
 from organizations.models import OrganizationUser
 from rest_framework.reverse import reverse as api_reverse
-from samples.utils import resolve_entered_by
+from bugbox3.samples.utils import resolve_entered_by
 
 from ..core import constants as constants_core
 from ..core.models import LookupChoices
