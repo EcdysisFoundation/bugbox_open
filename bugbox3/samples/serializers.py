@@ -13,7 +13,7 @@ from ..libs.utilities import get_media_url
 from . import constants
 from .models import (Experiment, MultiSpecimenImage, Sample, SamplePlan, Site,
                      Specimen)
-from samples.utils import resolve_entered_by
+from bugbox3.samples.utils import resolve_entered_by
 
 
 class ExperimentsDatatablesSerializer(ModelSerializer):
