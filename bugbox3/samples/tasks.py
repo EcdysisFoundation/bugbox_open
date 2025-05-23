@@ -5,13 +5,14 @@ from tempfile import NamedTemporaryFile
 from celery import shared_task
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
+from bugbox3.samples.models import UserLocationExportFile 
 
 from ..taxonomy.models import Morphospecies
 from ..taxonomy.utils import (get_immature_morphospecies_ids,
                               get_skip_morphospecies_ids)
 from . import constants
 from .calculations import get_indices
-from .models import Experiment, Sample, Site, UserExperimentFile
+from .models import Experiment, Sample, Site, SiteVisit, UserExperimentFile, UserLocationExportFile
 
 User = get_user_model()
 
@@ -194,3 +195,141 @@ def export_csv(
         user_experiment_file.save()
 
     return user_experiment_file.file.url
+
+from django.db.models.functions import Lower
+from django.db.models import Q
+
+
+@shared_task(soft_time_limit=1500, hard_time_limit=2000)
+def export_csv_by_location(user_id, habitats, countries, states, indices, sample_types, include_immatures_skipped, level):
+
+    user = User.objects.get(pk=user_id)
+
+    habitats = [h.strip().lower() for h in habitats]
+    countries = [c.strip().lower() for c in countries]
+    states = [s.strip().lower() for s in states]
+    sample_types = [s for s in sample_types if s]
+
+
+    print("SANITIZED HABITATS:", habitats)
+    print("SANITIZED COUNTRIES:", countries)
+    print("SANITIZED STATES:", states)
+    print("SANITIZED SAMPLE TYPES:", sample_types)
+    sites = Site.objects.all().annotate(
+        norm_habitat=Lower('habitat_type'),
+        norm_country=Lower('country'),
+        norm_state=Lower('state_region')
+    )
+
+    filters = Q()
+    if habitats:
+        filters &= Q(norm_habitat__in=habitats)
+    if countries:
+        filters &= Q(norm_country__in=countries)
+    if states:
+        filters &= Q(norm_state__in=states)
+
+    sites = sites.filter(filters)
+    sitevisits = SiteVisit.objects.filter(site__in=sites)
+
+    # Only apply the filter if there are non-empty sample_types
+    clean_sample_types = [t for t in sample_types if t]
+    if clean_sample_types:
+        samples = Sample.objects.filter(site_visit__in=sitevisits, sample_type__in=clean_sample_types)
+    else:
+        samples = Sample.objects.filter(site_visit__in=sitevisits)
+
+
+    print(f"[DEBUG] Exporting: {sites.count()} sites, {sitevisits.count()} visits, {samples.count()} samples")
+
+
+    skip_ids = get_skip_morphospecies_ids()
+    immature_ids = get_immature_morphospecies_ids()
+    if include_immatures_skipped:
+        skip_ids = []
+        immature_ids = []
+
+    unknown = 'Not identified'
+    indices = [i for i in indices if i in constants.INDICES_CHOICES_ALL]
+    headers_arr = constants.EXP_HEADERS_ARR + indices
+    morpho_headers = [dict.fromkeys(headers_arr, '') for _ in range(3)]
+
+    all_species = {unknown}
+    rows = []
+
+    for sample in samples.select_related('site_visit__site'):
+        site = sample.site_visit.site
+        specimens = sample.specimen_set.all()
+
+        if not include_immatures_skipped:
+            specimens = specimens.exclude(classification_id__in=skip_ids + immature_ids)
+
+        if not specimens.exists() and not sample.completed:
+            continue
+
+        row = {
+            constants.EXP_HEAD_ARR_HABITAT: site.habitat_type,
+            constants.EXP_HEAD_ARR_TREATMENT: site.treatment,
+            constants.EXP_HEAD_ARR_SITE: site.site_name,
+            constants.EXP_HEAD_ARR_DATE: sample.site_visit.visit_date.strftime("%d-%b-%Y"),
+            constants.EXP_HEAD_ARR_SAMPLE_TYPE: sample.sample_type,
+            constants.EXP_HEAD_ARR_SAMPLE_NAME: sample.name_no,
+            constants.EXP_HEAD_ARR_SAMPLE_COMPLETED: sample.completed,
+            unknown: 0
+        }
+
+        excluded_names = set()
+        for specimen in specimens:
+            morphospecies_id = specimen.classification_id or specimen.ai_classification_id
+            if morphospecies_id:
+                morpho = Morphospecies.objects.get(id=morphospecies_id)
+                if morpho.exclude_from_export and not include_immatures_skipped:
+                    continue
+
+                name = morpho.gbif_family if level == "family" else morpho.name
+                morpho_headers[0][name] = morpho.gbif_order
+                morpho_headers[1][name] = morpho.gbif_family
+                morpho_headers[2][name] = morpho.gbif_species or morpho.gbif_genus
+            else:
+                name = unknown
+                morpho_headers[0][name] = morpho_headers[1][name] = morpho_headers[2][name] = ''
+
+            all_species.add(name)
+            total = 1 + specimen.partial_count
+            row[name] = row.get(name, 0) + total
+
+            if morphospecies_id in skip_ids or morphospecies_id in immature_ids:
+                excluded_names.add(name)
+
+        if indices:
+            clean_row = {
+                k: v for k, v in row.items()
+                if k not in excluded_names and k not in constants.EXP_HEADERS_ARR + indices
+            }
+            n = sum(clean_row.values())
+            index_results = get_indices(n, clean_row, headers_arr)
+            for i in indices:
+                row[i] = index_results.get(i, '')
+
+        rows.append(row)
+
+    print("Adding sample row with habitat:", site.habitat_type)
+    all_species.discard(unknown)
+    filename = f"LocationExport-{time.strftime('%Y%m%d-%H%M%S')}.csv"
+    final_headers = headers_arr + [unknown] + sorted(all_species)
+
+    with NamedTemporaryFile(delete=False, mode='w+', suffix='.csv') as temp_file:
+        writer = csv.DictWriter(temp_file, fieldnames=final_headers)
+        writer.writeheader()
+        writer.writerows(morpho_headers)
+        for row in rows:
+            writer.writerow(row)
+        temp_file.flush()
+
+    with open(temp_file.name, 'rb') as f:
+        user_file = UserLocationExportFile.objects.create(user=user, exported_file_status='pending')
+        user_file.file.save(filename, ContentFile(f.read()), save=True)
+        user_file.exported_file_status = 'success'
+        user_file.save()
+
+    return user_file.file.url

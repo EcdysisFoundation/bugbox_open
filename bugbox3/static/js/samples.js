@@ -1,6 +1,8 @@
 import $ from 'jquery';
 import DataTable from 'datatables.net-bs5';
 import { Tooltip} from 'bootstrap'
+import 'select2';
+import 'select2/dist/css/select2.min.css';
 
 
 
@@ -12,6 +14,12 @@ $(function () {
     function getDetail( row ) {
         return row.detail_row
     }
+
+    $('#habitats-select, #countries-select, #states-select, #sampleTypes-select').select2({
+        placeholder: "Select...",
+        width: '100%',
+        allowClear: true
+    });
 
     document.querySelector('#check-all_sites').onchange = (e) => {
         document.querySelectorAll('[name=sites]').forEach(el => {

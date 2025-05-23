@@ -17,13 +17,29 @@ from django.db.models import (CASCADE, SET_NULL, BooleanField, CharField,
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from organizations.models import Organization
+from django.contrib.auth import get_user_model
 
-from ..core import constants as geo_constants
-from ..core.models import UsCountiesTigerLine
+from bugbox3.core import constants as geo_constants
+from bugbox3.core.models import UsCountiesTigerLine
 from ..libs.utilities import resized_thumbnail, save_specimen_img_thumbs
 from ..taxonomy.models import Morphospecies
 from ..taxonomy.tasks import id_image
 from . import constants
+
+User = get_user_model()
+
+class UserLocationExportFile(Model):
+    user = ForeignKey(User, on_delete=CASCADE)
+    file = FileField(upload_to='exports/location/')
+    created_at = DateTimeField(auto_now_add=True)
+    exported_file_status = CharField(
+        max_length=10,
+        choices=[('pending', 'Pending'), ('success', 'Success'), ('error', 'Error')],
+        default='pending'
+    )
+
+    def __str__(self):
+        return f"Location Export by {self.user} on {self.created_at.strftime('%Y-%m-%d %H:%M:%S')}"
 
 
 class ExperimentManager(Manager):
