@@ -142,9 +142,9 @@ class ExperimentView(PermissionRequiredMixin, TemplateView):
                 ])),
             'json_context': get_json_context(
                 {'sites_datatables_url': sites_datatables_url}),
-            'all_habitats': Site.objects.exclude(habitat_type='').values_list('habitat_type', flat=True).distinct(),
-            'all_countries': Site.objects.exclude(country='').values_list('country', flat=True).distinct(),
-            'all_states': Site.objects.exclude(state_region='').values_list('state_region', flat=True).distinct(),
+            'all_habitats': Site.objects.filter(experiment_id=experiment.id).exclude(habitat_type='').values_list('habitat_type', flat=True).distinct(),
+            'all_countries': Site.objects.filter(experiment_id=experiment.id).exclude(country='').values_list('country', flat=True).distinct(),
+            'all_states': Site.objects.filter(experiment_id=experiment.id).exclude(state_region='').values_list('state_region', flat=True).distinct(),
         })
 
         user_experiment_file, created = UserExperimentFile.objects.get_or_create(
@@ -162,7 +162,8 @@ class ExperimentView(PermissionRequiredMixin, TemplateView):
         context["last_exported_file_status"] = user_experiment_file.exported_file_status
 
         location_export = UserLocationExportFile.objects.filter(
-            user=self.request.user
+            user=self.request.user,
+            experiment=experiment
         ).order_by('-created_at').first()
 
         context["last_location_exported_file"] = (
@@ -1296,6 +1297,9 @@ class MultiSpecimeImageView(PermissionRequiredMixin, FormView):
 @permission_required(IS_RESEARCH)
 def export_by_location_csv(request):
     if request.method == 'POST':
+        experiment_id = int(request.POST.get('experiment_id'))
+        experiment = Experiment.objects.user_access(request.user).get(id=experiment_id)
+
         habitats = request.POST.getlist('habitats')
         countries = request.POST.getlist('countries')
         states = request.POST.getlist('states')
@@ -1309,14 +1313,9 @@ def export_by_location_csv(request):
             indices.remove('hill_numbers')
             indices.extend(['hill_H0', 'hill_H1', 'hill_H2', 'hill_inf'])
 
-        print("RAW HABITATS:", habitats)
-        print("RAW COUNTRIES:", countries)
-        print("RAW STATES:", states)
-        print("RAW SAMPLE TYPES:", sample_types)
-        print("RAW INDICES:", indices)
-
         export_csv_by_location.delay(
             request.user.pk,
+            experiment.id,
             habitats,
             countries,
             states,
@@ -1325,13 +1324,7 @@ def export_by_location_csv(request):
             include_immatures_skipped,
             level
         )
-        
-        print("HABITATS:", habitats)
-        print("COUNTRIES:", countries)
-        print("STATES:", states)
-        print("INDICES:", indices)
-        print("SAMPLE TYPES:", sample_types)
 
-        return redirect('samples:experiments', org_id=1)
+        return redirect('samples:experiment', experiment_id=experiment.id)
 
     raise Http404

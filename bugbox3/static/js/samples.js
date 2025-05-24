@@ -1,8 +1,6 @@
 import $ from 'jquery';
 import DataTable from 'datatables.net-bs5';
 import { Tooltip} from 'bootstrap'
-import 'select2';
-import 'select2/dist/css/select2.min.css';
 
 
 
@@ -15,11 +13,34 @@ $(function () {
         return row.detail_row
     }
 
-    $('#habitats-select, #countries-select, #states-select, #sampleTypes-select').select2({
-        placeholder: "Select...",
-        width: '100%',
-        allowClear: true
+    document.querySelector('#check-all_habitats')?.addEventListener('change', (e) => {
+        document.querySelectorAll('[name=habitats]').forEach(el => el.checked = e.target.checked);
     });
+
+    document.querySelector('#check-all_countries')?.addEventListener('change', (e) => {
+        document.querySelectorAll('[name=countries]').forEach(el => el.checked = e.target.checked);
+    });
+
+    document.querySelector('#check-all_states')?.addEventListener('change', (e) => {
+        document.querySelectorAll('[name=states]').forEach(el => el.checked = e.target.checked);
+    });
+
+    document.querySelector('#check-all_sampleTypes3')?.addEventListener('change', (e) => {
+        document.querySelectorAll('[name=sampleTypes]').forEach(el => el.checked = e.target.checked);
+    });
+
+    document.querySelector('#check-all_location_indices')?.addEventListener('change', (e) => {
+        document.querySelectorAll('input[name="indices"]').forEach(el => {
+        el.checked = e.target.checked;
+    });
+    });
+    document.querySelector('#exportForm3')?.addEventListener('submit', function () {
+        const statusDiv = document.querySelector('#location-export-status');
+        if (statusDiv) {
+            statusDiv.textContent = 'Exporting Location File...';
+        }
+    });
+
 
     document.querySelector('#check-all_sites').onchange = (e) => {
         document.querySelectorAll('[name=sites]').forEach(el => {

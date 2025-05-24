@@ -13,6 +13,8 @@ from ..taxonomy.utils import (get_immature_morphospecies_ids,
 from . import constants
 from .calculations import get_indices
 from .models import Experiment, Sample, Site, SiteVisit, UserExperimentFile, UserLocationExportFile
+from django.db.models.functions import Lower
+from django.db.models import Q
 
 User = get_user_model()
 
@@ -196,14 +198,14 @@ def export_csv(
 
     return user_experiment_file.file.url
 
-from django.db.models.functions import Lower
-from django.db.models import Q
 
-
-@shared_task(soft_time_limit=1500, hard_time_limit=2000)
-def export_csv_by_location(user_id, habitats, countries, states, indices, sample_types, include_immatures_skipped, level):
+@shared_task(soft_time_limit=3600, hard_time_limit=3900)
+def export_csv_by_location(user_id, experiment_id, habitats, countries, states, indices, sample_types, include_immatures_skipped, level):
 
     user = User.objects.get(pk=user_id)
+    experiment = Experiment.objects.user_access(user).get(id=experiment_id)
+
+
 
     habitats = [h.strip().lower() for h in habitats]
     countries = [c.strip().lower() for c in countries]
@@ -232,7 +234,7 @@ def export_csv_by_location(user_id, habitats, countries, states, indices, sample
     sites = sites.filter(filters)
     sitevisits = SiteVisit.objects.filter(site__in=sites)
 
-    # Only apply the filter if there are non-empty sample_types
+    # it will only apply the filter if there are non-empty sample_types
     clean_sample_types = [t for t in sample_types if t]
     if clean_sample_types:
         samples = Sample.objects.filter(site_visit__in=sitevisits, sample_type__in=clean_sample_types)
@@ -313,9 +315,13 @@ def export_csv_by_location(user_id, habitats, countries, states, indices, sample
 
         rows.append(row)
 
-    print("Adding sample row with habitat:", site.habitat_type)
+    if rows:
+        print(f"Added {len(rows)} sample rows.")
+    else:
+        print("No matching sample rows to export.")
+
     all_species.discard(unknown)
-    filename = f"LocationExport-{time.strftime('%Y%m%d-%H%M%S')}.csv"
+    filename = f"{experiment.abbreviation}-LocationExport-{time.strftime('%Y%m%d-%H%M%S')}.csv"
     final_headers = headers_arr + [unknown] + sorted(all_species)
 
     with NamedTemporaryFile(delete=False, mode='w+', suffix='.csv') as temp_file:
@@ -327,7 +333,12 @@ def export_csv_by_location(user_id, habitats, countries, states, indices, sample
         temp_file.flush()
 
     with open(temp_file.name, 'rb') as f:
-        user_file = UserLocationExportFile.objects.create(user=user, exported_file_status='pending')
+        user_file = UserLocationExportFile.objects.create(
+            user=user,
+            experiment=experiment,
+            exported_file_status='pending'
+        )
+
         user_file.file.save(filename, ContentFile(f.read()), save=True)
         user_file.exported_file_status = 'success'
         user_file.save()

@@ -30,6 +30,7 @@ User = get_user_model()
 
 class UserLocationExportFile(Model):
     user = ForeignKey(User, on_delete=CASCADE)
+    experiment = ForeignKey('samples.Experiment', on_delete=CASCADE)
     file = FileField(upload_to='exports/location/')
     created_at = DateTimeField(auto_now_add=True)
     exported_file_status = CharField(
@@ -39,7 +40,7 @@ class UserLocationExportFile(Model):
     )
 
     def __str__(self):
-        return f"Location Export by {self.user} on {self.created_at.strftime('%Y-%m-%d %H:%M:%S')}"
+        return f"Location Export by {self.user} for {self.experiment} on {self.created_at.strftime('%Y-%m-%d %H:%M:%S')}"
 
 
 class ExperimentManager(Manager):
