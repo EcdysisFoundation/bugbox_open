@@ -117,6 +117,12 @@ class ExperimentView(PermissionRequiredMixin, TemplateView):
                 constants.FIELD_SITE_SITE_NAME)
         other_experiments = Experiment.objects.user_access(self.request.user).exclude(
             id=experiment.id).order_by(constants.FIELD_ABBREVIATION)
+        
+        location_export = UserLocationExportFile.objects.filter(
+            user=self.request.user,
+            experiment=experiment
+        ).order_by('-created_at').first()
+
         context.update({
             'experiment': experiment,
             'experiment_sites': experiment_sites,
@@ -141,7 +147,12 @@ class ExperimentView(PermissionRequiredMixin, TemplateView):
                     'Treatment'
                 ])),
             'json_context': get_json_context(
-                {'sites_datatables_url': sites_datatables_url}),
+                {'sites_datatables_url': sites_datatables_url, 
+                 'experiment': {'id': experiment.id},
+                 'last_location_exported_file_status': (
+                     location_export.exported_file_status if location_export else None
+                 )
+                 }),
             'all_habitats': Site.objects.filter(experiment_id=experiment.id).exclude(habitat_type='').values_list('habitat_type', flat=True).distinct(),
             'all_countries': Site.objects.filter(experiment_id=experiment.id).exclude(country='').values_list('country', flat=True).distinct(),
             'all_states': Site.objects.filter(experiment_id=experiment.id).exclude(state_region='').values_list('state_region', flat=True).distinct(),
@@ -161,10 +172,6 @@ class ExperimentView(PermissionRequiredMixin, TemplateView):
         )
         context["last_exported_file_status"] = user_experiment_file.exported_file_status
 
-        location_export = UserLocationExportFile.objects.filter(
-            user=self.request.user,
-            experiment=experiment
-        ).order_by('-created_at').first()
 
         context["last_location_exported_file"] = (
             get_media_url(location_export.file)
@@ -178,6 +185,23 @@ class ExperimentView(PermissionRequiredMixin, TemplateView):
         )
 
         return context
+
+
+@permission_required(IS_RESEARCH)
+def export_by_location_progress(request, experiment_id):
+    export = UserLocationExportFile.objects.filter(
+        user=request.user,
+        experiment_id=experiment_id
+    ).order_by('-created_at').first()
+
+    if export:
+        return JsonResponse({
+            'status': export.exported_file_status,
+            'progress': export.progress,
+            'file_url': export.file.url if export.file else None
+        })
+
+    return JsonResponse({'status': 'not_started', 'progress': 0})
 
 
 class ExperimentSamplePlanCreateView(PermissionRequiredMixin, CreateView):
@@ -1308,7 +1332,35 @@ def export_by_location_csv(request):
         sample_types = request.POST.getlist('sampleTypes')
         include_immatures_skipped = request.POST.get('include_immatures_skipped')
 
-        indices = constants.INDICES_ALWAYS_INCLUDED + [i for i in indices if i not in constants.INDICES_ALWAYS_INCLUDED]
+        # If any of the three filter groups is empty, this includes all by default
+        if not habitats:
+            habitats = list(
+                Site.objects.filter(experiment=experiment)
+                .exclude(habitat_type__isnull=True)
+                .values_list('habitat_type', flat=True)
+                .distinct()
+            )
+
+        if not countries:
+            countries = list(
+                Site.objects.filter(experiment=experiment)
+                .exclude(country__isnull=True)
+                .values_list('country', flat=True)
+                .distinct()
+            )
+
+        if not states:
+            states = list(
+                Site.objects.filter(experiment=experiment)
+                .exclude(state_region__isnull=True)
+                .values_list('state_region', flat=True)
+                .distinct()
+            )
+
+
+        indices = constants.INDICES_ALWAYS_INCLUDED + [
+            i for i in indices if i not in constants.INDICES_ALWAYS_INCLUDED
+        ]
         if 'hill_numbers' in indices:
             indices.remove('hill_numbers')
             indices.extend(['hill_H0', 'hill_H1', 'hill_H2', 'hill_inf'])

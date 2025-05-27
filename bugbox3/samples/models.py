@@ -8,7 +8,7 @@ from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator
 from django.db import transaction
-from django.db.models import (CASCADE, SET_NULL, BooleanField, CharField,
+from django.db.models import (CASCADE, SET_NULL, IntegerField, BooleanField, CharField,
                               DateField, DateTimeField, DecimalField,
                               FileField, ForeignKey, ImageField, JSONField,
                               Manager, Model, PositiveIntegerField,
@@ -31,6 +31,7 @@ User = get_user_model()
 class UserLocationExportFile(Model):
     user = ForeignKey(User, on_delete=CASCADE)
     experiment = ForeignKey('samples.Experiment', on_delete=CASCADE)
+    progress = IntegerField(default=0)
     file = FileField(upload_to='exports/location/')
     created_at = DateTimeField(auto_now_add=True)
     exported_file_status = CharField(

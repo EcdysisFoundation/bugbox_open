@@ -201,22 +201,18 @@ def export_csv(
 
 @shared_task(soft_time_limit=3600, hard_time_limit=3900)
 def export_csv_by_location(user_id, experiment_id, habitats, countries, states, indices, sample_types, include_immatures_skipped, level):
-
     user = User.objects.get(pk=user_id)
     experiment = Experiment.objects.user_access(user).get(id=experiment_id)
-
-
-
     habitats = [h.strip().lower() for h in habitats]
     countries = [c.strip().lower() for c in countries]
     states = [s.strip().lower() for s in states]
     sample_types = [s for s in sample_types if s]
 
-
     print("SANITIZED HABITATS:", habitats)
     print("SANITIZED COUNTRIES:", countries)
     print("SANITIZED STATES:", states)
     print("SANITIZED SAMPLE TYPES:", sample_types)
+
     sites = Site.objects.all().annotate(
         norm_habitat=Lower('habitat_type'),
         norm_country=Lower('country'),
@@ -234,16 +230,13 @@ def export_csv_by_location(user_id, experiment_id, habitats, countries, states, 
     sites = sites.filter(filters)
     sitevisits = SiteVisit.objects.filter(site__in=sites)
 
-    # it will only apply the filter if there are non-empty sample_types
     clean_sample_types = [t for t in sample_types if t]
     if clean_sample_types:
         samples = Sample.objects.filter(site_visit__in=sitevisits, sample_type__in=clean_sample_types)
     else:
         samples = Sample.objects.filter(site_visit__in=sitevisits)
 
-
     print(f"[DEBUG] Exporting: {sites.count()} sites, {sitevisits.count()} visits, {samples.count()} samples")
-
 
     skip_ids = get_skip_morphospecies_ids()
     immature_ids = get_immature_morphospecies_ids()
@@ -256,10 +249,18 @@ def export_csv_by_location(user_id, experiment_id, habitats, countries, states, 
     headers_arr = constants.EXP_HEADERS_ARR + indices
     morpho_headers = [dict.fromkeys(headers_arr, '') for _ in range(3)]
 
+    user_file = UserLocationExportFile.objects.create(
+        user=user,
+        experiment=experiment,
+        exported_file_status='pending',
+        progress=0
+    )
+
     all_species = {unknown}
     rows = []
 
-    for sample in samples.select_related('site_visit__site'):
+    total = samples.count()
+    for i, sample in enumerate(samples.select_related('site_visit__site'), start=1):
         site = sample.site_visit.site
         specimens = sample.specimen_set.all()
 
@@ -297,8 +298,8 @@ def export_csv_by_location(user_id, experiment_id, habitats, countries, states, 
                 morpho_headers[0][name] = morpho_headers[1][name] = morpho_headers[2][name] = ''
 
             all_species.add(name)
-            total = 1 + specimen.partial_count
-            row[name] = row.get(name, 0) + total
+            total_count = 1 + specimen.partial_count
+            row[name] = row.get(name, 0) + total_count
 
             if morphospecies_id in skip_ids or morphospecies_id in immature_ids:
                 excluded_names.add(name)
@@ -310,10 +311,14 @@ def export_csv_by_location(user_id, experiment_id, habitats, countries, states, 
             }
             n = sum(clean_row.values())
             index_results = get_indices(n, clean_row, headers_arr)
-            for i in indices:
-                row[i] = index_results.get(i, '')
+            for i_key in indices:
+                row[i_key] = index_results.get(i_key, '')
 
         rows.append(row)
+
+        if i % max(1, total // 20) == 0 or i == total:
+            user_file.progress = int((i / total) * 100)
+            user_file.save(update_fields=["progress"])
 
     if rows:
         print(f"Added {len(rows)} sample rows.")
@@ -333,14 +338,9 @@ def export_csv_by_location(user_id, experiment_id, habitats, countries, states, 
         temp_file.flush()
 
     with open(temp_file.name, 'rb') as f:
-        user_file = UserLocationExportFile.objects.create(
-            user=user,
-            experiment=experiment,
-            exported_file_status='pending'
-        )
-
         user_file.file.save(filename, ContentFile(f.read()), save=True)
         user_file.exported_file_status = 'success'
+        user_file.progress = 100
         user_file.save()
 
     return user_file.file.url

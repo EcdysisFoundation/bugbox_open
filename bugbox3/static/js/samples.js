@@ -35,11 +35,39 @@ $(function () {
     });
     });
     document.querySelector('#exportForm3')?.addEventListener('submit', function () {
-        const statusDiv = document.querySelector('#location-export-status');
-        if (statusDiv) {
-            statusDiv.textContent = 'Exporting Location File...';
-        }
+    const statusDiv = document.querySelector('#location-export-status');
+    if (statusDiv) {
+        statusDiv.textContent = 'Exporting Location File... 0%';
+    }
+
+    setTimeout(() => pollLocationExportProgress(json_context.experiment.id), 1500);
     });
+
+    function pollLocationExportProgress(experimentId) {
+        const statusDiv = document.querySelector('#location-export-status');
+
+        fetch(`/samples/export-by-location-progress/${experimentId}/`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    statusDiv.innerHTML = `<a class="btn btn-link" href="${data.file_url}">Download Export</a>`;
+                } else if (data.status === 'error') {
+                    statusDiv.textContent = 'Export Failed';
+                } else {
+                    statusDiv.textContent = `Exporting Location File... ${data.progress}%`;
+                    setTimeout(() => pollLocationExportProgress(experimentId), 2000);
+                }
+            })
+            .catch(() => {
+                statusDiv.textContent = 'Error checking export progress';
+            });
+    }
+
+    if (json_context.last_location_exported_file_status === 'pending') {
+    pollLocationExportProgress(json_context.experiment.id);
+    }
+
+
 
 
     document.querySelector('#check-all_sites').onchange = (e) => {
