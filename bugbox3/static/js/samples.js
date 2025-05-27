@@ -50,7 +50,8 @@ $(function () {
             .then(res => res.json())
             .then(data => {
                 if (data.status === 'success') {
-                    statusDiv.innerHTML = `<a class="btn btn-link" href="${data.file_url}">Download Export</a>`;
+                    statusDiv.textContent = 'Generating Download Link...';
+                    location.reload();
                 } else if (data.status === 'error') {
                     statusDiv.textContent = 'Export Failed';
                 } else {
@@ -66,9 +67,6 @@ $(function () {
     if (json_context.last_location_exported_file_status === 'pending') {
     pollLocationExportProgress(json_context.experiment.id);
     }
-
-
-
 
     document.querySelector('#check-all_sites').onchange = (e) => {
         document.querySelectorAll('[name=sites]').forEach(el => {
