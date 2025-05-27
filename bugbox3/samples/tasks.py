@@ -263,6 +263,7 @@ def export_csv_by_location(user_id, experiment_id, habitats, countries, states, 
             continue
 
         row = {
+            constants.EXP_HEAD_ARR_EXPERIMENT: experiment.name,
             constants.EXP_HEAD_ARR_HABITAT: site.habitat_type,
             constants.EXP_HEAD_ARR_TREATMENT: site.treatment,
             constants.EXP_HEAD_ARR_SITE: site.site_name,
