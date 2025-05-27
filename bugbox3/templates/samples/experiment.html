@@ -381,35 +381,40 @@
     <div class="col-3">
         <button class="btn btn-link" data-bs-toggle="modal" data-bs-target="#exportModal">Export AI Data</button>
     </div>
+
     <div class="col-3">
         <button class="btn btn-link" data-bs-toggle="modal" data-bs-target="#exportModal2">Export Experiment Data</button>
     </div>
+
+    {% if last_exported_file_status == 'pending' %}
+    <div class="col-3">
+        Exporting File...
+    </div>
+    {% elif last_exported_file_status == 'error' %}
+    <div class="col-3">
+        Exporting Error
+    </div>
+    {% elif last_exported_file_status == 'success' %}
+    <div class="col-3">
+        <a class="btn btn-link" href="{{last_exported_file}}">Exported File</a>
+    </div>
+    {% endif %}
+
     <div class="col-3">
         <button class="btn btn-link" data-bs-toggle="modal" data-bs-target="#exportModal3">Export by Location</button>
     </div>
-<div class="col-3" id="location-export-status">
-    {% if last_location_exported_file_status == 'pending' %}
-        Exporting Location File...
-    {% elif last_location_exported_file_status == 'error' %}
-        Exporting Location Error
-    {% elif last_location_exported_file_status == 'success' %}
-        <a class="btn btn-link" href="{{ last_location_exported_file }}">Exported Location File</a>
-    {% endif %}
+
+    <div class="col-3" id="location-export-status">
+        {% if last_location_exported_file_status == 'pending' %}
+            Exporting Location File...
+        {% elif last_location_exported_file_status == 'error' %}
+            Exporting Location Error
+        {% elif last_location_exported_file_status == 'success' %}
+            <a class="btn btn-link" href="{{ last_location_exported_file }}">Exported Location File</a>
+        {% endif %}
+    </div>
 </div>
 
-    {% if last_exported_file_status == 'pending' %}
-      <div class="col-3">
-        Exporting File...
-      </div>
-    {% elif last_exported_file_status == 'error' %}
-      <div class="col-3">
-        Exporting Error
-      </div>
-    {% elif last_exported_file_status == 'success' %}
-      <div class="col-3">
-        <a class="btn btn-link" href="{{last_exported_file}}">Exported File</a>
-      </div>
-    {% endif %}
 </div>
 
 </div>
