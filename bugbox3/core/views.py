@@ -42,11 +42,11 @@ class DatatablesModelViewSetMixin:
         filtered_queryset = self.filter_for_datatable(queryset)
         try:
             start = int(request.query_params.get('start'))
-        except ValueError:
+        except (TypeError, ValueError):
             start = 0
         try:
             length = int(request.query_params.get('length'))
-        except ValueError:
+        except (TypeError, ValueError):
             length = 10
         end = length + start
         serializer = self.get_serializer(filtered_queryset[start:end], many=True)
