@@ -17,6 +17,7 @@ from .views_dtables import (CollectionDatatablesViewSet,
                             SpecimenDatatablesViewSet,
                             SpecimensAllDatatablesViewSet)
 from .views_public import CollectionDownloadView, CollectionView
+from . import views
 
 router = DefaultRouter()
 router.register(r'experiments-data/(?P<org_id>[^/]+)', ExperimentsDatatablesViewSet,
@@ -63,5 +64,8 @@ urlpatterns = [
      path('experiment-ai-csv/<int:id>', experiment_ai_csv, name='experiment-ai-csv'),
      path('experiment-csv/<int:id>', experiment_csv, name='experiment-csv'),
      path('collection/<int:org_id>', CollectionView.as_view(), name='collection'),
-     path('collection-download/<int:org_id>', CollectionDownloadView.as_view(), name='collection-download')
+     path('collection-download/<int:org_id>', CollectionDownloadView.as_view(), name='collection-download'),
+     path('export-by-location/', views.export_by_location_csv, name='export-by-location'),
+     path('export-by-location-progress/<int:experiment_id>/', views.export_by_location_progress, name='export-by-location-progress'),
+
 ]

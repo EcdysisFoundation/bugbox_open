@@ -5,6 +5,7 @@ from tempfile import SpooledTemporaryFile
 import pandas as pd
 from django.conf import settings
 from django.contrib.auth.decorators import permission_required
+from django.urls import reverse
 from django.core.files import File
 from django.db.models import Case, CharField, F, Func, Value, When
 from django.http import Http404, HttpResponse
@@ -34,12 +35,16 @@ def experiment_ai_csv(request, id):
     if not all([v.isnumeric() for v in sites]):
         return HttpResponse(status=404)
     sites = [int(v) for v in sites]
-    other_experiments = request.GET.getlist('otherExperiments')
     if not all([v.isnumeric() for v in other_experiments]):
         return HttpResponse(status=404)
     other_experiments = [int(v) for v in other_experiments]
     all_exp = other_experiments + [experiment.id]
-    headersArr = constants.EXPERIMENT_AI_CSV + ['Top 1 Correct', 'Top 3 Correct']
+    headersArr = (
+        [constants.EXPERIMENT_AI_CSV[0]] +
+        ['Link', 'Sample Type', 'Sample Name'] +
+        constants.EXPERIMENT_AI_CSV[1:] +
+        ['Top 1 Correct', 'Top 3 Correct']
+    )
     specimens = Specimen.objects.user_access(request.user).filter(
         sample__site_visit__site__experiment_id__in=all_exp,
         sample__sample_type__in=sample_types).exclude(
@@ -70,9 +75,32 @@ def experiment_ai_csv(request, id):
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="{0}-{1}.csv"'.format(
         experiment.abbreviation, timestr)
+    raw_values = list(specimens)
+
+    specimens_objs = Specimen.objects.user_access(request.user).filter(
+        sample__site_visit__site__experiment_id__in=all_exp,
+        sample__sample_type__in=sample_types
+    ).exclude(
+        acceptance=constants.ACCEPTANCE_PENDING
+    ).select_related('sample__site_visit__site__experiment', 'classification')
+
+    if not other_experiments:
+        specimens_objs = specimens_objs.filter(sample__site_visit__site__in=sites)
+    else:
+        specimens_objs = specimens_objs.order_by('sample__site_visit__site__experiment__name')
+
+    rows = []
+    for i, s in enumerate(specimens_objs):
+        link = request.build_absolute_uri(reverse('samples:specimen', args=[s.id]))
+        sample_type = s.sample.sample_type
+        sample_name = f'T{s.sample.name_no}' if s.sample and s.sample.name_no else ''
+        row = list(raw_values[i])
+        row = [row[0], link, sample_type, sample_name] + row[2:]
+        rows.append(row)
+
     writer = csv.writer(response)
     writer.writerow(headersArr)
-    writer.writerows(list(specimens))
+    writer.writerows(rows)
     return response
 
 
