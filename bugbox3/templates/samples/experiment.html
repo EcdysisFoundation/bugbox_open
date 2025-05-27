@@ -388,15 +388,15 @@
 
     {% if last_exported_file_status == 'pending' %}
     <div class="col-3">
-        Exporting File...
+        Exporting Experiment File...
     </div>
     {% elif last_exported_file_status == 'error' %}
     <div class="col-3">
-        Exporting Error
+        Exporting Experiment Error
     </div>
     {% elif last_exported_file_status == 'success' %}
     <div class="col-3">
-        <a class="btn btn-link" href="{{last_exported_file}}">Exported File</a>
+        <a class="btn btn-link" href="{{last_exported_file}}">Exported Experiment File</a>
     </div>
     {% endif %}
 

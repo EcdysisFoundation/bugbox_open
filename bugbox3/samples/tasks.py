@@ -170,7 +170,6 @@ def export_csv(
 
                 indice_results = get_indices(n_for_indices, row_for_indices, headers_arr)
                 for i in indices:
-                    print(f"Writing {i}: {indice_results.get(i, '')}")
                     row[i] = indice_results.get(i, '')
             rows.append(row)
 
@@ -208,11 +207,6 @@ def export_csv_by_location(user_id, experiment_id, habitats, countries, states, 
     states = [s.strip().lower() for s in states]
     sample_types = [s for s in sample_types if s]
 
-    print("SANITIZED HABITATS:", habitats)
-    print("SANITIZED COUNTRIES:", countries)
-    print("SANITIZED STATES:", states)
-    print("SANITIZED SAMPLE TYPES:", sample_types)
-
     sites = Site.objects.all().annotate(
         norm_habitat=Lower('habitat_type'),
         norm_country=Lower('country'),
@@ -235,8 +229,6 @@ def export_csv_by_location(user_id, experiment_id, habitats, countries, states, 
         samples = Sample.objects.filter(site_visit__in=sitevisits, sample_type__in=clean_sample_types)
     else:
         samples = Sample.objects.filter(site_visit__in=sitevisits)
-
-    print(f"[DEBUG] Exporting: {sites.count()} sites, {sitevisits.count()} visits, {samples.count()} samples")
 
     skip_ids = get_skip_morphospecies_ids()
     immature_ids = get_immature_morphospecies_ids()
@@ -319,11 +311,6 @@ def export_csv_by_location(user_id, experiment_id, habitats, countries, states, 
         if i % max(1, total // 20) == 0 or i == total:
             user_file.progress = int((i / total) * 100)
             user_file.save(update_fields=["progress"])
-
-    if rows:
-        print(f"Added {len(rows)} sample rows.")
-    else:
-        print("No matching sample rows to export.")
 
     all_species.discard(unknown)
     filename = f"{experiment.abbreviation}-LocationExport-{time.strftime('%Y%m%d-%H%M%S')}.csv"
