@@ -14,7 +14,7 @@ def image_prediction(image_bytes):
     if not settings.AI_INFERENCE_URL:
         return
     files = {'file': image_bytes}
-    response = requests.post(settings.AI_INFERENCE_URL, files=files)
+    response = requests.post(settings.AI_INFERENCE_URL + 'metaformer-predict', files=files)
     try:
         response.raise_for_status()
         response = response.json()
@@ -76,6 +76,44 @@ def id_image(id):
         print(data)
     return
 
+
+@celery_app.task(autoretry_for=(requests.RequestException,), soft_time_limit=240,
+                 retry_kwargs={'max_retries': 3, 'countdown': 30},
+                 retry_backoff=True)
+def obj_det_image(specimenimage_id):
+    if not settings.AI_INFERENCE_URL:
+        return
+    SpecimenImpage = apps.get_model(app_label='samples', model_name='SpecimenImage')
+    try:
+        specimenimage = SpecimenImpage.objects.get(id=specimenimage_id)
+    except SpecimenImpage.DoesNotExist:
+        print('DoesNotExist: SpecimenImage id {0}'.format(specimenimage_id))
+        return
+    try:
+        files = {'file': specimenimage.image_thumbnail_large}
+        response = requests.post(settings.AI_INFERENCE_URL + 'yolo-predict', files=files)
+    except SoftTimeLimitExceeded:
+        logging.exception('SoftTimeLimitExceeded on id_image of specimen id: {}'.format(specimenimage_id))
+        response = None
+    except FileNotFoundError as e:
+        print(e)
+        response = None
+        print('setting image_notfound to True')
+        specimenimage.image_notfound = True
+        specimenimage.save()
+    # dont make changes if we didnt get data
+    try:
+        response.raise_for_status()
+        response = response.json()
+    except Exception as e:
+        print(str(e))
+        return
+    if not response:
+        return
+    specimenimage.object_det_label = response
+    specimenimage.object_det_model_version = response[0]['model_version']
+    specimenimage.save()
+    print(response)
 
 # only run on Ecdysis01
 @shared_task

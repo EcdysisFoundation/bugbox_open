@@ -311,8 +311,10 @@ class SpecimenImage(Model):
     image_notfound = BooleanField(default=False)
     date_added = DateTimeField(auto_now_add=True)
     uploaded_by_user = ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=SET_NULL)
+    # object_det fields based on image_thumbnail_large
     object_det_sent = DateTimeField(null=True)
     object_det_label = JSONField(null=True, blank=True)
+    object_det_model_version = CharField(max_length=100, blank=True)
     object_det_annotation_id = PositiveIntegerField(null=True, help_text="From Label Studio")
     object_det_id = PositiveIntegerField(null=True, help_text="From Label Studio")
     object_det_updated_at = DateTimeField(null=True)
