@@ -113,7 +113,7 @@ def obj_det_image(specimenimage_id):
     specimenimage.object_det_label = response
     specimenimage.object_det_model_version = response[0]['model_version']
     specimenimage.save()
-    print(response)
+
 
 # only run on Ecdysis01
 @shared_task
