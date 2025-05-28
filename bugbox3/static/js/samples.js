@@ -13,6 +13,61 @@ $(function () {
         return row.detail_row
     }
 
+    document.querySelector('#check-all_habitats')?.addEventListener('change', (e) => {
+        document.querySelectorAll('[name=habitats]').forEach(el => el.checked = e.target.checked);
+    });
+
+    document.querySelector('#check-all_countries')?.addEventListener('change', (e) => {
+        document.querySelectorAll('[name=countries]').forEach(el => el.checked = e.target.checked);
+    });
+
+    document.querySelector('#check-all_states')?.addEventListener('change', (e) => {
+        document.querySelectorAll('[name=states]').forEach(el => el.checked = e.target.checked);
+    });
+
+    document.querySelector('#check-all_sampleTypes3')?.addEventListener('change', (e) => {
+        document.querySelectorAll('[name=sampleTypes]').forEach(el => el.checked = e.target.checked);
+    });
+
+    document.querySelector('#check-all_location_indices')?.addEventListener('change', (e) => {
+        document.querySelectorAll('input[name="indices"]').forEach(el => {
+        el.checked = e.target.checked;
+    });
+    });
+    document.querySelector('#exportForm3')?.addEventListener('submit', function () {
+    const statusDiv = document.querySelector('#location-export-status');
+    if (statusDiv) {
+        statusDiv.textContent = 'Exporting Filtered File... 0%';
+    }
+
+    setTimeout(() => pollLocationExportProgress(json_context.experiment.id), 1500);
+    });
+
+    function pollLocationExportProgress(experimentId) {
+        const statusDiv = document.querySelector('#location-export-status');
+
+        fetch(`/samples/export-by-location-progress/${experimentId}/`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    statusDiv.textContent = 'Generating Download Link...';
+                    location.reload();
+                } else if (data.status === 'error') {
+                    statusDiv.textContent = 'Export Failed';
+                } else {
+                    statusDiv.textContent = `Exporting Filtered File... ${data.progress}%`;
+                    setTimeout(() => pollLocationExportProgress(experimentId), 2000);
+                }
+            })
+            .catch(() => {
+                statusDiv.textContent = 'Error checking export progress';
+            });
+    }
+
+    if (json_context.last_location_exported_file_status === 'pending') {
+    pollLocationExportProgress(json_context.experiment.id);
+    }
+
     document.querySelector('#check-all_sites').onchange = (e) => {
         document.querySelectorAll('[name=sites]').forEach(el => {
             el.checked = e.target.checked
@@ -44,7 +99,7 @@ $(function () {
         })
     }
     document.querySelector('#check-all_indices').onchange = (e) => {
-        document.querySelectorAll('[name=indices').forEach(el => {
+        document.querySelectorAll('[name=indices]').forEach(el => {
             el.checked = e.target.checked
         })
     }

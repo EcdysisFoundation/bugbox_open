@@ -13,6 +13,7 @@ from ..libs.utilities import get_media_url
 from . import constants
 from .models import (Experiment, MultiSpecimenImage, Sample, SamplePlan, Site,
                      Specimen)
+from bugbox3.samples.utils import resolve_entered_by
 
 
 class ExperimentsDatatablesSerializer(ModelSerializer):
@@ -193,7 +194,7 @@ class SitesDatatablesSerializer(ModelSerializer):
                 self.get_observations(s.id),
                 completed_checkbox,
                 self.get_reviewed(s.id),
-                s.created_by_user
+                resolve_entered_by(s)
             ])
 
         return get_datatables_container(rows)

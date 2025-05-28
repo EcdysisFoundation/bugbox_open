@@ -93,3 +93,75 @@ tr.details td.details-control {
   align-items: center;
   justify-content: center;
 }
+
+// ==============================
+// Custom Navbar Styles (No JS)
+// ==============================
+// This replaces the default Bootstrap navbar dropdowns
+// with a pure CSS-based hover menu to avoid conflicts
+// with DataTables and other JavaScript. It includes
+// layout, hover, and dropdown menu styling.
+
+.custom-navbar {
+  background-color: #35a103;
+  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 400;
+  font-size: 15px;
+}
+
+.custom-navbar a {
+  color: #a4d58d;
+  text-decoration: none;
+  padding: 0.25rem 0.5rem;
+  display: inline-block;
+  transition: opacity 0.2s ease-in-out;
+  position: relative;
+}
+
+.custom-navbar > a:hover,
+.custom-navbar > .dropdown-hover > a:hover {
+  color: #ffffff;
+  text-decoration: none;
+  filter: brightness(1.2);
+}
+
+
+
+.dropdown-hover {
+  position: relative;
+}
+
+.dropdown-hover .dropdown-menu {
+  display: none;
+  position: absolute;
+  background-color: white;
+  color: black;
+  top: 100%;
+  left: 0;
+  min-width: 160px;
+  border-radius: 5px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+}
+
+.dropdown-hover:hover .dropdown-menu {
+  display: block;
+}
+
+.dropdown-menu a {
+  display: block;
+  padding: 8px 12px;
+  font-size: 14px;
+  color: #222;
+  text-decoration: none;
+}
+
+.dropdown-menu a:hover {
+  background-color: #f1f1f1;
+  color: #000;
+}
