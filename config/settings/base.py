@@ -44,7 +44,7 @@ LOCALE_PATHS = [str(BASE_DIR / "locale")]
 # AI_INFERENCE_URL
 # override this to blank string on Heroku
 # Torchserve is down
-AI_INFERENCE_URL = 'http://10.147.19.124:8070/metaformer-predict'
+AI_INFERENCE_URL = 'http://10.147.19.124:8070/'
 
 # DATABASES
 # ------------------------------------------------------------------------------

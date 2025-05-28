@@ -131,10 +131,9 @@ Open the logs, ctrl-c to escape
 If there is a power outage, or the Ecdysis01 server otherwise is restarted, the app has to be restarted there, starting with the Torchserve first, so that bugbox app doesnt generate a bunch of errors when it first comes up and finds that it cannot connect to Torchserve. See section below on starting Torchserve, waiting till it is full accessible to the bring up bugbox. Clear the docker network first with `docker compose -f local-cloud.yml down` then bring the containers back with `--no-build -d` as explained above, afer Torchserve fully starts.
 
 
-## Torchserve
+## FastAPI
 
-The image classifications performed from `taxonomy.tasks.image_prediction` are done through a Torchserve model served through Torchserve (see https://github.com/EcdysisFoundation/servemetaformer )
- produced by metaformer_ecdysis (see https://github.com/EcdysisFoundation/metaformer_ecdysis )
+API_INFERENCE_URL is defined in settings. This relates to inference run against FastAPI hosed models, see repo https://github.com/EcdysisFoundation/inference-fastapi
 
 
 ## Organizations, Users, Permissions
