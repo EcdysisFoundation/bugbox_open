@@ -110,8 +110,13 @@ def obj_det_image(specimenimage_id):
         return
     if not response:
         return
-    specimenimage.object_det_label = response
-    specimenimage.object_det_model_version = response[0]['model_version']
+    if 'model_version' in response[0].keys():
+        specimenimage.object_det_model_version = response[0]['model_version']
+        # verify a object detection response
+        if all([v in response[0].keys() for v in ['x', 'y', 'width', 'height']]):
+            specimenimage.object_det_label = response
+        else:
+            specimenimage.object_det_label = []
     specimenimage.save()
 
 
