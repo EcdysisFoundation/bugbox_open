@@ -186,6 +186,70 @@ class ExperimentView(PermissionRequiredMixin, TemplateView):
 
         return context
 
+@permission_required(IS_RESEARCH)
+def export_by_location_csv(request):
+    if request.method == 'POST':
+        experiment_id = int(request.POST.get('experiment_id'))
+        experiment = Experiment.objects.user_access(request.user).get(id=experiment_id)
+
+        habitats = request.POST.getlist('habitats')
+        countries = request.POST.getlist('countries')
+        states = request.POST.getlist('states')
+        indices = request.POST.getlist('indices')
+        level = request.POST.get('level', 'morphospecies')
+        sample_types = request.POST.getlist('sampleTypes')
+        include_immatures_skipped = request.POST.get('include_immatures_skipped')
+        export_type = request.POST.get('export_type', constants.EXP_CSV_TYPE_ALL)
+
+        # If any of the three filter groups is empty, this includes all by default
+        if not habitats:
+            habitats = list(
+                Site.objects.filter(experiment=experiment)
+                .exclude(habitat_type__isnull=True)
+                .values_list('habitat_type', flat=True)
+                .distinct()
+            )
+
+        if not countries:
+            countries = list(
+                Site.objects.filter(experiment=experiment)
+                .exclude(country__isnull=True)
+                .values_list('country', flat=True)
+                .distinct()
+            )
+
+        if not states:
+            states = list(
+                Site.objects.filter(experiment=experiment)
+                .exclude(state_region__isnull=True)
+                .values_list('state_region', flat=True)
+                .distinct()
+            )
+
+
+        indices = constants.INDICES_ALWAYS_INCLUDED + [
+            i for i in indices if i not in constants.INDICES_ALWAYS_INCLUDED
+        ]
+        if 'hill_numbers' in indices:
+            indices.remove('hill_numbers')
+            indices.extend(['hill_H0', 'hill_H1', 'hill_H2', 'hill_inf'])
+
+        export_csv_by_location.delay(
+            request.user.pk,
+            experiment.id,
+            habitats,
+            countries,
+            states,
+            indices,
+            sample_types,
+            include_immatures_skipped,
+            level,
+            export_type=export_type
+        )
+
+        return redirect('samples:experiment', experiment_id=experiment.id)
+
+    raise Http404
 
 @permission_required(IS_RESEARCH)
 def export_by_location_progress(request, experiment_id):
@@ -1316,67 +1380,3 @@ class MultiSpecimeImageView(PermissionRequiredMixin, FormView):
 
     def get_success_url(self):
         return reverse('samples:multispecimen-images', kwargs={'sample_id': self.kwargs['sample_id']})
-
-
-@permission_required(IS_RESEARCH)
-def export_by_location_csv(request):
-    if request.method == 'POST':
-        experiment_id = int(request.POST.get('experiment_id'))
-        experiment = Experiment.objects.user_access(request.user).get(id=experiment_id)
-
-        habitats = request.POST.getlist('habitats')
-        countries = request.POST.getlist('countries')
-        states = request.POST.getlist('states')
-        indices = request.POST.getlist('indices')
-        level = request.POST.get('level', 'morphospecies')
-        sample_types = request.POST.getlist('sampleTypes')
-        include_immatures_skipped = request.POST.get('include_immatures_skipped')
-
-        # If any of the three filter groups is empty, this includes all by default
-        if not habitats:
-            habitats = list(
-                Site.objects.filter(experiment=experiment)
-                .exclude(habitat_type__isnull=True)
-                .values_list('habitat_type', flat=True)
-                .distinct()
-            )
-
-        if not countries:
-            countries = list(
-                Site.objects.filter(experiment=experiment)
-                .exclude(country__isnull=True)
-                .values_list('country', flat=True)
-                .distinct()
-            )
-
-        if not states:
-            states = list(
-                Site.objects.filter(experiment=experiment)
-                .exclude(state_region__isnull=True)
-                .values_list('state_region', flat=True)
-                .distinct()
-            )
-
-
-        indices = constants.INDICES_ALWAYS_INCLUDED + [
-            i for i in indices if i not in constants.INDICES_ALWAYS_INCLUDED
-        ]
-        if 'hill_numbers' in indices:
-            indices.remove('hill_numbers')
-            indices.extend(['hill_H0', 'hill_H1', 'hill_H2', 'hill_inf'])
-
-        export_csv_by_location.delay(
-            request.user.pk,
-            experiment.id,
-            habitats,
-            countries,
-            states,
-            indices,
-            sample_types,
-            include_immatures_skipped,
-            level
-        )
-
-        return redirect('samples:experiment', experiment_id=experiment.id)
-
-    raise Http404

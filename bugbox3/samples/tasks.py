@@ -199,7 +199,7 @@ def export_csv(
 
 
 @shared_task(soft_time_limit=3600, hard_time_limit=3900)
-def export_csv_by_location(user_id, experiment_id, habitats, countries, states, indices, sample_types, include_immatures_skipped, level):
+def export_csv_by_location(user_id, experiment_id, habitats, countries, states, indices, sample_types, include_immatures_skipped, level, export_type):
     user = User.objects.get(pk=user_id)
     experiment = Experiment.objects.user_access(user).get(id=experiment_id)
     habitats = [h.strip().lower() for h in habitats]
@@ -276,16 +276,36 @@ def export_csv_by_location(user_id, experiment_id, habitats, countries, states, 
 
         excluded_names = set()
         for specimen in specimens:
-            morphospecies_id = specimen.classification_id or specimen.ai_classification_id
+            if export_type == constants.EXP_CSV_TYPE_AI:
+                morphospecies_id = specimen.ai_classification_id
+            elif export_type == constants.EXP_CSV_TYPE_REVIEWED:
+                morphospecies_id = (None if specimen.acceptance == constants.ACCEPTANCE_PENDING and specimen.ai_classification else specimen.classification_id)
+            else:
+                morphospecies_id = specimen.classification_id or specimen.ai_classification_id
+
             if morphospecies_id:
                 morpho = Morphospecies.objects.get(id=morphospecies_id)
-                if morpho.exclude_from_export and not include_immatures_skipped:
-                    continue
+                if morpho.exclude_from_export:
+                    is_immature = morpho.id in immature_ids or "immature" in morpho.name.lower()
+                    is_skipped = morpho.id in skip_ids
+                    if include_immatures_skipped and (is_immature or is_skipped):
+                        print(f"Override exclude_from_export: including {morpho.name}")
+                    else:
+                        print(f"Excluded from export (exclude_from_export=True): {morpho.name}")
+                        continue
 
-                name = morpho.gbif_family if level == "family" else morpho.name
-                morpho_headers[0][name] = morpho.gbif_order
-                morpho_headers[1][name] = morpho.gbif_family
-                morpho_headers[2][name] = morpho.gbif_species or morpho.gbif_genus
+
+                if level == "family":
+                    name = morpho.gbif_family if morpho.gbif_family else "Unspecified Family"
+                    morpho_headers[0][name] = morpho.gbif_order
+                    morpho_headers[1][name] = morpho.gbif_family
+                    morpho_headers[2][name] = ""
+                else:
+                    name = morpho.name
+                    morpho_headers[0][name] = morpho.gbif_order
+                    morpho_headers[1][name] = morpho.gbif_family
+                    morpho_headers[2][name] = morpho.gbif_species or morpho.gbif_genus
+
             else:
                 name = unknown
                 morpho_headers[0][name] = morpho_headers[1][name] = morpho_headers[2][name] = ''
@@ -298,10 +318,12 @@ def export_csv_by_location(user_id, experiment_id, habitats, countries, states, 
                 excluded_names.add(name)
 
         if indices:
+            excluded_names_for_indices = excluded_names.union({unknown})
             clean_row = {
                 k: v for k, v in row.items()
-                if k not in excluded_names and k not in constants.EXP_HEADERS_ARR + indices
+                if k not in excluded_names_for_indices and k not in constants.EXP_HEADERS_ARR + indices
             }
+
             n = sum(clean_row.values())
             index_results = get_indices(n, clean_row, headers_arr)
             for i_key in indices:
