@@ -182,8 +182,15 @@
       <div class="modal-body">
         <form id="exportForm3" method="POST" action="{% url 'samples:export-by-location' %}">
             {% csrf_token %}
+            <div class="mb-3">
+            <label for="export_type" class="form-label">Export Type</label>
+            <select class="form-select" id="export_type" name="export_type" required>
+                {% for e_type in export_types %}
+                <option value="{{ e_type.0 }}" {% if e_type.0 == 'all' %}selected{% endif %} title="{{ e_type.2 }}">{{ e_type.1 }}</option>
+                {% endfor %}
+            </select>
+            </div>
             <input type="hidden" name="experiment_id" value="{{ experiment.id }}">
-
             <h5>Filter by Habitat</h5>
             <small class="text-muted">Select one or more habitats to filter. Leave blank to include all.</small>
             <div class="form-check">
