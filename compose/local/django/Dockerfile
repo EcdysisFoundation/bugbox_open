@@ -47,6 +47,9 @@ RUN groupadd --gid 1000 dev-user \
 
 # Install required system dependencies
 RUN apt-get update && apt-get install --no-install-recommends -y \
+  # Download and key management tools (needed to add external repos)
+  wget \
+  gnupg \
   # psycopg2 dependencies
   libpq-dev \
   # Translations dependencies
@@ -55,7 +58,13 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   binutils \
   libproj-dev \
   gdal-bin \
-  # cleaning up unused files
+  # Add PostgreSQL APT repository key
+  && wget -qO - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
+  # Add PostgreSQL APT source for latest client
+  && echo "deb http://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
+  # Update again to load new PostgreSQL repo and install PostgreSQL 17 client
+  && apt-get update && apt-get install --no-install-recommends -y postgresql-client-17 \
+  # Cleaning up unused files
   && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
   && rm -rf /var/lib/apt/lists/*
 
