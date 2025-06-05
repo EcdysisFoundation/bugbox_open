@@ -34,6 +34,11 @@ class UserSignupForm(SignupForm):
     Check UserSocialSignupForm for accounts created from social.
     """
     name = CharField(max_length=255, label='Name of User')
+    def save(self, request):
+        user = super().save(request)
+        user.name = self.cleaned_data["name"]
+        user.save()
+        return user
 
 
 class UserSocialSignupForm(SocialSignupForm):
