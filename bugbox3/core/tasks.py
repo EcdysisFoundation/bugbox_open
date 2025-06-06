@@ -1,6 +1,5 @@
 from celery import shared_task
 from django.conf import settings
-from django.core.management import call_command
 
 from ..libs.utilities import S3_CLIENT
 
@@ -18,12 +17,3 @@ def download_s3_media(source_obj, destination_path):
         Filename=destination_path
     )
     return
-
-@shared_task(
-    soft_time_limit=600,
-    time_limit=660,
-)
-def backup_db_to_s3_task():
-    print("Starting database backup to S3...")
-    call_command('backup_db_to_s3')
-    print("Finished database backup to S3.")

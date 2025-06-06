@@ -20,10 +20,6 @@ app.autodiscover_tasks()
 
 if settings.ON_ECDYSIS_SERVER == "YES":
     app.conf.beat_schedule = {
-        'weekly-db-backup': {
-            'task': 'bugbox3.core.tasks.backup_db_to_s3_task',
-            'schedule': crontab(minute=0, hour=10, day_of_week='sunday'),  # Sunday @ 5 AM CT = 10 AM UTC
-        },
         'run_classify_new_images': {
             'task': 'bugbox3.taxonomy.tasks.run_classify_new_images',
             'schedule': crontab(minute='*/15')
