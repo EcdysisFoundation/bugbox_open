@@ -139,5 +139,3 @@ else:
     # Use local file storage in dev mode
     MEDIA_URL = "/media/"
     STATIC_URL = "/static/"
-    MEDIA_ROOT = BASE_DIR / "bugbox3" / "media"
-    STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
