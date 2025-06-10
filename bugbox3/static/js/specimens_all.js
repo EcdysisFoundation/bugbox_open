@@ -32,6 +32,13 @@ $(function () {
     let usStateChoices = json_context.state_choices_dict.US_STATE_CHOICES
     let caStateChoices = json_context.state_choices_dict.CANADA_STATE_CHOICES
 
+    let isReloading = false;
+    let reloadTimeout;
+    function delayedReload(ms = 300) {
+        clearTimeout(reloadTimeout);
+        reloadTimeout = setTimeout(() => reloadUrl(), ms);
+    }
+
     // Load filters from localStorage or setting default values
     function saveFilterState() {
         const filters = {
@@ -159,6 +166,8 @@ $(function () {
     }
 
     function reloadUrl() {
+        if (isReloading) return;
+        isReloading = true;
         specimens_table.ajax.url(getUrl(
             json_context.datatables_url,
             $acceptancePicker.val(), $archivalCheck, $userPicker.val(),
@@ -167,9 +176,12 @@ $(function () {
             $classificationFilter.val(),
             document.getElementById('classificationRadio').checked,
             document.getElementById('aiClassificationRadio').checked
-        )).load();
-        resetJsonData()
+        )).load(() => {
+            isReloading = false;
+        });
+        resetJsonData();
     }
+
 
 
     function doMyThing(recipient) {
@@ -413,15 +425,15 @@ $(function () {
 
     $acceptancePicker.on('change', () => {
         saveFilterState();
-        reloadUrl();
+        delayedReload();
     })
     $archivalCheck.on('change', () => {
         saveFilterState();
-        reloadUrl();
+        delayedReload();
     })
     $userPicker.on('change', () => {
         saveFilterState();
-        reloadUrl();
+        delayedReload();
     })
     // with more countries will need to instead dynamically rebuild select options from STATE_CHOICES.
     $countryPicker.on('change', () => {
@@ -436,31 +448,31 @@ $(function () {
             $statePicker.show()
         }
         saveFilterState();
-        reloadUrl();
+        delayedReload();
     })
     $statePicker.on('change', () => {
         saveFilterState();
-        reloadUrl();
+        delayedReload();
     })
     $tagPicker.on('change', () => {
         saveFilterState();
-        reloadUrl();
+        delayedReload();
     })
     $sampleTypePicker.on('change', () => {
         saveFilterState();
-        reloadUrl();
+        delayedReload();
     })
     $recentYearPicker.on('change', () => {
         saveFilterState();
-        reloadUrl();
+        delayedReload();
     })
     $classificationFilterButton.on('click', () => {
         saveFilterState();
-        reloadUrl();
+        delayedReload();
     })
     $('#classificationRadio, #aiClassificationRadio').on('change', () => {
         saveFilterState();
-        reloadUrl();
+        delayedReload();
     });
     // organization picker
     let $orgPicker = $(`<select placeholder="Organization" id="org-filter" class="form-select"></select>`)
@@ -536,7 +548,7 @@ $(function () {
     // Restore filter state from localStorage
     restoreFilterState();
     $('#clearFiltersBtn').on('click', clearAllFilters);
-    reloadUrl();
+    delayedReload();
 
 });
 

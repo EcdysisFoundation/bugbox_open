@@ -13,7 +13,7 @@ from django.db.models import (CASCADE, SET_NULL, IntegerField, BooleanField, Cha
                               FileField, ForeignKey, ImageField, JSONField,
                               Manager, Model, PositiveIntegerField,
                               PositiveSmallIntegerField, SlugField, TextField,
-                              UUIDField)
+                              UUIDField, Index)
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from organizations.models import Organization
@@ -188,6 +188,10 @@ class SiteVisit(Model):
                         name_no=name,
                         created_by_user=self.created_by_user)
                     n = n - 1
+    class Meta:
+        indexes = [
+            Index(fields=['visit_date']),
+        ]
 
 
 class SampleManager(Manager):
@@ -208,6 +212,10 @@ class Sample(Model):
     update_thumbs = BooleanField(null=True)
 
     objects = SampleManager()
+    class Meta:
+        indexes = [
+            Index(fields=['sample_type']),
+        ]
 
 
 @receiver(pre_save, sender=Sample)
@@ -307,6 +315,12 @@ class Specimen(Model):
     class Meta:
         permissions = [
             (constants.PERMISSION_SPECIMEN_REVIEW, constants.PERMISSION_SPECIMEN_REVIEW_TXT)
+        ]
+        indexes = [
+            Index(fields=['sample']),
+            Index(fields=['acceptance']),
+            Index(fields=['classification']),
+            Index(fields=['ai_classification']),
         ]
 
 
