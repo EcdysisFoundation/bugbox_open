@@ -4,6 +4,7 @@ import DataTable from 'datatables.net-bs5';
 
 $(function () {
     const json_context = JSON.parse(document.getElementById('json_context').textContent);
+    const FILTER_STORAGE_KEY = 'bugbox_specimens_filters';
     const isAlphaNumeric = str => /^[a-z0-9]*$/gi.test(str);
     let json_data = {
         confirm_ids: [],  // specimen ids
@@ -28,10 +29,87 @@ $(function () {
     }
 
 
-let usStateChoices = json_context.state_choices_dict.US_STATE_CHOICES
-let caStateChoices = json_context.state_choices_dict.CANADA_STATE_CHOICES
+    let usStateChoices = json_context.state_choices_dict.US_STATE_CHOICES
+    let caStateChoices = json_context.state_choices_dict.CANADA_STATE_CHOICES
 
-function getUrl(dt_url,
+    let isReloading = false;
+    let reloadTimeout;
+    function delayedReload(ms = 300) {
+        clearTimeout(reloadTimeout);
+        reloadTimeout = setTimeout(() => reloadUrl(), ms);
+    }
+
+    // Load filters from localStorage or setting default values
+    function saveFilterState() {
+        const filters = {
+            acceptance: $acceptancePicker.val(),
+            archival: $archivalCheck.prop('checked'),
+            user: $userPicker.val(),
+            country: $countryPicker.val(),
+            state: $statePicker.val(),
+            ca_state: $caStatePicker.val(),
+            tag: $tagPicker.val(),
+            sample_type: $sampleTypePicker.val(),
+            recent_year: $recentYearPicker.val(),
+            classification: $classificationFilter.val(),
+            radio: document.getElementById('classificationRadio').checked ? 'Reviewed' : 'AI'
+        };
+        localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(filters));
+    }
+
+    function restoreFilterState() {
+        const stored = localStorage.getItem(FILTER_STORAGE_KEY);
+        if (!stored) return;
+        const filters = JSON.parse(stored);
+
+        $acceptancePicker.val(filters.acceptance || '').trigger('change');
+        $archivalCheck.prop('checked', filters.archival || false).trigger('change');
+        $userPicker.val(filters.user || '').trigger('change');
+        $countryPicker.val(filters.country || '').trigger('change');
+
+        if (filters.country === 'CANADA_STATE_CHOICES') {
+            $statePicker.hide();
+            $caStatePicker.show().val(filters.ca_state || '').trigger('change');
+        } else {
+            $caStatePicker.hide();
+            $statePicker.show().val(filters.state || '').trigger('change');
+        }
+
+        $tagPicker.val(filters.tag || '').trigger('change');
+        $sampleTypePicker.val(filters.sample_type || '').trigger('change');
+        $recentYearPicker.val(filters.recent_year || '').trigger('change');
+        $classificationFilter.val(filters.classification || '');
+
+        if (filters.radio === 'AI') {
+            document.getElementById('aiClassificationRadio').checked = true;
+        } else {
+            document.getElementById('classificationRadio').checked = true;
+        }
+    }
+
+    function clearAllFilters() {
+        // Clear filter values
+        $acceptancePicker.val('').trigger('change');
+        $archivalCheck.prop('checked', false).trigger('change');
+        $userPicker.val('').trigger('change');
+        $countryPicker.val('').trigger('change');
+        $statePicker.val('').trigger('change');
+        $caStatePicker.val('').trigger('change');
+        $caStatePicker.hide();
+        $statePicker.show();
+        $tagPicker.val('').trigger('change');
+        $sampleTypePicker.val('').trigger('change');
+        $recentYearPicker.val('').trigger('change');
+        $classificationFilter.val('');
+        document.getElementById('classificationRadio').checked = true;
+
+        // Clear from localStorage
+        localStorage.removeItem(FILTER_STORAGE_KEY);
+
+        reloadUrl();
+    }
+
+    function getUrl(dt_url,
         acceptance_filter, archival_check, user_filter,
         country_filter, state_filter, tag_filter, sample_type_filter,
         recent_year_filter,
@@ -39,56 +117,58 @@ function getUrl(dt_url,
         classification_radio,
         ai_classification_radio
     ) {
-    let url_str = ''
-    let params = []
-    if (acceptance_filter) {
-        params.push('acceptance=' + acceptance_filter);
-    }
-    if (archival_check.prop("checked")) {
-        params.push('archival=' + archival_check.prop("checked"));
-    }
-    if (user_filter) {
-        params.push('user=' + user_filter);
-    }
-    if (country_filter) {
-        params.push('country=' + country_filter);
-    }
-    if (state_filter) {
-        params.push('state=' + state_filter);
-    }
-    if (tag_filter) {
-        params.push('tag=' + tag_filter);
-    }
-    if (sample_type_filter) {
-        params.push('sample_type=' + sample_type_filter);
-    }
-    if (recent_year_filter) {
-        params.push('recent_year=' + recent_year_filter);
-    }
-    if (classification_filter) {
-        let x = cleanInput(classification_filter)
-        if (x) {
-            params.push('classification_filter=' + x);
+        let url_str = ''
+        let params = []
+        if (acceptance_filter) {
+            params.push('acceptance=' + acceptance_filter);
         }
-    }
-    if (classification_radio) {
-        params.push('classification_radio=' + classification_radio);
-    }
-    if (ai_classification_radio) {
-        params.push('ai_classification_radio=' + ai_classification_radio);
-    }
-    for ( let i = 0; i < params.length; i++) {
-        let sep = '&'
-        if (i == 0) {
-            sep = '?'
+        if (archival_check.prop("checked")) {
+            params.push('archival=' + archival_check.prop("checked"));
         }
-        url_str += `${sep}${params[i]}`;
+        if (user_filter) {
+            params.push('user=' + user_filter);
+        }
+        if (country_filter) {
+            params.push('country=' + country_filter);
+        }
+        if (state_filter) {
+            params.push('state=' + state_filter);
+        }
+        if (tag_filter) {
+            params.push('tag=' + tag_filter);
+        }
+        if (sample_type_filter) {
+            params.push('sample_type=' + sample_type_filter);
+        }
+        if (recent_year_filter) {
+            params.push('recent_year=' + recent_year_filter);
+        }
+        if (classification_filter) {
+            let x = cleanInput(classification_filter)
+            if (x) {
+                params.push('classification_filter=' + x);
+            }
+        }
+        if (classification_radio) {
+            params.push('classification_radio=' + classification_radio);
+        }
+        if (ai_classification_radio) {
+            params.push('ai_classification_radio=' + ai_classification_radio);
+        }
+        for (let i = 0; i < params.length; i++) {
+            let sep = '&'
+            if (i == 0) {
+                sep = '?'
+            }
+            url_str += `${sep}${params[i]}`;
+        }
+        return `${dt_url}${url_str}`
     }
-    return `${dt_url}${url_str}`
-}
 
-function reloadUrl() {
-    specimens_table.ajax.url( getUrl(
+    function reloadUrl() {
+        if (isReloading) return;
+        isReloading = true;
+        specimens_table.ajax.url(getUrl(
             json_context.datatables_url,
             $acceptancePicker.val(), $archivalCheck, $userPicker.val(),
             $countryPicker.val(), $statePicker.val(), $tagPicker.val(),
@@ -96,60 +176,63 @@ function reloadUrl() {
             $classificationFilter.val(),
             document.getElementById('classificationRadio').checked,
             document.getElementById('aiClassificationRadio').checked
-        )).load();
-    resetJsonData()
-}
+        )).load(() => {
+            isReloading = false;
+        });
+        resetJsonData();
+    }
 
 
-function doMyThing(recipient) {
-    if (recipient) {
-        let thisRecipient = document.getElementById(recipient);
-        let data = data_table_2.rows('.selected').data();
-        if (data.length == 1) {
-            data = data[0];
-            thisRecipient.value = data.name;
-            let id = recipient.replace('new-class-', '');
-            json_data.new_classifications[id] = data.id;
-            let rejectCheck = 'reject-' + id;
-            document.getElementById(rejectCheck).checked = true;
 
+    function doMyThing(recipient) {
+        if (recipient) {
+            let thisRecipient = document.getElementById(recipient);
+            let data = data_table_2.rows('.selected').data();
+            if (data.length == 1) {
+                data = data[0];
+                thisRecipient.value = data.name;
+                let id = recipient.replace('new-class-', '');
+                json_data.new_classifications[id] = data.id;
+                let rejectCheck = 'reject-' + id;
+                document.getElementById(rejectCheck).checked = true;
+
+            }
         }
     }
-}
 
-function clearSelection(recipient) {
-    if (recipient) {
-        let thisRecipient = document.getElementById(recipient);
-        thisRecipient.value = '';
-        let id = recipient.replace('new-class-', '')
-        delete json_data.new_classifications[id]
+    function clearSelection(recipient) {
+        if (recipient) {
+            let thisRecipient = document.getElementById(recipient);
+            thisRecipient.value = '';
+            let id = recipient.replace('new-class-', '')
+            delete json_data.new_classifications[id]
+        }
     }
-}
 
-function formatRowDiv (cols) {
-    return `<div class='row'>${cols}</div>`;
-}
-
-function formatColDiv (col) {
-    return `<div class=\"col\">${col}</div>`;
-}
-
-function get_archival (row) {
-    if (row.archival_identifier) {
-        return `${row.archival_identifier}<br/>${row.archival_stored}`
-    } else {
-        return ''
+    function formatRowDiv(cols) {
+        return `<div class='row'>${cols}</div>`;
     }
-}
+
+    function formatColDiv(col) {
+        return `<div class=\"col\">${col}</div>`;
+    }
+
+    function get_archival(row) {
+        if (row.archival_identifier) {
+            return `${row.archival_identifier}<br/>${row.archival_stored}`
+        } else {
+            return ''
+        }
+    }
 
 
-function getRow ( data, type, row ) {
-    let cols = ''
-    let view_edit = `<h5><a href="${row.view_link}" target="_blank"><i class="bi bi-eye"></i></a>
+    function getRow(data, type, row) {
+        let cols = ''
+        let view_edit = `<h5><a href="${row.view_link}" target="_blank"><i class="bi bi-eye"></i></a>
 <a href="${row.edit_link}" target="_blank"><i class="bi bi-pencil"></i></a></h5>`
-    // img_thumbnail
-    if (row.img_thumbnail_large) {
-        cols += formatColDiv(`<button type="button" class="btn" data-bs-toggle="modal"
+        // img_thumbnail
+        if (row.img_thumbnail_large) {
+            cols += formatColDiv(`<button type="button" class="btn" data-bs-toggle="modal"
                 data-bs-target="#imageModal"
                 data-bs-whatever="
                 <img src='${row.img_thumbnail_large.url}'
@@ -157,34 +240,34 @@ function getRow ( data, type, row ) {
                 height='${row.img_thumbnail_large.height}'>
                 ">
                 ${data} </button>${view_edit}`);
-    } else {
-        cols += formatColDiv(`<div class="ms-4 mt-2">${data}</div>${view_edit}`);
-    }
-    // view and edit
-    cols += formatColDiv(get_archival(row));
-    // specimen context
-    cols += formatColDiv(
-        row.specimen_context
-    )
-    // classification
-    cols += formatColDiv(`${row.classification_name}<br/>${row.gbif_canonical_name}`)
+        } else {
+            cols += formatColDiv(`<div class="ms-4 mt-2">${data}</div>${view_edit}`);
+        }
+        // view and edit
+        cols += formatColDiv(get_archival(row));
+        // specimen context
+        cols += formatColDiv(
+            row.specimen_context
+        )
+        // classification
+        cols += formatColDiv(`${row.classification_name}<br/>${row.gbif_canonical_name}`)
 
-    // ai_classification
-    cols += formatColDiv(row.ai_classification)
+        // ai_classification
+        cols += formatColDiv(row.ai_classification)
 
-    return formatRowDiv(cols)
-};
+        return formatRowDiv(cols)
+    };
 
-let morphoModal = document.getElementById('morphoModal')
-let selectMorphoButton = document.getElementById('morpho-select-btn');
-let clearMorphoButton = document.getElementById('morpho-clear-btn');
-let recipient = false;
-selectMorphoButton.addEventListener('click', function() {
-    doMyThing(recipient);
-})
-clearMorphoButton.addEventListener('click', function() {
-    clearSelection(recipient);
-})
+    let morphoModal = document.getElementById('morphoModal')
+    let selectMorphoButton = document.getElementById('morpho-select-btn');
+    let clearMorphoButton = document.getElementById('morpho-clear-btn');
+    let recipient = false;
+    selectMorphoButton.addEventListener('click', function () {
+        doMyThing(recipient);
+    })
+    clearMorphoButton.addEventListener('click', function () {
+        clearSelection(recipient);
+    })
 
     let imageModal = document.getElementById('imageModal');
 
@@ -198,7 +281,7 @@ clearMorphoButton.addEventListener('click', function() {
         modalBodyInput.innerHTML = thisimage
     })
 
-    function getReviewPanel ( data, type, row ) {
+    function getReviewPanel(data, type, row) {
         if (!row.has_image || row.acceptance != 0 || !row.ai_classification_name) {
             /// not applicable to review in these cases
             return ''
@@ -249,18 +332,18 @@ clearMorphoButton.addEventListener('click', function() {
     $('#specimens-table tbody').on('click', '.confirm-btn', function () {
         var row = $(this).closest('tr');
 
-        var id = specimens_table.row( row ).data()["id"];
+        var id = specimens_table.row(row).data()["id"];
         json_data.confirm_ids.push(id)
     });
     $('#specimens-table tbody').on('click', '.reject-btn', function () {
         var row = $(this).closest('tr');
 
-        var id = specimens_table.row( row ).data()["id"];
+        var id = specimens_table.row(row).data()["id"];
         json_data.reject_ids.push(id)
     });
     $('#specimens-table tbody').on('click', '.clear-btn', function () {
         var row = $(this).closest('tr');
-        var id = specimens_table.row( row ).data()["id"];
+        var id = specimens_table.row(row).data()["id"];
         var input = document.getElementById(`new-class-${id}`)
         json_data.reject_ids = json_data.reject_ids.filter(v => v !== id)
         json_data.confirm_ids = json_data.confirm_ids.filter(v => v !== id)
@@ -341,13 +424,16 @@ clearMorphoButton.addEventListener('click', function() {
     $('.classification-search-btn').append($classificationFilterButton)
 
     $acceptancePicker.on('change', () => {
-        reloadUrl();
+        saveFilterState();
+        delayedReload();
     })
     $archivalCheck.on('change', () => {
-        reloadUrl();
+        saveFilterState();
+        delayedReload();
     })
     $userPicker.on('change', () => {
-        reloadUrl();
+        saveFilterState();
+        delayedReload();
     })
     // with more countries will need to instead dynamically rebuild select options from STATE_CHOICES.
     $countryPicker.on('change', () => {
@@ -361,24 +447,33 @@ clearMorphoButton.addEventListener('click', function() {
             $caStatePicker.val('')
             $statePicker.show()
         }
-        reloadUrl();
+        saveFilterState();
+        delayedReload();
     })
     $statePicker.on('change', () => {
-        reloadUrl();
+        saveFilterState();
+        delayedReload();
     })
     $tagPicker.on('change', () => {
-        reloadUrl();
+        saveFilterState();
+        delayedReload();
     })
     $sampleTypePicker.on('change', () => {
-        reloadUrl();
+        saveFilterState();
+        delayedReload();
     })
     $recentYearPicker.on('change', () => {
-        reloadUrl();
+        saveFilterState();
+        delayedReload();
     })
     $classificationFilterButton.on('click', () => {
-        reloadUrl();
+        saveFilterState();
+        delayedReload();
     })
-
+    $('#classificationRadio, #aiClassificationRadio').on('change', () => {
+        saveFilterState();
+        delayedReload();
+    });
     // organization picker
     let $orgPicker = $(`<select placeholder="Organization" id="org-filter" class="form-select"></select>`)
     $('.org-picker').append($orgPicker)
@@ -397,11 +492,11 @@ clearMorphoButton.addEventListener('click', function() {
 
     // Review panel
 
-       submitBtn.addEventListener('click', function() {
-            jsonDataInput.value = JSON.stringify(json_data);
-       })
+    submitBtn.addEventListener('click', function () {
+        jsonDataInput.value = JSON.stringify(json_data);
+    })
 
-       let data_table_2 = $('#data-table-2').DataTable({
+    let data_table_2 = $('#data-table-2').DataTable({
         order: [[1, 'desc']],
         ordering: false,
         processing: true,
@@ -439,18 +534,21 @@ clearMorphoButton.addEventListener('click', function() {
     // api_url filters
     let new_datatables_url_2 = ''
     if (json_context.second_picker_choices) {
-      let $secondPicker = $('<select placeholder="Filter by" aria-label="Filter by" id="second-picker" class="form-select"></select>')
-      $('.second-picker').append($secondPicker)
-      $secondPicker.append(`<option value="">` + json_context.second_picker_text + `</option>`)
-      $secondPicker.append(json_context.second_picker_choices.map(value => `<option value="${value[0]}">${value[1]}</option>`))
-      $secondPicker.val('')
-      $secondPicker.on('change', () => {
-          new_datatables_url_2 = json_context.datatables_url_2  + '?first_filter=' + $secondPicker.val()
-          data_table_2.ajax.url( new_datatables_url_2 ).load();
-      })
+        let $secondPicker = $('<select placeholder="Filter by" aria-label="Filter by" id="second-picker" class="form-select"></select>')
+        $('.second-picker').append($secondPicker)
+        $secondPicker.append(`<option value="">` + json_context.second_picker_text + `</option>`)
+        $secondPicker.append(json_context.second_picker_choices.map(value => `<option value="${value[0]}">${value[1]}</option>`))
+        $secondPicker.val('')
+        $secondPicker.on('change', () => {
+            new_datatables_url_2 = json_context.datatables_url_2 + '?first_filter=' + $secondPicker.val()
+            data_table_2.ajax.url(new_datatables_url_2).load();
+        })
     };
 
-
+    // Restore filter state from localStorage
+    restoreFilterState();
+    $('#clearFiltersBtn').on('click', clearAllFilters);
+    delayedReload();
 
 });
 

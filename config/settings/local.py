@@ -1,5 +1,7 @@
 from .base import *  # noqa
 from .base import env
+import os
+
 
 # GENERAL
 # ------------------------------------------------------------------------------
@@ -47,7 +49,6 @@ DEBUG_TOOLBAR_CONFIG = {
         "debug_toolbar.panels.settings.SettingsPanel",
         "debug_toolbar.panels.headers.HeadersPanel",
         "debug_toolbar.panels.request.RequestPanel",
-        "debug_toolbar.panels.sql.SQLPanel",
         "debug_toolbar.panels.staticfiles.StaticFilesPanel",
         "debug_toolbar.panels.templates.TemplatesPanel",
         "debug_toolbar.panels.alerts.AlertsPanel",
@@ -102,33 +103,39 @@ WEBPACK_LOADER["DEFAULT"]["CACHE"] = not DEBUG  # noqa: F405
 
 ###########################
 # USE CLOUD STORAGE IF THESE SETTINGS ENABLED
-aws_s3_domain_media = f"{AWS_STORAGE_BUCKET_NAME_MEDIA}.s3.amazonaws.com"
-aws_s3_domain_static = f"{AWS_STORAGE_BUCKET_NAME_STATIC}.s3.amazonaws.com"
+if ON_ECDYSIS_SERVER.upper() == "YES":
+    # Use cloud (S3) storage on Ecdysis01 or cloud instances
+    aws_s3_domain_media = f"{AWS_STORAGE_BUCKET_NAME_MEDIA}.s3.amazonaws.com"
+    aws_s3_domain_static = f"{AWS_STORAGE_BUCKET_NAME_STATIC}.s3.amazonaws.com"
 # STATIC & MEDIA
-STORAGES = {
-    "default": {
-        "BACKEND": "storages.backends.s3.S3Storage",
-        "OPTIONS": {
-            "file_overwrite": False,
-            "bucket_name": AWS_STORAGE_BUCKET_NAME_MEDIA
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3.S3Storage",
+            "OPTIONS": {
+                "file_overwrite": False,
+                "bucket_name": AWS_STORAGE_BUCKET_NAME_MEDIA
+            },
         },
-    },
-    "staticfiles": {
-        "BACKEND": "storages.backends.s3.S3Storage",
-        "OPTIONS": {
-            "default_acl": "public-read",
-            "bucket_name": AWS_STORAGE_BUCKET_NAME_STATIC
+        "staticfiles": {
+            "BACKEND": "storages.backends.s3.S3Storage",
+            "OPTIONS": {
+                "default_acl": "public-read",
+                "bucket_name": AWS_STORAGE_BUCKET_NAME_STATIC
+            },
         },
-    },
-}
+    }
 
-MEDIA_URL = f"https://{aws_s3_domain_media}/"
-STATIC_URL = f"https://{aws_s3_domain_static}/"
+    MEDIA_URL = f"https://{aws_s3_domain_media}/"
+    STATIC_URL = f"https://{aws_s3_domain_static}/"
 
 # Collectfasta
 # ------------------------------------------------------------------------------
 # https://github.com/jasongi/collectfasta#installation
-COLLECTFASTA_STRATEGY = "collectfasta.strategies.boto3.Boto3Strategy"
-INSTALLED_APPS = ["collectfasta", *INSTALLED_APPS]
+# Enable collectfasta only in cloud mode
+    COLLECTFASTA_STRATEGY = "collectfasta.strategies.boto3.Boto3Strategy"
+    INSTALLED_APPS = ["collectfasta", *INSTALLED_APPS]
 
-########################
+else:
+    # Use local file storage in dev mode
+    MEDIA_URL = "/media/"
+    STATIC_URL = "/static/"
