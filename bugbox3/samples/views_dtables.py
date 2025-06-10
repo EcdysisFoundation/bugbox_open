@@ -109,7 +109,14 @@ class SpecimensAllDatatablesViewSet(PermissionRequiredMixin, DatatablesModelView
          constants.FIELD_SPECIMEN_ARCHIVAL_STORED]
 
     def get_queryset(self):
-        specimen = Specimen.objects.user_access(self.request.user)
+        specimen = Specimen.objects.user_access(self.request.user).select_related(
+            'sample',
+            'sample__site_visit',
+            'sample__site_visit__site',
+            'sample__site_visit__site__experiment',
+            'classification',
+            'ai_classification'
+        )
         org_id = int(self.kwargs['org_id'])
         id = int(self.kwargs['id'])
         sample_id = int(self.kwargs['sample_id'])
