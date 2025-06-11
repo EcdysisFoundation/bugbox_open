@@ -118,8 +118,6 @@ class SpecimensAllDatatablesViewSet(PermissionRequiredMixin, DatatablesModelView
             'sample__site_visit__site__experiment',
             'classification',
             'ai_classification'
-        ).prefetch_related(
-            Prefetch('specimenimage_set', queryset=SpecimenImage.objects.order_by('id'))
         )
         org_id = int(self.kwargs['org_id'])
         id = int(self.kwargs['id'])
