@@ -328,7 +328,7 @@ class CollectionDatatablesSerializer(ModelSerializer):
                     specimen_image.image_thumbnail_medium,
                     value.classification.gbif_canonical_name,
                     public=specimen_image.public_image)
-            if specimen_image.image_thumbnail_large:
+            if specimen_image.image_thumbnail_large and specimen_image.image_thumbnail_large.name:
                 # dont use get_img_src() here due to modal .js reasons
                 if default_storage.exists(specimen_image.image_thumbnail_large.name):
                     img_thumbnail_large = {

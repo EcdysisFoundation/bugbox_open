@@ -1,5 +1,6 @@
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.http import Http404
+from django.db.models import Prefetch
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
 from ..core.constants import COUNTRY_LOOKUP
@@ -17,6 +18,7 @@ from .serializers import (CollectionDatatablesSerializer,
                           SpecimenDatatablesSerializer,
                           SpecimensAllDatatablesSerializer)
 from .views_public import PUBLIC_COLLECTIONS
+from bugbox3.samples.models import SpecimenImage
 
 
 class ExperimentsDatatablesViewSet(PermissionRequiredMixin, DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
@@ -116,6 +118,8 @@ class SpecimensAllDatatablesViewSet(PermissionRequiredMixin, DatatablesModelView
             'sample__site_visit__site__experiment',
             'classification',
             'ai_classification'
+        ).prefetch_related(
+            Prefetch('specimenimage_set', queryset=SpecimenImage.objects.order_by('id'))
         )
         org_id = int(self.kwargs['org_id'])
         id = int(self.kwargs['id'])
