@@ -232,12 +232,16 @@ $(function () {
 <a href="${row.edit_link}" target="_blank"><i class="bi bi-pencil"></i></a></h5>`
         // img_thumbnail
         if (row.img_thumbnail_large) {
+            let width = row.img_thumbnail_large.width;
+            let height = row.img_thumbnail_large.height;
+
+            let widthAttr = width && !isNaN(width) ? `width='${width}'` : '';
+            let heightAttr = height && !isNaN(height) ? `height='${height}'` : '';
+
             cols += formatColDiv(`<button type="button" class="btn" data-bs-toggle="modal"
                 data-bs-target="#imageModal"
                 data-bs-whatever="
-                <img src='${row.img_thumbnail_large.url}'
-                width='${row.img_thumbnail_large.width}'
-                height='${row.img_thumbnail_large.height}'>
+                <img src='${row.img_thumbnail_large.url}' ${widthAttr} ${heightAttr}>
                 ">
                 ${data} </button>${view_edit}`);
         } else {
