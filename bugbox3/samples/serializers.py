@@ -282,8 +282,8 @@ class SpecimensAllDatatablesSerializer(ModelSerializer):
                     img_thumbnail_large = {
                         'url': get_media_url(
                             specimen_image.image_thumbnail_large, public=specimen_image.public_image),
-                        'width': specimen_image.image_thumbnail_large.width,
-                        'height': specimen_image.image_thumbnail_large.height
+                        'width': getattr(specimen_image.image_thumbnail_large, 'width', ''),
+                        'height': getattr(specimen_image.image_thumbnail_large, 'height', '')
                     }
                 else:
                     img_thumbnail_large = {
@@ -328,14 +328,14 @@ class CollectionDatatablesSerializer(ModelSerializer):
                     specimen_image.image_thumbnail_medium,
                     value.classification.gbif_canonical_name,
                     public=specimen_image.public_image)
-            if specimen_image.image_thumbnail_large and specimen_image.image_thumbnail_large.name:
+            if specimen_image.image_thumbnail_large:
                 # dont use get_img_src() here due to modal .js reasons
                 if default_storage.exists(specimen_image.image_thumbnail_large.name):
                     img_thumbnail_large = {
                         'url': get_media_url(
                             specimen_image.image_thumbnail_large, public=specimen_image.public_image),
-                        'width': specimen_image.image_thumbnail_large.width,
-                        'height': specimen_image.image_thumbnail_large.height
+                        'width': getattr(specimen_image.image_thumbnail_large, 'width', ''),
+                        'height': getattr(specimen_image.image_thumbnail_large, 'height', '')
                     }
                 else:
                     img_thumbnail_large = {
