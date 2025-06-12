@@ -282,8 +282,8 @@ class SpecimensAllDatatablesSerializer(ModelSerializer):
                     img_thumbnail_large = {
                         'url': get_media_url(
                             specimen_image.image_thumbnail_large, public=specimen_image.public_image),
-                        'width': specimen_image.image_thumbnail_large.width,
-                        'height': specimen_image.image_thumbnail_large.height
+                        'width': getattr(specimen_image.image_thumbnail_large, 'width', ''),
+                        'height': getattr(specimen_image.image_thumbnail_large, 'height', '')
                     }
                 else:
                     img_thumbnail_large = {
@@ -334,8 +334,8 @@ class CollectionDatatablesSerializer(ModelSerializer):
                     img_thumbnail_large = {
                         'url': get_media_url(
                             specimen_image.image_thumbnail_large, public=specimen_image.public_image),
-                        'width': specimen_image.image_thumbnail_large.width,
-                        'height': specimen_image.image_thumbnail_large.height
+                        'width': getattr(specimen_image.image_thumbnail_large, 'width', ''),
+                        'height': getattr(specimen_image.image_thumbnail_large, 'height', '')
                     }
                 else:
                     img_thumbnail_large = {

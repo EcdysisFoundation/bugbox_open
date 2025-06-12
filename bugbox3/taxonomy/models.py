@@ -102,3 +102,22 @@ class GBIFImageRecord(Model):
         app_label = 'taxonomy'
     def __str__(self):
         return f"{self.scientific_name} ({self.gbif_taxon_key})"
+
+
+class FilteredGBIFImageRecord(Model):
+    gbif_taxon_key = IntegerField()
+    canonical_name = CharField(max_length=255)
+    image_url = CharField(max_length=500)
+    media_type = CharField(max_length=100, blank=True, null=True)
+    license = CharField(max_length=255, blank=True, null=True)
+    morphospecies = ForeignKey(Morphospecies, null=True, blank=True, on_delete=SET_NULL)
+    date_fetched = DateTimeField(auto_now_add=True)
+    decimal_latitude = FloatField(null=True, blank=True)
+    decimal_longitude = FloatField(null=True, blank=True)
+    occurrence_id = BigIntegerField(null=True, blank=True)
+    downloaded_image = BooleanField(default=False)
+
+    class Meta:
+        app_label = 'taxonomy'
+    def __str__(self):
+        return f"{self.canonical_name} ({self.gbif_taxon_key})"
