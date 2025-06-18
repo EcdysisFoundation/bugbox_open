@@ -1,11 +1,13 @@
 from django.contrib.gis.db.models import (CASCADE, BigIntegerField, CharField,
                                           DateTimeField, FileField, ForeignKey,
                                           JSONField, Manager, Model,
-                                          MultiPolygonField, SlugField)
+                                          MultiPolygonField,
+                                          SlugField)
 from django.db.models.fields import BLANK_CHOICE_DASH
 from organizations.models import Organization
 
 from .constants import FIELD_DISPLAY_TXT
+from .customstorage import PublicMediaStorage
 
 
 class Exports(Model):
@@ -58,6 +60,13 @@ class LookupChoices(Model):
 
     def __str__(self):
         return str(self.display_txt)
+
+
+class PublicSiteContent(Model):
+    title = SlugField(max_length=30, unique=True)
+    file = FileField(storage=PublicMediaStorage(), upload_to='site_content')
+    description = CharField(max_length=500, blank=True)
+    date_added = DateTimeField(auto_now_add=True)
 
 
 class UsCounties(Model):
