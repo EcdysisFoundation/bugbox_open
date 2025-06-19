@@ -92,14 +92,6 @@ ON_ECDYSIS_SERVER = env("ON_ECDYSIS_SERVER", default='NO')
 # ------------------------------------------------------------------------------
 WEBPACK_LOADER["DEFAULT"]["CACHE"] = not DEBUG  # noqa: F405
 
-############################
-# USE LOCAL STORAGE IF THE SECTION ENABLED
-# https://docs.djangoproject.com/en/dev/ref/settings/#media-url
-# MEDIA_URL = "/media/"
-# https://docs.djangoproject.com/en/dev/ref/settings/#static-url
-# STATIC_URL = "/static/"
-
-###########################
 
 ###########################
 # USE CLOUD STORAGE IF THESE SETTINGS ENABLED
@@ -107,7 +99,7 @@ if ON_ECDYSIS_SERVER.upper() == "YES":
     # Use cloud (S3) storage on Ecdysis01 or cloud instances
     aws_s3_domain_media = f"{AWS_STORAGE_BUCKET_NAME_MEDIA}.s3.amazonaws.com"
     aws_s3_domain_static = f"{AWS_STORAGE_BUCKET_NAME_STATIC}.s3.amazonaws.com"
-# STATIC & MEDIA
+    # STATIC & MEDIA
     STORAGES = {
         "default": {
             "BACKEND": "storages.backends.s3.S3Storage",
@@ -128,10 +120,10 @@ if ON_ECDYSIS_SERVER.upper() == "YES":
     MEDIA_URL = f"https://{aws_s3_domain_media}/"
     STATIC_URL = f"https://{aws_s3_domain_static}/"
 
-# Collectfasta
-# ------------------------------------------------------------------------------
-# https://github.com/jasongi/collectfasta#installation
-# Enable collectfasta only in cloud mode
+    # Collectfasta
+    # ------------------------------------------------------------------------------
+    # https://github.com/jasongi/collectfasta#installation
+    # Enable collectfasta only in cloud mode
     COLLECTFASTA_STRATEGY = "collectfasta.strategies.boto3.Boto3Strategy"
     INSTALLED_APPS = ["collectfasta", *INSTALLED_APPS]
 
