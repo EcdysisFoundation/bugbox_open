@@ -42,7 +42,7 @@ class Command(BaseCommand):
 
         # inventory specimen_images to see which have already been downloaded.
         for s in specimen_images:
-            local_paths = [self.local_storage + getattr(s, i).name for s in self.image_files]
+            local_paths = [self.local_storage + getattr(s, i).name for i in self.image_files]
             if all([os.path.isfile(v) for v in local_paths]):
                 # image already downloaded, so set to true and dont download
                 s.downloaded_image = True
