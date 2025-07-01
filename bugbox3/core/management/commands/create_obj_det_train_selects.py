@@ -14,7 +14,6 @@ class Command(BaseCommand):
     Check that db indicates image has been downloaded.
     """
 
-    Specimen = apps.get_model(app_label='samples', model_name='Specimen')
     SpecimenImage = apps.get_model(app_label='samples', model_name='SpecimenImage')
 
     def handle(self, *args, **options):
