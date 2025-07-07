@@ -35,6 +35,7 @@ class Command(BaseCommand):
                 si.object_det_annotation_id = d['annotation_id']
                 si.object_det_id = d['id']
                 si.object_det_updated_at = d['updated_at']
+                si.object_det_model_version = ''
                 si.save()
                 saved += 1
 
