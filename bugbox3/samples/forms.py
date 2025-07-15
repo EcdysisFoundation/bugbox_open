@@ -1,7 +1,7 @@
 import json
 
 from crispy_forms.layout import HTML, Column, Field, Fieldset, Row
-from django.forms import (CharField, ChoiceField, DateField, Form, HiddenInput,
+from django.forms import (TextInput, CharField, ChoiceField, DateField, Form, HiddenInput,
                           IntegerField, JSONField, MultipleChoiceField, Select,
                           SelectMultiple, Textarea)
 
@@ -147,7 +147,11 @@ class SiteForm(ModelFormMixin):
             Row(
                 Column(constants.FIELD_SITE_TREATMENT, css_class='form-control-width-medium'),
                 Column(constants.FIELD_SITE_HABITAT_TYPE, css_class='form-control-width-medium'),
-            )
+            ),
+            Row(
+                Column(constants.FIELD_SITE_STATE_REGION, css_class='form-control-width-medium'),
+                Column(constants.FIELD_SITE_COUNTY_REGION, css_class='form-control-width-medium'),
+            ),
         ]
 
     treatment = ChoiceField(
@@ -157,6 +161,22 @@ class SiteForm(ModelFormMixin):
     habitat_type = ChoiceField(
         widget=Select
     )
+    state_region = CharField(
+        required=False,
+        widget=TextInput(attrs={
+            'readonly': 'readonly',
+            'class': 'form-control-width-medium'
+        })
+    )
+
+    county_region = CharField(
+        required=False,
+        widget=TextInput(attrs={
+            'readonly': 'readonly',
+            'class': 'form-control-width-medium'
+        })
+    )
+
 
 
 class SiteVisitForm(ModelFormMixin):
