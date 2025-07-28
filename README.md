@@ -160,13 +160,13 @@ A get request
 When creating new Organizations, these new Organizations will need their LookupChoices populated to be able to create Experiments and use other forms. Populate a default set of LookupChoices to get them started, by running the management command `populate_org_choices`, passing the required argument of the new organization ID.
 
 
-## Ecdysis02 management commands
+## Ecdysis01 management commands
 
-When running management commands on Ecdysis02, be the command is..
+When running management commands on Ecdysis01, be the command is..
 
     docker compose -f local-cloud.yml run --rm django python manage.py MY_COMMAND
 
-Several management commands and tasks are specific to Ecdysis02. Some of these are scheduled through the Celery Beat schedule. Details about some specific commands are below.
+Several management commands and tasks are specific to Ecdysis01. Some of these are scheduled through the Celery Beat schedule. Details about some specific commands are below.
 
 ### Object Detection Training.
 
