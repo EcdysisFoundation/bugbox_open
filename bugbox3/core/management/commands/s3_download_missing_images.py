@@ -1,10 +1,10 @@
 import csv
 
-from django.apps import apps
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
 from ...tasks import download_s3_media
+
 
 class Command(BaseCommand):
     """

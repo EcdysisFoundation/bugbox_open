@@ -30,7 +30,6 @@ class Command(BaseCommand):
                     if si.object_det_updated_at:
                         thedate = datetime.fromisoformat(d['updated_at'][:-1]).astimezone(timezone.utc)
                         if si.object_det_updated_at == thedate:
-                            print(f'Record number {i} was already saved with this timestamp skipping')
                             skipped += 1
                             continue
                     si.object_det_label = d['label']
