@@ -90,11 +90,11 @@
                     <div class="col-auto">
                         <a href="{% url 'samples:experiment' sample_info.experiment_id %}" class="btn btn-light">Experiment</a>
                         <a href="{% url 'samples:sample-update' sample_info.sample_id %}" class="btn btn-light">Edit Sample</a>
-                        <a href="{% url 'samples:sample-delete' sample_info.sample_id sample_info.experiment_id %}" 
+                        <a href="{% url 'samples:sample-delete' sample_info.sample_id sample_info.experiment_id %}"
                             class="btn btn-danger {% if sample_info.has_data %} disabled{% endif %}">Delete Sample</a>
                     </div>
-                </div>                            
-                
+                </div>
+
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-8">
@@ -151,7 +151,7 @@
                                 </tbody>
                             </table>
                         </div>
-                
+
                         <div class="col-md-4 text-center">
                             <p class="card-text"><b>Sample Label:</b></p>
                             {% if sample_info.img_thumbnail %}
@@ -179,7 +179,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="row">
         <div class="col-12 mb-3 mt-2 p-0">
             <div class="card">

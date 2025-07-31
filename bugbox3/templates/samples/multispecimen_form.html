@@ -36,6 +36,7 @@
     </div>
 </div>
 
+<!-- change to new process
 <div class="modal fade" id="cropImagesModal" tabindex="-1" aria-labelledby="cropImagesModalLabel" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -57,6 +58,7 @@
       </div>
     </div>
 </div>
+-->
 
 <div class="container">
 
@@ -103,11 +105,6 @@
                                 <label for="id_image_4_by_3" class="form-label">
                                     {% if sample.completed %}
                                         Sample completed, edit sample to enable
-                                    {% else %}
-                                        <a href="#" data-bs-toggle="tooltip" data-bs-title="The image will be equally divided in 4 segments horizontally and 3 vertically. Your image should only have insects within these segments or it will not be cropped correctly.">
-                                            <i class="bi bi-exclamation-triangle text-light"></i>
-                                        </a>
-                                        Add 4 X 3 multi-specimen images
                                     {% endif %}
                                 </label>
                                     <input type="file" name="image_4_by_3" accept=".jpg, .png, .jpeg"
@@ -122,9 +119,11 @@
                             <button type="button" class="btn btn-info btn-sm" id="select-all-btn" {% if sample.completed %}disabled{% endif %}>
                                 Toggle Select</button>
                                 <br/>
+                                <!-- change to new process
                                 <button type="button" class="btn btn-warning btn-sm mt-1" id="crop-images-btn" data-bs-toggle="modal" data-bs-target="#cropImagesModal" {% if sample.completed %}disabled{% endif %}>
                                 Crop to Specimens</button>
                                 <br/>
+                                -->
                             <button type="button" class="btn btn-danger btn-sm mt-1" data-bs-toggle="modal" data-bs-target="#deleteImagesModal" id="openDeleteModal" {% if sample.completed %}disabled{% endif %}>
                                 Delete Selected
                             </button>
