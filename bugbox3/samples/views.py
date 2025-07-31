@@ -117,7 +117,7 @@ class ExperimentView(PermissionRequiredMixin, TemplateView):
                 constants.FIELD_SITE_SITE_NAME)
         other_experiments = Experiment.objects.user_access(self.request.user).exclude(
             id=experiment.id).order_by(constants.FIELD_ABBREVIATION)
-        
+
         location_export = UserLocationExportFile.objects.filter(
             user=self.request.user,
             experiment=experiment
@@ -147,7 +147,7 @@ class ExperimentView(PermissionRequiredMixin, TemplateView):
                     'Treatment'
                 ])),
             'json_context': get_json_context(
-                {'sites_datatables_url': sites_datatables_url, 
+                {'sites_datatables_url': sites_datatables_url,
                  'experiment': {'id': experiment.id},
                  'last_location_exported_file_status': (
                      location_export.exported_file_status if location_export else None
@@ -171,7 +171,6 @@ class ExperimentView(PermissionRequiredMixin, TemplateView):
             else None
         )
         context["last_exported_file_status"] = user_experiment_file.exported_file_status
-
 
         context["last_location_exported_file"] = (
             get_media_url(location_export.file)
@@ -1314,7 +1313,6 @@ class MultiSpecimeImageView(PermissionRequiredMixin, FormView):
             'container_row_header': get_datatables_container(
                 get_datatables_row([
                     'Image',
-                    'image_grid',
                     'cropped_to_specimen',
                 ]))
         })
@@ -1379,4 +1377,6 @@ class MultiSpecimeImageView(PermissionRequiredMixin, FormView):
         return super().form_valid(form)
 
     def get_success_url(self):
-        return reverse('samples:multispecimen-images', kwargs={'sample_id': self.kwargs['sample_id']})
+        return reverse('samples:multispecimen-images', kwargs={
+            'org_id': 0,
+            'sample_id': self.kwargs['sample_id']})
