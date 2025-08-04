@@ -25,6 +25,10 @@ services:
   redis:
     image: docker.io/redis:6
     container_name: bugbox3_local_redis
+    deploy:
+      resources:
+        limits:
+          memory: 9g
     command: --port 6380
     ports:
       - "6380:6380"
