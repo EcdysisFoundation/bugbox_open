@@ -21,6 +21,7 @@ module.exports = {
     specimens_all: path.resolve(__dirname, '../bugbox3/static/js/specimens_all'),
     timeline: path.resolve(__dirname, '../bugbox3/static/js/timeline'),
     collections: path.resolve(__dirname, '../bugbox3/static/js/collections'),
+    stitcher: path.resolve(__dirname, '../bugbox3/static/js/stitcher'),
   },
   output: {
     path: path.resolve(

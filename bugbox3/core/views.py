@@ -14,7 +14,8 @@ from ..samples.constants import (FIELD_SAMPLE_TYPE, FIELD_SITE_HABITAT_TYPE,
 from . import constants
 from .forms import LookupChoicesForm
 from .models import LookupChoices
-from .permissions import IS_ADMIN
+from .permissions import IS_ADMIN, IS_RESEARCH
+from .stitcher_api import list_upload_files
 
 
 class DatatablesModelViewSetMixin:
@@ -266,3 +267,21 @@ class OrgMemberDeleteView(PermissionRequiredMixin, DeleteView):
 
     def get_success_url(self):
         return reverse('core:org-members', kwargs={'org_id': self.kwargs['org_id']})
+
+
+class StitcherView(PermissionRequiredMixin, TemplateView):
+
+    permission_required = IS_RESEARCH
+
+    template_name = 'core/stitcher.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # all_data = list_upload_files()
+
+        context.update({
+            'nothing': None
+        })
+
+        return context

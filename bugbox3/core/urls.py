@@ -3,7 +3,8 @@ from django.urls import path
 from ..users.views import EulaReadView, EulaView
 from .views import (LookupChoicesCreateView, LookupChoicesDeleteView,
                     LookupChoicesUpdateView, LookupChoicesView,
-                    OrgMemberDeleteView, OrgMembersView)
+                    OrgMemberDeleteView, OrgMembersView,
+                    StitcherView)
 
 app_name = "core"
 urlpatterns = [
@@ -26,5 +27,6 @@ urlpatterns = [
     path('eula/', view=EulaView.as_view(), name='eula'),
     path('read-eula/', view=EulaReadView.as_view(), name='read-eula'),
     path('org-members/<int:org_id>', OrgMembersView.as_view(), name='org-members'),
-    path('member-delete/<int:id>/<int:org_id>', OrgMemberDeleteView.as_view(), name='member-delete')
+    path('member-delete/<int:id>/<int:org_id>', OrgMemberDeleteView.as_view(), name='member-delete'),
+    path('stitcher', StitcherView.as_view(), name='stitcher')
 ]
