@@ -1,8 +1,11 @@
+import json
+
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Column, Field, Layout, Row, Submit
 from django.conf import settings
 from django.forms import (ClearableFileInput, DateInput, FileField,
-                          HiddenInput, ValidationError)
+                          Form,
+                          HiddenInput, JSONField, ValidationError)
 from django.forms.models import ModelForm
 from django.utils.safestring import mark_safe
 
@@ -181,3 +184,9 @@ class LookupChoicesForm(ModelFormMixin):
                 ),
             ]
         return row
+
+
+class StitcherForm(Form):
+
+    json_data = JSONField(decoder=json.JSONDecoder)
+    json_data.widget = HiddenInput()

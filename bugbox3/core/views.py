@@ -5,17 +5,18 @@ from django.core.exceptions import PermissionDenied
 from django.http import Http404, HttpResponseRedirect
 from django.urls import reverse
 from django.views.generic import TemplateView
-from django.views.generic.edit import CreateView, DeleteView, UpdateView
+from django.views.generic.edit import CreateView, DeleteView, FormView, UpdateView
 from organizations.models import OrganizationUser
 from rest_framework.response import Response
 
+from ..libs.utilities import get_json_context
 from ..samples.constants import (FIELD_SAMPLE_TYPE, FIELD_SITE_HABITAT_TYPE,
                                  FIELD_SITE_TREATMENT, FIELD_SPECIMEN_TAGS)
 from . import constants
-from .forms import LookupChoicesForm
+from .forms import LookupChoicesForm, StitcherForm
 from .models import LookupChoices
 from .permissions import IS_ADMIN, IS_RESEARCH
-from .stitcher_api import list_upload_files
+from .stitcher_api import get_upload_file, STITCHER_URL
 
 
 class DatatablesModelViewSetMixin:
@@ -272,16 +273,44 @@ class OrgMemberDeleteView(PermissionRequiredMixin, DeleteView):
 class StitcherView(PermissionRequiredMixin, TemplateView):
 
     permission_required = IS_RESEARCH
-
     template_name = 'core/stitcher.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
-        # all_data = list_upload_files()
-
         context.update({
-            'nothing': None
+            'json_context': get_json_context({
+                'STITCHER_URL': STITCHER_URL
+            })
         })
 
         return context
+
+
+class StitcherUpdateView(PermissionRequiredMixin, FormView):
+
+    permission_required = IS_ADMIN
+
+    form_class = StitcherForm
+    template_name = 'core/stitcher_form.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(StitcherUpdateView, self).get_context_data(**kwargs)
+        print(context)
+        guid = self.kwargs['guid']
+        data = get_upload_file(guid)
+        context.update({
+            'guid': guid,
+            'data': data,
+            'json_context': get_json_context({
+                'guid': guid
+            })
+        })
+
+        return context
+
+    def form_valid(self, form):
+        print('form is valid')
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse('core:stitcher')

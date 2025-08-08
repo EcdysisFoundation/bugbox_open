@@ -363,10 +363,4 @@ AWS_S3_MAX_MEMORY_SIZE = env.int(
 # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
 AWS_S3_REGION_NAME = env("DJANGO_AWS_S3_REGION_NAME", default=None)
 
-
-# Label Studio
-# ------------------------------------------------------------------------------
-LABEL_STUDIO_URL = 'http://localhost:8090'
-LABEL_STUDIO_DEFAULT_URL = 'http://localhost:8090'
-
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 2000
