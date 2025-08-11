@@ -1,5 +1,5 @@
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Column, Field, Layout, Row, Submit
+from crispy_forms.layout import Button, Column, Field, Layout, Row, Submit
 from django.conf import settings
 from django.forms import (ClearableFileInput,
                           ChoiceField,
@@ -7,6 +7,7 @@ from django.forms import (ClearableFileInput,
                           Form,
                           HiddenInput, ValidationError)
 from django.forms.models import ModelForm
+from django.urls import reverse
 from django.utils.safestring import mark_safe
 
 from . import constants
@@ -202,5 +203,7 @@ class StitcherForm(Form):
         self.helper = FormHelper()
         self.helper.layout = Layout(
             'approved',
+            Button('cancel', 'Cancel', css_class='btn-secondary',
+                    onclick="window.location.href = '{}';".format(reverse('core:stitcher'))),
             Submit('submit', 'Submit')
         )
