@@ -30,6 +30,19 @@ function getFormButton(data) {
     return `<button id="${buttonId}" class="btn btn-primary stitcher-form-button" data-row-id="${data}">-></button>`;
 }
 
+function getApproved(approved) {
+    if (approved == null) {
+        return approved
+    }
+    if (approved) {
+        return 'Approved'
+    }
+    if (!approved) {
+            return 'Disapproved'
+        }
+    return approved
+}
+
 $(function () {
     const json_context = JSON.parse(document.getElementById('json_context').textContent)
     var stitcher_table = $('#stitcher-table').DataTable({
@@ -56,6 +69,10 @@ $(function () {
             },{
                 data: 'guid',
                 render: getFormButton
+            },
+            {
+                data: 'approved',
+                render: getApproved
             }
         ]
     })
