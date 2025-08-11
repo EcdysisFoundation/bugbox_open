@@ -297,11 +297,14 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
         context = super(StitcherUpdateView, self).get_context_data(**kwargs)
         guid = self.kwargs['guid']
         data = get_upload_file(guid)
+        img_src = data['panorama_path'].replace('/media/', '/static/')
         context.update({
             'guid': guid,
             'data': data,
+            #'img_src': f'{STITCHER_URL}{img_src}',
+            'img_src': f'http://localhost:8090{img_src}',
             'json_context': get_json_context({
-                'guid': guid
+                'guid': guid,
             })
         })
         return context

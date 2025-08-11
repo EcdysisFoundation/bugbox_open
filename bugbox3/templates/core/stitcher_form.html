@@ -8,9 +8,9 @@
 
     <div class="row">
         <div class="col">
-            {{ guid }}
-
-            {{ data }}
+            <a href="{{ img_src }}" target="_blank">
+                <img src="{{ img_src }}" width="500">
+            </a>
         </div>
     </div>
     <div class="row">
@@ -22,4 +22,8 @@
         </div>
     </div>
 </div>
+
+            {{ guid }}
+
+            {{ data }}
 {% endblock content %}
