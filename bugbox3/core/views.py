@@ -16,7 +16,7 @@ from . import constants
 from .forms import LookupChoicesForm, StitcherForm
 from .models import LookupChoices
 from .permissions import IS_ADMIN, IS_RESEARCH
-from .stitcher_api import get_upload_file, STITCHER_URL
+from .stitcher_api import get_upload_file, patch_upload_file, STITCHER_URL
 
 
 class DatatablesModelViewSetMixin:
@@ -295,7 +295,6 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super(StitcherUpdateView, self).get_context_data(**kwargs)
-        print(context)
         guid = self.kwargs['guid']
         data = get_upload_file(guid)
         context.update({
@@ -305,11 +304,19 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                 'guid': guid
             })
         })
-
         return context
 
+    def get_initial(self):
+        initial = super().get_initial()
+        data = get_upload_file(self.kwargs['guid'])
+        initial['approved'] = data['approved']
+        return initial
+
     def form_valid(self, form):
-        print('form is valid')
+        data = form.cleaned_data
+        if data['approved'] == '':
+            data['approved'] = None
+        patch_upload_file(self.kwargs['guid'], data)
         return super().form_valid(form)
 
     def get_success_url(self):

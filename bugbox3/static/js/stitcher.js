@@ -62,7 +62,7 @@ $(function () {
 
     $('#stitcher-table', 'body').on('click', '.stitcher-form-button', function () {
         var guid = $(this).data('row-id');
-        window.open(`/core/stitcher-form/${guid}`, "_blank");
+        window.location.href = `/core/stitcher-form/${guid}`;
         })
 
 })

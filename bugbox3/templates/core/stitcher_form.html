@@ -1,6 +1,7 @@
 {% extends "base.html" %}
+{% load crispy_forms_tags %}
 
-{% block title %}Lookup Choices Form{% endblock %}
+{% block title %}Stitcher Form{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -10,6 +11,14 @@
             {{ guid }}
 
             {{ data }}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <form method="post">
+                {% csrf_token %}
+                {% crispy form %}
+            </form>
         </div>
     </div>
 </div>
