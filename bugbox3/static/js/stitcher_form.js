@@ -7,8 +7,6 @@ let messageModal = new Modal(document.getElementById('messageModal'), {
   })
 
 function updateStitching( url ) { $.post(url, function( data ) {
-    console.log(url)
-    // stuff to get result to modal
 }).done(function( data ) {
     messageModalBody.innerHTML = '<p>' + data.message +
 '</p><p>Processing may take a few minutes to complete.</p>';

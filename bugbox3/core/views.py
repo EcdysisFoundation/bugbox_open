@@ -298,8 +298,6 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
         guid = self.kwargs['guid']
         data = get_upload_file(guid)
         img_src = data['panorama_path'].replace('/media/', '/static/')
-        print('$'*100)
-        print(data['approved'])
         disable_stitching = False if data['approved'] is None else True
         context.update({
             'guid': guid,

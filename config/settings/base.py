@@ -199,6 +199,7 @@ TEMPLATES = [
                 "django.template.context_processors.tz",
                 "django.contrib.messages.context_processors.messages",
                 "bugbox3.users.context_processors.allauth_settings",
+                "bugbox3.core.context_processors.global_settings",
             ],
         },
     }
