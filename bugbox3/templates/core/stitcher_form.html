@@ -1,13 +1,30 @@
 {% extends "base.html" %}
 {% load crispy_forms_tags %}
+{% load render_bundle from webpack_loader %}
 
 {% block title %}Stitcher Form{% endblock %}
 
+{% block customheadtagcontent %}
+
+{% render_bundle 'stitcher_form' 'js' attrs='defer' %}
+{{ json_context|safe }}
+
+{% endblock customheadtagcontent %}
+
 {% block content %}
 <div class="container">
-
     <div class="row">
         <div class="col">
+            <div class="stitch-button"></div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            {{ guid }}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col mb-2">
             <a href="{{ img_src }}" target="_blank">
                 <img src="{{ img_src }}" width="500">
             </a>
@@ -23,7 +40,4 @@
     </div>
 </div>
 
-            {{ guid }}
-
-            {{ data }}
 {% endblock content %}

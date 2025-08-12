@@ -43,8 +43,10 @@ function getApproved(approved) {
     return approved
 }
 
+
 $(function () {
     const json_context = JSON.parse(document.getElementById('json_context').textContent)
+
     var stitcher_table = $('#stitcher-table').DataTable({
         order: [[1, 'desc']],
         ordering: false,

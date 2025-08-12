@@ -298,6 +298,9 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
         guid = self.kwargs['guid']
         data = get_upload_file(guid)
         img_src = data['panorama_path'].replace('/media/', '/static/')
+        print('$'*100)
+        print(data['approved'])
+        disable_stitching = False if data['approved'] is None else True
         context.update({
             'guid': guid,
             'data': data,
@@ -305,6 +308,9 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
             'img_src': f'http://localhost:8090{img_src}',
             'json_context': get_json_context({
                 'guid': guid,
+                #'STITCHER_URL': STITCHER_URL
+                'STITCHER_URL': 'http://localhost:8090',
+                'disable_stitching': disable_stitching
             })
         })
         return context

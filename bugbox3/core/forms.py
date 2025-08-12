@@ -196,6 +196,7 @@ class StitcherForm(Form):
     approved = ChoiceField(
         choices=choices,
         label="Approve/Dissaprove",
+        help_text="Updating the stitching is disabled when approved or dissaproved.",
         required=False)
 
     def __init__(self, *args, **kwargs):
@@ -203,7 +204,7 @@ class StitcherForm(Form):
         self.helper = FormHelper()
         self.helper.layout = Layout(
             'approved',
-            Button('cancel', 'Cancel', css_class='btn-secondary',
-                    onclick="window.location.href = '{}';".format(reverse('core:stitcher'))),
+            Button('cancel', 'Back / Cancel', css_class='btn-secondary',
+                   onclick="window.location.href = '{}';".format(reverse('core:stitcher'))),
             Submit('submit', 'Submit')
         )
