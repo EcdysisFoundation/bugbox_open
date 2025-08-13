@@ -15,8 +15,10 @@ from ..samples.constants import (FIELD_SAMPLE_TYPE, FIELD_SITE_HABITAT_TYPE,
 from . import constants
 from .forms import LookupChoicesForm, StitcherForm
 from .models import LookupChoices
-from .permissions import IS_ADMIN, IS_RESEARCH
-from .stitcher_api import get_upload_file, patch_upload_file, STITCHER_URL
+from .permissions import IS_ADMIN, IS_RESEARCH, ZEROTIER_USERS
+from .stitcher_api import (
+    get_upload_file, patch_upload_file, STITCHER_URL, STITCHER_URL_ZEROTIER
+)
 
 
 class DatatablesModelViewSetMixin:
@@ -277,9 +279,11 @@ class StitcherView(PermissionRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        stitcher_url = STITCHER_URL_ZEROTIER if \
+            str(self.request.user) in ZEROTIER_USERS else STITCHER_URL
         context.update({
             'json_context': get_json_context({
-                'STITCHER_URL': STITCHER_URL
+                'STITCHER_URL': stitcher_url
             })
         })
 
@@ -299,14 +303,16 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
         data = get_upload_file(guid)
         img_src = data['panorama_path'].replace('/media/', '/static/') if data['panorama_path'] else ''
         disable_stitching = False if data['approved'] is None else True
+        stitcher_url = STITCHER_URL_ZEROTIER if \
+            str(self.request.user) in ZEROTIER_USERS else STITCHER_URL
         context.update({
             'guid': guid,
             'data': data,
-            'img_src': f'{STITCHER_URL}{img_src}',
+            'img_src': f'{stitcher_url}{img_src}',
             # use_local_dev 'img_src': f'http://localhost:8090{img_src}',
             'json_context': get_json_context({
                 'guid': guid,
-                'STITCHER_URL': STITCHER_URL,
+                'STITCHER_URL': stitcher_url,
                 # use_local_dev 'STITCHER_URL': 'http://localhost:8090',
                 'disable_stitching': disable_stitching
             })

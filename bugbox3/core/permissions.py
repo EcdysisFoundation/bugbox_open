@@ -91,3 +91,6 @@ IS_ADMIN = [
 
 def show_toolbar(request):
     return str(request.user) == 'mikaylaelectra'
+
+
+ZEROTIER_USERS = ('mikaylaelectra',)
