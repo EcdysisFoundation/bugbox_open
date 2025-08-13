@@ -11,19 +11,6 @@ function getFilename(path) {
   return '';
 }
 
-function getPanormaSrc(data, type, row) {
-    let filename = getFilename(data)
-    if (filename) {
-        let result = `<a href="${json_context.STITCHER_URL}`
-        // let result = `<a href="http://localhost:8090`
-        let s = String(data).replace('media', 'static')
-        result += `${s}">${filename}</a>`;
-        return result
-    } else {
-        return 'no panorma available'
-    }
-};
-
 function getFormButton(data) {
     var buttonId = 'actionButton_' + data; // Assuming `row.id` is unique
     return `<button id="${buttonId}" class="btn btn-primary stitcher-form-button" data-row-id="${data}">-></button>`;
@@ -45,6 +32,19 @@ function getApproved(approved) {
 
 $(function () {
     const json_context = JSON.parse(document.getElementById('json_context').textContent)
+
+    function getPanormaSrc(data, type, row) {
+        let filename = getFilename(data)
+        if (filename) {
+            let result = `<a href="${json_context.STITCHER_URL}`
+            // let result = `<a href="http://localhost:8090`
+            let s = String(data).replace('media', 'static')
+            result += `${s}">${filename}</a>`;
+            return result
+        } else {
+            return 'no panorma available'
+        }
+    };
 
     var stitcher_table = $('#stitcher-table').DataTable({
         order: [[1, 'desc']],
