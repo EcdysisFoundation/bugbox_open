@@ -53,6 +53,7 @@ def get_upload_file(guid):
         else:
             return {'message': response.status_code}
     except Exception as e:
+        print(e)
         return {'message': e}
 
 
@@ -66,4 +67,5 @@ def patch_upload_file(guid, data):
         else:
             return {'message': response.status_code}
     except Exception as e:
+        print(e)
         return {'message': e}
