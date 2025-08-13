@@ -23,6 +23,8 @@ module.exports = {
     collections: path.resolve(__dirname, '../bugbox3/static/js/collections'),
     stitcher: path.resolve(__dirname, '../bugbox3/static/js/stitcher'),
     stitcher_form: path.resolve(__dirname, '../bugbox3/static/js/stitcher_form'),
+    site_form: path.resolve(__dirname, '../bugbox3/static/js/site_form'),
+
   },
   output: {
     path: path.resolve(
@@ -70,6 +72,6 @@ module.exports = {
     extensions: ['.js', '.jsx'],
   },
   watchOptions: {
-     ignored: [path.resolve(__dirname, '../bugbox3/node_modules'),]
+    ignored: [path.resolve(__dirname, '../bugbox3/node_modules'),]
   },
 };
