@@ -5,16 +5,20 @@ from django.core.exceptions import PermissionDenied
 from django.http import Http404, HttpResponseRedirect
 from django.urls import reverse
 from django.views.generic import TemplateView
-from django.views.generic.edit import CreateView, DeleteView, UpdateView
+from django.views.generic.edit import CreateView, DeleteView, FormView, UpdateView
 from organizations.models import OrganizationUser
 from rest_framework.response import Response
 
+from ..libs.utilities import get_json_context
 from ..samples.constants import (FIELD_SAMPLE_TYPE, FIELD_SITE_HABITAT_TYPE,
                                  FIELD_SITE_TREATMENT, FIELD_SPECIMEN_TAGS)
 from . import constants
-from .forms import LookupChoicesForm
+from .forms import LookupChoicesForm, StitcherForm
 from .models import LookupChoices
-from .permissions import IS_ADMIN
+from .permissions import IS_ADMIN, IS_RESEARCH, ZEROTIER_USERS
+from .stitcher_api import (
+    get_upload_file, patch_upload_file, STITCHER_URL, STITCHER_URL_ZEROTIER
+)
 
 
 class DatatablesModelViewSetMixin:
@@ -266,3 +270,67 @@ class OrgMemberDeleteView(PermissionRequiredMixin, DeleteView):
 
     def get_success_url(self):
         return reverse('core:org-members', kwargs={'org_id': self.kwargs['org_id']})
+
+
+class StitcherView(PermissionRequiredMixin, TemplateView):
+
+    permission_required = IS_RESEARCH
+    template_name = 'core/stitcher.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        stitcher_url = STITCHER_URL_ZEROTIER if \
+            str(self.request.user) in ZEROTIER_USERS else STITCHER_URL
+        context.update({
+            'json_context': get_json_context({
+                'STITCHER_URL': stitcher_url
+            })
+        })
+
+        return context
+
+
+class StitcherUpdateView(PermissionRequiredMixin, FormView):
+
+    permission_required = IS_ADMIN
+
+    form_class = StitcherForm
+    template_name = 'core/stitcher_form.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(StitcherUpdateView, self).get_context_data(**kwargs)
+        guid = self.kwargs['guid']
+        data = get_upload_file(guid)
+        img_src = data['panorama_path'].replace('/media/', '/static/') if data['panorama_path'] else ''
+        disable_stitching = False if data['approved'] is None else True
+        stitcher_url = STITCHER_URL_ZEROTIER if \
+            str(self.request.user) in ZEROTIER_USERS else STITCHER_URL
+        context.update({
+            'guid': guid,
+            'data': data,
+            'img_src': f'{stitcher_url}{img_src}',
+            # use_local_dev 'img_src': f'http://localhost:8090{img_src}',
+            'json_context': get_json_context({
+                'guid': guid,
+                'STITCHER_URL': stitcher_url,
+                # use_local_dev 'STITCHER_URL': 'http://localhost:8090',
+                'disable_stitching': disable_stitching
+            })
+        })
+        return context
+
+    def get_initial(self):
+        initial = super().get_initial()
+        data = get_upload_file(self.kwargs['guid'])
+        initial['approved'] = data['approved']
+        return initial
+
+    def form_valid(self, form):
+        data = form.cleaned_data
+        if data['approved'] == '':
+            data['approved'] = None
+        patch_upload_file(self.kwargs['guid'], data)
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse('core:stitcher')

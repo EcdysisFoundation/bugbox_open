@@ -1,9 +1,13 @@
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Column, Field, Layout, Row, Submit
+from crispy_forms.layout import Button, Column, Field, Layout, Row, Submit
 from django.conf import settings
-from django.forms import (ClearableFileInput, DateInput, FileField,
+from django.forms import (ClearableFileInput,
+                          ChoiceField,
+                          DateInput, FileField,
+                          Form,
                           HiddenInput, ValidationError)
 from django.forms.models import ModelForm
+from django.urls import reverse
 from django.utils.safestring import mark_safe
 
 from . import constants
@@ -181,3 +185,26 @@ class LookupChoicesForm(ModelFormMixin):
                 ),
             ]
         return row
+
+
+class StitcherForm(Form):
+    choices = [
+        (None, '---'),
+        (True, 'Approved'),
+        (False, 'Dissaprove')
+    ]
+    approved = ChoiceField(
+        choices=choices,
+        label="Approve/Dissaprove",
+        help_text="Updating the stitching is disabled when approved or dissaproved.",
+        required=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.layout = Layout(
+            'approved',
+            Button('cancel', 'Back / Cancel', css_class='btn-secondary',
+                   onclick="window.location.href = '{}';".format(reverse('core:stitcher'))),
+            Submit('submit', 'Submit')
+        )
