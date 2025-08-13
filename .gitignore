@@ -285,6 +285,7 @@ local_files/
 db_backups/
 *.csv
 *.json
+*.dump
 
 Notes/
 *.geany
