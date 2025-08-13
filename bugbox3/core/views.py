@@ -302,12 +302,12 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
         context.update({
             'guid': guid,
             'data': data,
-            #'img_src': f'{STITCHER_URL}{img_src}',
-            'img_src': f'http://localhost:8090{img_src}',
+            'img_src': f'{STITCHER_URL}{img_src}',
+            # use_local_dev 'img_src': f'http://localhost:8090{img_src}',
             'json_context': get_json_context({
                 'guid': guid,
-                #'STITCHER_URL': STITCHER_URL
-                'STITCHER_URL': 'http://localhost:8090',
+                'STITCHER_URL': STITCHER_URL,
+                # use_local_dev 'STITCHER_URL': 'http://localhost:8090',
                 'disable_stitching': disable_stitching
             })
         })

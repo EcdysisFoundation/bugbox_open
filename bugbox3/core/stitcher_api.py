@@ -2,9 +2,11 @@ import json
 import requests
 
 # use for local dev
-STITCHER_URL = 'http://host.docker.internal:8090'
+# STITCHER_URL = 'http://host.docker.internal:8090'
 # use for ecdysis01
-# STITCHER_URL = 'http://10.147.19.124:8090'
+STITCHER_URL = 'http://10.147.19.124:8090'
+# or
+# STITCHER_URL = 'http://ecdysis01.local:8090'
 
 
 def list_upload_files():

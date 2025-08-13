@@ -14,11 +14,10 @@ function getFilename(path) {
 function getPanormaSrc(data, type, row) {
     let filename = getFilename(data)
     if (filename) {
-        // let result = `<a href="${json_context.STITCHER_URL}`
-        let result = `<a href="http://localhost:8090`
+        let result = `<a href="${json_context.STITCHER_URL}`
+        // let result = `<a href="http://localhost:8090`
         let s = String(data).replace('media', 'static')
         result += `${s}">${filename}</a>`;
-        //console.log(result)
         return result
     } else {
         return 'no panorma available'
@@ -53,8 +52,8 @@ $(function () {
         processing: true,
         serverSide: true,
         ajax: {
-            // url: json_context.STITCHER_URL + '/uploads',
-            url: 'http://localhost:8090/uploads',
+            url: json_context.STITCHER_URL + '/uploads',
+            // url: 'http://localhost:8090/uploads',
             dataSrc: 'data'
         },
         language: {
