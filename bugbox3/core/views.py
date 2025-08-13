@@ -17,7 +17,10 @@ from .forms import LookupChoicesForm, StitcherForm
 from .models import LookupChoices
 from .permissions import IS_ADMIN, IS_RESEARCH, ZEROTIER_USERS
 from .stitcher_api import (
-    get_upload_file, patch_upload_file, STITCHER_URL, STITCHER_URL_ZEROTIER
+    get_upload_file,
+    patch_upload_file,
+    STITCHER_JS_URL_ZEROTIER,
+    STITCHER_JS_URL
 )
 
 
@@ -279,8 +282,8 @@ class StitcherView(PermissionRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        stitcher_url = STITCHER_URL_ZEROTIER if \
-            str(self.request.user) in ZEROTIER_USERS else STITCHER_URL
+        stitcher_url = STITCHER_JS_URL_ZEROTIER if \
+            str(self.request.user) in ZEROTIER_USERS else STITCHER_JS_URL
         context.update({
             'json_context': get_json_context({
                 'STITCHER_URL': stitcher_url
@@ -303,8 +306,8 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
         data = get_upload_file(guid)
         img_src = data['panorama_path'].replace('/media/', '/static/') if data['panorama_path'] else ''
         disable_stitching = False if data['approved'] is None else True
-        stitcher_url = STITCHER_URL_ZEROTIER if \
-            str(self.request.user) in ZEROTIER_USERS else STITCHER_URL
+        stitcher_url = STITCHER_JS_URL_ZEROTIER if \
+            str(self.request.user) in ZEROTIER_USERS else STITCHER_JS_URL
         context.update({
             'guid': guid,
             'data': data,
