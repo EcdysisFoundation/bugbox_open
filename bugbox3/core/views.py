@@ -325,7 +325,8 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
     def get_initial(self):
         initial = super().get_initial()
         data = get_upload_file(self.kwargs['guid'])
-        initial['approved'] = data['approved']
+        if 'approved' in data.keys():
+            initial['approved'] = data['approved']
         return initial
 
     def form_valid(self, form):
