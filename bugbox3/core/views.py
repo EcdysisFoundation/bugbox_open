@@ -17,10 +17,12 @@ from .forms import LookupChoicesForm, StitcherForm
 from .models import LookupChoices
 from .permissions import IS_ADMIN, IS_RESEARCH, ZEROTIER_USERS
 from .stitcher_api import (
+    get_root_message,
     get_upload_file,
     patch_upload_file,
     STITCHER_JS_URL_ZEROTIER,
-    STITCHER_JS_URL
+    STITCHER_JS_URL,
+    ERROR_MSG_KEY
 )
 
 
@@ -289,7 +291,9 @@ class StitcherView(PermissionRequiredMixin, TemplateView):
                 'STITCHER_URL': stitcher_url
             })
         })
-
+        root_message = get_root_message()
+        if ERROR_MSG_KEY in root_message:
+            messages.error(self.request, root_message[ERROR_MSG_KEY])
         return context
 
 
@@ -304,22 +308,26 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
         context = super(StitcherUpdateView, self).get_context_data(**kwargs)
         guid = self.kwargs['guid']
         data = get_upload_file(guid)
-        img_src = data['panorama_path'].replace('/media/', '/static/') if data['panorama_path'] else ''
-        disable_stitching = False if data['approved'] is None else True
+        if 'panorma_path' in data.keys():
+            img_src = data['panorama_path'].replace('/media/', '/static/') if data['panorama_path'] else ''
+            disable_stitching = False if data['approved'] is None else True
+        else:
+            img_src = ''
+            disable_stitching = True
         stitcher_url = STITCHER_JS_URL_ZEROTIER if \
             str(self.request.user) in ZEROTIER_USERS else STITCHER_JS_URL
         context.update({
             'guid': guid,
             'data': data,
             'img_src': f'{stitcher_url}{img_src}',
-            # use_local_dev 'img_src': f'http://localhost:8090{img_src}',
             'json_context': get_json_context({
                 'guid': guid,
                 'STITCHER_URL': stitcher_url,
-                # use_local_dev 'STITCHER_URL': 'http://localhost:8090',
                 'disable_stitching': disable_stitching
             })
         })
+        if ERROR_MSG_KEY in data.keys():
+            messages.error(self.request, data[ERROR_MSG_KEY])
         return context
 
     def get_initial(self):
