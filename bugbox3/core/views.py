@@ -306,22 +306,23 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super(StitcherUpdateView, self).get_context_data(**kwargs)
-        guid = self.kwargs['guid']
+        guid = self.kwargs[constants.STITCHER_GUID]
         data = get_upload_file(guid)
-        if 'panorma_path' in data.keys():
-            img_src = data['panorama_path'].replace('/media/', '/static/') if data['panorama_path'] else ''
-            disable_stitching = False if data['approved'] is None else True
+        if constants.STITCHER_PANORAMA_PATH in data.keys():
+            img_src = data[constants.STITCHER_PANORAMA_PATH].replace('/media/', '/static/') \
+                if data[constants.STITCHER_PANORAMA_PATH] else ''
+            disable_stitching = False if data[constants.STITCHER_APPROVED] is None else True
         else:
             img_src = ''
             disable_stitching = True
         stitcher_url = STITCHER_JS_URL_ZEROTIER if \
             str(self.request.user) in ZEROTIER_USERS else STITCHER_JS_URL
         context.update({
-            'guid': guid,
+            constants.STITCHER_GUID: guid,
             'data': data,
             'img_src': f'{stitcher_url}{img_src}',
             'json_context': get_json_context({
-                'guid': guid,
+                constants.STITCHER_GUID: guid,
                 'STITCHER_URL': stitcher_url,
                 'disable_stitching': disable_stitching
             })
@@ -332,16 +333,16 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
 
     def get_initial(self):
         initial = super().get_initial()
-        data = get_upload_file(self.kwargs['guid'])
-        if 'approved' in data.keys():
-            initial['approved'] = data['approved']
+        data = get_upload_file(self.kwargs[constants.STITCHER_GUID])
+        if constants.STITCHER_APPROVED in data.keys():
+            initial[constants.STITCHER_APPROVED] = data[constants.STITCHER_APPROVED]
         return initial
 
     def form_valid(self, form):
         data = form.cleaned_data
-        if data['approved'] == '':
-            data['approved'] = None
-        patch_upload_file(self.kwargs['guid'], data)
+        if data[constants.STITCHER_APPROVED] == '':
+            data[constants.STITCHER_APPROVED] = None
+        patch_upload_file(self.kwargs[constants.STITCHER_GUID], data)
         return super().form_valid(form)
 
     def get_success_url(self):
