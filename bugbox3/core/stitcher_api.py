@@ -12,6 +12,7 @@ STITCHER_JS_URL = 'http://ecdysis01.local:8090'
 
 ERROR_MSG_KEY = 'ERROR'
 
+
 def list_upload_files():
     api_list_url = STITCHER_URL + '/list-upload-files/'
     all_data = []

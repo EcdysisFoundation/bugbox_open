@@ -1,5 +1,11 @@
 import $ from 'jquery';
 import DataTable from 'datatables.net-bs5';
+import { Modal } from 'bootstrap';
+
+let messageModalBody = document.getElementById('messageModal-body');
+let messageModal = new Modal(document.getElementById('messageModal'), {
+    keyboard: false
+  })
 
 function getFilename(path) {
   if (path) {
@@ -29,6 +35,21 @@ function getApproved(approved) {
     return approved
 }
 
+function sendZipFile(formData, api_url) {
+    fetch(api_url, {
+        method: 'POST',
+        body: formData // The FormData object automatically sets the 'Content-Type' header to 'multipart/form-data'
+    })
+    .then(response => response.json()) // Parse the JSON response from the API
+    .then(data => {
+        messageModalBody.innerHTML = '<p>' + JSON.stringify(data) + '</p>';
+        messageModal.show();
+    })
+    .catch(error => {
+        messageModalBody.innerHTML = '<p>' + JSON.stringify(error) + '</p>';
+        messageModal.show();
+    });
+}
 
 $(function () {
     const json_context = JSON.parse(document.getElementById('json_context').textContent)
@@ -37,7 +58,6 @@ $(function () {
         let filename = getFilename(data)
         if (filename) {
             let result = `<a href="${json_context.STITCHER_URL}`
-            // let result = `<a href="http://localhost:8090`
             let s = String(data).replace('media', 'static')
             result += `${s}">${filename}</a>`;
             return result
@@ -53,7 +73,6 @@ $(function () {
         serverSide: true,
         ajax: {
             url: json_context.STITCHER_URL + '/uploads',
-            // url: 'http://localhost:8090/uploads',
             dataSrc: 'data'
         },
         language: {
@@ -82,5 +101,29 @@ $(function () {
         var guid = $(this).data('row-id');
         window.location.href = `/core/stitcher-form/${guid}`;
         })
+
+
+    $('#formFile').on('change', function() {
+        if ($(this).val()) {
+        $uploadButton.removeAttr('disabled');
+        } else {
+        $uploadButton.attr('disabled', 'disabled');
+        }
+    });
+
+    let $uploadButton = $('<button class="btn btn-warning mb-3 mt-2 text-nowrap" type="button" disabled>Upload Zip File</button>')
+    $('.upload-button').append($uploadButton)
+    $uploadButton.on('click', function() {
+        const fileInput = $('#formFile')[0];
+        const selectedFile = fileInput.files[0];
+        console.log(selectedFile)
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+        console.log(formData)
+
+        sendZipFile(formData, json_context.STITCHER_URL + '/upload-zip-images')
+
+    })
+
 
 })
