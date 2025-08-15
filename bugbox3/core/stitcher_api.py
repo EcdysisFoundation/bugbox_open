@@ -3,9 +3,14 @@ import requests
 
 STITCHER_URL = 'http://host.docker.internal:8090'
 
-STITCHER_JS_URL_ZEROTIER = 'http://10.147.19.124:8090'
-# or
+#STITCHER_JS_URL_ZEROTIER = 'http://10.147.19.124:8090'
+
+# for local dev
+STITCHER_JS_URL_ZEROTIER = 'http://localhost:8090'
+
 STITCHER_JS_URL = 'http://ecdysis01.local:8090'
+
+ERROR_MSG_KEY = 'ERROR'
 
 
 def list_upload_files():
@@ -51,10 +56,10 @@ def get_upload_file(guid):
             data = response.json()
             return data
         else:
-            return {'message': response.status_code}
+            return {ERROR_MSG_KEY: response.status_code}
     except Exception as e:
         print(e)
-        return {'message': e}
+        return {ERROR_MSG_KEY: e}
 
 
 def patch_upload_file(guid, data):
@@ -65,7 +70,21 @@ def patch_upload_file(guid, data):
             data = response.json()
             return data
         else:
-            return {'message': response.status_code}
+            return {ERROR_MSG_KEY: response.status_code}
     except Exception as e:
         print(e)
-        return {'message': e}
+        return {ERROR_MSG_KEY: e}
+
+
+def get_root_message():
+    api_url = STITCHER_URL
+    try:
+        response = requests.get(api_url)
+        if response.status_code == 200:
+            data = response.json()
+            return data
+        else:
+            return {ERROR_MSG_KEY: response.status_code}
+    except Exception as e:
+        print(e)
+        return {ERROR_MSG_KEY: e}

@@ -11,8 +11,10 @@ function updateStitching( url ) { $.post(url, function( data ) {
     messageModalBody.innerHTML = '<p>' + data.message +
 '</p><p>Processing may take a few minutes to complete.</p>';
     messageModal.show();
-}).fail(function() {
-    alert( "error");
+}).fail(function( data ) {
+    messageModalBody.innerHTML = '<p>' + data +
+    '</p><p>Update Failed.</p>';
+    messageModal.show();
 })}
 
 $(function () {
