@@ -114,13 +114,13 @@ $(function () {
     let $uploadButton = $('<button class="btn btn-warning mb-3 mt-2 text-nowrap" type="button" disabled>Upload Zip File</button>')
     $('.upload-button').append($uploadButton)
     $uploadButton.on('click', function() {
+        $(this).prop('disabled', true)
         const fileInput = $('#formFile')[0];
         const selectedFile = fileInput.files[0];
-        console.log(selectedFile)
         const formData = new FormData();
         formData.append('file', selectedFile);
-        console.log(formData)
-
+        const confidence = $('#formConfidence')[0]
+        formData.append('confidence_threshold', confidence.value)
         sendZipFile(formData, json_context.STITCHER_URL + '/upload-zip-images')
 
     })
