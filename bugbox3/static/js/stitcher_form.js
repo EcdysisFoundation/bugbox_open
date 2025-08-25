@@ -6,7 +6,8 @@ let messageModal = new Modal(document.getElementById('messageModal'), {
     keyboard: false
   })
 
-function updateStitching( url ) { $.post(url, function( data ) {
+function updateStitching( url, confidence ) {
+    $.post(url, {'confidence_threshold': confidence}, function( data ) {
 }).done(function( data ) {
     messageModalBody.innerHTML = '<p>' + data.message +
 '</p><p>Processing may take a few minutes to complete.</p>';
@@ -25,8 +26,10 @@ $(function () {
     }
     $('.stitch-button').append($stitchButton)
     $stitchButton.on('click', function() {
+        const confidence = $('#formConfidence')[0]
+         $(this).prop('disabled', true);
         updateStitching(
-            json_context.STITCHER_URL + '/update-stitching?guid=' + json_context.guid)
-            $(this).prop('disabled', true);
+            json_context.STITCHER_URL + '/update-stitching?guid=' + json_context.guid,
+        confidence.value)
     });
 })

@@ -1,3 +1,4 @@
+import os
 from django.contrib import messages
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.postgres.search import SearchVector
@@ -9,7 +10,7 @@ from django.views.generic.edit import CreateView, DeleteView, FormView, UpdateVi
 from organizations.models import OrganizationUser
 from rest_framework.response import Response
 
-from ..libs.utilities import get_json_context
+from ..libs.utilities import get_json_context, cast_utc_time
 from ..samples.constants import (FIELD_SAMPLE_TYPE, FIELD_SITE_HABITAT_TYPE,
                                  FIELD_SITE_TREATMENT, FIELD_SPECIMEN_TAGS)
 from . import constants
@@ -308,18 +309,22 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
         context = super(StitcherUpdateView, self).get_context_data(**kwargs)
         guid = self.kwargs[constants.STITCHER_GUID]
         data = get_upload_file(guid)
+        panorma_name = ''
+        img_src = ''
+        disable_stitching = True
         if constants.STITCHER_PANORAMA_PATH in data.keys():
-            img_src = data[constants.STITCHER_PANORAMA_PATH].replace('/media/', '/static/') \
-                if data[constants.STITCHER_PANORAMA_PATH] else ''
+            if data[constants.STITCHER_PANORAMA_PATH]:
+                img_src = data[constants.STITCHER_PANORAMA_PATH].replace('/media/', '/static/')
+                panorma_name = os.path.basename(data[constants.STITCHER_PANORAMA_PATH])
             disable_stitching = False if data[constants.STITCHER_APPROVED] is None else True
-        else:
-            img_src = ''
-            disable_stitching = True
         stitcher_url = STITCHER_JS_URL_ZEROTIER if \
             str(self.request.user) in ZEROTIER_USERS else STITCHER_JS_URL
+        for v in constants.STITCHER_TIMEFIELDS:
+            if data[v]:
+                data[v] = cast_utc_time(data[v])
         context.update({
-            constants.STITCHER_GUID: guid,
             'data': data,
+            'panorma_name': panorma_name,
             'img_src': f'{stitcher_url}{img_src}',
             'json_context': get_json_context({
                 constants.STITCHER_GUID: guid,

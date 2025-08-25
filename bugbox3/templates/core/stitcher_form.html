@@ -13,14 +13,24 @@
 
 {% block content %}
 <div class="container">
-    <div class="row">
-        <div class="col">
+    <div class="row mb-2">
+        <div class="col-1">
+                <label for="formConfidence" class="form-label">Confidence</label>
+                <input type="number" step="0.1" id="formConfidence" class="form-control" value="0.5" max="0.9" min="0.1" required="true">
+            </div>
+        <div class="col mt-4">
             <div class="stitch-button"></div>
         </div>
     </div>
-    <div class="row">
-        <div class="col">
-            {{ guid }}
+    <div class="row mb-2">
+        <div class="col-3">
+            <b>Upload directory:</b> {{ data.upload_dir_name }}
+        </div>
+        <div class="col-3">
+            <b>Created at:</b> {{ data.created_at }}
+        </div>
+        <div class="col-4">
+            <b>uid:</b> {{ data.guid }}
         </div>
     </div>
     <div class="row">
@@ -30,6 +40,16 @@
             </a>
         </div>
     </div>
+    {% if panorma_name %}
+    <div class="row mb-4">
+        <div class="col-3">
+            <b>Filename:</b> {{ panorma_name }}
+        </div>
+        <div class="col-3">
+            <b>Updated at:</b> {{ data.panorma_timestamp}}
+        </div>
+    </div>
+    {% endif %}
     <div class="row">
         <div class="col">
             <form method="post">
@@ -38,6 +58,20 @@
             </form>
         </div>
     </div>
+
+    {% if data.stitching_exception_at %}
+    <div class="row mt-3">
+        <div class="col">
+            <div class="alert alert-warning" role="alert">
+            <h5>Warning: @ {{ data.stitching_exception_at }} a stitching error occured</h5>
+            <p>
+                {{ data.stitching_exception }}
+            </p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
 </div>
 
 {% endblock content %}
