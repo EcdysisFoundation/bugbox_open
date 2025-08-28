@@ -18,7 +18,6 @@ from .serializers import (CollectionDatatablesSerializer,
                           SpecimenDatatablesSerializer,
                           SpecimensAllDatatablesSerializer)
 from .views_public import PUBLIC_COLLECTIONS
-from bugbox3.samples.models import SpecimenImage
 
 
 class ExperimentsDatatablesViewSet(PermissionRequiredMixin, DatatablesModelViewSetMixin, ReadOnlyModelViewSet):

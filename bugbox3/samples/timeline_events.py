@@ -1,5 +1,6 @@
 from . import constants
 from .models import TimelineEvent
+from ..libs.utilities import uniform_time_display
 
 # EVENT CONSTANTS
 EVENT_TITLE_REVIEW = 'Reviewed'
@@ -103,6 +104,5 @@ def timeline_events(specimen):
     events += list(TimelineEvent.objects.filter(
                     specimen_id=specimen.id).values(*EVENT_VALUES))
     for e in events:
-        e[constants.FIELD_TIMELINE_EVENT_DATE_TIME] = e[constants.FIELD_TIMELINE_EVENT_DATE_TIME].strftime(
-            '%B %d, %Y, %I:%M %p')
+        e[constants.FIELD_TIMELINE_EVENT_DATE_TIME] = uniform_time_display(e[constants.FIELD_TIMELINE_EVENT_DATE_TIME])
     return events

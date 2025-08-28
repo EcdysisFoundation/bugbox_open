@@ -1,3 +1,4 @@
+import os
 from django.contrib import messages
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.postgres.search import SearchVector
@@ -5,16 +6,25 @@ from django.core.exceptions import PermissionDenied
 from django.http import Http404, HttpResponseRedirect
 from django.urls import reverse
 from django.views.generic import TemplateView
-from django.views.generic.edit import CreateView, DeleteView, UpdateView
+from django.views.generic.edit import CreateView, DeleteView, FormView, UpdateView
 from organizations.models import OrganizationUser
 from rest_framework.response import Response
 
+from ..libs.utilities import get_json_context, cast_utc_time
 from ..samples.constants import (FIELD_SAMPLE_TYPE, FIELD_SITE_HABITAT_TYPE,
                                  FIELD_SITE_TREATMENT, FIELD_SPECIMEN_TAGS)
 from . import constants
-from .forms import LookupChoicesForm
+from .forms import LookupChoicesForm, StitcherForm
 from .models import LookupChoices
-from .permissions import IS_ADMIN
+from .permissions import IS_ADMIN, IS_RESEARCH, ZEROTIER_USERS
+from .stitcher_api import (
+    get_root_message,
+    get_upload_file,
+    patch_upload_file,
+    STITCHER_JS_URL_ZEROTIER,
+    STITCHER_JS_URL,
+    ERROR_MSG_KEY
+)
 
 
 class DatatablesModelViewSetMixin:
@@ -266,3 +276,79 @@ class OrgMemberDeleteView(PermissionRequiredMixin, DeleteView):
 
     def get_success_url(self):
         return reverse('core:org-members', kwargs={'org_id': self.kwargs['org_id']})
+
+
+class StitcherView(PermissionRequiredMixin, TemplateView):
+
+    permission_required = IS_RESEARCH
+    template_name = 'core/stitcher.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        stitcher_url = STITCHER_JS_URL_ZEROTIER if \
+            str(self.request.user) in ZEROTIER_USERS else STITCHER_JS_URL
+        context.update({
+            'json_context': get_json_context({
+                'STITCHER_URL': stitcher_url
+            })
+        })
+        root_message = get_root_message()
+        if ERROR_MSG_KEY in root_message:
+            messages.error(self.request, root_message[ERROR_MSG_KEY])
+        return context
+
+
+class StitcherUpdateView(PermissionRequiredMixin, FormView):
+
+    permission_required = IS_ADMIN
+
+    form_class = StitcherForm
+    template_name = 'core/stitcher_form.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(StitcherUpdateView, self).get_context_data(**kwargs)
+        guid = self.kwargs[constants.STITCHER_GUID]
+        data = get_upload_file(guid)
+        panorma_name = ''
+        img_src = ''
+        disable_stitching = True
+        if constants.STITCHER_PANORAMA_PATH in data.keys():
+            if data[constants.STITCHER_PANORAMA_PATH]:
+                img_src = data[constants.STITCHER_PANORAMA_PATH].replace('/media/', '/static/')
+                panorma_name = os.path.basename(data[constants.STITCHER_PANORAMA_PATH])
+            disable_stitching = False if data[constants.STITCHER_APPROVED] is None else True
+        stitcher_url = STITCHER_JS_URL_ZEROTIER if \
+            str(self.request.user) in ZEROTIER_USERS else STITCHER_JS_URL
+        for v in constants.STITCHER_TIMEFIELDS:
+            if data[v]:
+                data[v] = cast_utc_time(data[v])
+        context.update({
+            'data': data,
+            'panorma_name': panorma_name,
+            'img_src': f'{stitcher_url}{img_src}',
+            'json_context': get_json_context({
+                constants.STITCHER_GUID: guid,
+                'STITCHER_URL': stitcher_url,
+                'disable_stitching': disable_stitching
+            })
+        })
+        if ERROR_MSG_KEY in data.keys():
+            messages.error(self.request, data[ERROR_MSG_KEY])
+        return context
+
+    def get_initial(self):
+        initial = super().get_initial()
+        data = get_upload_file(self.kwargs[constants.STITCHER_GUID])
+        if constants.STITCHER_APPROVED in data.keys():
+            initial[constants.STITCHER_APPROVED] = data[constants.STITCHER_APPROVED]
+        return initial
+
+    def form_valid(self, form):
+        data = form.cleaned_data
+        if data[constants.STITCHER_APPROVED] == '':
+            data[constants.STITCHER_APPROVED] = None
+        patch_upload_file(self.kwargs[constants.STITCHER_GUID], data)
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse('core:stitcher')
