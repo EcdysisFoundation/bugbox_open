@@ -19,6 +19,7 @@ from .views_dtables import (CollectionDatatablesViewSet,
 from .views_dtables_optimized import SpecimensAllOptimizedViewSet
 from .views_public import CollectionDownloadView, CollectionView
 from . import views
+from .views_ajax import get_region_by_coordinates
 
 router = DefaultRouter()
 router.register(r'experiments-data/(?P<org_id>[^/]+)', ExperimentsDatatablesViewSet,
@@ -72,5 +73,5 @@ urlpatterns = [
      path('collection-download/<int:org_id>', CollectionDownloadView.as_view(), name='collection-download'),
      path('export-by-location/', views.export_by_location_csv, name='export-by-location'),
      path('export-by-location-progress/<int:experiment_id>/', views.export_by_location_progress, name='export-by-location-progress'),
-
+     path('ajax/get-region/', get_region_by_coordinates, name='get-region'),
 ]

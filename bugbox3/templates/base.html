@@ -18,7 +18,7 @@
         content="Ecdysis bugbox" />
   <meta name="author"
         content="Mikayla Electra Wilson" />
-  <link rel="icon" href="{% static 'images/favicons/favicon.ico' %}" />
+  <link rel="icon" href="https://ecdysis-media.s3.amazonaws.com/site_content/favicon.png">
   {% block css %}
 <!-- Your stuff: Third-party CSS libraries go here -->
 <!-- This file stores project-specific CSS -->
@@ -51,11 +51,19 @@
 <body>
   <div class="mb-1">
 <div class="custom-navbar">
-  <a href="{% url 'about' %}"><img src="{% static 'images/logo/logo-light-51x50.png' %}" alt="logo dragonfly" style="height: 32px; vertical-align: middle;" /></a>
+  <a href="{% url 'about' %}">
+    <img src="https://ecdysis-media.s3.amazonaws.com/site_content/logo-light.png"
+        alt="logo BB"
+        style="height: 32px; vertical-align: middle;" />
+  </a>
+
   <a href="{% url 'about' %}">About</a>
   <a href="{% url 'samples:collection' 1 %}">Collections</a>
 
   {% if request.user.is_authenticated %}
+    {% if ON_ECDYSIS_SERVER %}
+    <a href="{% url 'core:stitcher' %}">Shimsy Images</a>
+    {% else %}
     {% for group in request.user.groups.all %}
       {% if group.name == 'is_research' %}
         <div class="dropdown-hover">
@@ -79,6 +87,7 @@
         </div>
       {% endif %}
     {% endfor %}
+    {% endif %}
   {% endif %}
 
   {% if request.user.is_authenticated %}

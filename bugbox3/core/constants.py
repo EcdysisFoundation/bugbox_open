@@ -86,3 +86,18 @@ STATE_CHOICES = {
     US_STATE_CHOICES: [[v, v] for _ , v in FIPS_STATE.items()],
     CANADA_STATE_CHOICES: (('Manitoba', 'Manitoba'), ('Saskatchewan', 'Saskatchewan'))
 }
+
+
+# Stitcher API Constants
+STITCHER_PANORAMA_PATH = 'panorama_path'
+STITCHER_APPROVED = 'approved'
+STITCHER_GUID = 'guid'
+STITCHER_STITCHING_EXCEPTION = 'stitching_exception'
+STITCHER_STITCHING_EXCEPTION_AT = 'stitching_exception_at'
+STITCHER_PANORMA_TIMESTAMP = 'panorma_timestamp'
+STITCHER_CREATED_AT = 'created_at'
+STITCHER_TIMEFIELDS = [
+    STITCHER_STITCHING_EXCEPTION_AT,
+    STITCHER_PANORMA_TIMESTAMP,
+    STITCHER_CREATED_AT
+]

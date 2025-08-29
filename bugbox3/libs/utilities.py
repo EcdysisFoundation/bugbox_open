@@ -10,7 +10,8 @@ from django.core.files.storage import default_storage
 from django.core.serializers.json import DjangoJSONEncoder
 from PIL import Image
 
-from ..samples import constants
+from bugbox3.samples import constants
+
 
 S3_CLIENT = boto3.client(
         's3',
@@ -188,3 +189,16 @@ def save_specimen_img_thumbs(instance):
             if i:
                 i.close()
     return
+
+
+def uniform_time_display(date_time):
+    return date_time.strftime('%B %d, %Y, %I:%M %p')
+
+
+def cast_utc_time(utc_string):
+    utc_format = "%Y-%m-%dT%H:%M:%S.%f"
+    try:
+        naive_dt = datetime.strptime(utc_string, utc_format)
+        return naive_dt
+    except Exception:
+        return utc_string
