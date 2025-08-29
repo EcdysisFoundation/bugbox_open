@@ -320,8 +320,9 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
         stitcher_url = STITCHER_JS_URL_ZEROTIER if \
             str(self.request.user) in ZEROTIER_USERS else STITCHER_JS_URL
         for v in constants.STITCHER_TIMEFIELDS:
-            if data[v]:
-                data[v] = cast_utc_time(data[v])
+            if v in data.keys():
+                if data[v]:
+                    data[v] = cast_utc_time(data[v])
         context.update({
             'data': data,
             'panorma_name': panorma_name,
