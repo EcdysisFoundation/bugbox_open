@@ -6,14 +6,14 @@ let messageModal = new Modal(document.getElementById('messageModal'), {
     keyboard: false
   })
 
-function updateStitching( url, confidence ) {
-    $.post(url, {'confidence_threshold': confidence}, function( data ) {
-}).done(function( data ) {
+function updateStitching( url ) {
+
+    $.post(url).done(function( data ) {
     messageModalBody.innerHTML = '<p>' + data.message +
 '</p><p>Processing may take a few minutes to complete.</p>';
     messageModal.show();
-}).fail(function( data ) {
-    messageModalBody.innerHTML = '<p>' + data +
+}).fail(function( data, status, error ) {
+    messageModalBody.innerHTML = '<p>'+ JSON.stringify(data) + status + ' ' + error +
     '</p><p>Update Failed.</p>';
     messageModal.show();
 })}
@@ -31,9 +31,9 @@ $(function () {
     $('.stitch-button').append($stitchButton)
     $stitchButton.on('click', function() {
         const confidence = $confidenceInput[0].value
-         $(this).prop('disabled', true);
+        const params = `?guid=${json_context.guid}&confidence_threshold=${confidence}`
+        $(this).prop('disabled', true);
         updateStitching(
-            json_context.STITCHER_URL + '/update-stitching?guid=' + json_context.guid,
-        confidence)
+            json_context.STITCHER_URL + '/update-stitching/' + params)
     });
 })

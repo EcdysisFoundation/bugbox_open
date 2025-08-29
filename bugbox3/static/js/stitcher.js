@@ -126,7 +126,8 @@ $(function () {
         formData.append('file', selectedFile);
         const confidence = $confidenceInput[0].value
         formData.append('confidence_threshold', confidence)
-        sendZipFile(formData, json_context.STITCHER_URL + '/upload-zip-images')
+        const params = `?confidence_threshold=${confidence}`
+        sendZipFile(formData, json_context.STITCHER_URL + '/upload-zip-images/' + params)
     })
 
 

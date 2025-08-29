@@ -26,10 +26,10 @@
         <div class="col-3">
             <b>Upload directory:</b> {{ data.upload_dir_name }}
         </div>
-        <div class="col-3">
+        <div class="col-4">
             <b>Created at:</b> {{ data.created_at }}
         </div>
-        <div class="col-4">
+        <div class="col">
             <b>uid:</b> {{ data.guid }}
         </div>
     </div>
@@ -45,8 +45,11 @@
         <div class="col-3">
             <b>Filename:</b> {{ panorma_name }}
         </div>
-        <div class="col-3">
+        <div class="col-4">
             <b>Updated at:</b> {{ data.panorma_timestamp}}
+        </div>
+        <div class="col">
+            <b>Stitcher confidence:</b> {{ data.panorama_confidence }}
         </div>
     </div>
     {% endif %}
