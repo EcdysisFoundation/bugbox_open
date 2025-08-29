@@ -16,7 +16,6 @@ from .views_dtables import (CollectionDatatablesViewSet,
                             SamplesDatatablesViewSet, SitesDatatablesViewSet,
                             SpecimenDatatablesViewSet,
                             SpecimensAllDatatablesViewSet)
-from .views_dtables_optimized import SpecimensAllOptimizedViewSet
 from .views_public import CollectionDownloadView, CollectionView
 from . import views
 from .views_ajax import get_region_by_coordinates
@@ -33,10 +32,6 @@ router.register(r'specimens-data/(?P<sample_id>[^/]+)', SpecimenDatatablesViewSe
 router.register(r'specimens-all-data/(?P<org_id>[^/]+)/(?P<id>[^/]+)/(?P<sample_id>[^/]+)',
                 SpecimensAllDatatablesViewSet,
                 basename='specimen-all-data')
-# for testing
-router.register(r'specimens-all-data-optimized/(?P<org_id>[^/]+)/(?P<id>[^/]+)/(?P<sample_id>[^/]+)',
-                SpecimensAllOptimizedViewSet,
-                basename='specimen-all-data-optimized')
 router.register(r'multispecimens-data/(?P<sample_id>[^/]+)', MultiSpecimenDatatablesViewSet,
                 basename='multispecimen-data')
 router.register(r'collections-data/(?P<org_id>[^/]+)', CollectionDatatablesViewSet,
@@ -63,7 +58,7 @@ urlpatterns = [
      path('specimen-delete/<int:id>/<int:sample_id>', SpecimenDeleteView.as_view(), name='specimen-delete'),
      path('specimen-image-upload/<int:sample_id>', specimen_image_upload, name='specimen-image-upload'),
      path('multispecimen-images/<int:sample_id>', MultiSpecimeImageView.as_view(), name='multispecimen-images'),
-     path('specimens-experiment-sample/<int:org_id>/<int:id>/<int:sample_id>/',
+     path('specimens-experiment-sample/<int:org_id>/<int:id>/<int:sample_id>',
           SpecimensView.as_view(),
           name='specimens-experiment-sample'),
      path('specimens-wo-img/<int:id>', SpecimensWithoutImagesFormView.as_view(), name='specimens-wo-img'),

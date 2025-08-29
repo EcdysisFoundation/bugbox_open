@@ -277,17 +277,7 @@ $(function () {
 
     let jsonDataInput = document.getElementById('id_json_data');
     let submitBtn = document.getElementById('submit-btn');
-    
-    // for testing
-    const USE_OPTIMIZED = window.location.search.includes('optimized=true');
-    let url = json_context.datatables_url;
-    
-    if (USE_OPTIMIZED) {
-        url = url.replace('specimens-all-data/', 'specimens-all-data-optimized/');
-        console.log('* Using optimized endpoint:', url);
-    } else {
-        console.log('* Using original endpoint:', url);
-    }
+    let url = json_context.datatables_url
     imageModal.addEventListener('show.bs.modal', event => {
         const button = event.relatedTarget
         const thisimage = button.getAttribute('data-bs-whatever')
