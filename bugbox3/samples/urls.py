@@ -32,13 +32,6 @@ router.register(r'specimens-data/(?P<sample_id>[^/]+)', SpecimenDatatablesViewSe
 router.register(r'specimens-all-data/(?P<org_id>[^/]+)/(?P<id>[^/]+)/(?P<sample_id>[^/]+)',
                 SpecimensAllDatatablesViewSet,
                 basename='specimen-all-data')
-<<<<<<< HEAD
-# for testing
-router.register(r'specimens-all-data-optimized/(?P<org_id>[^/]+)/(?P<id>[^/]+)/(?P<sample_id>[^/]+)',
-                SpecimensAllOptimizedViewSet,
-                basename='specimen-all-data-optimized')
-=======
->>>>>>> parent of 8c56bb5 (specimen page enhancements)
 router.register(r'multispecimens-data/(?P<sample_id>[^/]+)', MultiSpecimenDatatablesViewSet,
                 basename='multispecimen-data')
 router.register(r'collections-data/(?P<org_id>[^/]+)', CollectionDatatablesViewSet,
