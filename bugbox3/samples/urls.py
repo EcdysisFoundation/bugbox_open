@@ -32,7 +32,7 @@ router.register(r'specimens-data/(?P<sample_id>[^/]+)', SpecimenDatatablesViewSe
 router.register(r'specimens-all-data/(?P<org_id>[^/]+)/(?P<id>[^/]+)/(?P<sample_id>[^/]+)',
                 SpecimensAllDatatablesViewSet,
                 basename='specimen-all-data')
-# Add optimized version for testing
+# for testing
 router.register(r'specimens-all-data-optimized/(?P<org_id>[^/]+)/(?P<id>[^/]+)/(?P<sample_id>[^/]+)',
                 SpecimensAllOptimizedViewSet,
                 basename='specimen-all-data-optimized')
