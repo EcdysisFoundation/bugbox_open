@@ -56,6 +56,9 @@ function sendZipFile(formData, api_url) {
 $(function () {
     const json_context = JSON.parse(document.getElementById('json_context').textContent)
 
+    let $confidenceInput = $('<input type="number" step="0.1" id="formConfidence" class="form-control" value="0.6" max="0.9" min="0.1" required="true">')
+    $('.confidence-input').append($confidenceInput)
+
     function getPanormaSrc(data, type, row) {
         let filename = getFilename(data)
         if (filename) {
@@ -121,9 +124,10 @@ $(function () {
         const selectedFile = fileInput.files[0];
         const formData = new FormData();
         formData.append('file', selectedFile);
-        const confidence = $('#formConfidence')[0]
-        formData.append('confidence_threshold', confidence.value)
-        sendZipFile(formData, json_context.STITCHER_URL + '/upload-zip-images')
+        const confidence = $confidenceInput[0].value
+        formData.append('confidence_threshold', confidence)
+        const params = `?confidence_threshold=${confidence}`
+        sendZipFile(formData, json_context.STITCHER_URL + '/upload-zip-images/' + params)
     })
 
 

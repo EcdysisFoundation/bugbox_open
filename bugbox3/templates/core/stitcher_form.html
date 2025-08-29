@@ -16,7 +16,7 @@
     <div class="row mb-2">
         <div class="col-1">
                 <label for="formConfidence" class="form-label">Confidence</label>
-                <input type="number" step="0.1" id="formConfidence" class="form-control" value="0.6" max="0.9" min="0.1" required="true">
+                <div class="confidence-input"></div>
             </div>
         <div class="col mt-4">
             <div class="stitch-button"></div>
@@ -26,10 +26,10 @@
         <div class="col-3">
             <b>Upload directory:</b> {{ data.upload_dir_name }}
         </div>
-        <div class="col-3">
+        <div class="col-4">
             <b>Created at:</b> {{ data.created_at }}
         </div>
-        <div class="col-4">
+        <div class="col">
             <b>uid:</b> {{ data.guid }}
         </div>
     </div>
@@ -45,8 +45,11 @@
         <div class="col-3">
             <b>Filename:</b> {{ panorma_name }}
         </div>
-        <div class="col-3">
+        <div class="col-4">
             <b>Updated at:</b> {{ data.panorma_timestamp}}
+        </div>
+        <div class="col">
+            <b>Stitcher confidence:</b> {{ data.panorama_confidence }}
         </div>
     </div>
     {% endif %}
