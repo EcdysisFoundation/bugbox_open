@@ -230,7 +230,7 @@ $(function () {
         let cols = ''
         let view_edit = `<h5><a href="${row.view_link}" target="_blank"><i class="bi bi-eye"></i></a>
 <a href="${row.edit_link}" target="_blank"><i class="bi bi-pencil"></i></a></h5>`
-        // img_thumbnail with lazy loading
+        // img_thumbnail
         if (row.img_thumbnail_large) {
             let width = row.img_thumbnail_large.width;
             let height = row.img_thumbnail_large.height;
@@ -241,7 +241,7 @@ $(function () {
             cols += formatColDiv(`<button type="button" class="btn" data-bs-toggle="modal"
                 data-bs-target="#imageModal"
                 data-bs-whatever="
-                <img data-src='${row.img_thumbnail_large.url}' ${widthAttr} ${heightAttr} class='lazy-load' alt='Loading...'>
+                <img src='${row.img_thumbnail_large.url}' ${widthAttr} ${heightAttr}>
                 ">
                 ${data} </button>${view_edit}`);
         } else {
@@ -261,27 +261,6 @@ $(function () {
 
         return formatRowDiv(cols)
     };
-
-    // Lazy loading function for images
-    function lazyLoadImages() {
-        const lazyImages = document.querySelectorAll('.lazy-load');
-        const imageObserver = new IntersectionObserver((entries, observer) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    const img = entry.target;
-                    const src = img.getAttribute('data-src');
-                    if (src) {
-                        img.src = src;
-                        img.removeAttribute('data-src');
-                        img.classList.remove('lazy-load');
-                        observer.unobserve(img);
-                    }
-                }
-            });
-        });
-
-        lazyImages.forEach(img => imageObserver.observe(img));
-    }
 
     let morphoModal = document.getElementById('morphoModal')
     let selectMorphoButton = document.getElementById('morpho-select-btn');
@@ -328,7 +307,6 @@ $(function () {
         ordering: false,
         processing: true,
         serverSide: true,
-        deferRender: true, // Only render visible rows
         ajax: {
             url: url,
             dataSrc: 'data'

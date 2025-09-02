@@ -9,7 +9,7 @@ from ..core.views import DatatablesModelViewSetMixin
 from ..taxonomy import constants as constants_tax
 from ..taxonomy.models_query import get_taxon_entries
 from . import constants
-from .models import Experiment, MultiSpecimenImage, Sample, Site, Specimen, SpecimenImage
+from .models import Experiment, MultiSpecimenImage, Sample, Site, Specimen
 from .serializers import (CollectionDatatablesSerializer,
                           ExperimentsDatatablesSerializer,
                           MultiSpecimenImageDatatablesSerializer,
@@ -110,15 +110,7 @@ class SpecimensAllDatatablesViewSet(PermissionRequiredMixin, DatatablesModelView
          constants.FIELD_SPECIMEN_ARCHIVAL_STORED]
 
     def get_queryset(self):
-        specimen = Specimen.objects.user_access(self.request.user).select_related(
-            'classification',
-            'ai_classification',
-            'sample__site_visit__site',
-            'created_by_user'
-        ).prefetch_related(
-            Prefetch('specimenimage_set', 
-                    queryset=SpecimenImage.objects.select_related().order_by('-primary_image'))
-        )
+        specimen = Specimen.objects.user_access(self.request.user)
         org_id = int(self.kwargs['org_id'])
         id = int(self.kwargs['id'])
         sample_id = int(self.kwargs['sample_id'])
