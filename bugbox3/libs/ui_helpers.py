@@ -98,6 +98,8 @@ def get_img_src(img_field, resize_width=None, styles='', public=False):
     Get an html img tag formated from an ImageField.
     Styles should be a string of styles, example 'c-1 c-2'
     """
+    if img_field and not default_storage.exists(img_field.name):
+        return '<i class="bi bi-question-diamond"></i>'
 
     def img_src(path, width, height, styles):
         return '<img src="{0}" width="{1}" height="{2}" class="{3}">'.format(
@@ -108,33 +110,23 @@ def get_img_src(img_field, resize_width=None, styles='', public=False):
         )
 
     if img_field and not resize_width:
-        try:
-            width = img_field.width
-            height = img_field.height
-            if width is None or height is None:
-                return '<i class="bi bi-exclamation-triangle"></i>'
-            return img_src(
-                get_media_url(img_field, public),
-                width,
-                height,
-                str(styles)
-            )
-        except (FileNotFoundError, OSError):
-            return '<i class="bi bi-question-diamond"></i>'
+        if img_field.width is None or img_field.height is None:
+            return '<i class="bi bi-exclamation-triangle"></i>'
+        return img_src(
+            get_media_url(img_field, public),
+            img_field.width,
+            img_field.height,
+            str(styles)
+        )
     elif img_field and resize_width:
-        try:
-            width = img_field.width
-            height = img_field.height
-            if width is None or height is None or width == 0:
-                return '<i class="bi bi-exclamation-triangle"></i>'
-            return img_src(
-                get_media_url(img_field, public),
-                int(resize_width),
-                int(resize_width * (height / width)),
-                str(styles)
-            )
-        except (FileNotFoundError, OSError):
-            return '<i class="bi bi-question-diamond"></i>'
+        if img_field.width is None or img_field.height is None or img_field.width == 0:
+            return '<i class="bi bi-exclamation-triangle"></i>'
+        return img_src(
+            get_media_url(img_field, public),
+            int(resize_width),
+            int(resize_width * (img_field.height / img_field.width)),
+            str(styles)
+        )
     else:
         return '<i class="bi bi-bug"></i>'
 

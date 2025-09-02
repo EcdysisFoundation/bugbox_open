@@ -272,25 +272,24 @@ class SpecimensAllDatatablesSerializer(ModelSerializer):
 
     def to_representation(self, value):
         img_thumbnail_large = None
-        specimen_images = value.specimenimage_set.all()
-        specimen_image = specimen_images[0] if specimen_images else None
-        
+        specimen_image = value.specimenimage_set.first()
         if specimen_image:
             img_thumbnail = get_img_src(specimen_image.image_thumbnail, public=specimen_image.public_image)
             if specimen_image.image_thumbnail_large:
-                try:
-                    width = specimen_image.image_thumbnail_large.width
-                    height = specimen_image.image_thumbnail_large.height
-                except (FileNotFoundError, OSError):
-                    width = ''
-                    height = ''
-                
-                img_thumbnail_large = {
-                    'url': get_media_url(
-                        specimen_image.image_thumbnail_large, public=specimen_image.public_image),
-                    'width': width,
-                    'height': height
-                }
+                # dont use get_img_src() here due to modal .js reasons
+                if default_storage.exists(specimen_image.image_thumbnail_large.name):
+                    img_thumbnail_large = {
+                        'url': get_media_url(
+                            specimen_image.image_thumbnail_large, public=specimen_image.public_image),
+                        'width': getattr(specimen_image.image_thumbnail_large, 'width', ''),
+                        'height': getattr(specimen_image.image_thumbnail_large, 'height', '')
+                    }
+                else:
+                    img_thumbnail_large = {
+                        'url': '',
+                        'width': '',
+                        'height': ''
+                    }
         else:
             img_thumbnail = get_img_src(False)
         return {
@@ -306,8 +305,8 @@ class SpecimensAllDatatablesSerializer(ModelSerializer):
             'classification_name': value.classification.name if value.classification else '',
             'gbif_canonical_name': get_canonical_name(value.classification) if value.classification else '',
             'classification_id': value.classification.id if value.classification else '',
-            'view_link': f'/samples/specimen/{value.id}',
-            'edit_link': f'/samples/specimen-update/{value.id}',
+            'view_link': reverse('samples:specimen', kwargs={'id': value.id}),
+            'edit_link': reverse('samples:specimen-update', kwargs={'id': value.id}),
             'specimen_context': get_specimen_context(value)
         }
 
