@@ -35,18 +35,29 @@
                     <b>Created at:</b> {{ data.created_at }}
                 </li>
                 <li class="list-group-item">
-                    <b>uid:</b> {{ data.guid }}
+                    <b>guid:</b> {{ data.guid }}
                 </li>
                 {% if data.sent_label_studio %}
-                <li class="list-group-item list-group-item-info">
-                    Sent to label studio
-                </li>
-                <li class="list-group-item">
-                    <b>Predictions:</b> {{ data.predictions|length }}
-                </li>
-                <li class="list-group-item">
-                    <b>Annotations:</b> {{ data.annotations|length }}
-                </li>
+                    <li class="list-group-item list-group-item-info">
+                        Sent to label studio
+                    </li>
+                    <li class="list-group-item">
+                        <b>Predictions:</b> {{ data.predictions|length }}
+                    </li>
+                    <li class="list-group-item">
+                        <b>Annotations:</b> {{ data.annotations|length }}
+                    </li>
+                {% endif %}
+                {% if potential_samples %}
+                    <li class="list-group-item list-group-item-success">
+                        Potential samples in BugBox {% for p, l in potential_samples %}
+                            <a href="{{ l }}" target="_blank">{{ p }}</a>&nbsp;
+                        {% endfor %}
+                    </li>
+                {% else %}
+                    <li class="list-group-item list-group-item-warning">
+                        No matching samples found in BugBox
+                    </li>
                 {% endif %}
             </ul>
         </div>

@@ -89,6 +89,7 @@ STATE_CHOICES = {
 
 
 # Stitcher API Constants
+STITCHER_UPLOAD_DIR_NAME = 'upload_dir_name'
 STITCHER_PANORAMA_PATH = 'panorama_path'
 STITCHER_APPROVED = 'approved'
 STITCHER_GUID = 'guid'

@@ -12,7 +12,9 @@ from rest_framework.response import Response
 
 from ..libs.utilities import get_json_context, cast_utc_time
 from ..samples.constants import (FIELD_SAMPLE_TYPE, FIELD_SITE_HABITAT_TYPE,
-                                 FIELD_SITE_TREATMENT, FIELD_SPECIMEN_TAGS)
+                                 FIELD_SITE_TREATMENT, FIELD_SPECIMEN_TAGS,
+                                 STITCHER_SAMPLE_TYPES)
+from ..samples.models import Sample
 from . import constants
 from .forms import LookupChoicesForm, StitcherForm
 from .models import LookupChoices
@@ -307,6 +309,11 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super(StitcherUpdateView, self).get_context_data(**kwargs)
+        orgs = OrganizationUser.objects.filter(
+            user=self.request.user).values_list(
+                'organization_id', flat=True)
+        if not orgs:
+            raise Http404
         guid = self.kwargs[constants.STITCHER_GUID]
         data = get_upload_file(guid)
         panorma_name = ''
@@ -323,10 +330,39 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
             if v in data.keys():
                 if data[v]:
                     data[v] = cast_utc_time(data[v])
+        # find samples in bugbox
+        potential_samples = []
+        if constants.STITCHER_UPLOAD_DIR_NAME in data.keys():
+            dir_name = data[constants.STITCHER_UPLOAD_DIR_NAME]
+            vs = dir_name.split('_')
+            if vs:
+                samples_w_type = None
+                samples_w_transect = None
+                sample_ids = None
+                samples = Sample.objects.filter(
+                    site_visit__site__experiment__organization_id__in=orgs,
+                    site_visit__site__site_name__icontains=vs[0]
+                )
+                if len(vs) >= 2:
+                    if vs[1].lower() in STITCHER_SAMPLE_TYPES.keys():
+                        sample_type = STITCHER_SAMPLE_TYPES[vs[1].lower()]
+                        samples_w_type = samples.filter(sample_type=sample_type)
+                    if len(vs) >= 3 and samples_w_type:
+                        samples_w_transect = samples_w_type.filter(name_no__icontains=vs[2])
+                if samples_w_transect:
+                    sample_ids = samples_w_transect.values_list('id', flat=True)
+                elif samples_w_type:
+                    sample_ids = samples_w_type.values_list('id', flat=True)
+                else:
+                    sample_ids = samples.values_list('id', flat=True)
+                if sample_ids:
+                    potential_samples = [
+                        (i, reverse('samples:sample', kwargs={'sample_id': i})) for i in sample_ids]
         context.update({
             'data': data,
             'panorma_name': panorma_name,
             'img_src': f'{stitcher_url}{img_src}',
+            'potential_samples': potential_samples,
             'json_context': get_json_context({
                 constants.STITCHER_GUID: guid,
                 'STITCHER_URL': stitcher_url,
