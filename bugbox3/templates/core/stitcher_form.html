@@ -22,34 +22,60 @@
             <div class="stitch-button"></div>
         </div>
     </div>
-    <div class="row mb-2">
-        <div class="col-3">
-            <b>Upload directory:</b> {{ data.upload_dir_name }}
-        </div>
-        <div class="col-4">
-            <b>Created at:</b> {{ data.created_at }}
-        </div>
-        <div class="col">
-            <b>uid:</b> {{ data.guid }}
-        </div>
-    </div>
     <div class="row">
         <div class="col mb-2">
+            <h3>{{ data.upload_dir_name }}</h3>
             <a href="{{ img_src }}" target="_blank">
                 <img src="{{ img_src }}" width="500">
             </a>
         </div>
+        <div class="col mb-2">
+            <ul class="list-group">
+                <li class="list-group-item">
+                    <b>Created at:</b> {{ data.created_at }}
+                </li>
+                <li class="list-group-item">
+                    <b>guid:</b> {{ data.guid }}
+                </li>
+                {% if data.sent_label_studio %}
+                    <li class="list-group-item list-group-item-info">
+                        Sent to label studio
+                    </li>
+                    <li class="list-group-item">
+                        <b>Predictions:</b> {{ data.predictions|length }}
+                    </li>
+                    <li class="list-group-item">
+                        <b>Annotations:</b> {{ data.annotations|length }}
+                    </li>
+                {% endif %}
+                {% if potential_samples %}
+                    <li class="list-group-item list-group-item-success">
+                        Potential samples in BugBox {% for p, l in potential_samples %}
+                            <a href="{{ l }}" target="_blank">{{ p }}</a>&nbsp;
+                        {% endfor %}
+                    </li>
+                {% else %}
+                    <li class="list-group-item list-group-item-warning">
+                        No matching samples found in BugBox
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
     </div>
     {% if panorma_name %}
     <div class="row mb-4">
-        <div class="col-3">
-            <b>Filename:</b> {{ panorma_name }}
-        </div>
-        <div class="col-4">
-            <b>Updated at:</b> {{ data.panorma_timestamp}}
-        </div>
         <div class="col">
-            <b>Stitcher confidence:</b> {{ data.panorama_confidence }}
+        <ul class="list-group">
+                <li class="list-group-item">
+                    <b>Filename:</b> {{ panorma_name }}
+                </li>
+                <li class="list-group-item">
+                    <b>Updated at:</b> {{ data.panorma_timestamp}}
+                </li>
+                <li class="list-group-item">
+                    <b>Stitcher confidence:</b> {{ data.panorama_confidence }}
+                </li>
+            </ul>
         </div>
     </div>
     {% endif %}
