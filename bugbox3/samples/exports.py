@@ -41,7 +41,7 @@ def experiment_ai_csv(request, id):
     all_exp = other_experiments + [experiment.id]
     headersArr = (
         [constants.EXPERIMENT_AI_CSV[0]] +
-        ['Link', 'Sample Type', 'Sample Name'] +
+        ['Link', 'Site Name', 'Visit Date', 'Sample Type', 'Sample Name'] +
         constants.EXPERIMENT_AI_CSV[1:] +
         ['Top 1 Correct', 'Top 3 Correct']
     )
@@ -58,17 +58,28 @@ def experiment_ai_csv(request, id):
         *constants.EXPERIMENT_AI_CSV,
         Case(When(classification=F(constants.FIELD_SPECIMEN_AI_CLASSIFICATION), then=1),
              default=0, output_field=CharField()),
-        Case(When(classification=F(constants.FIELD_SPECIMEN_AI_CLASSIFICATION), then=1),
-             When(classification__name=Func(
-                 F(constants.FIELD_SPECIMEN_OPTIONAL_PRED_ONE),
-                 Value('class_op'),
-                 function='jsonb_extract_path_text',
-             ), then=1),
-             When(classification__name=Func(
-                 F(constants.FIELD_SPECIMEN_OPTIONAL_PRED_TWO),
-                 Value('class_op'),
-                 function='jsonb_extract_path_text',
-             ), then=1),
+        Case(
+             When(classification=F(constants.FIELD_SPECIMEN_AI_CLASSIFICATION), then=1),
+             When(
+                 **{constants.FIELD_SPECIMEN_OPTIONAL_PRED_ONE + '__isnull': False},
+                 classification__name=Func(
+                     F(constants.FIELD_SPECIMEN_OPTIONAL_PRED_ONE),
+                     Value('class_op'),
+                     function='jsonb_extract_path_text',
+                     output_field=CharField()
+                 ),
+                 then=1
+             ),
+             When(
+                 **{constants.FIELD_SPECIMEN_OPTIONAL_PRED_TWO + '__isnull': False},
+                 classification__name=Func(
+                     F(constants.FIELD_SPECIMEN_OPTIONAL_PRED_TWO),
+                     Value('class_op'),
+                     function='jsonb_extract_path_text',
+                     output_field=CharField()
+                 ),
+                 then=1
+             ),
              default=0, output_field=CharField())
     )
     timestr = time.strftime("%Y%m%d-%H%M%S")
@@ -82,7 +93,7 @@ def experiment_ai_csv(request, id):
         sample__sample_type__in=sample_types
     ).exclude(
         acceptance=constants.ACCEPTANCE_PENDING
-    ).select_related('sample__site_visit__site__experiment', 'classification')
+    ).select_related('sample__site_visit__site__experiment', 'sample__site_visit__site', 'sample__site_visit', 'classification')
 
     if not other_experiments:
         specimens_objs = specimens_objs.filter(sample__site_visit__site__in=sites)
@@ -92,10 +103,12 @@ def experiment_ai_csv(request, id):
     rows = []
     for i, s in enumerate(specimens_objs):
         link = request.build_absolute_uri(reverse('samples:specimen', args=[s.id]))
+        site_name = s.sample.site_visit.site.site_name if s.sample and s.sample.site_visit and s.sample.site_visit.site else ''
+        visit_date = s.sample.site_visit.visit_date.strftime('%Y-%m-%d') if s.sample and s.sample.site_visit and s.sample.site_visit.visit_date else ''
         sample_type = s.sample.sample_type
-        sample_name = f'T{s.sample.name_no}' if s.sample and s.sample.name_no else ''
+        sample_name = f'{s.sample.name_no}' if s.sample and s.sample.name_no else ''
         row = list(raw_values[i])
-        row = [row[0], link, sample_type, sample_name] + row[2:]
+        row = [row[0], link, site_name, visit_date, sample_type, sample_name] + row[1:]
         rows.append(row)
 
     writer = csv.writer(response)
