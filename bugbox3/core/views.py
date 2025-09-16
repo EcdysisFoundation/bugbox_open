@@ -390,8 +390,12 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
         data = form.cleaned_data
         if data['sample_id']:
             # handle crop and save annotations, and skip other form fields
-            print(f'THERE IS A SAMPLE_ID {data['sample_id']}')
-            print(data)
+            try:
+                sample = Sample.objects.user_access(
+                    self.request.user).get(id=data['sample_id'])
+            except Sample.DoesNotExist:
+                raise Http404
+            print(f'found {sample.id}')
         else:
             if data[constants.STITCHER_APPROVED] == '':
                 data[constants.STITCHER_APPROVED] = None
