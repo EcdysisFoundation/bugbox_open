@@ -7,7 +7,6 @@ let messageModal = new Modal(document.getElementById('messageModal'), {
   })
 
 function updateStitching( url ) {
-
     $.post(url).done(function( data ) {
     messageModalBody.innerHTML = '<p>' + data.message +
 '</p><p>Processing may take a few minutes to complete.</p>';
@@ -17,6 +16,7 @@ function updateStitching( url ) {
     '</p><p>Update Failed.</p>';
     messageModal.show();
 })}
+
 
 $(function () {
     const json_context = JSON.parse(document.getElementById('json_context').textContent)

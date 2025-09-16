@@ -5,7 +5,8 @@ from django.forms import (ClearableFileInput,
                           ChoiceField,
                           DateInput, FileField,
                           Form,
-                          HiddenInput, ValidationError)
+                          HiddenInput,
+                          IntegerField, ValidationError)
 from django.forms.models import ModelForm
 from django.urls import reverse
 from django.utils.safestring import mark_safe
@@ -197,6 +198,11 @@ class StitcherForm(Form):
         choices=choices,
         label="Approve/Dissaprove",
         help_text="Updating the stitching is disabled when approved or dissaproved.",
+        required=False)
+
+    sample_id = IntegerField(
+        label="Sample ID",
+        help_text="Annotations will be used to save images to the entered Sample ID",
         required=False)
 
     def __init__(self, *args, **kwargs):

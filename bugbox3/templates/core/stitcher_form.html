@@ -37,7 +37,7 @@
                 <li class="list-group-item">
                     <b>guid:</b> {{ data.guid }}
                 </li>
-                {% if data.sent_label_studio %}
+
                     <li class="list-group-item list-group-item-info">
                         Sent to label studio
                     </li>
@@ -47,10 +47,10 @@
                     <li class="list-group-item">
                         <b>Annotations:</b> {{ data.annotations|length }}
                     </li>
-                {% endif %}
+
                 {% if potential_samples %}
                     <li class="list-group-item list-group-item-success">
-                        Potential samples in BugBox {% for p, l in potential_samples %}
+                        Potential Sample IDs in BugBox {% for p, l in potential_samples %}
                             <a href="{{ l }}" target="_blank">{{ p }}</a>&nbsp;
                         {% endfor %}
                     </li>
@@ -59,6 +59,19 @@
                         No matching samples found in BugBox
                     </li>
                 {% endif %}
+                <li class="list-group-item">
+                    <form enctype="multipart/form-data" action="{{ form_action_url }}" method="POST">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col">
+                            <input type="number" class="form-control" name="sample_id" value="null" id="sample_id" placeholder="Sample ID">
+                        </div>
+                        <div class="col">
+                            <input type="submit" value="Crop and save annotations" id="sample_id-btn" class="btn btn-danger">
+                        </div>
+                    </div>
+                </form>
+                </li>
             </ul>
         </div>
     </div>

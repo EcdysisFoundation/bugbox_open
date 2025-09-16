@@ -4,6 +4,7 @@ from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.postgres.search import SearchVector
 from django.core.exceptions import PermissionDenied
 from django.http import Http404, HttpResponseRedirect
+from django.middleware.csrf import get_token
 from django.urls import reverse
 from django.views.generic import TemplateView
 from django.views.generic.edit import CreateView, DeleteView, FormView, UpdateView
@@ -363,10 +364,13 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
             'panorma_name': panorma_name,
             'img_src': f'{stitcher_url}{img_src}',
             'potential_samples': potential_samples,
+            'form_action_url': reverse(
+                'core:stitcher-form', kwargs={'guid': str(guid)}),
             'json_context': get_json_context({
                 constants.STITCHER_GUID: guid,
                 'STITCHER_URL': stitcher_url,
-                'disable_stitching': disable_stitching
+                'disable_stitching': disable_stitching,
+                'csrf_token': get_token(self.request)
             })
         })
         if ERROR_MSG_KEY in data.keys():
@@ -381,10 +385,17 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
         return initial
 
     def form_valid(self, form):
+        print('FORM VALID')
+        print(form)
         data = form.cleaned_data
-        if data[constants.STITCHER_APPROVED] == '':
-            data[constants.STITCHER_APPROVED] = None
-        patch_upload_file(self.kwargs[constants.STITCHER_GUID], data)
+        if data['sample_id']:
+            # handle crop and save annotations, and skip other form fields
+            print(f'THERE IS A SAMPLE_ID {data['sample_id']}')
+            print(data)
+        else:
+            if data[constants.STITCHER_APPROVED] == '':
+                data[constants.STITCHER_APPROVED] = None
+            patch_upload_file(self.kwargs[constants.STITCHER_GUID], data)
         return super().form_valid(form)
 
     def get_success_url(self):
