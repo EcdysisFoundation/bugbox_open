@@ -3,9 +3,8 @@ from django.urls import path
 from ..users.views import EulaReadView, EulaView
 from .views import (LookupChoicesCreateView, LookupChoicesDeleteView,
                     LookupChoicesUpdateView, LookupChoicesView,
-                    OrgMemberDeleteView, OrgMembersView,
-                    StitcherUpdateView, StitcherView)
-from .stitcher_views import crop_and_save_pano
+                    OrgMemberDeleteView, OrgMembersView)
+from .stitcher_views import StitcherUpdateView, StitcherView
 
 app_name = "core"
 urlpatterns = [
@@ -30,6 +29,5 @@ urlpatterns = [
     path('org-members/<int:org_id>', OrgMembersView.as_view(), name='org-members'),
     path('member-delete/<int:id>/<int:org_id>', OrgMemberDeleteView.as_view(), name='member-delete'),
     path('stitcher', StitcherView.as_view(), name='stitcher'),
-    path('stitcher-form/<uuid:guid>', StitcherUpdateView.as_view(), name='stitcher-form'),
-    path('stitcher-cropsavepano/<uuid:guid>/<int:sample_id>', crop_and_save_pano, name='stitcher-cropsavepano'),
+    path('stitcher-form/<uuid:guid>', StitcherUpdateView.as_view(), name='stitcher-form')
 ]
