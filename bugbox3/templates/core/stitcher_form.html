@@ -62,6 +62,7 @@
                 <li class="list-group-item">
                     <form enctype="multipart/form-data" action="{{ form_action_url }}" method="POST">
                     {% csrf_token %}
+                    <input type="hidden" name="form_ident" value="{{ form_iden_crop_save }}" >
                     <div class="row">
                         <div class="col">
                             <input type="number" class="form-control" name="sample_id" value="null" id="sample_id" placeholder="Sample ID">

@@ -108,6 +108,7 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
             'potential_samples': potential_samples,
             'form_action_url': reverse(
                 'core:stitcher-form', kwargs={'guid': str(guid)}),
+            'form_iden_crop_save': constants.STITCHER_FORM_CROPSAVE,
             'json_context': get_json_context({
                 constants.STITCHER_GUID: guid,
                 'STITCHER_URL': stitcher_url,
@@ -125,19 +126,21 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
             initial[constants.STITCHER_APPROVED] = data[constants.STITCHER_APPROVED]
         return initial
 
+    def form_invalid(self, form):
+        print('FORM INVALID')
+        return super().form_invalid(form)
+
     def form_valid(self, form):
-        print('FORM VALID')
-        print(form)
         data = form.cleaned_data
-        if data['sample_id']:
-            # handle crop and save annotations, and skip other form fields
-            try:
-                sample = Sample.objects.user_access(
-                    self.request.user).get(id=data['sample_id'])
-            except Sample.DoesNotExist:
-                raise Http404
-            print(f'found {sample.id}')
-        else:
+        if data['form_ident'] == constants.STITCHER_FORM_CROPSAVE:
+            if data['sample_id']:
+                try:
+                    sample = Sample.objects.user_access(
+                        self.request.user).get(id=data['sample_id'])
+                except Sample.DoesNotExist:
+                    raise Http404
+                print(f'found {sample.id}')
+        elif data['form_ident'] == constants.STITCHER_FORM_DEFAULT:
             if data[constants.STITCHER_APPROVED] == '':
                 data[constants.STITCHER_APPROVED] = None
             patch_upload_file(self.kwargs[constants.STITCHER_GUID], data)

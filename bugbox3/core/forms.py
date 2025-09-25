@@ -2,6 +2,7 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Button, Column, Field, Layout, Row, Submit
 from django.conf import settings
 from django.forms import (ClearableFileInput,
+                          CharField,
                           ChoiceField,
                           DateInput, FileField,
                           Form,
@@ -205,11 +206,14 @@ class StitcherForm(Form):
         help_text="Annotations will be used to save images to the entered Sample ID",
         required=False)
 
+    form_ident = CharField(widget=HiddenInput(), initial="defaultValue")
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
         self.helper.layout = Layout(
             'approved',
+            'form_ident',
             Button('cancel', 'Back / Cancel', css_class='btn-secondary',
                    onclick="window.location.href = '{}';".format(reverse('core:stitcher'))),
             Submit('submit', 'Submit')
