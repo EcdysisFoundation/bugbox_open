@@ -106,9 +106,11 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
             'panorma_name': panorma_name,
             'img_src': f'{stitcher_url}{img_src}',
             'potential_samples': potential_samples,
+            'first_potential_sample': potential_samples[0][0] if potential_samples else None,
             'form_action_url': reverse(
                 'core:stitcher-form', kwargs={'guid': str(guid)}),
             'form_iden_crop_save': constants.STITCHER_FORM_CROPSAVE,
+            'disable_crop_save': False if data[constants.STITCHER_APPROVED] else True,
             'json_context': get_json_context({
                 constants.STITCHER_GUID: guid,
                 'STITCHER_URL': stitcher_url,
@@ -139,11 +141,22 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                         self.request.user).get(id=data['sample_id'])
                 except Sample.DoesNotExist:
                     raise Http404
-                print(f'found {sample.id}')
+                messages.success(
+                   self.request, f'Succesfully sent sample_id {data['sample_id']}'
+                )
+                messages.warning(
+                   self.request, 'Crop and Save is not implemented yet, so nothing really happened.'
+                )
         elif data['form_ident'] == constants.STITCHER_FORM_DEFAULT:
-            if data[constants.STITCHER_APPROVED] == '':
-                data[constants.STITCHER_APPROVED] = None
+            approved = data[constants.STITCHER_APPROVED]
+            if approved == '':
+                approved = None
             patch_upload_file(self.kwargs[constants.STITCHER_GUID], data)
+            messages.success(
+                self.request, f'Succesfully set approved to {approved}'
+            )
+        else:
+            messages.error(self.request, 'There was an error in form submission.')
         return super().form_valid(form)
 
     def get_success_url(self):

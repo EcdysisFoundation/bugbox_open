@@ -65,10 +65,14 @@
                     <input type="hidden" name="form_ident" value="{{ form_iden_crop_save }}" >
                     <div class="row">
                         <div class="col">
-                            <input type="number" class="form-control" name="sample_id" value="null" id="sample_id" placeholder="Sample ID">
+                            <input type="number" class="form-control" name="sample_id"
+                            value="{{ first_potential_sample }}" id="sample_id">
                         </div>
                         <div class="col">
-                            <input type="submit" value="Crop and save annotations" id="sample_id-btn" class="btn btn-danger">
+                            <input type="submit"
+                                value="Crop and save annotations"
+                                id="sample_id-btn" class="btn btn-danger"
+                                {% if disable_crop_save %} disabled {% endif %}>
                         </div>
                     </div>
                 </form>
