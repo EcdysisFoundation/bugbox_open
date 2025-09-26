@@ -62,6 +62,7 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
         panorma_name = ''
         img_src = ''
         disable_stitching = True
+        disable_crop_save = True
         if constants.STITCHER_PANORAMA_PATH in data.keys():
             if data[constants.STITCHER_PANORAMA_PATH]:
                 img_src = data[constants.STITCHER_PANORAMA_PATH].replace('/media/', '/static/')
@@ -73,6 +74,8 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
             if v in data.keys():
                 if data[v]:
                     data[v] = cast_utc_time(data[v])
+        if constants.STITCHER_APPROVED in data.keys():
+            disable_crop_save = False if data[constants.STITCHER_APPROVED] else True
         # find samples in bugbox
         potential_samples = []
         if constants.STITCHER_UPLOAD_DIR_NAME in data.keys():
@@ -110,7 +113,7 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
             'form_action_url': reverse(
                 'core:stitcher-form', kwargs={'guid': str(guid)}),
             'form_iden_crop_save': constants.STITCHER_FORM_CROPSAVE,
-            'disable_crop_save': False if data[constants.STITCHER_APPROVED] else True,
+            'disable_crop_save': disable_crop_save,
             'json_context': get_json_context({
                 constants.STITCHER_GUID: guid,
                 'STITCHER_URL': stitcher_url,
@@ -148,16 +151,15 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                    self.request, 'Crop and Save is not implemented yet, so nothing really happened.'
                 )
         elif data['form_ident'] == constants.STITCHER_FORM_DEFAULT:
-            approved = data[constants.STITCHER_APPROVED]
-            if approved == '':
-                approved = None
+            if data[constants.STITCHER_APPROVED] == '':
+                data[constants.STITCHER_APPROVED] = None
             patch_upload_file(self.kwargs[constants.STITCHER_GUID], data)
             messages.success(
-                self.request, f'Succesfully set approved to {approved}'
+                self.request, f'Succesfully set approved to {data[constants.STITCHER_APPROVED]}'
             )
         else:
             messages.error(self.request, 'There was an error in form submission.')
         return super().form_valid(form)
 
     def get_success_url(self):
-        return reverse('core:stitcher')
+        return reverse('core:stitcher-form', kwargs={constants.STITCHER_GUID: self.kwargs[constants.STITCHER_GUID]})
