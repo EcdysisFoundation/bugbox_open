@@ -32,50 +32,54 @@
         <div class="col mb-2">
             <ul class="list-group">
                 <li class="list-group-item">
-                    <b>Created at:</b> {{ data.created_at }}
-                </li>
-                <li class="list-group-item">
                     <b>guid:</b> {{ data.guid }}
                 </li>
+                <li class="list-group-item">
+                    <b>Created at:</b> {{ data.created_at }}
+                </li>
+                <li class="list-group-item list-group-item-info">
+                    Sent to label studio
+                </li>
+                <li class="list-group-item">
+                    <b>Predictions:</b> {{ data.predictions|length }}
+                </li>
+                <li class="list-group-item">
+                    <b>Annotations:</b> {{ data.annotations|length }}
+                </li>
+                {% if not data.bugbox_sample_id %}
 
-                    <li class="list-group-item list-group-item-info">
-                        Sent to label studio
-                    </li>
-                    <li class="list-group-item">
-                        <b>Predictions:</b> {{ data.predictions|length }}
-                    </li>
-                    <li class="list-group-item">
-                        <b>Annotations:</b> {{ data.annotations|length }}
-                    </li>
+                    {% if potential_samples %}
+                        <li class="list-group-item list-group-item-success">
+                            Potential Sample IDs in BugBox {% for p, l in potential_samples %}
+                                <a href="{{ l }}" target="_blank">{{ p }}</a>&nbsp;
+                            {% endfor %}
+                        </li>
+                    {% else %}
+                        <li class="list-group-item list-group-item-warning">
+                            No matching samples found in BugBox
+                        </li>
+                    {% endif %}
 
-                {% if potential_samples %}
-                    <li class="list-group-item list-group-item-success">
-                        Potential Sample IDs in BugBox {% for p, l in potential_samples %}
-                            <a href="{{ l }}" target="_blank">{{ p }}</a>&nbsp;
-                        {% endfor %}
-                    </li>
-                {% else %}
-                    <li class="list-group-item list-group-item-warning">
-                        No matching samples found in BugBox
-                    </li>
+                {% endif %}
+
+                {% if data.bugbox_croped_saved %}
+                        <li class="list-group-item list-group-item-success">
+                            Sent to Sample ID <a href="{% url 'samples:sample' data.bugbox_sample_id %}">
+                                {{ data.bugbox_sample_id }}</a> on {{ data.bugbox_croped_saved }}
+                        </li>
+                {% elif data.bugbox_sample_id %}
+                        <li class="list-group-item list-group-item-success">
+                            Sample ID <a href="{% url 'samples:sample' data.bugbox_sample_id %}">
+                                {{ data.bugbox_sample_id }}</a>
+                        </li>
                 {% endif %}
                 <li class="list-group-item">
-                    <form enctype="multipart/form-data" action="{{ form_action_url }}" method="POST">
-                    {% csrf_token %}
-                    <input type="hidden" name="form_ident" value="{{ form_iden_crop_save }}" >
-                    <div class="row">
-                        <div class="col">
-                            <input type="number" class="form-control" name="sample_id"
-                            value="{{ first_potential_sample }}" id="sample_id">
-                        </div>
-                        <div class="col">
-                            <input type="submit"
-                                value="Crop and save annotations"
-                                id="sample_id-btn" class="btn btn-danger"
-                                {% if disable_crop_save %} disabled {% endif %}>
-                        </div>
+                    <div class="input-group input-group-sm">
+                    <form method="post">
+                        {% csrf_token %}
+                        {% crispy form %}
+                    </form>
                     </div>
-                </form>
                 </li>
             </ul>
         </div>
@@ -97,14 +101,7 @@
         </div>
     </div>
     {% endif %}
-    <div class="row">
-        <div class="col">
-            <form method="post">
-                {% csrf_token %}
-                {% crispy form %}
-            </form>
-        </div>
-    </div>
+
 
     {% if data.stitching_exception_at %}
     <div class="row mt-3">

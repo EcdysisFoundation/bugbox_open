@@ -1,5 +1,6 @@
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Button, Column, Field, Layout, Row, Submit
+from crispy_bootstrap5.bootstrap5 import FloatingField
 from django.conf import settings
 from django.forms import (ClearableFileInput,
                           CharField,
@@ -201,10 +202,12 @@ class StitcherForm(Form):
         help_text="Updating the stitching is disabled when approved or dissaproved.",
         required=False)
 
-    sample_id = IntegerField(
+    bugbox_sample_id = IntegerField(
         label="Sample ID",
         help_text="Annotations will be used to save images to the entered Sample ID",
         required=False)
+
+    upload_dir_name = CharField()
 
     form_ident = CharField(widget=HiddenInput(), initial="defaultValue")
 
@@ -212,7 +215,9 @@ class StitcherForm(Form):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
         self.helper.layout = Layout(
-            'approved',
+            FloatingField(constants.STITCHER_BUGBOX_SAMPLE_ID),
+            FloatingField(constants.STITCHER_UPLOAD_DIR_NAME),
+            FloatingField(constants.STITCHER_APPROVED),
             'form_ident',
             Button('cancel', 'Back / Cancel', css_class='btn-secondary',
                    onclick="window.location.href = '{}';".format(reverse('core:stitcher'))),

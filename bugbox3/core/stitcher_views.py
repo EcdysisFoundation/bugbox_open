@@ -129,6 +129,10 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
         data = get_upload_file(self.kwargs[constants.STITCHER_GUID])
         if constants.STITCHER_APPROVED in data.keys():
             initial[constants.STITCHER_APPROVED] = data[constants.STITCHER_APPROVED]
+        if constants.STITCHER_UPLOAD_DIR_NAME in data.keys():
+            initial[constants.STITCHER_UPLOAD_DIR_NAME] = data[constants.STITCHER_UPLOAD_DIR_NAME]
+        if constants.STITCHER_BUGBOX_SAMPLE_ID in data.keys():
+            initial[constants.STITCHER_BUGBOX_SAMPLE_ID] = data[constants.STITCHER_BUGBOX_SAMPLE_ID]
         return initial
 
     def form_invalid(self, form):
@@ -151,11 +155,12 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                    self.request, 'Crop and Save is not implemented yet, so nothing really happened.'
                 )
         elif data['form_ident'] == constants.STITCHER_FORM_DEFAULT:
+            print(data)
             if data[constants.STITCHER_APPROVED] == '':
                 data[constants.STITCHER_APPROVED] = None
             patch_upload_file(self.kwargs[constants.STITCHER_GUID], data)
             messages.success(
-                self.request, f'Succesfully set approved to {data[constants.STITCHER_APPROVED]}'
+                self.request, f'Succesfully updated {self.kwargs[constants.STITCHER_GUID]}'
             )
         else:
             messages.error(self.request, 'There was an error in form submission.')
