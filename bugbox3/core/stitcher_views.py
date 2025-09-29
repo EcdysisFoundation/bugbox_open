@@ -112,6 +112,7 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
             'data': data,
             'panorma_name': panorma_name,
             'img_src': f'{stitcher_url}{img_src}',
+            'label_src': f'{stitcher_url}/static/{guid}/label_r_001.jpg',
             'potential_samples': potential_samples,
             'first_potential_sample': first_potential_sample,
             'form_action_url': reverse(
