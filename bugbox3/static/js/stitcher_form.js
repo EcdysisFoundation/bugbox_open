@@ -36,4 +36,12 @@ $(function () {
         updateStitching(
             json_context.STITCHER_URL + '/update-stitching/' + params)
     });
+
+    let $deleteButton = $(`<a href="${json_context.stitcher_delete_url}" class="btn btn-danger mb-3 mt-2 text-nowrap" type="button">Delete</a>`)
+    console.log(json_context.disable_delete)
+    if ( json_context.disable_delete ) {
+        $deleteButton.addClass('disabled');
+    }
+    $('.delete-button').append($deleteButton)
+
 })

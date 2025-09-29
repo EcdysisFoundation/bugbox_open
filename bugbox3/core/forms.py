@@ -8,7 +8,7 @@ from django.forms import (ClearableFileInput,
                           DateInput, FileField,
                           Form,
                           HiddenInput,
-                          IntegerField, ValidationError)
+                          IntegerField, UUIDField, ValidationError)
 from django.forms.models import ModelForm
 from django.urls import reverse
 from django.utils.safestring import mark_safe
@@ -222,4 +222,21 @@ class StitcherForm(Form):
             Button('cancel', 'Back / Cancel', css_class='btn-secondary',
                    onclick="window.location.href = '{}';".format(reverse('core:stitcher'))),
             Submit('submit', 'Submit')
+        )
+
+
+class StitcherDeleteForm(Form):
+
+    upload_dir_name = CharField(widget=HiddenInput())
+    guid = UUIDField(widget=HiddenInput())
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.layout = Layout(
+            'upload_dir_name',
+            'guid',
+            Button('cancel', 'Back / Cancel', css_class='btn-secondary',
+                   onclick="window.location.href = '{}';".format(reverse('core:stitcher'))),
+            Submit('submit', 'Submit', css_class='btn-danger')
         )

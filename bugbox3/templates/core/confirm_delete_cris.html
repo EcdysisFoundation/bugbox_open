@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% load django_bootstrap5 %}
+
+{% block title %}Delete Form{% endblock %}
+
+{% block content %}
+
+<div class="container">
+    <div class="row mt-3">
+        <div class="col">
+            {{ information }}
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col">
+            <form method="post">
+                {% csrf_token %}
+                {% crispy form %}
+            </form>
+
+        </div>
+    </div>
+</div>
+
+{% endblock content %}

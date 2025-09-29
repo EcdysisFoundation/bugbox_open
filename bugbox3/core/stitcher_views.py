@@ -10,7 +10,7 @@ from bugbox3.samples.models import Sample
 from bugbox3.samples.constants import STITCHER_SAMPLE_TYPES
 from bugbox3.libs.utilities import get_json_context, cast_utc_time
 from .permissions import IS_RESEARCH, ZEROTIER_USERS, IS_ADMIN
-from .forms import StitcherForm
+from .forms import StitcherForm, StitcherDeleteForm
 from .stitcher_api import (
     get_root_message,
     get_upload_file,
@@ -63,6 +63,8 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
         img_src = ''
         disable_stitching = True
         disable_crop_save = True
+        disable_delete = False
+        dir_name = None
         if constants.STITCHER_PANORAMA_PATH in data.keys():
             if data[constants.STITCHER_PANORAMA_PATH]:
                 img_src = data[constants.STITCHER_PANORAMA_PATH].replace('/media/', '/static/')
@@ -76,6 +78,7 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                     data[v] = cast_utc_time(data[v])
         if constants.STITCHER_APPROVED in data.keys():
             disable_crop_save = False if data[constants.STITCHER_APPROVED] else True
+            disable_delete = True if data[constants.STITCHER_APPROVED] else False
         # find samples in bugbox
         potential_samples = []
         if constants.STITCHER_UPLOAD_DIR_NAME in data.keys():
@@ -117,7 +120,10 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
             'json_context': get_json_context({
                 constants.STITCHER_GUID: guid,
                 'STITCHER_URL': stitcher_url,
-                'disable_stitching': disable_stitching
+                'disable_stitching': disable_stitching,
+                'disable_delete': disable_delete,
+                'stitcher_delete_url': reverse(
+                    'core:stitcher-delete', kwargs={constants.STITCHER_GUID: str(guid)})
             })
         })
         if ERROR_MSG_KEY in data.keys():
@@ -154,3 +160,49 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
 
     def get_success_url(self):
         return reverse('core:stitcher-form', kwargs={constants.STITCHER_GUID: self.kwargs[constants.STITCHER_GUID]})
+
+
+class StitcherDeleteView(PermissionRequiredMixin, FormView):
+
+    permission_required = IS_ADMIN
+
+    form_class = StitcherDeleteForm
+    template_name = 'core/confirm_delete_cris.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(StitcherDeleteView, self).get_context_data(**kwargs)
+        orgs = OrganizationUser.objects.filter(
+            user=self.request.user).values_list(
+                'organization_id', flat=True)
+        if not orgs:
+            raise Http404
+        information = 'Are you sure you want to delete Shimsy upload with guid {0}'.format(
+            self.kwargs[constants.STITCHER_GUID]
+        )
+        context.update({
+            'information': information
+        })
+        return context
+
+    def get_initial(self):
+        initial = super().get_initial()
+        guid = self.kwargs[constants.STITCHER_GUID]
+        data = get_upload_file(guid)
+        if constants.STITCHER_UPLOAD_DIR_NAME not in data.keys():
+            raise Http404
+        self.upload_dir_name = data[constants.STITCHER_UPLOAD_DIR_NAME]
+        initial[constants.STITCHER_UPLOAD_DIR_NAME] = self.upload_dir_name
+        initial[constants.STITCHER_GUID] = guid
+        return initial
+
+    def form_valid(self, form):
+        data = form.cleaned_data
+        print(data)
+        messages.success(
+                self.request,
+                f'Succesfully deleted {self.upload_dir_name}'
+            )
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse('core:stitcher')
