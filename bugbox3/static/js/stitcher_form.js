@@ -7,7 +7,6 @@ let messageModal = new Modal(document.getElementById('messageModal'), {
   })
 
 function updateStitching( url ) {
-
     $.post(url).done(function( data ) {
     messageModalBody.innerHTML = '<p>' + data.message +
 '</p><p>Processing may take a few minutes to complete.</p>';
@@ -17,6 +16,7 @@ function updateStitching( url ) {
     '</p><p>Update Failed.</p>';
     messageModal.show();
 })}
+
 
 $(function () {
     const json_context = JSON.parse(document.getElementById('json_context').textContent)
@@ -36,4 +36,17 @@ $(function () {
         updateStitching(
             json_context.STITCHER_URL + '/update-stitching/' + params)
     });
+
+    let $useSampleId = $(`<button class="btn btn-warning btn-small text-nowrap" type="button">Use ${json_context.first_potential_sample}</button>`)
+    $('.use-sample-id').append($useSampleId)
+    $useSampleId.on('click', function() {
+        $('#id_bugbox_sample_id').val(json_context.first_potential_sample);
+    });
+
+    let $deleteButton = $(`<a href="${json_context.stitcher_delete_url}" class="btn btn-danger mb-3 mt-2 text-nowrap" type="button">Delete</a>`)
+    if ( json_context.disable_delete ) {
+        $deleteButton.addClass('disabled');
+    }
+    $('.delete-button').append($deleteButton)
+
 })
