@@ -141,21 +141,7 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
 
     def form_valid(self, form):
         data = form.cleaned_data
-        if data['form_ident'] == constants.STITCHER_FORM_CROPSAVE:
-            if data['sample_id']:
-                try:
-                    sample = Sample.objects.user_access(
-                        self.request.user).get(id=data['sample_id'])
-                except Sample.DoesNotExist:
-                    raise Http404
-                messages.success(
-                   self.request, f'Succesfully sent sample_id {data['sample_id']}'
-                )
-                messages.warning(
-                   self.request, 'Crop and Save is not implemented yet, so nothing really happened.'
-                )
-        elif data['form_ident'] == constants.STITCHER_FORM_DEFAULT:
-            print(data)
+        if data['form_ident'] == constants.STITCHER_FORM_DEFAULT:
             if data[constants.STITCHER_APPROVED] == '':
                 data[constants.STITCHER_APPROVED] = None
             patch_upload_file(self.kwargs[constants.STITCHER_GUID], data)
