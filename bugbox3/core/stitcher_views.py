@@ -144,10 +144,6 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
             initial[constants.STITCHER_BUGBOX_SAMPLE_ID] = data[constants.STITCHER_BUGBOX_SAMPLE_ID]
         return initial
 
-    def form_invalid(self, form):
-        print('FORM INVALID')
-        return super().form_invalid(form)
-
     def form_valid(self, form):
         data = form.cleaned_data
         if data['form_ident'] == constants.STITCHER_FORM_DEFAULT:
@@ -199,9 +195,7 @@ class StitcherDeleteView(PermissionRequiredMixin, FormView):
         return initial
 
     def form_valid(self, form):
-        data = form.cleaned_data
-        print(data)
-        messages.success(
+        messages.warning(
                 self.request,
                 f'Succesfully deleted {self.upload_dir_name}'
             )
