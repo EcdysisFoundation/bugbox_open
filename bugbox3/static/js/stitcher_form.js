@@ -37,6 +37,12 @@ $(function () {
             json_context.STITCHER_URL + '/update-stitching/' + params)
     });
 
+    let $useSampleId = $(`<button class="btn btn-warning btn-small text-nowrap" type="button">Use ${json_context.first_potential_sample}</button>`)
+    $('.use-sample-id').append($useSampleId)
+    $useSampleId.on('click', function() {
+        $('#id_bugbox_sample_id').val(json_context.first_potential_sample);
+    });
+
     let $deleteButton = $(`<a href="${json_context.stitcher_delete_url}" class="btn btn-danger mb-3 mt-2 text-nowrap" type="button">Delete</a>`)
     console.log(json_context.disable_delete)
     if ( json_context.disable_delete ) {

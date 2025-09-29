@@ -107,12 +107,13 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                 if sample_ids:
                     potential_samples = [
                         (i, reverse('samples:sample', kwargs={'sample_id': i})) for i in sample_ids]
+        first_potential_sample = potential_samples[0][0] if potential_samples else None
         context.update({
             'data': data,
             'panorma_name': panorma_name,
             'img_src': f'{stitcher_url}{img_src}',
             'potential_samples': potential_samples,
-            'first_potential_sample': potential_samples[0][0] if potential_samples else None,
+            'first_potential_sample': first_potential_sample,
             'form_action_url': reverse(
                 'core:stitcher-form', kwargs={'guid': str(guid)}),
             'form_iden_crop_save': constants.STITCHER_FORM_CROPSAVE,
@@ -123,7 +124,8 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                 'disable_stitching': disable_stitching,
                 'disable_delete': disable_delete,
                 'stitcher_delete_url': reverse(
-                    'core:stitcher-delete', kwargs={constants.STITCHER_GUID: str(guid)})
+                    'core:stitcher-delete', kwargs={constants.STITCHER_GUID: str(guid)}),
+                'first_potential_sample': first_potential_sample
             })
         })
         if ERROR_MSG_KEY in data.keys():
