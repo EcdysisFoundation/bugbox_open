@@ -74,14 +74,37 @@
                                 {{ data.bugbox_sample_id }}</a>
                         </li>
                 {% endif %}
-                <li class="list-group-item">
-                    <div class="input-group input-group-sm">
-                    <form method="post">
-                        {% csrf_token %}
-                        {% crispy form %}
+                {% if not data.bugbox_croped_saved %}
+                    <li class="list-group-item">
+                        <div class="input-group input-group-sm">
+                        <form method="post">
+                            {% csrf_token %}
+                            {% crispy form %}
+                        </form>
+                        </div>
+                    </li>
+
+                    <li class="list-group-item">
+                        <p class="text-secondary">
+                            <i>To crop out arthropods and save to BugBox,
+                                the Sample ID must first be linked, there must be annotations and the image must be marked as Approved.
+                                Changes above will be ignored, unless first submitted.
+                            </i>
+                        </p>
+                    <form enctype="multipart/form-data" action="{{ form_action_url }}" method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_ident" value="{{ form_iden_crop_save }}" >
+
+                        <input type="submit"
+                            value="Crop and save annotations"
+                            id="sample_id-btn" class="btn btn-danger"
+                            {% if disable_crop_save %} disabled {% endif %}>
+
                     </form>
-                    </div>
                 </li>
+                {% endif %}
+
+
             </ul>
         </div>
     </div>

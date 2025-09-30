@@ -1,6 +1,5 @@
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.http import Http404
-from django.db.models import Prefetch
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
 from ..core.constants import COUNTRY_LOOKUP
