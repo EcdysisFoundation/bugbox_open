@@ -275,14 +275,17 @@ class MultiSpecimenImage(Model):
 @receiver(post_save, sender=MultiSpecimenImage)
 def save_multi_specimen_image_thumbnail(instance, created, **kwargs):
     # Can only create and delete MultiSpecimenImage.
+    print('save_multi_specimen_image_thumbnail')
     if created and instance.image:
+        print('CREATED AND SAVED')
         buffer = BytesIO()
         instance.image_thumbnail = resized_thumbnail(
             instance.image,
             constants.SPECIMEN_IMAGE_THUMBSIZE_MEDIUM,
             constants.SPECIMEN_IMAGE_THUMBSIZE_MEDIUM,
             buffer,
-            'thumbnail')
+            'thumbnail',
+            large_ok=True)
         instance.save()
         buffer.close()
 

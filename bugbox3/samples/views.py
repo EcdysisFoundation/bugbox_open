@@ -1319,31 +1319,13 @@ class MultiSpecimeImageView(PermissionRequiredMixin, FormView):
         return context
 
     def form_valid(self, form):
-        image_4_by_3 = form.cleaned_data['image_4_by_3']
         json_data = form.cleaned_data['json_data']
         json_crop_ids = form.cleaned_data['json_crop_ids']
         try:
             sample = Sample.objects.user_access(self.request.user).get(id=self.kwargs['sample_id'])
         except Sample.DoesNotExist:
             raise Http404
-        if image_4_by_3:
-            created_images = 0
-            try:
-                for f in image_4_by_3:
-                    MultiSpecimenImage.objects.create(
-                        sample=sample,
-                        image=f,
-                        image_grid=constants.IMAGE_GRID_CHOICE_4_BY_3,
-                        uploaded_by_user=self.request.user
-                    )
-                    created_images += 1
-            except Exception:
-                messages.add_message(
-                    self.request,
-                    messages.ERROR,
-                    'Error: An unsupported file may have been selected, please use .jpg or .png')
-                created_images = 0
-            messages.success(self.request, 'Succesfully added {0} new multi-specimen images'.format(created_images))
+
         if json_data:
             if not all([isinstance(v, int) for v in json_data['ids']]):
                 raise ValidationError(mark_safe('non-integers provided in form as ids'))
@@ -1378,5 +1360,4 @@ class MultiSpecimeImageView(PermissionRequiredMixin, FormView):
 
     def get_success_url(self):
         return reverse('samples:multispecimen-images', kwargs={
-            'org_id': 0,
             'sample_id': self.kwargs['sample_id']})
