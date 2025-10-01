@@ -77,6 +77,19 @@ def patch_upload_file(guid, data):
         return {ERROR_MSG_KEY: e}
 
 
+def delete_upload_file(guid):
+    api_url = STITCHER_URL + f'/delete/{guid}'
+    try:
+        response = requests.delete(api_url)
+        if response.status_code in [200, 204]:
+            return {'message': f'success code {response.status_code}'}
+        else:
+            return {ERROR_MSG_KEY: response.status_code}
+    except Exception as e:
+        print(e)
+        return {ERROR_MSG_KEY: e}
+
+
 def get_root_message():
     api_url = STITCHER_URL
     try:
