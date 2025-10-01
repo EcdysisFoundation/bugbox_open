@@ -177,27 +177,23 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                     id=self.data[constants.STITCHER_BUGBOX_SAMPLE_ID])
             except Exception:
                 raise Http404
-            #try:
-            if True:
+            try:
                 pano_path = self.data[constants.STITCHER_PANORAMA_PATH].replace('/media/', '/static/')
                 img_url = f'{self.stitcher_url}{pano_path}'
-                print(img_url)
                 response = requests.get(img_url, stream=True)
                 response.raise_for_status()
                 instance = MultiSpecimenImage(
                     sample=this_sample,
                     uuid=self.data[constants.STITCHER_GUID])
                 img_name = f'{self.data[constants.STITCHER_UPLOAD_DIR_NAME]}.jpg'
-                try:
-                    instance.image.save(img_name, ContentFile(response.content), save=False)
-                    instance.save()
-                    messages.success(
-                        self.request, f'Succesfully initiated crop and save annotations for {self.guid}')
-                except IntegrityError as e:
-                    messages.error(self.request, f'Error, possible duplicate image for this record, {e}')
-
-            #except Exception:
-            #    messages.error(self.request, 'There was an error in Crop and Save submition.')
+                instance.image.save(img_name, ContentFile(response.content), save=False)
+                instance.save()
+                messages.success(
+                    self.request, f'Succesfully initiated crop and save annotations for {self.guid}')
+            except IntegrityError as e:
+                messages.error(self.request, f'Error, possible duplicate image for this record, {e}')
+            except Exception:
+                messages.error(self.request, 'There was an error in Crop and Save submition.')
         else:
             messages.error(self.request, 'There was an error in form submission.')
         return super().form_valid(form)
