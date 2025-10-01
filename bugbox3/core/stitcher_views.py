@@ -18,6 +18,7 @@ from .stitcher_api import (
     get_root_message,
     get_upload_file,
     patch_upload_file,
+    delete_upload_file,
     STITCHER_URL,
     STITCHER_JS_URL_ZEROTIER,
     STITCHER_JS_URL,
@@ -239,10 +240,15 @@ class StitcherDeleteView(PermissionRequiredMixin, FormView):
         return initial
 
     def form_valid(self, form):
-        messages.warning(
-                self.request,
-                f'Succesfully deleted {self.upload_dir_name}'
-            )
+        data = form.cleaned_data
+        response = delete_upload_file(data['guid'])
+        if ERROR_MSG_KEY in response.keys():
+            messages.error(self.request, response[ERROR_MSG_KEY])
+        else:
+            messages.warning(
+                    self.request,
+                    f'Succesfully deleted {self.upload_dir_name}'
+                )
         return super().form_valid(form)
 
     def get_success_url(self):
