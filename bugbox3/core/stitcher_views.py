@@ -26,7 +26,6 @@ from .stitcher_api import (
     ERROR_MSG_KEY
 )
 from . import constants
-# from .stitcher_utils import convert_ls_to_coco_to_pil, crop_and_save_images
 
 
 class StitcherView(PermissionRequiredMixin, TemplateView):

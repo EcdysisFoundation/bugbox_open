@@ -1,7 +1,7 @@
 from celery import shared_task
 from django.conf import settings
 
-from ..libs.utilities import S3_CLIENT
+from bugbox3.libs.utilities import S3_CLIENT
 
 
 @shared_task()

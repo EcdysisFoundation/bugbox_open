@@ -22,7 +22,7 @@ from rest_framework.reverse import reverse as api_reverse
 from bugbox3.samples.utils import resolve_entered_by
 from bugbox3.core.stitcher_utils import crop_img_to_annotations
 
-from .tasks import export_csv_by_location
+from .tasks import export_csv_by_location, crop_panorama
 from ..core import constants as constants_core
 from ..core.models import LookupChoices
 from ..core.permissions import IS_RESEARCH, REVIEW_SPECIMEN_PAGE
@@ -1058,7 +1058,6 @@ class SpecimenUpdateView(PermissionRequiredMixin, UpdateView):
 
     def form_invalid(self, form):
         messages.error(self.request, 'Form Error, changes not saved')
-        print(form.errors)
         return super().form_invalid(form)
 
     def form_valid(self, form):
@@ -1339,23 +1338,11 @@ class MultiSpecimenImageView(PermissionRequiredMixin, FormView):
             selected_images = MultiSpecimenImage.objects.user_access(self.request.user).filter(
                 id__in=json_crop_ids['ids']).exclude(cropped_to_specimen=True)
             prev_cropped = len(json_crop_ids['ids']) - len(selected_images)
-            for i in selected_images:
-                imgs = crop_img_to_annotations(i.image, i.annotations)
-                if imgs:
-                    for cropped_i in imgs:
-                        specimen = Specimen.objects.create(
-                            sample=sample,
-                            created_by_user=self.request.user)
-                        SpecimenImage.objects.create(
-                            specimen=specimen,
-                            image=cropped_i[0],
-                            multispecimen_image_uuid=i.uuid,
-                            multispecimen_image_index=cropped_i[1],
-                            uploaded_by_user=self.request.user
-                        )
-                    i.cropped_to_specimen = True
-                    i.save()
-            messages.warning(self.request, 'Succesfully croped {0} images. {1}'.format(
+
+            # celery task
+            crop_panorama(selected_images, sample, self.request.user)
+
+            messages.warning(self.request, 'Succesfully sent {0} images to be cropped. {1}'.format(
                 len(selected_images),
                 str(prev_cropped) + ' images were skipped as already cropped.' if prev_cropped else ''
             ))
