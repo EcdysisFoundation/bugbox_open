@@ -65,6 +65,12 @@ function concatTen(data) {
     } else { return '' }
 }
 
+function getSent(data) {
+    if (data) {
+        return '<i class="bi bi-send-check-fill h4 text-success"></i>'
+    } else { return '' }
+}
+
 
 $(function () {
     const json_context = JSON.parse(document.getElementById('json_context').textContent)
@@ -100,8 +106,20 @@ $(function () {
             {
                 data: 'upload_dir_name',
             },{
+                data: 'guid',
+                render: getFormButton
+            },{
+                data: 'approved',
+                render: getApproved
+            },{
+                data: 'bugbox_croped_saved',
+                render: getSent
+            },{
                 data: 'bugbox_sample_id',
                 render: getSampleUrl
+            },{
+                data: 'panorama_path',
+                render: getPanoramaSrc
             },{
                 data: 'sent_label_studio',
                 render: getFilename
@@ -111,15 +129,6 @@ $(function () {
             },{
                 data: 'predictions_timestamp',
                 render: concatTen
-            },{
-                data: 'panorama_path',
-                render: getPanoramaSrc
-            },{
-                data: 'guid',
-                render: getFormButton
-            },{
-                data: 'approved',
-                render: getApproved
             }
         ]
     })
