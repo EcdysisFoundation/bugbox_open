@@ -1314,7 +1314,7 @@ class MultiSpecimenImageView(PermissionRequiredMixin, FormView):
             'container_row_header': get_datatables_container(
                 get_datatables_row([
                     'Image',
-                    'cropped_to_specimen',
+                    'Cropped to specimen',
                 ]))
         })
         return context
@@ -1332,8 +1332,7 @@ class MultiSpecimenImageView(PermissionRequiredMixin, FormView):
                 raise ValidationError(mark_safe('non-integers provided in form as ids'))
             imgs = MultiSpecimenImage.objects.user_access(self.request.user).filter(
                 id__in=json_data['ids']).exclude(cropped_to_specimen=True).delete()
-            print(imgs)
-            messages.warning(self.request, 'Succesfully deleted {0} images'.format(len(imgs)))
+            messages.warning(self.request, 'Succesfully deleted images {0}'.format(imgs))
         if json_crop_ids:
             if not all([isinstance(v, int) for v in json_crop_ids['ids']]):
                 raise ValidationError(mark_safe('non-integers provided in form as ids'))

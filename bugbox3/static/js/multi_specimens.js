@@ -46,7 +46,7 @@ $(function () {
         let datalen = dt.rows('.selected').data().length;
         const modalBodyInput = deleteImagesModal.querySelector('.modal-body')
         if (datalen) {
-            modalBodyInput.innerHTML = `Are you sure you want to delete ${datalen} records?`
+            modalBodyInput.innerHTML = `Are you sure you want to delete ${datalen} records? Note: Images with Cropped to specimen set to True will not delete.`
         } else { modalBodyInput.innerHTML = 'No images were selected to delete.' }
 
     });
