@@ -160,7 +160,7 @@ def crop_img_to_grid(image, grid):
                 # Wrap the buffer in File object
                 file_object = File(buffer, name=new_filename)
                 result.append((file_object, i))
-            return result
+        return result
     return None
 
 

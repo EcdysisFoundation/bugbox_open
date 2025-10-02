@@ -1,0 +1,98 @@
+import os
+from io import BytesIO
+from pathlib import Path
+from PIL import Image
+
+from django.core.files import File
+from django.core.files.storage import default_storage
+
+
+def crop_and_save_images(image, bounding_boxes):
+    """
+    Crops images based on a list of bounding boxes and saves them to a directory.
+    """
+    result = []
+    original_max_pixels = Image.MAX_IMAGE_PIXELS
+    if not original_max_pixels:
+        raise ValueError('MAX_IMAGE_PIXELS was not set')
+    Image.MAX_IMAGE_PIXELS = None
+
+    image_types = {
+        'jpg': 'JPEG',
+        'jpeg': 'JPEG',
+        'png': 'PNG',
+    }
+    print('-crop_and_save_images-'* 10)
+    supported_extension = [v for v in image_types.keys()]
+    print('supported_extension')
+    print(supported_extension)
+    img_suffix = Path(image.file.name).name.split(".")[-1]
+    print(img_suffix)
+    img_basename = Path(image.file.name).name.split(".")[:-1]
+    print(img_basename)
+
+    with Image.open(image) as img:
+        if img_suffix.lower() in supported_extension:
+            img_format = image_types[img_suffix.lower()]
+            print('img_format')
+            print(img_format)
+        else:
+            print('img_suffix not ins upported_extension ')
+            return result
+
+        for i, bbox in enumerate(bounding_boxes):
+            try:
+                x_min, y_min, x_max, y_max = map(int, bbox)
+                img_width, img_height = img.size
+                x_min = max(0, x_min)
+                y_min = max(0, y_min)
+                x_max = min(img_width, x_max)
+                y_max = min(img_height, y_max)
+                print('x_min, y_min, x_max, y_max')
+                print(x_min, y_min, x_max, y_max)
+                cropped_image = img.crop((x_min, y_min, x_max, y_max))
+                output_filename = f"{img_basename}_crop_{i}.{img_suffix}"
+                buffer = BytesIO()
+                cropped_image.save(buffer, format=img_format)
+                file_object = File(buffer, name=output_filename)
+                result.append((file_object, i))
+            except (ValueError, IndexError) as e:
+                print(f"Skipping invalid bounding box {bbox}: {e}")
+    Image.MAX_IMAGE_PIXELS = original_max_pixels
+    print(f'Len cropped images is {len(result)}')
+    return result
+
+
+def convert_coco_bbox_to_pil(bbox):
+    # convert coco formatted bounding box to PIL format
+    x, y, width, height = bbox
+    x_min = x
+    y_min = y
+    x_max = x + width
+    y_max = y + height
+    return (x_min, y_min, x_max, y_max)
+
+
+def convert_ls_to_coco_to_pil(bbox, image_width, image_height):
+    # undo format_result_label_studio() formatted boundingbox
+    x, y, width, height = bbox
+    x = x / 100 * image_width
+    y = y / 100 * image_height
+    width = width / 100 * image_width
+    height = height / 100 * image_height
+    return convert_coco_bbox_to_pil((x, y, width, height))
+
+
+def crop_img_to_annotations(image, anno):
+    if not default_storage.exists(image.name):
+        print('WARNING'*100)
+        return None
+    static_bboxes = [
+        convert_ls_to_coco_to_pil(
+            (v['x'], v['y'], v['width'], v['height']),
+            v['original_width'],
+            v['original_height']) for v in anno
+    ]
+    print(f'Len static_bboxes is {len(static_bboxes)}')
+    bytes_imgs = crop_and_save_images(image, static_bboxes)
+    return bytes_imgs

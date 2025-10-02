@@ -18,10 +18,11 @@ from django.views.generic.edit import (CreateView, DeleteView, FormView,
                                        UpdateView)
 from organizations.models import OrganizationUser
 from rest_framework.reverse import reverse as api_reverse
+
 from bugbox3.samples.utils import resolve_entered_by
+from bugbox3.core.stitcher_utils import crop_img_to_annotations
+
 from .tasks import export_csv_by_location
-
-
 from ..core import constants as constants_core
 from ..core.models import LookupChoices
 from ..core.permissions import IS_RESEARCH, REVIEW_SPECIMEN_PAGE
@@ -29,7 +30,7 @@ from ..libs.ui_helpers import (calc_image_height, get_datatables_container,
                                get_datatables_row,
                                get_formsets_display_control_config,
                                get_probability)
-from ..libs.utilities import crop_img_to_grid, get_json_context, get_media_url
+from ..libs.utilities import get_json_context, get_media_url
 from ..taxonomy import constants as taxa_const
 from ..taxonomy.models import Morphospecies
 from . import constants
@@ -1338,20 +1339,21 @@ class MultiSpecimeImageView(PermissionRequiredMixin, FormView):
                 id__in=json_crop_ids['ids']).exclude(cropped_to_specimen=True)
             prev_cropped = len(json_crop_ids['ids']) - len(selected_images)
             for i in selected_images:
-                imgs = crop_img_to_grid(i.image, i.image_grid)
-                for cropped_i in imgs:
-                    specimen = Specimen.objects.create(
-                        sample=sample,
-                        created_by_user=self.request.user)
-                    SpecimenImage.objects.create(
-                        specimen=specimen,
-                        image=cropped_i[0],
-                        multispecimen_image_uuid=i.uuid,
-                        multispecimen_image_index=cropped_i[1],
-                        uploaded_by_user=self.request.user
-                    )
-                i.cropped_to_specimen = True
-                i.save()
+                imgs = crop_img_to_annotations(i.image, i.annotations)
+                if imgs:
+                    for cropped_i in imgs:
+                        specimen = Specimen.objects.create(
+                            sample=sample,
+                            created_by_user=self.request.user)
+                        SpecimenImage.objects.create(
+                            specimen=specimen,
+                            image=cropped_i[0],
+                            multispecimen_image_uuid=i.uuid,
+                            multispecimen_image_index=cropped_i[1],
+                            uploaded_by_user=self.request.user
+                        )
+                    i.cropped_to_specimen = True
+                    i.save()
             messages.warning(self.request, 'Succesfully croped {0} images. {1}'.format(
                 len(selected_images),
                 str(prev_cropped) + ' images were skipped as already cropped.' if prev_cropped else ''
