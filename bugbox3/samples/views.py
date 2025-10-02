@@ -20,7 +20,6 @@ from organizations.models import OrganizationUser
 from rest_framework.reverse import reverse as api_reverse
 
 from bugbox3.samples.utils import resolve_entered_by
-from bugbox3.core.stitcher_utils import crop_img_to_annotations
 
 from .tasks import export_csv_by_location, crop_panorama
 from ..core import constants as constants_core
@@ -1322,7 +1321,7 @@ class MultiSpecimenImageView(PermissionRequiredMixin, FormView):
         json_data = form.cleaned_data['json_data']
         json_crop_ids = form.cleaned_data['json_crop_ids']
         try:
-            sample = Sample.objects.user_access(self.request.user).get(id=self.kwargs['sample_id'])
+            sample_id = Sample.objects.user_access(self.request.user).get(id=self.kwargs['sample_id']).id
         except Sample.DoesNotExist:
             raise Http404
 
@@ -1338,9 +1337,10 @@ class MultiSpecimenImageView(PermissionRequiredMixin, FormView):
             selected_images = MultiSpecimenImage.objects.user_access(self.request.user).filter(
                 id__in=json_crop_ids['ids']).exclude(cropped_to_specimen=True)
             prev_cropped = len(json_crop_ids['ids']) - len(selected_images)
-
-            # celery task
-            crop_panorama(selected_images, sample, self.request.user)
+            user_id = self.request.user.id
+            img_ids = [i.id for i in selected_images]
+            if img_ids:
+                crop_panorama.delay(img_ids, sample_id, user_id)
 
             messages.warning(self.request, 'Succesfully sent {0} images to be cropped. {1}'.format(
                 len(selected_images),

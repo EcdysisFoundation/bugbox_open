@@ -3,6 +3,8 @@ import time
 from tempfile import NamedTemporaryFile
 
 from celery import shared_task
+from config import celery_app
+
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 
@@ -16,7 +18,8 @@ from .calculations import get_indices
 from .models import (
     Experiment, Sample, Site, SiteVisit,
     UserExperimentFile, UserLocationExportFile,
-    Specimen, SpecimenImage
+    Specimen, SpecimenImage,
+    MultiSpecimenImage
 )
 from django.db.models.functions import Lower
 from django.db.models import Q
@@ -299,7 +302,6 @@ def export_csv_by_location(user_id, experiment_id, habitats, countries, states, 
                         print(f"Excluded from export (exclude_from_export=True): {morpho.name}")
                         continue
 
-
                 if level == "family":
                     name = morpho.gbif_family if morpho.gbif_family else "Unspecified Family"
                     morpho_headers[0][name] = morpho.gbif_order
@@ -361,8 +363,17 @@ def export_csv_by_location(user_id, experiment_id, habitats, countries, states, 
     return user_file.file.url
 
 
-@shared_task()
-def crop_panorama(images, sample, user):
+@celery_app.task()
+def crop_panorama(img_ids, sample_id, user_id):
+    try:
+        sample = Sample.objects.get(id=sample_id)
+        user = User.objects.get(id=user_id)
+        images = MultiSpecimenImage.objects.filter(id__in=img_ids)
+    except Exception as e:
+        print(f'Warning: {e}')
+        return
+    if not images:
+        return
 
     for i in images:
         imgs = crop_img_to_annotations(i.image, i.annotations)
@@ -381,4 +392,3 @@ def crop_panorama(images, sample, user):
                 cropped_i[0].close()
             i.cropped_to_specimen = True
             i.save()
-
