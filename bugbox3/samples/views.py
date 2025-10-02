@@ -1330,8 +1330,10 @@ class MultiSpecimenImageView(PermissionRequiredMixin, FormView):
         if json_data:
             if not all([isinstance(v, int) for v in json_data['ids']]):
                 raise ValidationError(mark_safe('non-integers provided in form as ids'))
-            MultiSpecimenImage.objects.user_access(self.request.user).filter(id__in=json_data['ids']).delete()
-            messages.warning(self.request, 'Succesfully deleted {0} images'.format(len(json_data['ids'])))
+            imgs = MultiSpecimenImage.objects.user_access(self.request.user).filter(
+                id__in=json_data['ids']).exclude(cropped_to_specimen=True).delete()
+            print(imgs)
+            messages.warning(self.request, 'Succesfully deleted {0} images'.format(len(imgs)))
         if json_crop_ids:
             if not all([isinstance(v, int) for v in json_crop_ids['ids']]):
                 raise ValidationError(mark_safe('non-integers provided in form as ids'))
