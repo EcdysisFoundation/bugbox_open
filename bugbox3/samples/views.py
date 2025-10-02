@@ -1286,7 +1286,7 @@ class SpecimensView(PermissionRequiredMixin, FormView):
         )
 
 
-class MultiSpecimeImageView(PermissionRequiredMixin, FormView):
+class MultiSpecimenImageView(PermissionRequiredMixin, FormView):
 
     permission_required = IS_RESEARCH
 
@@ -1294,7 +1294,7 @@ class MultiSpecimeImageView(PermissionRequiredMixin, FormView):
     template_name = 'samples/multispecimen_form.html'
 
     def get_context_data(self, **kwargs):
-        context = super(MultiSpecimeImageView, self).get_context_data(**kwargs)
+        context = super(MultiSpecimenImageView, self).get_context_data(**kwargs)
         try:
             sample = Sample.objects.user_access(self.request.user).get(id=self.kwargs['sample_id'])
         except Sample.DoesNotExist:
