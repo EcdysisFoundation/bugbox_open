@@ -3,10 +3,11 @@ import requests
 
 STITCHER_URL = 'http://host.docker.internal:8090'
 
+# move js_URLs dev differences to local.yml and local-cloud.yml
 STITCHER_JS_URL_ZEROTIER = 'http://10.147.19.124:8090'
 
 # for local dev
-#STITCHER_JS_URL_ZEROTIER = 'http://localhost:8090'
+# STITCHER_JS_URL_ZEROTIER = 'http://localhost:8090'
 
 STITCHER_JS_URL = 'http://ecdysis01.local:8090'
 
@@ -24,7 +25,7 @@ def list_upload_files():
         params = {
             'offset': offset,
             'limit': limit,
-            'label_studio_filter': True
+            'approved': True
         }
         print(params)
 
@@ -69,6 +70,19 @@ def patch_upload_file(guid, data):
         if response.status_code == 200:
             data = response.json()
             return data
+        else:
+            return {ERROR_MSG_KEY: response.status_code}
+    except Exception as e:
+        print(e)
+        return {ERROR_MSG_KEY: e}
+
+
+def delete_upload_file(guid):
+    api_url = STITCHER_URL + f'/delete/{guid}'
+    try:
+        response = requests.delete(api_url)
+        if response.status_code in [200, 204]:
+            return {'message': f'success code {response.status_code}'}
         else:
             return {ERROR_MSG_KEY: response.status_code}
     except Exception as e:

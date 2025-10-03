@@ -16,48 +16,102 @@
     <div class="row mb-2">
         <div class="col-1">
                 <label for="formConfidence" class="form-label">Confidence</label>
-                <input type="number" step="0.1" id="formConfidence" class="form-control" value="0.6" max="0.9" min="0.1" required="true">
+                <div class="confidence-input"></div>
             </div>
         <div class="col mt-4">
             <div class="stitch-button"></div>
         </div>
     </div>
-    <div class="row mb-2">
-        <div class="col-3">
-            <b>Upload directory:</b> {{ data.upload_dir_name }}
-        </div>
-        <div class="col-3">
-            <b>Created at:</b> {{ data.created_at }}
-        </div>
-        <div class="col-4">
-            <b>uid:</b> {{ data.guid }}
-        </div>
-    </div>
     <div class="row">
         <div class="col mb-2">
+            <h3>{{ data.upload_dir_name }}</h3>
             <a href="{{ img_src }}" target="_blank">
                 <img src="{{ img_src }}" width="500">
             </a>
         </div>
-    </div>
-    {% if panorma_name %}
-    <div class="row mb-4">
-        <div class="col-3">
-            <b>Filename:</b> {{ panorma_name }}
+        <div class="col mb-2">
+            <ul class="list-group">
+                <li class="list-group-item">
+                    <b>guid:</b> {{ data.guid }}
+                </li>
+                <li class="list-group-item">
+                    <b>Created at:</b> {{ data.created_at }}
+                </li>
+                <li class="list-group-item list-group-item-info">
+                    Sent to label studio
+                </li>
+                <li class="list-group-item">
+                    <b>Predictions:</b> {{ data.predictions|length }}
+                </li>
+                <li class="list-group-item">
+                    <b>Annotations:</b> {{ data.annotations|length }}
+                </li>
+                {% if not data.bugbox_sample_id %}
+
+                    {% if potential_samples %}
+                        <li class="list-group-item list-group-item-success">
+                            Potential Sample IDs in BugBox {% for p, l in potential_samples %}
+                                <a href="{{ l }}" target="_blank">{{ p }}</a>&nbsp;
+                            {% endfor %}
+                        <div class="use-sample-id"></div>
+                        </li>
+                    {% else %}
+                        <li class="list-group-item list-group-item-warning">
+                            No matching samples found in BugBox
+                        </li>
+                    {% endif %}
+
+                {% endif %}
+
+                {% if data.bugbox_croped_saved %}
+                        <li class="list-group-item list-group-item-success">
+                            Sent to Sample ID <a href="{% url 'samples:sample' data.bugbox_sample_id %}">
+                                {{ data.bugbox_sample_id }}</a> on {{ data.bugbox_croped_saved }}
+                        </li>
+                {% elif data.bugbox_sample_id %}
+                        <li class="list-group-item list-group-item-success">
+                            Sample ID <a href="{% url 'samples:sample' data.bugbox_sample_id %}">
+                                {{ data.bugbox_sample_id }}</a>
+                        </li>
+                {% endif %}
+                <li class="list-group-item">
+                    <div class="input-group input-group-sm">
+                    <form method="post">
+                        {% csrf_token %}
+                        {% crispy form %}
+                    </form>
+                    </div>
+                </li>
+            </ul>
         </div>
-        <div class="col-3">
-            <b>Updated at:</b> {{ data.panorma_timestamp}}
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <h6>Label image (if available)</h6>
+            <img src="{{ label_src }}" width="300">
+        </div>
+    </div>
+
+    {% if panorma_name %}
+    <div class="row mb-4 mt-4">
+        <div class="col">
+        <ul class="list-group">
+                <li class="list-group-item">
+                    <b>Filename:</b> {{ panorma_name }}
+                </li>
+                <li class="list-group-item">
+                    <b>Updated at:</b> {{ data.panorma_timestamp}}
+                </li>
+                <li class="list-group-item">
+                    <b>Stitcher confidence:</b> {{ data.panorama_confidence }}
+                </li>
+            </ul>
         </div>
     </div>
     {% endif %}
-    <div class="row">
-        <div class="col">
-            <form method="post">
-                {% csrf_token %}
-                {% crispy form %}
-            </form>
-        </div>
-    </div>
+
+    <div class="delete-button"></div>
 
     {% if data.stitching_exception_at %}
     <div class="row mt-3">

@@ -53,8 +53,24 @@ function sendZipFile(formData, api_url) {
     });
 }
 
+function getSampleUrl(data) {
+    if (data) {
+        return `<a href="/samples/sample/${data}">${data}</a>`
+    } else { return '' }
+}
+
+function concatTen(data) {
+    if (data) {
+        return String(data).slice(0, 10)
+    } else { return '' }
+}
+
+
 $(function () {
     const json_context = JSON.parse(document.getElementById('json_context').textContent)
+
+    let $confidenceInput = $('<input type="number" step="0.1" id="formConfidence" class="form-control" value="0.6" max="0.9" min="0.1" required="true">')
+    $('.confidence-input').append($confidenceInput)
 
     function getPanormaSrc(data, type, row) {
         let filename = getFilename(data)
@@ -84,15 +100,24 @@ $(function () {
             {
                 data: 'upload_dir_name',
             },{
-                data: 'guid',
+                data: 'bugbox_sample_id',
+                render: getSampleUrl
+            },{
+                data: 'sent_label_studio',
+                render: getFilename
+            },{
+                data: 'annotations_updated_at',
+                render: concatTen
+            },{
+                data: 'predictions_timestamp',
+                render: concatTen
             },{
                 data: 'panorama_path',
                 render: getPanormaSrc
             },{
                 data: 'guid',
                 render: getFormButton
-            },
-            {
+            },{
                 data: 'approved',
                 render: getApproved
             }
@@ -121,9 +146,10 @@ $(function () {
         const selectedFile = fileInput.files[0];
         const formData = new FormData();
         formData.append('file', selectedFile);
-        const confidence = $('#formConfidence')[0]
-        formData.append('confidence_threshold', confidence.value)
-        sendZipFile(formData, json_context.STITCHER_URL + '/upload-zip-images')
+        const confidence = $confidenceInput[0].value
+        formData.append('confidence_threshold', confidence)
+        const params = `?confidence_threshold=${confidence}`
+        sendZipFile(formData, json_context.STITCHER_URL + '/upload-zip-images/' + params)
     })
 
 

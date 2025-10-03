@@ -23,7 +23,7 @@
             </div>
             <div class="col-1">
                 <label for="formConfidence" class="form-label">Confidence</label>
-                <input type="number" step="0.1" id="formConfidence" class="form-control" value="0.6" max="0.9" min="0.1" required="true">
+                <div class="confidence-input"></div>
             </div>
             <div class="col-5">
                 <div class="mb-3">
@@ -42,8 +42,11 @@
                 <table id="stitcher-table" class="table table-striped table-responsive nowrap compact" width="100%">
             <thead>
                 <tr>
-                <th>upload_dir_name</th>
-                <th>guid</th>
+                <th>Upload Dir Name</th>
+                <th>Bugbox Sample</th>
+                <th>Sent Label Studio</th>
+                <th>Annotations</th>
+                <th>Predictions</th>
                 <th>Panorama</th>
                 <th>Update</th>
                 <th>Approved</th>
