@@ -75,10 +75,15 @@ IMAGE_TYPES = {
 }
 
 
-def resized_thumbnail(image, width, height, buffer, thumbname='thumbnail'):
+def resized_thumbnail(image, width, height, buffer, thumbname='thumbnail', large_ok=False):
     # Open the image using Pillow
     if default_storage.exists(image.name):
         try:
+            if large_ok:
+                original_max_pixels = Image.MAX_IMAGE_PIXELS
+                if not original_max_pixels:
+                    raise ValueError('MAX_IMAGE_PIXELS was not set')
+                Image.MAX_IMAGE_PIXELS = None
             with Image.open(image) as img:
                 output_size = (width, height)
                 # Create a new resized “thumbnail” version of the image with Pillow
@@ -97,8 +102,13 @@ def resized_thumbnail(image, width, height, buffer, thumbname='thumbnail'):
                 file_object = File(buffer, name=new_filename)
                 # return the new resized
                 return file_object
-        except Exception:
-            print('Warning: Exception encountered for file {0}'.format(image.name))
+        except Exception as e:
+            warn = 'Warning: Exception encountered in resized_thumbnail for file'
+            print('{0} {1} {2}'.format(warn, image.name, e))
+        finally:
+            if large_ok:
+                Image.MAX_IMAGE_PIXELS = original_max_pixels
+
     else:
         return None
 
@@ -150,7 +160,7 @@ def crop_img_to_grid(image, grid):
                 # Wrap the buffer in File object
                 file_object = File(buffer, name=new_filename)
                 result.append((file_object, i))
-            return result
+        return result
     return None
 
 

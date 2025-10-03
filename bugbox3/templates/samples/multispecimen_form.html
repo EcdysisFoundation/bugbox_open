@@ -36,7 +36,7 @@
     </div>
 </div>
 
-<!-- change to new process
+
 <div class="modal fade" id="cropImagesModal" tabindex="-1" aria-labelledby="cropImagesModalLabel" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -58,7 +58,7 @@
       </div>
     </div>
 </div>
--->
+
 
 <div class="container">
 
@@ -97,37 +97,20 @@
                 <div class="card-header align-items-center bg-ecdysis text-white">
                     <div class="row">
                         <div class="col">
-                            <h5>Multi-Specimen Images</h5>
-                        </div>
-                        <div class="col">
-                            <form enctype="multipart/form-data" action="{{ form_action_url }}" method="POST">
-                                {% csrf_token %}
-                                <label for="id_image_4_by_3" class="form-label">
-                                    {% if sample.completed %}
-                                        Sample completed, edit sample to enable
-                                    {% endif %}
-                                </label>
-                                    <input type="file" name="image_4_by_3" accept=".jpg, .png, .jpeg"
-                                        class="form-control"
-                                        multiple required id="id_image_4_by_3" {% if sample.completed %} disabled{% endif %}>
-                        </div>
-                        <div class="col">
-                                    <input type="submit" value="Submit" class="btn btn-light mt-4 ms-3" {% if sample.completed %} disabled{% endif %}>
-                                </form>
-                        </div>
-                        <div class="col">
                             <button type="button" class="btn btn-info btn-sm" id="select-all-btn" {% if sample.completed %}disabled{% endif %}>
                                 Toggle Select</button>
                                 <br/>
-                                <!-- change to new process
+
                                 <button type="button" class="btn btn-warning btn-sm mt-1" id="crop-images-btn" data-bs-toggle="modal" data-bs-target="#cropImagesModal" {% if sample.completed %}disabled{% endif %}>
                                 Crop to Specimens</button>
                                 <br/>
-                                -->
+
                             <button type="button" class="btn btn-danger btn-sm mt-1" data-bs-toggle="modal" data-bs-target="#deleteImagesModal" id="openDeleteModal" {% if sample.completed %}disabled{% endif %}>
                                 Delete Selected
                             </button>
-
+                        </div>
+                        <div class="col">
+                            <h5>Multi-Specimen Images</h5>
                         </div>
                     </div>
                 </div>

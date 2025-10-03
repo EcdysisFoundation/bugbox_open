@@ -253,9 +253,18 @@ class MultiSpecimenImageManager(Manager):
 class MultiSpecimenImage(Model):
     sample = ForeignKey(Sample, on_delete=CASCADE)
     uuid = UUIDField(default=uuid.uuid4, unique=True)
+    panorama_filename = CharField(max_length=100, blank=True)
+    upload_dir_name = CharField(max_length=100, blank=True)
+    annotations = JSONField(null=True, blank=True)
+    annotations_updated_at = CharField(max_length=100, blank=True)
+    predictions = JSONField(null=True, blank=True)
+    predictions_timestamp = DateTimeField(null=True)
     image = ImageField(upload_to='multi_specimen_images')
     image_thumbnail = ImageField(null=True, blank=True, upload_to='multi_specimen_images')
-    image_grid = CharField(max_length=10, choices=constants.MULTIIMAGE_IMAGE_GRID_CHOICES)
+    image_grid = CharField(
+        max_length=10,
+        choices=constants.MULTIIMAGE_IMAGE_GRID_CHOICES,
+        blank=True)
     cropped_to_specimen = BooleanField(null=True)
     date_added = DateTimeField(auto_now_add=True)
     uploaded_by_user = ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=SET_NULL)
@@ -273,7 +282,8 @@ def save_multi_specimen_image_thumbnail(instance, created, **kwargs):
             constants.SPECIMEN_IMAGE_THUMBSIZE_MEDIUM,
             constants.SPECIMEN_IMAGE_THUMBSIZE_MEDIUM,
             buffer,
-            'thumbnail')
+            'thumbnail',
+            large_ok=True)
         instance.save()
         buffer.close()
 
