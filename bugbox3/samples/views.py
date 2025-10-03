@@ -18,10 +18,10 @@ from django.views.generic.edit import (CreateView, DeleteView, FormView,
                                        UpdateView)
 from organizations.models import OrganizationUser
 from rest_framework.reverse import reverse as api_reverse
+
 from bugbox3.samples.utils import resolve_entered_by
-from .tasks import export_csv_by_location
 
-
+from .tasks import export_csv_by_location, crop_panorama
 from ..core import constants as constants_core
 from ..core.models import LookupChoices
 from ..core.permissions import IS_RESEARCH, REVIEW_SPECIMEN_PAGE
@@ -29,7 +29,7 @@ from ..libs.ui_helpers import (calc_image_height, get_datatables_container,
                                get_datatables_row,
                                get_formsets_display_control_config,
                                get_probability)
-from ..libs.utilities import crop_img_to_grid, get_json_context, get_media_url
+from ..libs.utilities import get_json_context, get_media_url
 from ..taxonomy import constants as taxa_const
 from ..taxonomy.models import Morphospecies
 from . import constants
@@ -1057,7 +1057,6 @@ class SpecimenUpdateView(PermissionRequiredMixin, UpdateView):
 
     def form_invalid(self, form):
         messages.error(self.request, 'Form Error, changes not saved')
-        print(form.errors)
         return super().form_invalid(form)
 
     def form_valid(self, form):
@@ -1285,7 +1284,7 @@ class SpecimensView(PermissionRequiredMixin, FormView):
         )
 
 
-class MultiSpecimeImageView(PermissionRequiredMixin, FormView):
+class MultiSpecimenImageView(PermissionRequiredMixin, FormView):
 
     permission_required = IS_RESEARCH
 
@@ -1293,7 +1292,7 @@ class MultiSpecimeImageView(PermissionRequiredMixin, FormView):
     template_name = 'samples/multispecimen_form.html'
 
     def get_context_data(self, **kwargs):
-        context = super(MultiSpecimeImageView, self).get_context_data(**kwargs)
+        context = super(MultiSpecimenImageView, self).get_context_data(**kwargs)
         try:
             sample = Sample.objects.user_access(self.request.user).get(id=self.kwargs['sample_id'])
         except Sample.DoesNotExist:
@@ -1313,64 +1312,37 @@ class MultiSpecimeImageView(PermissionRequiredMixin, FormView):
             'container_row_header': get_datatables_container(
                 get_datatables_row([
                     'Image',
-                    'cropped_to_specimen',
+                    'Cropped to specimen',
                 ]))
         })
         return context
 
     def form_valid(self, form):
-        image_4_by_3 = form.cleaned_data['image_4_by_3']
         json_data = form.cleaned_data['json_data']
         json_crop_ids = form.cleaned_data['json_crop_ids']
         try:
-            sample = Sample.objects.user_access(self.request.user).get(id=self.kwargs['sample_id'])
+            sample_id = Sample.objects.user_access(self.request.user).get(id=self.kwargs['sample_id']).id
         except Sample.DoesNotExist:
             raise Http404
-        if image_4_by_3:
-            created_images = 0
-            try:
-                for f in image_4_by_3:
-                    MultiSpecimenImage.objects.create(
-                        sample=sample,
-                        image=f,
-                        image_grid=constants.IMAGE_GRID_CHOICE_4_BY_3,
-                        uploaded_by_user=self.request.user
-                    )
-                    created_images += 1
-            except Exception:
-                messages.add_message(
-                    self.request,
-                    messages.ERROR,
-                    'Error: An unsupported file may have been selected, please use .jpg or .png')
-                created_images = 0
-            messages.success(self.request, 'Succesfully added {0} new multi-specimen images'.format(created_images))
+
         if json_data:
             if not all([isinstance(v, int) for v in json_data['ids']]):
                 raise ValidationError(mark_safe('non-integers provided in form as ids'))
-            MultiSpecimenImage.objects.user_access(self.request.user).filter(id__in=json_data['ids']).delete()
-            messages.warning(self.request, 'Succesfully deleted {0} images'.format(len(json_data['ids'])))
+            imgs = MultiSpecimenImage.objects.user_access(self.request.user).filter(
+                id__in=json_data['ids']).exclude(cropped_to_specimen=True).delete()
+            messages.warning(self.request, 'Succesfully deleted images {0}'.format(imgs))
         if json_crop_ids:
             if not all([isinstance(v, int) for v in json_crop_ids['ids']]):
                 raise ValidationError(mark_safe('non-integers provided in form as ids'))
             selected_images = MultiSpecimenImage.objects.user_access(self.request.user).filter(
                 id__in=json_crop_ids['ids']).exclude(cropped_to_specimen=True)
             prev_cropped = len(json_crop_ids['ids']) - len(selected_images)
-            for i in selected_images:
-                imgs = crop_img_to_grid(i.image, i.image_grid)
-                for cropped_i in imgs:
-                    specimen = Specimen.objects.create(
-                        sample=sample,
-                        created_by_user=self.request.user)
-                    SpecimenImage.objects.create(
-                        specimen=specimen,
-                        image=cropped_i[0],
-                        multispecimen_image_uuid=i.uuid,
-                        multispecimen_image_index=cropped_i[1],
-                        uploaded_by_user=self.request.user
-                    )
-                i.cropped_to_specimen = True
-                i.save()
-            messages.warning(self.request, 'Succesfully croped {0} images. {1}'.format(
+            user_id = self.request.user.id
+            img_ids = [i.id for i in selected_images]
+            if img_ids:
+                crop_panorama.delay(img_ids, sample_id, user_id)
+
+            messages.warning(self.request, 'Succesfully sent {0} images to be cropped. {1}'.format(
                 len(selected_images),
                 str(prev_cropped) + ' images were skipped as already cropped.' if prev_cropped else ''
             ))
@@ -1378,5 +1350,4 @@ class MultiSpecimeImageView(PermissionRequiredMixin, FormView):
 
     def get_success_url(self):
         return reverse('samples:multispecimen-images', kwargs={
-            'org_id': 0,
             'sample_id': self.kwargs['sample_id']})

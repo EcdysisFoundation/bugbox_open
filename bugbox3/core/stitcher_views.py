@@ -1,12 +1,16 @@
 import os
+import requests
+import json
 from django.http import Http404
 from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.core.files.base import ContentFile
+from django.db.utils import IntegrityError
 from django.urls import reverse
 from django.views.generic import FormView, TemplateView
 from django.contrib import messages
 from organizations.models import OrganizationUser
 
-from bugbox3.samples.models import Sample
+from bugbox3.samples.models import Sample, MultiSpecimenImage
 from bugbox3.samples.constants import STITCHER_SAMPLE_TYPES
 from bugbox3.libs.utilities import get_json_context, cast_utc_time
 from .permissions import IS_RESEARCH, ZEROTIER_USERS, IS_ADMIN
@@ -16,12 +20,12 @@ from .stitcher_api import (
     get_upload_file,
     patch_upload_file,
     delete_upload_file,
+    STITCHER_URL,
     STITCHER_JS_URL_ZEROTIER,
     STITCHER_JS_URL,
     ERROR_MSG_KEY
 )
 from . import constants
-# from .stitcher_utils import convert_ls_to_coco_to_pil, crop_and_save_images
 
 
 class StitcherView(PermissionRequiredMixin, TemplateView):
@@ -51,6 +55,27 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
     form_class = StitcherForm
     template_name = 'core/stitcher_form.html'
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        orgs = OrganizationUser.objects.filter(
+            user=self.request.user).values_list(
+                'organization_id', flat=True)
+        if not orgs:
+            raise Http404
+        guid = self.kwargs[constants.STITCHER_GUID]
+        self.guid = guid
+        self.data = get_upload_file(guid)
+        self.stitcher_url = STITCHER_URL
+        self.stitcher_js_url = STITCHER_JS_URL_ZEROTIER if \
+            str(self.request.user) in ZEROTIER_USERS else STITCHER_JS_URL
+        if self.data[constants.STITCHER_PANORAMA_PATH]:
+            self.img_src = self.data[constants.STITCHER_PANORAMA_PATH].replace('/media/', '/static/')
+            self.panorama_name = os.path.basename(self.data[constants.STITCHER_PANORAMA_PATH])
+        else:
+            self.panorama_name = ''
+            self.img_src = ''
+        return kwargs
+
     def get_context_data(self, **kwargs):
         context = super(StitcherUpdateView, self).get_context_data(**kwargs)
         orgs = OrganizationUser.objects.filter(
@@ -58,38 +83,29 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                 'organization_id', flat=True)
         if not orgs:
             raise Http404
-        guid = self.kwargs[constants.STITCHER_GUID]
-        data = get_upload_file(guid)
-        panorma_name = ''
-        img_src = ''
         disable_stitching = True
         disable_crop_save = True
         disable_delete = False
         dir_name = None
-        if constants.STITCHER_PANORAMA_PATH in data.keys():
-            if data[constants.STITCHER_PANORAMA_PATH]:
-                img_src = data[constants.STITCHER_PANORAMA_PATH].replace('/media/', '/static/')
-                panorma_name = os.path.basename(data[constants.STITCHER_PANORAMA_PATH])
-            disable_stitching = False if data[constants.STITCHER_APPROVED] is None else True
-        stitcher_url = STITCHER_JS_URL_ZEROTIER if \
-            str(self.request.user) in ZEROTIER_USERS else STITCHER_JS_URL
-        for v in constants.STITCHER_TIMEFIELDS:
-            if v in data.keys():
-                if data[v]:
-                    data[v] = cast_utc_time(data[v])
-        if constants.STITCHER_APPROVED in data.keys():
-            disable_crop_save = False if data[constants.STITCHER_APPROVED] else True
-            disable_delete = True if data[constants.STITCHER_APPROVED] else False
-        # find samples in bugbox
         potential_samples = []
-        if constants.STITCHER_UPLOAD_DIR_NAME in data.keys():
-            dir_name = data[constants.STITCHER_UPLOAD_DIR_NAME]
+
+        for v in constants.STITCHER_TIMEFIELDS:
+            if v in self.data.keys():
+                if self.data[v]:
+                    self.data[v] = cast_utc_time(self.data[v])
+        # check for required files
+        if all([v in self.data.keys() for v in constants.STITCHER_FORM_REQUIRED_KEYS]):
+
+            disable_stitching = False if self.data[constants.STITCHER_APPROVED] is None else True
+            disable_delete = True if self.data[constants.STITCHER_APPROVED] else False
+            # find samples in bugbox
+            dir_name = self.data[constants.STITCHER_UPLOAD_DIR_NAME]
             vs = dir_name.split('_')
             if vs:
                 samples_w_type = None
                 samples_w_transect = None
                 sample_ids = None
-                samples = Sample.objects.filter(
+                samples = Sample.objects.user_access(self.request.user).filter(
                     site_visit__site__experiment__organization_id__in=orgs,
                     site_visit__site__site_name__icontains=vs[0]
                 )
@@ -108,30 +124,33 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                 if sample_ids:
                     potential_samples = [
                         (i, reverse('samples:sample', kwargs={'sample_id': i})) for i in sample_ids]
+            if self.data[constants.STITCHER_ANNOTATIONS] and self.data[constants.STITCHER_APPROVED] \
+                    and self.data[constants.STITCHER_BUGBOX_SAMPLE_ID]:
+                disable_crop_save = False
         first_potential_sample = potential_samples[0][0] if potential_samples else None
         context.update({
-            'data': data,
-            'panorma_name': panorma_name,
-            'img_src': f'{stitcher_url}{img_src}',
-            'label_src': f'{stitcher_url}/static/{guid}/label_r_001.jpg',
+            'data': self.data,
+            'panoarma_name': self.panorama_name,
+            'img_src': f'{self.stitcher_js_url}{self.img_src}',
+            'label_src': f'{self.stitcher_js_url}/static/{self.guid}/label_r_001.jpg',
             'potential_samples': potential_samples,
             'first_potential_sample': first_potential_sample,
             'form_action_url': reverse(
-                'core:stitcher-form', kwargs={'guid': str(guid)}),
+                'core:stitcher-form', kwargs={'guid': str(self.guid)}),
             'form_iden_crop_save': constants.STITCHER_FORM_CROPSAVE,
             'disable_crop_save': disable_crop_save,
             'json_context': get_json_context({
-                constants.STITCHER_GUID: guid,
-                'STITCHER_URL': stitcher_url,
+                constants.STITCHER_GUID: self.guid,
+                'STITCHER_URL': self.stitcher_js_url,
                 'disable_stitching': disable_stitching,
                 'disable_delete': disable_delete,
                 'stitcher_delete_url': reverse(
-                    'core:stitcher-delete', kwargs={constants.STITCHER_GUID: str(guid)}),
+                    'core:stitcher-delete', kwargs={constants.STITCHER_GUID: str(self.guid)}),
                 'first_potential_sample': first_potential_sample
             })
         })
-        if ERROR_MSG_KEY in data.keys():
-            messages.error(self.request, data[ERROR_MSG_KEY])
+        if ERROR_MSG_KEY in self.data.keys():
+            messages.error(self.request, self.data[ERROR_MSG_KEY])
         return context
 
     def get_initial(self):
@@ -146,20 +165,53 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
         return initial
 
     def form_valid(self, form):
-        data = form.cleaned_data
-        if data['form_ident'] == constants.STITCHER_FORM_DEFAULT:
-            if data[constants.STITCHER_APPROVED] == '':
-                data[constants.STITCHER_APPROVED] = None
-            patch_upload_file(self.kwargs[constants.STITCHER_GUID], data)
+        formdata = form.cleaned_data
+        if formdata[constants.STITCHER_FORM_IDENT] == constants.STITCHER_FORM_DEFAULT:
+            if formdata[constants.STITCHER_APPROVED] == '':
+                formdata[constants.STITCHER_APPROVED] = None
+            patch_upload_file(self.guid, formdata)
             messages.success(
-                self.request, f'Succesfully updated {self.kwargs[constants.STITCHER_GUID]}'
+                self.request, f'Succesfully updated {self.guid}'
             )
+        elif formdata[constants.STITCHER_FORM_IDENT] == constants.STITCHER_FORM_CROPSAVE:
+            try:
+                this_sample = Sample.objects.user_access(self.request.user).get(
+                    id=self.data[constants.STITCHER_BUGBOX_SAMPLE_ID])
+            except Exception:
+                raise Http404
+            try:
+                img_url = f'{self.stitcher_url}{self.img_src}'
+                response = requests.get(img_url, stream=True)
+                response.raise_for_status()
+                predictions_timestamp = cast_utc_time(self.data[constants.STITCHER_PREDICTIONS_TIMESTAMP])
+                auat = self.data[constants.STITCHER_ANNOTATIONS_UPDATED_AT]
+                instance = MultiSpecimenImage(
+                    sample=this_sample,
+                    panorama_filename=self.panorama_name,
+                    annotations=self.data[constants.STITCHER_ANNOTATIONS],
+                    annotations_updated_at=auat if auat else '',
+                    predictions=self.data[constants.STITCHER_PREDICTIONS],
+                    predictions_timestamp=predictions_timestamp,
+                    upload_dir_name=self.data[constants.STITCHER_UPLOAD_DIR_NAME],
+                    uuid=self.data[constants.STITCHER_GUID],
+                    uploaded_by_user=self.request.user)
+                img_name = f'{self.data[constants.STITCHER_UPLOAD_DIR_NAME]}.jpg'
+                instance.image.save(img_name, ContentFile(response.content), save=False)
+                instance.save()
+                messages.success(
+                    self.request, f'Succesfully initiated "Save to sample" for {self.guid}')
+                self.data[constants.STITCHER_BUGBOX_CROPED_SAVED] = str(instance.id)
+                patch_upload_file(self.guid, self.data)
+            except IntegrityError as e:
+                messages.error(self.request, f'Error, possible duplicate image for this record, {e}')
+            except Exception as e:
+                messages.error(self.request, f'There was an error in "Save to sample". {e}')
         else:
             messages.error(self.request, 'There was an error in form submission.')
         return super().form_valid(form)
 
     def get_success_url(self):
-        return reverse('core:stitcher-form', kwargs={constants.STITCHER_GUID: self.kwargs[constants.STITCHER_GUID]})
+        return reverse('core:stitcher-form', kwargs={constants.STITCHER_GUID: self.guid})
 
 
 class StitcherDeleteView(PermissionRequiredMixin, FormView):
@@ -205,10 +257,6 @@ class StitcherDeleteView(PermissionRequiredMixin, FormView):
                     self.request,
                     f'Succesfully deleted {self.upload_dir_name}'
                 )
-        messages.warning(
-                self.request,
-                f'Succesfully deleted {self.upload_dir_name}'
-            )
         return super().form_valid(form)
 
     def get_success_url(self):

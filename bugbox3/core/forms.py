@@ -207,7 +207,9 @@ class StitcherForm(Form):
         help_text="Annotations will be used to save images to the entered Sample ID",
         required=False)
 
-    upload_dir_name = CharField()
+    upload_dir_name = CharField(required=False)
+
+    bugbox_croped_saved = CharField(required=False)
 
     form_ident = CharField(widget=HiddenInput(), initial="defaultValue")
 
@@ -216,9 +218,9 @@ class StitcherForm(Form):
         self.helper = FormHelper()
         self.helper.layout = Layout(
             FloatingField(constants.STITCHER_BUGBOX_SAMPLE_ID),
-            FloatingField(constants.STITCHER_UPLOAD_DIR_NAME),
+            FloatingField(constants.STITCHER_UPLOAD_DIR_NAME, required=True),
             FloatingField(constants.STITCHER_APPROVED),
-            'form_ident',
+            constants.STITCHER_FORM_IDENT,
             Button('cancel', 'Back / Cancel', css_class='btn-secondary',
                    onclick="window.location.href = '{}';".format(reverse('core:stitcher'))),
             Submit('submit', 'Submit')

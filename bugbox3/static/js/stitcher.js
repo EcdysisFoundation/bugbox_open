@@ -65,6 +65,12 @@ function concatTen(data) {
     } else { return '' }
 }
 
+function getSent(data) {
+    if (data) {
+        return '<i class="bi bi-send-check-fill h4 text-success"></i>'
+    } else { return '' }
+}
+
 
 $(function () {
     const json_context = JSON.parse(document.getElementById('json_context').textContent)
@@ -72,7 +78,7 @@ $(function () {
     let $confidenceInput = $('<input type="number" step="0.1" id="formConfidence" class="form-control" value="0.6" max="0.9" min="0.1" required="true">')
     $('.confidence-input').append($confidenceInput)
 
-    function getPanormaSrc(data, type, row) {
+    function getPanoramaSrc(data, type, row) {
         let filename = getFilename(data)
         if (filename) {
             let result = `<a href="${json_context.STITCHER_URL}`
@@ -80,7 +86,7 @@ $(function () {
             result += `${s}">${filename}</a>`;
             return result
         } else {
-            return 'no panorma available'
+            return 'no panorama available'
         }
     };
 
@@ -100,8 +106,20 @@ $(function () {
             {
                 data: 'upload_dir_name',
             },{
+                data: 'guid',
+                render: getFormButton
+            },{
+                data: 'approved',
+                render: getApproved
+            },{
+                data: 'bugbox_croped_saved',
+                render: getSent
+            },{
                 data: 'bugbox_sample_id',
                 render: getSampleUrl
+            },{
+                data: 'panorama_path',
+                render: getPanoramaSrc
             },{
                 data: 'sent_label_studio',
                 render: getFilename
@@ -111,15 +129,6 @@ $(function () {
             },{
                 data: 'predictions_timestamp',
                 render: concatTen
-            },{
-                data: 'panorama_path',
-                render: getPanormaSrc
-            },{
-                data: 'guid',
-                render: getFormButton
-            },{
-                data: 'approved',
-                render: getApproved
             }
         ]
     })
