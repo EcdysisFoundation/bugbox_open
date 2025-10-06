@@ -68,12 +68,13 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
         self.stitcher_url = STITCHER_URL
         self.stitcher_js_url = STITCHER_JS_URL_ZEROTIER if \
             str(self.request.user) in ZEROTIER_USERS else STITCHER_JS_URL
-        if self.data[constants.STITCHER_PANORAMA_PATH]:
-            self.img_src = self.data[constants.STITCHER_PANORAMA_PATH].replace('/media/', '/static/')
-            self.panorama_name = os.path.basename(self.data[constants.STITCHER_PANORAMA_PATH])
-        else:
-            self.panorama_name = ''
-            self.img_src = ''
+        self.panorama_name = ''
+        self.img_src = ''
+        if constants.STITCHER_PANORAMA_PATH in self.data.keys():
+            if self.data[constants.STITCHER_PANORAMA_PATH]:
+                self.img_src = self.data[constants.STITCHER_PANORAMA_PATH].replace('/media/', '/static/')
+                self.panorama_name = os.path.basename(self.data[constants.STITCHER_PANORAMA_PATH])
+
         return kwargs
 
     def get_context_data(self, **kwargs):
