@@ -97,6 +97,9 @@
 
     <div class="row">
         <div class="col">
+
+            {% if image_set_large %}
+
             <div id="carouselControls" class="carousel slide" data-bs-ride="carousel">
                 <div class="carousel-inner">
                     {% for i in image_set_large %}
@@ -119,6 +122,10 @@
             {% for i in image_set_small %}
                 <img src="{{i.path}}" width="{{ i.width }}" height="{{ i.height }}" class="mb-2">
             {% endfor %}
+
+            {% elif single_image %}
+                <img src="{{single_image.path}}" width="{{ single_image.width }}" height="{{ single_image.height }}" class="mb-2">
+            {% endif %}
 
         </div>
         <div class="col">

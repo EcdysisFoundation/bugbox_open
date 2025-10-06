@@ -153,7 +153,7 @@
                         Sample: <a href="{% url 'samples:sample' specimen.sample.id %}" class="link-light">
                             {{ specimen.sample.name_no }}</a>
                         ({{ specimen.sample.sample_type }})
-                    </h5>                    
+                    </h5>
                     </div>
                     <div class="col">
                         <a href="{% url 'samples:specimen-update' specimen.id %}" class="btn btn-light">
@@ -220,13 +220,13 @@
 
                           </li>
                           <li class="list-group-item">
-                              <b>AI Model Used:</b> 
+                              <b>AI Model Used:</b>
                               {% if specimen.ai_model_name %}
                                   MorphoMF v{{ specimen.ai_model_name }}
                               {% else %}
                                   Unknown Model
                               {% endif %}
-                          </li>                        
+                          </li>
                           <li class="list-group-item"><b>Primary prediction:</b> {{ ai_classification.name }}</li>
                           <li class="list-group-item">{{ probability|safe }}</li>
                           <li class="list-group-item"><b>Secondary prediction:</b> {{ specimen.optional_pred_one.class_op }} </li>
@@ -250,8 +250,9 @@
                           {% endif %}
                       </ul>
                     </div>
-                
+
                     <div class="col-md-7">
+                      {% if image_set_large %}
                         <div id="carouselControls" class="carousel slide" data-bs-ride="carousel">
                             <div class="carousel-inner">
                                 {% for i in image_set_large %}
@@ -269,12 +270,15 @@
                                 <span class="visually-hidden">Next</span>
                             </button>
                         </div>
-                
+
                         <hr/>
                         {% for i in image_set_small %}
                             <img src="{{i.path}}" width="{{ i.width }}" height="{{ i.height }}" class="mb-2">
                         {% endfor %}
-                
+                        {% elif single_image %}
+                          <img src="{{single_image.path}}" width="{{ single_image.width }}" height="{{ single_image.height }}" class="mb-2">
+                        {% endif %}
+
                         <form enctype="multipart/form-data" action="{{ form_action_url }}" method="POST">
                             {% csrf_token %}
                             <label for="image_files" class="form-label">
@@ -283,7 +287,7 @@
                             <input type="file" name="image_files" accept=".jpg, .png, .jpeg" class="form-control" multiple id="image_files">
                             <input type="submit" value="Submit" class="btn btn-secondary mt-2 ms-3">
                         </form>
-                
+
                         {% if image_set_small %}
                             <button type="button" class="btn btn-info mt-3 mb-5" data-bs-toggle="modal" data-bs-target="#setPrimaryModal">
                                 Set Primary Image
