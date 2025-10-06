@@ -1300,9 +1300,13 @@ class MultiSpecimenImageView(PermissionRequiredMixin, FormView):
         datatables_url = api_reverse(
             'samples:multispecimen-data-list', request=self.request, kwargs=self.kwargs
         )
+        crop_disabled = False if settings.ON_ECDYSIS_SERVER == 'YES' else True
+        if sample.completed:
+            crop_disabled = True
         context.update({
             'sample': sample,
             'experiment_id': sample.site_visit.site.experiment_id,
+            'crop_disabled': crop_disabled,
             'json_context': get_json_context({
                 'datatables_url': datatables_url
             }),
@@ -1341,7 +1345,7 @@ class MultiSpecimenImageView(PermissionRequiredMixin, FormView):
             img_ids = [i.id for i in selected_images]
             if img_ids:
                 crop_panorama.delay(img_ids, sample_id, user_id)
-
+            MultiSpecimenImage.objects.filter(id__in=img_ids).update(cropped_to_specimen=True)
             messages.warning(self.request, 'Succesfully sent {0} images to be cropped. {1}'.format(
                 len(selected_images),
                 str(prev_cropped) + ' images were skipped as already cropped.' if prev_cropped else ''
