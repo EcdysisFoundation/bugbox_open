@@ -188,6 +188,7 @@ class SiteVisit(Model):
                         name_no=name,
                         created_by_user=self.created_by_user)
                     n = n - 1
+
     class Meta:
         indexes = [
             Index(fields=['visit_date']),
@@ -212,6 +213,7 @@ class Sample(Model):
     update_thumbs = BooleanField(null=True)
 
     objects = SampleManager()
+
     class Meta:
         indexes = [
             Index(fields=['sample_type']),
@@ -261,6 +263,8 @@ class MultiSpecimenImage(Model):
     predictions_timestamp = DateTimeField(null=True)
     image = ImageField(upload_to='multi_specimen_images')
     image_thumbnail = ImageField(null=True, blank=True, upload_to='multi_specimen_images')
+    label_image = ImageField(null=True, blank=True, upload_to='multi_specimen_images')
+    label_image_thumbnail = ImageField(null=True, blank=True, upload_to='multi_specimen_images')
     image_grid = CharField(
         max_length=10,
         choices=constants.MULTIIMAGE_IMAGE_GRID_CHOICES,
@@ -284,8 +288,17 @@ def save_multi_specimen_image_thumbnail(instance, created, **kwargs):
             buffer,
             'thumbnail',
             large_ok=True)
+        if instance.label_image:
+            label_buffer = BytesIO()
+            instance.label_image_thumbnail = resized_thumbnail(
+                instance.label_image,
+                constants.SAMPLE_IMAGE_THUMBSIZE,
+                constants.SAMPLE_IMAGE_THUMBSIZE,
+                label_buffer
+            )
         instance.save()
         buffer.close()
+        label_buffer.close()
 
 
 class SpecimenManager(Manager):
