@@ -1316,6 +1316,7 @@ class MultiSpecimenImageView(PermissionRequiredMixin, FormView):
             'container_row_header': get_datatables_container(
                 get_datatables_row([
                     'Image',
+                    'Label',
                     'Cropped to specimen',
                 ]))
         })

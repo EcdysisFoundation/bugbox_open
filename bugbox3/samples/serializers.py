@@ -67,11 +67,16 @@ class MultiSpecimenImageDatatablesSerializer(ModelSerializer):
 
     class Meta:
         model = MultiSpecimenImage
-        fields = ['id', 'image_4_by_3_thumbnail', 'cropped_to_specimen']
+        fields = [
+            'id',
+            constants.FIELD_MULTIIMAGE_IMAGE_THUMBNAIL,
+            constants.FIELD_MULTIIMAGE_LABEL_IMAGE_THUMBNAIL,
+            constants.FIELD_MULTIIMAGE_CROPPED_TO_SPECIMEN]
 
     def get_data_row(self, value):
         columns = [
             get_img_src(value.image_thumbnail),
+            get_img_src(value.label_image_thumbnail),
             value.cropped_to_specimen
         ]
         return get_datatables_container(get_datatables_row(columns))
