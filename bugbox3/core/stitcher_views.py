@@ -70,6 +70,7 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
             str(self.request.user) in ZEROTIER_USERS else STITCHER_JS_URL
         self.panorama_name = ''
         self.img_src = ''
+        self.label_src = f'/static/{self.guid}/{constants.STITCHER_LABEL_IMG}'
         if constants.STITCHER_PANORAMA_PATH in self.data.keys():
             if self.data[constants.STITCHER_PANORAMA_PATH]:
                 self.img_src = self.data[constants.STITCHER_PANORAMA_PATH].replace('/media/', '/static/')
@@ -133,7 +134,7 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
             'data': self.data,
             'panoarma_name': self.panorama_name,
             'img_src': f'{self.stitcher_js_url}{self.img_src}',
-            'label_src': f'{self.stitcher_js_url}/static/{self.guid}/label_r_001.jpg',
+            'label_src': f'{self.stitcher_js_url}{self.label_src}',
             'potential_samples': potential_samples,
             'first_potential_sample': first_potential_sample,
             'form_action_url': reverse(
@@ -182,8 +183,14 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                 raise Http404
             try:
                 img_url = f'{self.stitcher_url}{self.img_src}'
+                label_url = f'{self.stitcher_url}{self.label_src}'
                 response = requests.get(img_url, stream=True)
                 response.raise_for_status()
+                try:
+                    label_response = requests.get(label_url, stream=True)
+                    label_response.raise_for_status()
+                except Exception:
+                    label_response = None
                 predictions_timestamp = cast_utc_time(self.data[constants.STITCHER_PREDICTIONS_TIMESTAMP])
                 auat = self.data[constants.STITCHER_ANNOTATIONS_UPDATED_AT]
                 instance = MultiSpecimenImage(
@@ -198,6 +205,9 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                     uploaded_by_user=self.request.user)
                 img_name = f'{self.data[constants.STITCHER_UPLOAD_DIR_NAME]}.jpg'
                 instance.image.save(img_name, ContentFile(response.content), save=False)
+                if label_response:
+                    label_img_name = f'{self.data[constants.STITCHER_UPLOAD_DIR_NAME]}_label.jpg'
+                    instance.label_image.save(label_img_name, ContentFile(label_response.content), save=False)
                 instance.save()
                 messages.success(
                     self.request, f'Succesfully initiated "Save to sample" for {self.guid}')

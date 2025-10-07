@@ -67,11 +67,16 @@ class MultiSpecimenImageDatatablesSerializer(ModelSerializer):
 
     class Meta:
         model = MultiSpecimenImage
-        fields = ['id', 'image_4_by_3_thumbnail', 'cropped_to_specimen']
+        fields = [
+            'id',
+            constants.FIELD_MULTIIMAGE_IMAGE_THUMBNAIL,
+            constants.FIELD_MULTIIMAGE_LABEL_IMAGE_THUMBNAIL,
+            constants.FIELD_MULTIIMAGE_CROPPED_TO_SPECIMEN]
 
     def get_data_row(self, value):
         columns = [
             get_img_src(value.image_thumbnail),
+            get_img_src(value.label_image_thumbnail),
             value.cropped_to_specimen
         ]
         return get_datatables_container(get_datatables_row(columns))
@@ -275,21 +280,21 @@ class SpecimensAllDatatablesSerializer(ModelSerializer):
         specimen_image = value.specimenimage_set.first()
         if specimen_image:
             img_thumbnail = get_img_src(specimen_image.image_thumbnail, public=specimen_image.public_image)
-            if specimen_image.image_thumbnail_large:
-                # dont use get_img_src() here due to modal .js reasons
-                if default_storage.exists(specimen_image.image_thumbnail_large.name):
-                    img_thumbnail_large = {
-                        'url': get_media_url(
-                            specimen_image.image_thumbnail_large, public=specimen_image.public_image),
-                        'width': getattr(specimen_image.image_thumbnail_large, 'width', ''),
-                        'height': getattr(specimen_image.image_thumbnail_large, 'height', '')
-                    }
-                else:
-                    img_thumbnail_large = {
-                        'url': '',
-                        'width': '',
-                        'height': ''
-                    }
+            modal_thumb_img = specimen_image.image_thumbnail_large if specimen_image.image_thumbnail_large else specimen_image.image
+            # dont use get_img_src() here due to modal .js reasons
+            if default_storage.exists(modal_thumb_img.name):
+                img_thumbnail_large = {
+                    'url': get_media_url(
+                        modal_thumb_img, public=specimen_image.public_image),
+                    'width': getattr(modal_thumb_img, 'width', ''),
+                    'height': getattr(modal_thumb_img, 'height', '')
+                }
+            else:
+                img_thumbnail_large = {
+                    'url': '',
+                    'width': '',
+                    'height': ''
+                }
         else:
             img_thumbnail = get_img_src(False)
         return {
