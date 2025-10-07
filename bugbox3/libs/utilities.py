@@ -8,6 +8,7 @@ from django.conf import settings
 from django.core.files import File
 from django.core.files.storage import default_storage
 from django.core.serializers.json import DjangoJSONEncoder
+from django.core.files.images import get_image_dimensions
 from PIL import Image
 
 from bugbox3.samples import constants
@@ -172,21 +173,22 @@ def save_specimen_img_thumbs(instance):
     a = None
     b = None
     c = None
-    if not instance.image_thumbnail:
+    dims = get_image_dimensions(instance.image)
+    if not instance.image_thumbnail and dims[0] > constants.SPECIMEN_IMAGE_THUMBSIZE:
         a = BytesIO()
         instance.image_thumbnail = resized_thumbnail(
             instance.image,
             constants.SPECIMEN_IMAGE_THUMBSIZE,
             constants.SPECIMEN_IMAGE_THUMBSIZE,
             a)
-    if not instance.image_thumbnail_medium:
+    if not instance.image_thumbnail_medium and dims[0] > constants.SPECIMEN_IMAGE_THUMBSIZE_MEDIUM:
         b = BytesIO()
         instance.image_thumbnail_medium = resized_thumbnail(
             instance.image,
             constants.SPECIMEN_IMAGE_THUMBSIZE_MEDIUM,
             constants.SPECIMEN_IMAGE_THUMBSIZE_MEDIUM,
             b, 'thumbnail_medium')
-    if not instance.image_thumbnail_large:
+    if not instance.image_thumbnail_large and dims[0] > constants.SPECIMEN_IMAGE_THUMBSIZE_LARGE:
         c = BytesIO()
         instance.image_thumbnail_large = resized_thumbnail(
             instance.image,
