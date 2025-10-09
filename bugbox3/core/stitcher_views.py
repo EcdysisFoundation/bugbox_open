@@ -182,15 +182,15 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
             except Exception:
                 raise Http404
             try:
-                img_url = f'{self.stitcher_url}{self.img_src}'
                 label_url = f'{self.stitcher_url}{self.label_src}'
+                label_response = requests.get(label_url, stream=True)
+                label_response.raise_for_status()
+            except Exception:
+                label_response = None
+            try:
+                img_url = f'{self.stitcher_url}{self.img_src}'
                 response = requests.get(img_url, stream=True)
                 response.raise_for_status()
-                try:
-                    label_response = requests.get(label_url, stream=True)
-                    label_response.raise_for_status()
-                except Exception:
-                    label_response = None
                 predictions_timestamp = cast_utc_time(self.data[constants.STITCHER_PREDICTIONS_TIMESTAMP])
                 auat = self.data[constants.STITCHER_ANNOTATIONS_UPDATED_AT]
                 instance = MultiSpecimenImage(
