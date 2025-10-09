@@ -3,6 +3,7 @@ import time
 from tempfile import NamedTemporaryFile
 
 from celery import shared_task
+from celery.exceptions import SoftTimeLimitExceeded
 from config import celery_app
 
 from django.contrib.auth import get_user_model
@@ -363,7 +364,7 @@ def export_csv_by_location(user_id, experiment_id, habitats, countries, states, 
     return user_file.file.url
 
 
-@celery_app.task()
+@celery_app.task(soft_time_limit=240)
 def crop_panorama(img_ids, sample_id, user_id):
     try:
         sample = Sample.objects.get(id=sample_id)
@@ -376,7 +377,10 @@ def crop_panorama(img_ids, sample_id, user_id):
         return
 
     for i in images:
-        imgs = crop_img_to_annotations(i.image, i.annotations)
+        try:
+            imgs = crop_img_to_annotations(i.image, i.annotations)
+        except SoftTimeLimitExceeded:
+            return
         if imgs:
             for cropped_i in imgs:
                 specimen = Specimen.objects.create(

@@ -32,7 +32,7 @@ def image_prediction(image_bytes):
     except requests.exceptions.RequestException as e:
         logging.error(f"[AI_INFERENCE] General request failure: {e}")
     except Exception as e:
-        logging.exception("[AI_INFERENCE] Unexpected error occurred during image prediction")  # Catch-all errors
+        logging.exception(f"[AI_INFERENCE] Unexpected error occurred during image prediction {e}")  # Catch-all errors
     return None
 
 
