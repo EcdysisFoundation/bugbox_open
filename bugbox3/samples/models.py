@@ -298,7 +298,8 @@ def save_multi_specimen_image_thumbnail(instance, created, **kwargs):
             )
         instance.save()
         buffer.close()
-        label_buffer.close()
+        if instance.label_image:
+            label_buffer.close()
 
 
 class SpecimenManager(Manager):
