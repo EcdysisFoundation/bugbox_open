@@ -1,6 +1,6 @@
 """
 Grower Portal URLs
-Organized into grower and admin subdirectories for separation of concerns
+grower and admin subdirectories for separation of concerns
 """
 from django.urls import path, include
 
