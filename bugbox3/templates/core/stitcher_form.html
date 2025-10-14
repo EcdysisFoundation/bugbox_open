@@ -37,14 +37,19 @@
                 <li class="list-group-item">
                     <b>Created at:</b> {{ data.created_at }}
                 </li>
-                <li class="list-group-item list-group-item-info">
-                    Sent to label studio
-                </li>
+                {% if data.sent_label_studio %}
+                    <li class="list-group-item list-group-item-info">
+                        Sent to label studio
+                    </li>
+                {% endif %}
                 <li class="list-group-item">
                     <b>Predictions:</b> {{ data.predictions|length }}
                 </li>
                 <li class="list-group-item">
                     <b>Annotations:</b> {{ data.annotations|length }}
+                    {% if data.annotations_updated_at %}
+                        <br/> Updated at: {{ data.annotations_updated_at }}
+                    {% endif %}
                 </li>
                 {% if not data.bugbox_sample_id %}
 

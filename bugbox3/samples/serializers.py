@@ -1,4 +1,5 @@
 from django.core.files.storage import default_storage
+from django.conf import settings
 from django.urls import reverse
 from rest_framework.serializers import ModelSerializer
 
@@ -73,10 +74,23 @@ class MultiSpecimenImageDatatablesSerializer(ModelSerializer):
             constants.FIELD_MULTIIMAGE_LABEL_IMAGE_THUMBNAIL,
             constants.FIELD_MULTIIMAGE_CROPPED_TO_SPECIMEN]
 
+    def pano_details(self, value):
+        rows = [
+            get_img_src(value.label_image_thumbnail),
+            value.panorama_filename,
+            value.upload_dir_name,
+            f'annotations: {len(value.annotations)}',
+            str(value.uuid),
+        ]
+        if settings.ON_ECDYSIS_SERVER == 'YES':
+            form_url = reverse('core:stitcher-form', kwargs={'guid': value.uuid})
+            rows.append(f'<a href="{form_url}" target="_blank">Stitcher form</a>')
+        return '</br>'.join(rows)
+
     def get_data_row(self, value):
         columns = [
             get_img_src(value.image_thumbnail),
-            get_img_src(value.label_image_thumbnail),
+            self.pano_details(value),
             value.cropped_to_specimen
         ]
         return get_datatables_container(get_datatables_row(columns))
