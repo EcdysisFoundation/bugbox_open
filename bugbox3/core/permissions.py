@@ -47,6 +47,18 @@ DELETE_LOOKUPCHOICES = 'core.delete_lookupchoices'
 
 REVIEW_SPECIMEN_PAGE = 'samples.review_specimen_page'
 
+# Grower Portal Permissions
+VIEW_GROWER_PROFILE = 'grower_portal.view_growerprofile'
+MANAGE_GROWER_PROFILES = 'grower_portal.manage_grower_profiles'
+MANAGE_FARMS = 'grower_portal.manage_farms'
+MANAGE_FIELDS = 'grower_portal.manage_fields'
+MANAGE_GROWER_APPLICATIONS = 'grower_portal.manage_grower_applications'
+VIEW_APPLICATION_MEASUREMENTS = 'grower_portal.view_applicationmeasurement'
+ADD_APPLICATION_MEASUREMENTS = 'grower_portal.add_applicationmeasurement'
+CHANGE_APPLICATION_MEASUREMENTS = 'grower_portal.change_applicationmeasurement'
+DELETE_APPLICATION_MEASUREMENTS = 'grower_portal.delete_applicationmeasurement'
+GENERATE_TRANSECT_CODES = 'grower_portal.generate_transect_codes'
+
 IS_RESEARCH = [
     VIEW_MORPHOSPECIES,
     ADD_SPECIMEN,
@@ -80,6 +92,37 @@ IS_RESEARCH = [
     CHANGE_SITEVISIT,
     DELETE_SITEVISIT,
     VIEW_SITEVISIT,
+]
+
+# Permission list for users with grower role (even if profile not completed)
+IS_GROWER_USER = [
+    VIEW_GROWER_PROFILE,
+]
+
+# Permission list for growers with completed profiles
+IS_GROWER = [
+    VIEW_GROWER_PROFILE,
+    MANAGE_FARMS,
+    MANAGE_FIELDS,
+    MANAGE_GROWER_APPLICATIONS,
+    VIEW_APPLICATION_MEASUREMENTS,
+    ADD_APPLICATION_MEASUREMENTS,
+    CHANGE_APPLICATION_MEASUREMENTS,
+    DELETE_APPLICATION_MEASUREMENTS,
+]
+
+# Permission list for grower portal administrators
+IS_GROWERADMIN = [
+    VIEW_GROWER_PROFILE,
+    MANAGE_GROWER_PROFILES,
+    MANAGE_FARMS,
+    MANAGE_FIELDS,
+    MANAGE_GROWER_APPLICATIONS,
+    VIEW_APPLICATION_MEASUREMENTS,
+    ADD_APPLICATION_MEASUREMENTS,
+    CHANGE_APPLICATION_MEASUREMENTS,
+    DELETE_APPLICATION_MEASUREMENTS,
+    GENERATE_TRANSECT_CODES,
 ]
 
 IS_ADMIN = [

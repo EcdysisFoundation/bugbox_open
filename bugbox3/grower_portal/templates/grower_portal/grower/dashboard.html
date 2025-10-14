@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+{% block title %}Grower Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Welcome, {{ user.name }}!</h1>
+                <a href="{% url 'grower_portal:profile_edit' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-user-edit"></i> Manage Profile
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Quick Actions -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <a href="#" class="btn btn-primary btn-lg w-100 mb-3">
+                        <i class="fas fa-plus"></i> Create New Application
+                    </a>
+                    <a href="#" class="btn btn-outline-primary w-100 mb-2">
+                        <i class="fas fa-farm"></i> Manage Farms & Fields
+                    </a>
+                    <a href="#" class="btn btn-outline-secondary w-100">
+                        <i class="fas fa-chart-bar"></i> My Grower Reports
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Previous Applications -->
+        <div class="col-md-8 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">Previous Applications</h5>
+                </div>
+                <div class="card-body">
+                    {% if applications %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Submission Code</th>
+                                        <th>Farm Name</th>
+                                        <th>Field Name</th>
+                                        <th>Field Type</th>
+                                        <th>Status</th>
+                                        <th>Created Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for application in applications %}
+                                    <tr>
+                                        <td>{{ application.submission_code|default:"N/A" }}</td>
+                                        <td>{{ application.farm_name|default:"N/A" }}</td>
+                                        <td>{{ application.field_name|default:"N/A" }}</td>
+                                        <td>{{ application.field_type|default:"N/A" }}</td>
+                                        <td>
+                                            <span class="badge {% if application.status == 'Draft' %}bg-warning{% else %}bg-success{% endif %}">
+                                                {{ application.status|default:"Draft" }}
+                                            </span>
+                                        </td>
+                                        <td>{{ application.created_date|date:"M d, Y" }}</td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="#" class="btn btn-outline-primary btn-sm">View</a>
+                                                {% if application.status == 'Draft' %}
+                                                    <a href="#" class="btn btn-outline-warning btn-sm">Edit</a>
+                                                    <a href="#" class="btn btn-outline-danger btn-sm">Delete</a>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No applications yet</h5>
+                            <p class="text-muted">Create your first application to get started.</p>
+                            <a href="#" class="btn btn-primary">Create New Application</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Information Summary -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Profile Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Name:</strong> {{ user.name }}</p>
+                            <p><strong>Email:</strong> {{ user.email }}</p>
+                            <p><strong>Phone:</strong> {{ grower_profile.phone|default:"Not provided" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Gender:</strong> {{ grower_profile.get_gender_display }}</p>
+                            <p><strong>Age:</strong> {{ grower_profile.age|default:"Not provided" }}</p>
+                            <p><strong>Race:</strong> {{ grower_profile.get_race_display|default:"Not provided" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

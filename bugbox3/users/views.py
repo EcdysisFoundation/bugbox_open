@@ -65,13 +65,34 @@ class EulaView(LoginRequiredMixin, FormView):
         })
         return context
 
+    def get_success_url(self):
+        """
+        Redirect growers to profile completion or dashboard after EULA acceptance.
+        """
+        user = self.request.user
+        
+        # Check if user is a member of is_grower group
+        if user.groups.filter(name='is_grower').exists():
+            try:
+                grower_profile = user.grower_profile
+                if grower_profile.profile_completed:
+                    return reverse('grower_portal:dashboard')
+                else:
+                    return reverse('grower_portal:profile_complete')
+            except:
+                # If no grower profile exists, redirect to profile completion
+                return reverse('grower_portal:profile_complete')
+        
+        # For regular users, use default redirect
+        return self.success_url
+
     def form_valid(self, form):
         """
         Overwrite user agreed to eula to be true
         """
         self.request.user.agreed_to_eula = True
         self.request.user.save()
-        return HttpResponseRedirect(self.success_url)
+        return HttpResponseRedirect(self.get_success_url())
 
 
 class EulaReadView(TemplateView):

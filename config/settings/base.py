@@ -94,7 +94,8 @@ LOCAL_APPS = [
     "bugbox3.users",
     "bugbox3.core",
     "bugbox3.samples",
-    "bugbox3.taxonomy"
+    "bugbox3.taxonomy",
+    "bugbox3.grower_portal"
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS

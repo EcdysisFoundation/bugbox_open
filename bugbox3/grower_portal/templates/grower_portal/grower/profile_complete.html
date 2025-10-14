@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+{% load crispy_forms_tags %}
+
+{% block title %}Complete Your Grower Profile{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="mb-0">Complete Your Grower Profile</h2>
+                    <p class="text-muted mb-0">Please provide some additional information to complete your grower profile. You can skip this step if you prefer.</p>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="profile-form">
+                        {% csrf_token %}
+                        {{ form|crispy }}
+                        <div class="form-group mt-4 d-flex gap-2">
+                            <button type="submit" name="action" value="complete" class="btn btn-primary btn-lg">
+                                {% if is_edit %}Update Profile{% else %}Complete Profile{% endif %}
+                            </button>
+                            {% if not is_edit %}
+                            <button type="submit" name="action" value="skip" class="btn btn-outline-secondary btn-lg">
+                                Skip for Now
+                            </button>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
