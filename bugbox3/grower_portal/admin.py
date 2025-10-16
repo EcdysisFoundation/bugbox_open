@@ -142,13 +142,13 @@ class GrowerApplicationAdmin(admin.ModelAdmin):
         'submission_code',
         'field',
         'grower',
-        'application_year',
+        'date_sampled',
         'number_of_transects',
         'is_draft',
         'is_submitted',
         'submitted_at'
     )
-    list_filter = ('is_draft', 'is_submitted', 'application_year', 'field__field_type')
+    list_filter = ('is_draft', 'is_submitted', 'date_sampled', 'field__field_type')
     search_fields = (
         'submission_code',
         'field__field_name',
@@ -163,7 +163,7 @@ class GrowerApplicationAdmin(admin.ModelAdmin):
     autocomplete_fields = ['field', 'grower']
     fieldsets = (
         ('Application Information', {
-            'fields': ('submission_code', 'field', 'grower', 'application_year')
+            'fields': ('submission_code', 'field', 'grower', 'date_sampled')
         }),
         ('Transect Codes', {
             'fields': ('transect_code_1', 'transect_code_2', 'transect_code_3', 'transect_code_4'),

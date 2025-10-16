@@ -296,7 +296,7 @@ class GrowerApplication(models.Model):
     is_draft = models.BooleanField(default=True)
     is_submitted = models.BooleanField(default=False)
     submitted_at = models.DateTimeField(null=True, blank=True)
-    application_year = models.IntegerField()
+    date_sampled = models.DateField(help_text='Date when samples were collected', null=True, blank=True)
     
     # Transect Codes - specific to this application (can vary per year for same field)
     transect_code_1 = models.CharField(max_length=20, blank=True, null=True)
@@ -310,11 +310,11 @@ class GrowerApplication(models.Model):
     class Meta:
         verbose_name = _('Grower Application')
         verbose_name_plural = _('Grower Applications')
-        unique_together = [['field', 'application_year']]
+        unique_together = [['field', 'date_sampled']]
         permissions = [
             ('manage_grower_applications', 'Can manage grower applications'),
         ]
-        ordering = ['-application_year', '-created_at']
+        ordering = ['-date_sampled', '-created_at']
     
     @property
     def transect_codes(self):
@@ -338,11 +338,11 @@ class GrowerApplication(models.Model):
     def save(self, *args, **kwargs):
         if not self.submission_code:
             # Generate a unique submission code
-            year_suffix = str(self.application_year)[-2:]
+            year_suffix = str(self.date_sampled.year)[-2:]
             field_initials = ''.join([word[0] for word in self.field.field_name.split()]).upper()[:3]
             grower_initials = self.grower.name[:2].upper() if self.grower.name else 'GR'
             # Simple unique suffix
-            count = GrowerApplication.objects.filter(application_year=self.application_year).count() + 1
+            count = GrowerApplication.objects.filter(date_sampled__year=self.date_sampled.year).count() + 1
             self.submission_code = f"APP-{year_suffix}-{field_initials}-{grower_initials}-{count:04d}"
         
         # Auto-capture submission timestamp in Brookings, SD timezone
@@ -353,7 +353,7 @@ class GrowerApplication(models.Model):
         super().save(*args, **kwargs)
     
     def __str__(self):
-        return f"{self.submission_code} - {self.field.field_name} ({self.application_year})"
+        return f"{self.submission_code} - {self.field.field_name} ({self.date_sampled})"
 
 
 class ApplicationMeasurement(models.Model):
