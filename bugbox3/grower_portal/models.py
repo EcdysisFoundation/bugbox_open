@@ -4,6 +4,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 import pytz
+import uuid
 
 User = get_user_model()
 
@@ -233,10 +234,22 @@ class ManagementPractices(models.Model):
         help_text='e.g., Chickens, Livestock'
     )
     applies_insecticides_dewormers = models.BooleanField(default=False)
+    
+    INSECTICIDE_FREQUENCY_CHOICES = [
+        ('not_used', 'Not used/less than 10% of herd'),
+        ('once_per_year', 'Once per year, not during grazing'),
+        ('multiple_times', 'Multiple times per year, and/or during grazing season'),
+    ]
+    
     insecticide_dewormer_frequency = models.CharField(
         max_length=100,
+        choices=INSECTICIDE_FREQUENCY_CHOICES,
         blank=True,
-        help_text='e.g., Not used, Once per year, Multiple times per year'
+        help_text='Frequency of insecticide/dewormer application'
+    )
+    insecticide_dewormer_comments = models.TextField(
+        blank=True,
+        help_text='Timing details, name of insecticide/dewormer'
     )
     
     # Orchard-specific practices
@@ -337,17 +350,17 @@ class GrowerApplication(models.Model):
     
     def save(self, *args, **kwargs):
         if not self.submission_code:
-            # Generate a unique submission code
+            # Generating a unique submission code with UUID
             year_suffix = str(self.date_sampled.year)[-2:]
             field_initials = ''.join([word[0] for word in self.field.field_name.split()]).upper()[:3]
             grower_initials = self.grower.name[:2].upper() if self.grower.name else 'GR'
-            # Simple unique suffix
-            count = GrowerApplication.objects.filter(date_sampled__year=self.date_sampled.year).count() + 1
-            self.submission_code = f"APP-{year_suffix}-{field_initials}-{grower_initials}-{count:04d}"
+            
+            # Handling concurrent creates
+            unique_suffix = str(uuid.uuid4()).split('-')[-1].upper()[:8]
+            self.submission_code = f"APP-{year_suffix}-{field_initials}-{grower_initials}-{unique_suffix}"
         
-        # Auto-capture submission timestamp in Brookings, SD timezone
         if self.is_submitted and not self.submitted_at:
-            brookings_tz = pytz.timezone('America/Chicago')  # Brookings, SD is in Central Time
+            brookings_tz = pytz.timezone('America/Chicago')
             self.submitted_at = timezone.now().astimezone(brookings_tz)
         
         super().save(*args, **kwargs)

@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+{% load crispy_forms_tags %}
+
+{% block title %}Create New Application{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1>Create New Application</h1>
+            <p class="text-muted">Enter your farm, field, and transect information to begin a new application.</p>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-10">
+            <div class="card">
+                <div class="card-body">
+                    {% crispy form %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fieldTypeSelect = document.getElementById('id_field_type');
+    const cropVarietyField = document.getElementById('crop_variety_field');
+    const rangelandFields = document.getElementById('rangeland_fields');
+    const orchardSpecificFields = document.getElementById('orchard_specific_fields');
+    
+    function updateFieldDisplay() {
+        const fieldType = fieldTypeSelect.value;
+        
+        // Hide all field-specific sections
+        if (cropVarietyField) cropVarietyField.style.display = 'none';
+        if (rangelandFields) rangelandFields.style.display = 'none';
+        if (orchardSpecificFields) orchardSpecificFields.style.display = 'none';
+        
+        // Show relevant sections based on field type
+        if (fieldType === 'crop') {
+            if (cropVarietyField) cropVarietyField.style.display = 'block';
+        } else if (fieldType === 'range') {
+            if (rangelandFields) rangelandFields.style.display = 'block';
+        } else if (fieldType === 'orchard') {
+            if (cropVarietyField) cropVarietyField.style.display = 'block';
+            if (orchardSpecificFields) orchardSpecificFields.style.display = 'block';
+        }
+    }
+    
+    if (fieldTypeSelect) {
+        fieldTypeSelect.addEventListener('change', updateFieldDisplay);
+        updateFieldDisplay();
+    }
+});
+</script>
+{% endblock %}
+

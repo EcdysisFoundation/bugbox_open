@@ -1,0 +1,365 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+{% block title %}Review & Submit - Step 5{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'grower_portal:dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'grower_portal:application_step1' application.id %}">{{ application.submission_code }}</a></li>
+                    <li class="breadcrumb-item active">Step 5</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="progress mb-4">
+                <div class="progress-bar bg-success" role="progressbar" style="width: 100%">Step 5 of 5</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h3 class="mb-0">Step 5: Review & Submit</h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        Please review all information below before submitting. You can edit any section by clicking the "Edit" button.
+                    </div>
+                    
+                    <!-- Application Overview -->
+                    <div class="card mb-3">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Application Overview</h5>
+                            <a href="{% url 'grower_portal:application_step1' application.id %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-sm">
+                                <tr>
+                                    <th style="width: 40%">Submission Code:</th>
+                                    <td>{{ application.submission_code }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Farm Name:</th>
+                                    <td>{{ application.field.farm.name }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Field Name:</th>
+                                    <td>{{ application.field.field_name }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Field Type:</th>
+                                    <td>{{ application.field.get_field_type_display }}</td>
+                                </tr>
+                                {% if application.field.latitude and application.field.longitude %}
+                                <tr>
+                                    <th>GPS Coordinates:</th>
+                                    <td>{{ application.field.latitude }}, {{ application.field.longitude }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if application.field.crop_variety %}
+                                <tr>
+                                    <th>Crop Variety:</th>
+                                    <td>{{ application.field.crop_variety }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if application.field.forage_varieties %}
+                                <tr>
+                                    <th>Forage Varieties:</th>
+                                    <td>{{ application.field.forage_varieties }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if application.field.paddock_size %}
+                                <tr>
+                                    <th>Paddock Size:</th>
+                                    <td>{{ application.field.paddock_size }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if application.field.rootstock_species %}
+                                <tr>
+                                    <th>Rootstock Species:</th>
+                                    <td>{{ application.field.rootstock_species }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if application.field.transitional_status %}
+                                <tr>
+                                    <th>Transitional Status:</th>
+                                    <td>{{ application.field.get_transitional_status_display }}</td>
+                                </tr>
+                                {% endif %}
+                                <tr>
+                                    <th>Date Sampled:</th>
+                                    <td>{{ application.date_sampled|date:"F d, Y" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Transect Codes:</th>
+                                    <td>
+                                        {% for code in application.transect_codes %}
+                                            <code>{{ code }}</code>{% if not forloop.last %}, {% endif %}
+                                        {% endfor %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Management Practices -->
+                    <div class="card mb-3">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Management Practices</h5>
+                            <a href="{% url 'grower_portal:application_step2' application.id %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                        </div>
+                        <div class="card-body">
+                            {% if management_practices %}
+                                <table class="table table-sm">
+                                    <tr>
+                                        <th style="width: 40%">Tillage:</th>
+                                        <td>{{ management_practices.uses_tillage|yesno:"Yes,No" }}</td>
+                                    </tr>
+                                    {% if management_practices.uses_tillage and management_practices.tillage_depth %}
+                                    <tr>
+                                        <th>Tillage Depth:</th>
+                                        <td>{{ management_practices.tillage_depth }}</td>
+                                    </tr>
+                                    {% endif %}
+                                    <tr>
+                                        <th>Cover Crop:</th>
+                                        <td>{{ management_practices.uses_cover_crop|yesno:"Yes,No" }}</td>
+                                    </tr>
+                                    {% if management_practices.uses_cover_crop and management_practices.cover_crop_termination %}
+                                    <tr>
+                                        <th>Cover Crop Termination:</th>
+                                        <td>{{ management_practices.cover_crop_termination }}</td>
+                                    </tr>
+                                    {% endif %}
+                                    <tr>
+                                        <th>Synthetic Fertilizers:</th>
+                                        <td>{{ management_practices.uses_synthetic_fertilizers|yesno:"Yes,No" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Synthetic Insecticides:</th>
+                                        <td>{{ management_practices.uses_synthetic_insecticides|yesno:"Yes,No" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Synthetic Herbicides:</th>
+                                        <td>{{ management_practices.uses_synthetic_herbicides|yesno:"Yes,No" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Synthetic Fungicides:</th>
+                                        <td>{{ management_practices.uses_synthetic_fungicides|yesno:"Yes,No" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Organic Amendments:</th>
+                                        <td>{{ management_practices.uses_organic_amendments|yesno:"Yes,No" }}</td>
+                                    </tr>
+                                    {% if management_practices.uses_organic_amendments and management_practices.organic_amendment_types %}
+                                    <tr>
+                                        <th>Amendment Types:</th>
+                                        <td>{{ management_practices.organic_amendment_types }}</td>
+                                    </tr>
+                                    {% endif %}
+                                    <tr>
+                                        <th>Grazing:</th>
+                                        <td>{{ management_practices.uses_grazing|yesno:"Yes,No" }}</td>
+                                    </tr>
+                                    {% if management_practices.uses_grazing %}
+                                        {% if management_practices.grazer_types %}
+                                        <tr>
+                                            <th>Grazer Types:</th>
+                                            <td>{{ management_practices.grazer_types }}</td>
+                                        </tr>
+                                        {% endif %}
+                                        <tr>
+                                            <th>Applies Insecticides/Dewormers:</th>
+                                            <td>{{ management_practices.applies_insecticides_dewormers|yesno:"Yes,No" }}</td>
+                                        </tr>
+                                        {% if management_practices.applies_insecticides_dewormers %}
+                                            {% if management_practices.insecticide_dewormer_frequency %}
+                                            <tr>
+                                                <th>Frequency:</th>
+                                                <td>{{ management_practices.get_insecticide_dewormer_frequency_display }}</td>
+                                            </tr>
+                                            {% endif %}
+                                            {% if management_practices.insecticide_dewormer_comments %}
+                                            <tr>
+                                                <th>Insecticide/Dewormer Comments:</th>
+                                                <td>{{ management_practices.insecticide_dewormer_comments }}</td>
+                                            </tr>
+                                            {% endif %}
+                                        {% endif %}
+                                    {% endif %}
+                                    {% if application.field.field_type == 'orchard' %}
+                                        <tr>
+                                            <th>Allows Ground Cover:</th>
+                                            <td>{{ management_practices.allows_ground_cover|yesno:"Yes,No" }}</td>
+                                        </tr>
+                                        {% if management_practices.allows_ground_cover and management_practices.ground_cover_management %}
+                                        <tr>
+                                            <th>Ground Cover Management:</th>
+                                            <td>{{ management_practices.ground_cover_management }}</td>
+                                        </tr>
+                                        {% endif %}
+                                        <tr>
+                                            <th>Tills Between Rows:</th>
+                                            <td>{{ management_practices.tills_between_rows|yesno:"Yes,No" }}</td>
+                                        </tr>
+                                    {% endif %}
+                                </table>
+                            {% else %}
+                                <p class="text-muted">No management practices recorded.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Transect Measurements -->
+                    <div class="card mb-3">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Transect Measurements</h5>
+                            <a href="{% url 'grower_portal:application_step3' application.id %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                        </div>
+                        <div class="card-body">
+                            {% for measurement in measurements %}
+                                <h6>Transect {{ measurement.transect_number }}</h6>
+                                <table class="table table-sm mb-3">
+                                    <tr>
+                                        <th style="width: 40%">Acres Sampled:</th>
+                                        <td>{{ measurement.acres_sampled|default:"Not specified" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Years Under Management:</th>
+                                        <td>{{ measurement.years_under_management|default:"Not specified" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Supports Dairy:</th>
+                                        <td>{{ measurement.supports_dairy|yesno:"Yes,No" }}</td>
+                                    </tr>
+                                    {% if measurement.supports_dairy %}
+                                    <tr>
+                                        <th>Confined Dairy:</th>
+                                        <td>{{ measurement.is_confined_dairy|yesno:"Yes,No" }}</td>
+                                    </tr>
+                                    {% endif %}
+                                    {% if measurement.comments %}
+                                    <tr>
+                                        <th>Comments:</th>
+                                        <td>{{ measurement.comments }}</td>
+                                    </tr>
+                                    {% endif %}
+                                </table>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <!-- Grazing Events (Rangeland only) -->
+                    {% if application.field.field_type == 'range' %}
+                    <div class="card mb-3">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Grazing Events</h5>
+                            <a href="{% url 'grower_portal:application_step4' application.id %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                        </div>
+                        <div class="card-body">
+                            {% if grazing_events %}
+                                {% for event in grazing_events %}
+                                    <h6>Grazing Event {{ forloop.counter }}</h6>
+                                    <table class="table table-sm mb-3">
+                                        <tr>
+                                            <th style="width: 40%">Class of Animal:</th>
+                                            <td>{{ event.class_of_animal|default:"Not specified" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Number of Animals:</th>
+                                            <td>{{ event.number_of_animals|default:"Not specified" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Average lbs per Animal:</th>
+                                            <td>{{ event.average_weight_lbs|default:"Not specified" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Duration (days):</th>
+                                            <td>{{ event.duration_days|default:"Not specified" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Rest Period (days):</th>
+                                            <td>{{ event.rest_period_days|default:"Not specified" }}</td>
+                                        </tr>
+                                    </table>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted">No grazing events recorded.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Submit Actions -->
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between mt-4">
+                            <div>
+                                {% if application.field.field_type == 'range' %}
+                                    <a href="{% url 'grower_portal:application_step4' application.id %}" class="btn btn-secondary">
+                                        <i class="fas fa-arrow-left"></i> Previous
+                                    </a>
+                                {% else %}
+                                    <a href="{% url 'grower_portal:application_step3' application.id %}" class="btn btn-secondary">
+                                        <i class="fas fa-arrow-left"></i> Previous
+                                    </a>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <button type="submit" name="action" value="save_draft" class="btn btn-warning me-2">
+                                    <i class="fas fa-save"></i> Save as Draft
+                                </button>
+                                <button type="submit" name="action" value="submit" class="btn btn-success">
+                                    <i class="fas fa-check-circle"></i> Submit Application
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Progress</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        <li class="list-group-item text-success">
+                            <i class="fas fa-check-circle"></i> Step 1: Overview
+                        </li>
+                        <li class="list-group-item text-success">
+                            <i class="fas fa-check-circle"></i> Step 2: Management Practices
+                        </li>
+                        <li class="list-group-item text-success">
+                            <i class="fas fa-check-circle"></i> Step 3: Transect Measurements
+                        </li>
+                        {% if application.field.field_type == 'range' %}
+                        <li class="list-group-item text-success">
+                            <i class="fas fa-check-circle"></i> Step 4: Grazing Events
+                        </li>
+                        {% endif %}
+                        <li class="list-group-item active bg-success text-white">
+                            <i class="fas fa-circle"></i> Step 5: Review & Submit
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

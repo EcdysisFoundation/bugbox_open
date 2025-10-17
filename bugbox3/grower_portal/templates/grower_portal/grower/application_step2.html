@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+{% load crispy_forms_tags %}
+
+{% block title %}Management Practices - Step 2{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'grower_portal:dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'grower_portal:application_step1' application.id %}">{{ application.submission_code }}</a></li>
+                    <li class="breadcrumb-item active">Step 2</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="progress mb-4">
+                <div class="progress-bar" role="progressbar" style="width: 40%">Step 2 of 5</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">Step 2: Management Practices</h3>
+                    <p class="text-muted mb-0">Field: {{ application.field.field_name }} ({{ application.field.get_field_type_display }})</p>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-start mb-3">
+                        <a href="{% url 'grower_portal:application_step1' application.id %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Previous
+                        </a>
+                    </div>
+                    
+                    {% crispy form %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Progress</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        <li class="list-group-item text-success">
+                            <i class="fas fa-check-circle"></i> Step 1: Overview
+                        </li>
+                        <li class="list-group-item active">
+                            <i class="fas fa-circle"></i> Step 2: Management Practices
+                        </li>
+                        <li class="list-group-item">Step 3: Transect Measurements</li>
+                        {% if application.field.field_type == 'range' %}
+                        <li class="list-group-item">Step 4: Grazing Events</li>
+                        {% endif %}
+                        <li class="list-group-item">Step 5: Review & Submit</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const usesTillage = document.getElementById('id_uses_tillage');
+    const tillageDepthField = document.getElementById('tillage_depth_field');
+    
+    const usesCoverCrop = document.getElementById('id_uses_cover_crop');
+    const coverCropFields = document.getElementById('cover_crop_fields');
+    
+    const usesOrganicAmendments = document.getElementById('id_uses_organic_amendments');
+    const organicAmendmentFields = document.getElementById('organic_amendment_fields');
+    
+    const usesGrazing = document.getElementById('id_uses_grazing');
+    const grazingFields = document.getElementById('grazing_fields');
+    
+    const appliesInsecticides = document.getElementById('id_applies_insecticides_dewormers');
+    const insecticideFields = document.getElementById('insecticide_fields');
+    
+    const allowsGroundCover = document.getElementById('id_allows_ground_cover');
+    const groundCoverFields = document.getElementById('ground_cover_fields');
+    
+    function toggleField(checkbox, targetDiv) {
+        if (checkbox && targetDiv) {
+            targetDiv.style.display = checkbox.checked ? 'block' : 'none';
+        }
+    }
+    
+    if (usesTillage) usesTillage.addEventListener('change', () => toggleField(usesTillage, tillageDepthField));
+    if (usesCoverCrop) usesCoverCrop.addEventListener('change', () => toggleField(usesCoverCrop, coverCropFields));
+    if (usesOrganicAmendments) usesOrganicAmendments.addEventListener('change', () => toggleField(usesOrganicAmendments, organicAmendmentFields));
+    if (usesGrazing) usesGrazing.addEventListener('change', () => toggleField(usesGrazing, grazingFields));
+    if (appliesInsecticides) appliesInsecticides.addEventListener('change', () => toggleField(appliesInsecticides, insecticideFields));
+    if (allowsGroundCover) allowsGroundCover.addEventListener('change', () => toggleField(allowsGroundCover, groundCoverFields));
+    
+    toggleField(usesTillage, tillageDepthField);
+    toggleField(usesCoverCrop, coverCropFields);
+    toggleField(usesOrganicAmendments, organicAmendmentFields);
+    toggleField(usesGrazing, grazingFields);
+    toggleField(appliesInsecticides, insecticideFields);
+    toggleField(allowsGroundCover, groundCoverFields);
+    
+    // Show/hide orchard-specific practices based on field type
+    const fieldType = '{{ application.field.field_type }}';
+    const orchardPractices = document.getElementById('orchard_practices');
+    
+    if (orchardPractices) {
+        // Show orchard practices only for orchard field type
+        orchardPractices.style.display = (fieldType === 'orchard') ? 'block' : 'none';
+    }
+});
+</script>
+{% endblock %}
+

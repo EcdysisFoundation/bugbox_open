@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+{% load crispy_forms_tags %}
+
+{% block title %}Grazing Events - Step 4{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'grower_portal:dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'grower_portal:application_step1' application.id %}">{{ application.submission_code }}</a></li>
+                    <li class="breadcrumb-item active">Step 4</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="progress mb-4">
+                <div class="progress-bar" role="progressbar" style="width: 80%">Step 4 of 5</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">Step 4: Grazing Events</h3>
+                    <p class="text-muted mb-0">Enter up to 4 grazing events for this paddock in 2025</p>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="grazing-events-form">
+                        {% csrf_token %}
+                        {{ formset.management_form }}
+                        
+                        <div id="grazing-events-container">
+                            {% for form in formset %}
+                                <div class="card mb-4 grazing-event-form {% if not form.instance.pk %}hidden-form{% endif %}" data-form-index="{{ forloop.counter0 }}" {% if not form.instance.pk and forloop.counter0 > 0 %}style="display:none;"{% endif %}>
+                                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0">Grazing Event {{ forloop.counter }}</h5>
+                                        <button type="button" class="btn btn-sm btn-outline-danger remove-event-btn" data-form-index="{{ forloop.counter0 }}" style="display:none;">
+                                            <i class="fas fa-trash"></i> Remove
+                                        </button>
+                                    </div>
+                                    <div class="card-body">
+                                        {{ form.id }}
+                                        {% if formset.can_delete %}
+                                            <div style="display:none;">
+                                                {{ form.DELETE }}
+                                            </div>
+                                        {% endif %}
+                                        
+                                        <div class="row mb-3">
+                                            <div class="col-12">
+                                                <label for="{{ form.class_of_animal.id_for_label }}" class="form-label">{{ form.class_of_animal.label }}</label>
+                                                {{ form.class_of_animal }}
+                                                <small class="form-text text-muted">Examples: Cow/calf pair, yearling cattle (7-12 months), yearling cattle (12-17 months), replacement heifers (18-24 months), bull, ewe/lamb pair, non-lactating ewe, ram, wether, bison cow, bison bull, etc.</small>
+                                                {% if form.class_of_animal.errors %}
+                                                    <div class="text-danger">{{ form.class_of_animal.errors }}</div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <label for="{{ form.number_of_animals.id_for_label }}" class="form-label">{{ form.number_of_animals.label }}</label>
+                                                {{ form.number_of_animals }}
+                                                {% if form.number_of_animals.errors %}
+                                                    <div class="text-danger">{{ form.number_of_animals.errors }}</div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label for="{{ form.average_weight_lbs.id_for_label }}" class="form-label">{{ form.average_weight_lbs.label }}</label>
+                                                {{ form.average_weight_lbs }}
+                                                {% if form.average_weight_lbs.errors %}
+                                                    <div class="text-danger">{{ form.average_weight_lbs.errors }}</div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <label for="{{ form.duration_days.id_for_label }}" class="form-label">{{ form.duration_days.label }}</label>
+                                                {{ form.duration_days }}
+                                                {% if form.duration_days.errors %}
+                                                    <div class="text-danger">{{ form.duration_days.errors }}</div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label for="{{ form.rest_period_days.id_for_label }}" class="form-label">{{ form.rest_period_days.label }}</label>
+                                                {{ form.rest_period_days }}
+                                                {% if form.rest_period_days.errors %}
+                                                    <div class="text-danger">{{ form.rest_period_days.errors }}</div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="mb-4">
+                            <button type="button" class="btn btn-success" id="add-grazing-event-btn">
+                                <i class="fas fa-plus"></i> Add Another Grazing Event
+                            </button>
+                            <small class="text-muted ms-2">
+                                (<span id="event-count">0</span> of 4 events added)
+                            </small>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Note:</strong> You can add up to 4 grazing events. If you have grazed the paddock more than 4 times, please contact support for assistance.
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'grower_portal:application_step3' application.id %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Previous
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                Next: Review & Submit <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Progress</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        <li class="list-group-item text-success">
+                            <i class="fas fa-check-circle"></i> Step 1: Overview
+                        </li>
+                        <li class="list-group-item text-success">
+                            <i class="fas fa-check-circle"></i> Step 2: Management Practices
+                        </li>
+                        <li class="list-group-item text-success">
+                            <i class="fas fa-check-circle"></i> Step 3: Transect Measurements
+                        </li>
+                        <li class="list-group-item active">
+                            <i class="fas fa-circle"></i> Step 4: Grazing Events
+                        </li>
+                        <li class="list-group-item">Step 5: Review & Submit</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const addButton = document.getElementById('add-grazing-event-btn');
+    const eventCountSpan = document.getElementById('event-count');
+    const allForms = document.querySelectorAll('.grazing-event-form');
+    const maxEvents = 4;
+    
+    function updateEventCount() {
+        const visibleForms = document.querySelectorAll('.grazing-event-form:not([style*="display:none"]):not([style*="display: none"])');
+        const count = visibleForms.length;
+        eventCountSpan.textContent = count;
+        
+        if (count >= maxEvents) {
+            addButton.style.display = 'none';
+        } else {
+            addButton.style.display = 'inline-block';
+        }
+        
+        document.querySelectorAll('.remove-event-btn').forEach(btn => btn.style.display = 'none');
+        
+        if (visibleForms.length > 1) {
+            const lastVisibleForm = visibleForms[visibleForms.length - 1];
+            const lastFormIndex = lastVisibleForm.getAttribute('data-form-index');
+            
+            if (lastFormIndex !== '0') {
+                const removeBtn = lastVisibleForm.querySelector('.remove-event-btn');
+                if (removeBtn) {
+                    removeBtn.style.display = 'inline-block';
+                }
+            }
+        }
+    }
+    
+    addButton.addEventListener('click', function() {
+        const hiddenForms = document.querySelectorAll('.grazing-event-form[style*="display:none"], .grazing-event-form[style*="display: none"]');
+        
+        if (hiddenForms.length > 0) {
+            hiddenForms[0].style.display = 'block';
+            updateEventCount();
+        }
+    });
+    
+    document.querySelectorAll('.remove-event-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const formIndex = this.getAttribute('data-form-index');
+            const formCard = document.querySelector(`.grazing-event-form[data-form-index="${formIndex}"]`);
+            const deleteCheckbox = formCard.querySelector('input[name$="-DELETE"]');
+            
+            if (deleteCheckbox) {
+                deleteCheckbox.checked = true;
+                formCard.style.display = 'none';
+                updateEventCount();
+            }
+        });
+    });
+    
+    updateEventCount();
+});
+</script>
+{% endblock %}
+

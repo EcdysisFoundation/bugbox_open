@@ -86,6 +86,9 @@
           </div>
         </div>
       {% endif %}
+      {% if group.name == 'is_grower' %}
+        <a href="{% url 'grower_portal:dashboard' %}">Grower Dashboard</a>
+      {% endif %}
     {% endfor %}
     {% endif %}
   {% endif %}
