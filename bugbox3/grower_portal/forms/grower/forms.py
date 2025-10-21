@@ -7,6 +7,16 @@ from ...models import (
     GrowerProfile, Field, TransectCode, GrowerApplication,
     ManagementPractices, ApplicationMeasurement, GrazingEvent
 )
+from ...constants import (
+    GENDER_CHOICES, RACE_CHOICES, FIELD_TYPE_CHOICES,
+    TRANSITIONAL_STATUS_CHOICES, INSECTICIDE_FREQUENCY_CHOICES,
+    PHONE_MAX_LENGTH, FARM_NAME_MAX_LENGTH, FIELD_NAME_MAX_LENGTH,
+    CROP_VARIETY_MAX_LENGTH, FORAGE_VARIETIES_MAX_LENGTH,
+    PADDOCK_SIZE_MAX_LENGTH, ROOTSTOCK_SPECIES_MAX_LENGTH,
+    TRANSECT_CODE_MAX_LENGTH, AGE_MIN, AGE_MAX,
+    LATITUDE_MIN, LATITUDE_MAX, LONGITUDE_MIN, LONGITUDE_MAX,
+    CLASS_OF_ANIMAL_EXAMPLES
+)
 
 User = get_user_model()
 
@@ -16,31 +26,13 @@ class GrowerProfileCompletionForm(forms.ModelForm):
     Form for completing grower profile information during initial signup.
     This form is shown only once after grower registration.
     """
-    GENDER_CHOICES = [
-        ('', 'Select Gender'),
-        ('male', 'Male'),
-        ('female', 'Female'),
-        ('prefer_not_to_say', 'Prefer not to say'),
-    ]
-    
-    RACE_CHOICES = [
-        ('', 'Select Race'),
-        ('american_indian_alaska_native', 'American Indian or Alaska Native'),
-        ('asian', 'Asian'),
-        ('black_african_american', 'Black or African American'),
-        ('native_hawaiian_pacific_islander', 'Native Hawaiian or Other Pacific Islander'),
-        ('white', 'White'),
-        ('two_or_more_races', 'Two or More Races'),
-        ('prefer_not_to_say', 'Prefer not to say'),
-    ]
-    
     phone = forms.CharField(
-        max_length=20,
+        max_length=PHONE_MAX_LENGTH,
         required=False,
         label='Phone Number'
     )
     gender = forms.ChoiceField(
-        choices=GENDER_CHOICES,
+        choices=[('', 'Select Gender')] + GENDER_CHOICES,
         required=False,
         label='Gender'
     )
@@ -48,11 +40,11 @@ class GrowerProfileCompletionForm(forms.ModelForm):
         required=False,
         label='Age',
         help_text='Enter your age in years',
-        min_value=1,
-        max_value=120
+        min_value=AGE_MIN,
+        max_value=AGE_MAX
     )
     race = forms.ChoiceField(
-        choices=RACE_CHOICES,
+        choices=[('', 'Select Race')] + RACE_CHOICES,
         required=False,
         label='Race'
     )
@@ -69,23 +61,23 @@ class GrowerProfileCompletionForm(forms.ModelForm):
 
 class ApplicationCreationForm(ModelFormMixin):
     farm_name = forms.CharField(
-        max_length=200,
+        max_length=FARM_NAME_MAX_LENGTH,
         label='Farm Name'
     )
     field_name = forms.CharField(
-        max_length=200,
+        max_length=FIELD_NAME_MAX_LENGTH,
         label='Field Name'
     )
     field_type = forms.ChoiceField(
-        choices=Field.FIELD_TYPE_CHOICES,
+        choices=FIELD_TYPE_CHOICES,
         label='Field Type'
     )
     latitude = forms.DecimalField(
         max_digits=9,
         decimal_places=6,
         required=False,
-        min_value=-90,
-        max_value=90,
+        min_value=LATITUDE_MIN,
+        max_value=LATITUDE_MAX,
         label='Latitude',
         help_text='Field latitude (-90 to 90)'
     )
@@ -93,37 +85,37 @@ class ApplicationCreationForm(ModelFormMixin):
         max_digits=9,
         decimal_places=6,
         required=False,
-        min_value=-180,
-        max_value=180,
+        min_value=LONGITUDE_MIN,
+        max_value=LONGITUDE_MAX,
         label='Longitude',
         help_text='Field longitude (-180 to 180)'
     )
     crop_variety = forms.CharField(
-        max_length=200,
+        max_length=CROP_VARIETY_MAX_LENGTH,
         required=False,
         label='Crop Variety',
         help_text='For crop fields and orchards'
     )
     forage_varieties = forms.CharField(
-        max_length=500,
+        max_length=FORAGE_VARIETIES_MAX_LENGTH,
         required=False,
         label='Forage Varieties',
         help_text='For rangeland'
     )
     paddock_size = forms.CharField(
-        max_length=100,
+        max_length=PADDOCK_SIZE_MAX_LENGTH,
         required=False,
         label='Paddock Size',
         help_text='For rangeland'
     )
     rootstock_species = forms.CharField(
-        max_length=500,
+        max_length=ROOTSTOCK_SPECIES_MAX_LENGTH,
         required=False,
         label='Rootstock Species',
         help_text='For orchards'
     )
     transitional_status = forms.ChoiceField(
-        choices=[('', '---')] + Field.TRANSITIONAL_STATUS_CHOICES,
+        choices=[('', '---')] + TRANSITIONAL_STATUS_CHOICES,
         required=False,
         label='Transitional Status',
         help_text='For orchards'
@@ -134,21 +126,21 @@ class ApplicationCreationForm(ModelFormMixin):
         help_text='Date when samples were collected'
     )
     transect_code_1 = forms.CharField(
-        max_length=20,
+        max_length=TRANSECT_CODE_MAX_LENGTH,
         label='Transect Code 1'
     )
     transect_code_2 = forms.CharField(
-        max_length=20,
+        max_length=TRANSECT_CODE_MAX_LENGTH,
         required=False,
         label='Transect Code 2'
     )
     transect_code_3 = forms.CharField(
-        max_length=20,
+        max_length=TRANSECT_CODE_MAX_LENGTH,
         required=False,
         label='Transect Code 3'
     )
     transect_code_4 = forms.CharField(
-        max_length=20,
+        max_length=TRANSECT_CODE_MAX_LENGTH,
         required=False,
         label='Transect Code 4'
     )
@@ -358,6 +350,7 @@ class ApplicationMeasurementForm(ModelFormMixin):
     class Meta:
         model = ApplicationMeasurement
         fields = [
+            'transect_latitude', 'transect_longitude',
             'acres_sampled', 'years_under_management',
             'supports_dairy', 'is_confined_dairy', 'comments'
         ]
@@ -404,7 +397,7 @@ class GrazingEventForm(ModelFormMixin):
             Fieldset(
                 'Animal Information',
                 Row(Column('class_of_animal')),
-                HTML('<small class="form-text text-muted">Examples: Cow/calf pair, yearling cattle (7-12 months), yearling cattle (12-17 months), replacement heifers (18-24 months), bull, ewe/lamb pair, non-lactating ewe, ram, wether, bison cow, bison bull, etc.</small>'),
+                HTML(f'<small class="form-text text-muted">{CLASS_OF_ANIMAL_EXAMPLES}</small>'),
                 Row(
                     Column('number_of_animals', css_class='col-md-6'),
                     Column('average_weight_lbs', css_class='col-md-6')

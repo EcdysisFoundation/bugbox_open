@@ -6,42 +6,48 @@ from django.utils import timezone
 import pytz
 import uuid
 
+from .constants import (
+    GENDER_CHOICES, RACE_CHOICES, FIELD_TYPE_CHOICES,
+    TRANSITIONAL_STATUS_CHOICES, INSECTICIDE_FREQUENCY_CHOICES,
+    CSV_IMPORT_STATUS_CHOICES, BROOKINGS_TIMEZONE,
+    AGE_MIN, AGE_MAX, LATITUDE_MIN, LATITUDE_MAX,
+    LONGITUDE_MIN, LONGITUDE_MAX, GRAZING_EVENT_NUMBER_MIN,
+    GRAZING_EVENT_NUMBER_MAX, REST_PERIOD_DAYS_MIN,
+    REST_PERIOD_DAYS_MAX, NUMBER_OF_ANIMALS_MIN,
+    NUMBER_OF_ANIMALS_MAX, AVERAGE_WEIGHT_MIN,
+    AVERAGE_WEIGHT_MAX, DURATION_DAYS_MIN, DURATION_DAYS_MAX,
+    PHONE_MAX_LENGTH, FARM_NAME_MAX_LENGTH, FIELD_NAME_MAX_LENGTH,
+    CROP_VARIETY_MAX_LENGTH, FORAGE_VARIETIES_MAX_LENGTH,
+    PADDOCK_SIZE_MAX_LENGTH, ROOTSTOCK_SPECIES_MAX_LENGTH,
+    TILLAGE_DEPTH_MAX_LENGTH, COVER_CROP_TERMINATION_MAX_LENGTH,
+    ORGANIC_AMENDMENT_TYPES_MAX_LENGTH, GRAZER_TYPES_MAX_LENGTH,
+    INSECTICIDE_FREQUENCY_MAX_LENGTH, INSECTICIDE_COMMENTS_MAX_LENGTH,
+    GROUND_COVER_MANAGEMENT_MAX_LENGTH, TRANSECT_CODE_MAX_LENGTH,
+    SUBMISSION_CODE_MAX_LENGTH, CLASS_OF_ANIMAL_MAX_LENGTH,
+    CSV_FILENAME_MAX_LENGTH, STATUS_MAX_LENGTH, SUBMISSION_CODE_PREFIX,
+    FIELD_INITIALS_MAX_LENGTH, GROWER_INITIALS_MAX_LENGTH,
+    GROWER_INITIALS_DEFAULT, UUID_SUFFIX_LENGTH,
+    TRANSECT_NUMBER_MIN, TRANSECT_NUMBER_MAX,
+    ACRES_SAMPLED_MIN, ACRES_SAMPLED_MAX,
+    YEARS_UNDER_MANAGEMENT_MIN, YEARS_UNDER_MANAGEMENT_MAX
+)
+
 User = get_user_model()
 
 
 class GrowerProfile(models.Model):
-    """
-    Profile information for growers.
-    This is completed during initial signup and can be edited later.
-    """
-    GENDER_CHOICES = [
-        ('male', 'Male'),
-        ('female', 'Female'),
-        ('prefer_not_to_say', 'Prefer not to say'),
-    ]
-    
-    RACE_CHOICES = [
-        ('american_indian_alaska_native', 'American Indian or Alaska Native'),
-        ('asian', 'Asian'),
-        ('black_african_american', 'Black or African American'),
-        ('native_hawaiian_pacific_islander', 'Native Hawaiian or Other Pacific Islander'),
-        ('white', 'White'),
-        ('two_or_more_races', 'Two or More Races'),
-        ('prefer_not_to_say', 'Prefer not to say'),
-    ]
-    
     user = models.OneToOneField(
         User,
         on_delete=models.CASCADE,
         related_name='grower_profile'
     )
     phone = models.CharField(
-        max_length=20,
+        max_length=PHONE_MAX_LENGTH,
         blank=True,
         null=True
     )
     gender = models.CharField(
-        max_length=20,
+        max_length=PHONE_MAX_LENGTH,
         choices=GENDER_CHOICES,
         blank=True,
         null=True
@@ -50,10 +56,10 @@ class GrowerProfile(models.Model):
         blank=True,
         null=True,
         help_text='Age in years',
-        validators=[MinValueValidator(1), MaxValueValidator(120)]
+        validators=[MinValueValidator(AGE_MIN), MaxValueValidator(AGE_MAX)]
     )
     race = models.CharField(
-        max_length=50,
+        max_length=STATUS_MAX_LENGTH,
         choices=RACE_CHOICES,
         blank=True,
         null=True
@@ -83,7 +89,7 @@ class Farm(models.Model):
         on_delete=models.CASCADE,
         related_name='farms'
     )
-    name = models.CharField(max_length=200)
+    name = models.CharField(max_length=FARM_NAME_MAX_LENGTH)
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -102,40 +108,25 @@ class Farm(models.Model):
 
 
 class Field(models.Model):
-    """Individual field within a farm - has persistent properties including GPS location"""
-    
-    FIELD_TYPE_CHOICES = [
-        ('crop', 'Crop Field'),
-        ('range', 'Rangeland/Pasture'),
-        ('orchard', 'Orchard'),
-    ]
-    
-    TRANSITIONAL_STATUS_CHOICES = [
-        ('1st_year', '1st year'),
-        ('2nd_year', '2nd year'),
-        ('3rd_year', '3rd year'),
-        ('4th_year', '4th year'),
-    ]
+    """Individual field within a farm"""
     
     farm = models.ForeignKey(
         Farm,
         on_delete=models.CASCADE,
         related_name='fields'
     )
-    field_name = models.CharField(max_length=200)
+    field_name = models.CharField(max_length=FIELD_NAME_MAX_LENGTH)
     field_type = models.CharField(
-        max_length=20,
+        max_length=PHONE_MAX_LENGTH,
         choices=FIELD_TYPE_CHOICES
     )
     
-    # GPS Coordinates - field location (selected via Google Maps integration)
-    # These are fixed for a field since the physical location doesn't change
     latitude = models.DecimalField(
         max_digits=9,
         decimal_places=6,
         null=True,
         blank=True,
-        validators=[MinValueValidator(-90), MaxValueValidator(90)],
+        validators=[MinValueValidator(LATITUDE_MIN), MaxValueValidator(LATITUDE_MAX)],
         help_text='Field latitude (-90 to 90)'
     )
     longitude = models.DecimalField(
@@ -143,33 +134,32 @@ class Field(models.Model):
         decimal_places=6,
         null=True,
         blank=True,
-        validators=[MinValueValidator(-180), MaxValueValidator(180)],
+        validators=[MinValueValidator(LONGITUDE_MIN), MaxValueValidator(LONGITUDE_MAX)],
         help_text='Field longitude (-180 to 180)'
     )
     
-    # Field-specific properties based on type
     crop_variety = models.CharField(
-        max_length=200,
+        max_length=CROP_VARIETY_MAX_LENGTH,
         blank=True,
         help_text='For crop fields and orchards'
     )
     forage_varieties = models.CharField(
-        max_length=500,
+        max_length=FORAGE_VARIETIES_MAX_LENGTH,
         blank=True,
         help_text='For rangeland'
     )
     paddock_size = models.CharField(
-        max_length=100,
+        max_length=PADDOCK_SIZE_MAX_LENGTH,
         blank=True,
         help_text='For rangeland'
     )
     rootstock_species = models.CharField(
-        max_length=500,
+        max_length=ROOTSTOCK_SPECIES_MAX_LENGTH,
         blank=True,
         help_text='For orchards'
     )
     transitional_status = models.CharField(
-        max_length=20,
+        max_length=PHONE_MAX_LENGTH,
         choices=TRANSITIONAL_STATUS_CHOICES,
         blank=True,
         help_text='For orchards'
@@ -200,49 +190,38 @@ class ManagementPractices(models.Model):
         related_name='practices'
     )
     
-    # Tillage practices
     uses_tillage = models.BooleanField(default=False)
-    tillage_depth = models.CharField(max_length=50, blank=True)
+    tillage_depth = models.CharField(max_length=TILLAGE_DEPTH_MAX_LENGTH, blank=True)
     
-    # Cover crops
     uses_cover_crop = models.BooleanField(default=False)
     cover_crop_termination = models.CharField(
-        max_length=100,
+        max_length=COVER_CROP_TERMINATION_MAX_LENGTH,
         blank=True,
         help_text='e.g., Grazing, Tillage, Other'
     )
     
-    # Synthetic inputs
     uses_synthetic_fertilizers = models.BooleanField(default=False)
     uses_synthetic_insecticides = models.BooleanField(default=False)
     uses_synthetic_herbicides = models.BooleanField(default=False)
     uses_synthetic_fungicides = models.BooleanField(default=False)
     
-    # Organic amendments
     uses_organic_amendments = models.BooleanField(default=False)
     organic_amendment_types = models.CharField(
-        max_length=500,
+        max_length=ORGANIC_AMENDMENT_TYPES_MAX_LENGTH,
         blank=True,
         help_text='e.g., Manure, Compost, Compost Tea, Organic Fertilizer'
     )
     
-    # Grazing practices (for rangeland/orchards)
     uses_grazing = models.BooleanField(default=False)
     grazer_types = models.CharField(
-        max_length=200,
+        max_length=GRAZER_TYPES_MAX_LENGTH,
         blank=True,
         help_text='e.g., Chickens, Livestock'
     )
     applies_insecticides_dewormers = models.BooleanField(default=False)
     
-    INSECTICIDE_FREQUENCY_CHOICES = [
-        ('not_used', 'Not used/less than 10% of herd'),
-        ('once_per_year', 'Once per year, not during grazing'),
-        ('multiple_times', 'Multiple times per year, and/or during grazing season'),
-    ]
-    
     insecticide_dewormer_frequency = models.CharField(
-        max_length=100,
+        max_length=INSECTICIDE_FREQUENCY_MAX_LENGTH,
         choices=INSECTICIDE_FREQUENCY_CHOICES,
         blank=True,
         help_text='Frequency of insecticide/dewormer application'
@@ -252,10 +231,9 @@ class ManagementPractices(models.Model):
         help_text='Timing details, name of insecticide/dewormer'
     )
     
-    # Orchard-specific practices
     allows_ground_cover = models.BooleanField(default=False)
     ground_cover_management = models.CharField(
-        max_length=100,
+        max_length=GROUND_COVER_MANAGEMENT_MAX_LENGTH,
         blank=True,
         help_text='e.g., Tilling, Herbicide, Other'
     )
@@ -275,7 +253,7 @@ class ManagementPractices(models.Model):
 class TransectCode(models.Model):
     """Unique transect codes for validation - generated by administrators"""
     
-    transect_code = models.CharField(max_length=20, unique=True)
+    transect_code = models.CharField(max_length=TRANSECT_CODE_MAX_LENGTH, unique=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -293,12 +271,7 @@ class TransectCode(models.Model):
 
 
 class GrowerApplication(models.Model):
-    """
-    Main application container - one per field per year/sampling period
-    Transect codes are stored here (can vary per application for the same field)
-    """
-    
-    submission_code = models.CharField(max_length=50, unique=True)
+    submission_code = models.CharField(max_length=SUBMISSION_CODE_MAX_LENGTH, unique=True)
     field = models.ForeignKey(
         Field,
         on_delete=models.CASCADE,
@@ -311,11 +284,10 @@ class GrowerApplication(models.Model):
     submitted_at = models.DateTimeField(null=True, blank=True)
     date_sampled = models.DateField(help_text='Date when samples were collected', null=True, blank=True)
     
-    # Transect Codes - specific to this application (can vary per year for same field)
-    transect_code_1 = models.CharField(max_length=20, blank=True, null=True)
-    transect_code_2 = models.CharField(max_length=20, blank=True, null=True)
-    transect_code_3 = models.CharField(max_length=20, blank=True, null=True)
-    transect_code_4 = models.CharField(max_length=20, blank=True, null=True)
+    transect_code_1 = models.CharField(max_length=TRANSECT_CODE_MAX_LENGTH, blank=True, null=True)
+    transect_code_2 = models.CharField(max_length=TRANSECT_CODE_MAX_LENGTH, blank=True, null=True)
+    transect_code_3 = models.CharField(max_length=TRANSECT_CODE_MAX_LENGTH, blank=True, null=True)
+    transect_code_4 = models.CharField(max_length=TRANSECT_CODE_MAX_LENGTH, blank=True, null=True)
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -345,22 +317,18 @@ class GrowerApplication(models.Model):
     
     @property
     def number_of_transects(self):
-        """Dynamic property to get number of transects from this application"""
         return len(self.transect_codes)
     
     def save(self, *args, **kwargs):
         if not self.submission_code:
-            # Generating a unique submission code with UUID
             year_suffix = str(self.date_sampled.year)[-2:]
-            field_initials = ''.join([word[0] for word in self.field.field_name.split()]).upper()[:3]
-            grower_initials = self.grower.name[:2].upper() if self.grower.name else 'GR'
-            
-            # Handling concurrent creates
-            unique_suffix = str(uuid.uuid4()).split('-')[-1].upper()[:8]
-            self.submission_code = f"APP-{year_suffix}-{field_initials}-{grower_initials}-{unique_suffix}"
+            field_initials = ''.join([word[0] for word in self.field.field_name.split()]).upper()[:FIELD_INITIALS_MAX_LENGTH]
+            grower_initials = self.grower.name[:GROWER_INITIALS_MAX_LENGTH].upper() if self.grower.name else GROWER_INITIALS_DEFAULT
+            unique_suffix = str(uuid.uuid4()).split('-')[-1].upper()[:UUID_SUFFIX_LENGTH]
+            self.submission_code = f"{SUBMISSION_CODE_PREFIX}-{year_suffix}-{field_initials}-{grower_initials}-{unique_suffix}"
         
         if self.is_submitted and not self.submitted_at:
-            brookings_tz = pytz.timezone('America/Chicago')
+            brookings_tz = pytz.timezone(BROOKINGS_TIMEZONE)
             self.submitted_at = timezone.now().astimezone(brookings_tz)
         
         super().save(*args, **kwargs)
@@ -370,12 +338,7 @@ class GrowerApplication(models.Model):
 
 
 class ApplicationMeasurement(models.Model):
-    """
-    Measurement data for each transect within an application
-    GPS coordinates are from Field level (field location doesn't change)
-    Transect codes are from Application level (can vary per application/year)
-    This model stores the actual measurement data for each transect
-    """
+    """Measurement data for each transect within an application"""
     
     application = models.ForeignKey(
         GrowerApplication,
@@ -383,32 +346,46 @@ class ApplicationMeasurement(models.Model):
         related_name='measurements'
     )
     transect_number = models.IntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(4)],
+        validators=[MinValueValidator(TRANSECT_NUMBER_MIN), MaxValueValidator(TRANSECT_NUMBER_MAX)],
         help_text='1-4 within application (corresponds to application\'s transect codes)'
     )
     
-    # Sample specifications - actual measurement context
     acres_sampled = models.DecimalField(
         max_digits=8,
         decimal_places=2,
         null=True,
         blank=True,
-        validators=[MinValueValidator(0.1), MaxValueValidator(10000)]
+        validators=[MinValueValidator(ACRES_SAMPLED_MIN), MaxValueValidator(ACRES_SAMPLED_MAX)]
     )
     years_under_management = models.IntegerField(
         null=True,
         blank=True,
-        validators=[MinValueValidator(0), MaxValueValidator(100)]
+        validators=[MinValueValidator(YEARS_UNDER_MANAGEMENT_MIN), MaxValueValidator(YEARS_UNDER_MANAGEMENT_MAX)]
     )
     
-    # Dairy operation context - measurement-specific
     supports_dairy = models.BooleanField(default=False)
     is_confined_dairy = models.BooleanField(
         default=False,
         help_text='For crop fields'
     )
     
-    # Measurement-specific comments
+    transect_latitude = models.DecimalField(
+        max_digits=9,
+        decimal_places=6,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(LATITUDE_MIN), MaxValueValidator(LATITUDE_MAX)],
+        help_text='Transect latitude (-90 to 90) - specific location where this transect was sampled'
+    )
+    transect_longitude = models.DecimalField(
+        max_digits=9,
+        decimal_places=6,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(LONGITUDE_MIN), MaxValueValidator(LONGITUDE_MAX)],
+        help_text='Transect longitude (-180 to 180) - specific location where this transect was sampled'
+    )
+    
     comments = models.TextField(blank=True)
     
     created_at = models.DateTimeField(auto_now_add=True)
@@ -434,47 +411,41 @@ class ApplicationMeasurement(models.Model):
 class GrazingEvent(models.Model):
     """Grazing events for rangeland applications - measurement-specific events"""
     
-    EVENT_TYPE_CHOICES = [
-        ('start', 'Start Grazing'),
-        ('end', 'End Grazing'),
-        ('move', 'Move Animals'),
-    ]
-    
     application_measurement = models.ForeignKey(
         ApplicationMeasurement,
         on_delete=models.CASCADE,
         related_name='grazing_events'
     )
     event_number = models.IntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(4)],
+        validators=[MinValueValidator(GRAZING_EVENT_NUMBER_MIN), MaxValueValidator(GRAZING_EVENT_NUMBER_MAX)],
         help_text='1, 2, 3, or 4'
     )
     rest_period_days = models.IntegerField(
         null=True,
         blank=True,
-        validators=[MinValueValidator(0), MaxValueValidator(365)],
+        validators=[MinValueValidator(REST_PERIOD_DAYS_MIN), MaxValueValidator(REST_PERIOD_DAYS_MAX)],
         help_text='Rest period between grazing events in days'
     )
     class_of_animal = models.CharField(
-        max_length=100,
+        max_length=CLASS_OF_ANIMAL_MAX_LENGTH,
         help_text='e.g., Cow/calf pair, yearling cattle, ewe/lamb pair'
     )
     number_of_animals = models.IntegerField(
         null=True,
         blank=True,
-        validators=[MinValueValidator(1), MaxValueValidator(10000)]
+        validators=[MinValueValidator(NUMBER_OF_ANIMALS_MIN), MaxValueValidator(NUMBER_OF_ANIMALS_MAX)]
     )
     average_weight_lbs = models.DecimalField(
         max_digits=8,
         decimal_places=2,
         null=True,
         blank=True,
-        validators=[MinValueValidator(1), MaxValueValidator(5000)]
+        validators=[MinValueValidator(AVERAGE_WEIGHT_MIN), MaxValueValidator(AVERAGE_WEIGHT_MAX)]
     )
     duration_days = models.IntegerField(
         null=True,
         blank=True,
-        validators=[MinValueValidator(1), MaxValueValidator(365)]
+        validators=[MinValueValidator(DURATION_DAYS_MIN), MaxValueValidator(DURATION_DAYS_MAX)]
     )
     
     created_at = models.DateTimeField(auto_now_add=True)
@@ -493,22 +464,15 @@ class GrazingEvent(models.Model):
 class CSVImportLog(models.Model):
     """Track CSV imports from administrators"""
     
-    STATUS_CHOICES = [
-        ('pending', 'Pending'),
-        ('processing', 'Processing'),
-        ('completed', 'Completed'),
-        ('failed', 'Failed'),
-    ]
-    
-    filename = models.CharField(max_length=255)
+    filename = models.CharField(max_length=CSV_FILENAME_MAX_LENGTH)
     imported_by = models.ForeignKey(User, on_delete=models.CASCADE)
     import_date = models.DateTimeField(auto_now_add=True)
     total_records = models.IntegerField(default=0)
     successful_records = models.IntegerField(default=0)
     failed_records = models.IntegerField(default=0)
     status = models.CharField(
-        max_length=50,
-        choices=STATUS_CHOICES,
+        max_length=STATUS_MAX_LENGTH,
+        choices=CSV_IMPORT_STATUS_CHOICES,
         default='pending'
     )
     error_log = models.TextField(blank=True)

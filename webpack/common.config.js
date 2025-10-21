@@ -24,6 +24,12 @@ module.exports = {
     stitcher: path.resolve(__dirname, '../bugbox3/static/js/stitcher'),
     stitcher_form: path.resolve(__dirname, '../bugbox3/static/js/stitcher_form'),
     site_form: path.resolve(__dirname, '../bugbox3/static/js/site_form'),
+    // Grower Portal app
+    grower_application_create: path.resolve(__dirname, '../bugbox3/static/js/grower_portal/application_create'),
+    grower_application_step2: path.resolve(__dirname, '../bugbox3/static/js/grower_portal/application_step2'),
+    grower_application_step3: path.resolve(__dirname, '../bugbox3/static/js/grower_portal/application_step3'),
+    grower_application_step4: path.resolve(__dirname, '../bugbox3/static/js/grower_portal/application_step4'),
+    grower_maps_view: path.resolve(__dirname, '../bugbox3/static/js/grower_portal/google_maps_view'),
 
   },
   output: {

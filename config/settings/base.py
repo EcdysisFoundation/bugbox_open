@@ -46,6 +46,10 @@ LOCALE_PATHS = [str(BASE_DIR / "locale")]
 # Torchserve is down
 AI_INFERENCE_URL = 'http://10.147.19.124:8070/'
 
+# GOOGLE MAPS
+# ------------------------------------------------------------------------------
+GOOGLE_MAPS_API_KEY = env("GOOGLE_MAPS_API_KEY", default="AIzaSyCKcLKDWIujKdNm-70q1dQYqvaiwh1eeTQ")
+
 # DATABASES
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#databases
@@ -201,6 +205,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "bugbox3.users.context_processors.allauth_settings",
                 "bugbox3.core.context_processors.global_settings",
+                "bugbox3.grower_portal.context_processors.grower_portal_constants",
             ],
         },
     }

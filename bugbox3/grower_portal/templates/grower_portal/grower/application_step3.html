@@ -1,9 +1,21 @@
 {% extends "base.html" %}
+{% load render_bundle from webpack_loader %}
 
 {% load i18n %}
 {% load crispy_forms_tags %}
 
 {% block title %}Transect Measurements - Step 3{% endblock %}
+
+{% block customheadtagcontent %}
+<script id="json_context" type="application/json">
+{
+    "transectData": {{ transect_data|safe }},
+    "fieldLatitude": {{ field_latitude }},
+    "fieldLongitude": {{ field_longitude }}
+}
+</script>
+{% render_bundle 'grower_application_step3' 'js' %}
+{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
@@ -27,15 +39,43 @@
         </div>
     </div>
     
+    <!-- Google Maps  -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0"><i class="fas fa-map-marked-alt"></i> Mark Transect Locations</h4>
+                    <p class="mb-0 small">Drag each marker to the location where that transect was sampled</p>
+                </div>
+                <div class="card-body">
+                    <div style="position: relative;">
+                        <div id="map" style="height: 500px; width: 100%;"></div>
+                        <!-- Locate Me Button -->
+                        <button id="locateMe" type="button" class="btn btn-primary" style="position: absolute; top: 10px; left: 10px; z-index: 1000;">
+                            <i class="fas fa-crosshairs"></i> Locate Me
+                        </button>
+                    </div>
+                    <div class="mt-3">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Instructions:</strong> Click "Locate Me" to center the map on your current location. Then drag the markers labeled with transect codes to their actual locations in the field. 
+                            The coordinates will automatically update in the form below. GPS marking is optional but helps with data accuracy.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <div class="row">
-        <div class="col-lg-8">
+        <div class="col-lg-12">
             <div class="card">
                 <div class="card-header">
                     <h3 class="mb-0">Step 3: Transect Measurements</h3>
                     <p class="text-muted mb-0">Enter measurements for each transect</p>
                 </div>
                 <div class="card-body">
-                    <form method="post">
+                    <form method="post" id="measurementForm">
                         {% csrf_token %}
                         {{ formset.management_form }}
                         
@@ -46,6 +86,29 @@
                                 </div>
                                 <div class="card-body">
                                     {{ form.id }}
+                                    
+                                    {# Hidden GPS coordinate fields - populated by map #}
+                                    <input type="hidden" name="{{ form.transect_latitude.html_name }}" id="{{ form.transect_latitude.id_for_label }}" value="{{ form.instance.transect_latitude|default:'' }}">
+                                    <input type="hidden" name="{{ form.transect_longitude.html_name }}" id="{{ form.transect_longitude.id_for_label }}" value="{{ form.instance.transect_longitude|default:'' }}">
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-12">
+                                            <div class="alert alert-light border">
+                                                <small class="text-muted">
+                                                    <i class="fas fa-map-marker-alt"></i> 
+                                                    <strong>GPS Coordinates:</strong>
+                                                    <span id="coords_display_{{ forloop.counter0 }}">
+                                                        {% if form.instance.transect_latitude and form.instance.transect_longitude %}
+                                                            {{ form.instance.transect_latitude }}, {{ form.instance.transect_longitude }}
+                                                        {% else %}
+                                                            Drag marker on map to set coordinates
+                                                        {% endif %}
+                                                    </span>
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
                                     <div class="row mb-3">
                                         <div class="col-md-6">
                                             <label for="{{ form.acres_sampled.id_for_label }}" class="form-label">{{ form.acres_sampled.label }} <span class="text-danger">*</span></label>
@@ -144,24 +207,7 @@
     </div>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const supportsDairyCheckboxes = document.querySelectorAll('.supports-dairy-checkbox');
-    
-    supportsDairyCheckboxes.forEach(function(checkbox) {
-        const transectIndex = checkbox.getAttribute('data-transect');
-        const confinedDiv = document.getElementById(`confined_dairy_${transectIndex}`);
-        
-        function toggleConfinedDairy() {
-            if (confinedDiv) {
-                confinedDiv.style.display = checkbox.checked ? 'block' : 'none';
-            }
-        }
-        
-        checkbox.addEventListener('change', toggleConfinedDairy);
-        toggleConfinedDairy();
-    });
-});
-</script>
+<!-- Google Maps API with callback -->
+<script src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}&callback=initMap&v=weekly" async defer></script>
 {% endblock %}
 

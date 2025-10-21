@@ -8,6 +8,7 @@ from django.views.generic import TemplateView
 from django.contrib.auth import get_user_model
 from django.forms import modelformset_factory
 from django.db import IntegrityError, transaction
+import json
 
 from bugbox3.core.permissions import IS_GROWER_USER, IS_GROWER
 from ...models import (
@@ -18,6 +19,7 @@ from ...forms.grower.forms import (
     GrowerProfileCompletionForm, ApplicationCreationForm,
     ManagementPracticesForm, ApplicationMeasurementForm, GrazingEventForm
 )
+from ...constants import DEFAULT_FIELD_LATITUDE, DEFAULT_FIELD_LONGITUDE
 
 User = get_user_model()
 
@@ -25,11 +27,7 @@ User = get_user_model()
 @login_required
 @permission_required(IS_GROWER_USER, raise_exception=True)
 def profile_complete(request):
-    """
-    One-time profile completion form for new growers.
-    This view is only shown if the grower hasn't completed their profile yet.
-    """
-    # Check if profile already exists and is completed
+    """One-time profile completion form for new growers"""
     try:
         grower_profile = request.user.grower_profile
         if grower_profile.profile_completed:
@@ -41,7 +39,6 @@ def profile_complete(request):
         action = request.POST.get('action', 'complete')
         
         if action == 'skip':
-            # Create a minimal profile and mark as completed
             grower_profile, created = GrowerProfile.objects.get_or_create(
                 user=request.user,
                 defaults={'profile_completed': True}
@@ -53,16 +50,14 @@ def profile_complete(request):
             messages.info(request, 'Profile completion skipped. You can complete it later from your dashboard.')
             return redirect('grower_portal:dashboard')
         
-        else:  # action == 'complete'
+        else:
             form = GrowerProfileCompletionForm(request.POST)
             if form.is_valid():
-                # Create or update the grower profile
                 grower_profile, created = GrowerProfile.objects.get_or_create(
                     user=request.user,
                     defaults=form.cleaned_data
                 )
                 if not created:
-                    # Update existing profile
                     for field, value in form.cleaned_data.items():
                         setattr(grower_profile, field, value)
                 
@@ -82,13 +77,10 @@ def profile_complete(request):
 @login_required
 @permission_required(IS_GROWER, raise_exception=True)
 def dashboard(request):
-    """
-    Main grower dashboard showing applications and quick actions.
-    """
+    """Main grower dashboard"""
     try:
         grower_profile = request.user.grower_profile
     except GrowerProfile.DoesNotExist:
-        # If no profile exists, redirect to profile completion
         return redirect('grower_portal:profile_complete')
     
     if not grower_profile.profile_completed:
@@ -105,9 +97,7 @@ def dashboard(request):
 @login_required
 @permission_required(IS_GROWER, raise_exception=True)
 def profile_edit(request):
-    """
-    Edit grower profile information.
-    """
+    """Edit grower profile"""
     try:
         grower_profile = request.user.grower_profile
     except GrowerProfile.DoesNotExist:
@@ -295,9 +285,25 @@ def application_step3(request, application_id):
             else:
                 field.widget.attrs.update({'class': 'form-check-input'})
     
+    field = application.field
+    field_latitude = float(field.latitude) if field.latitude else DEFAULT_FIELD_LATITUDE
+    field_longitude = float(field.longitude) if field.longitude else DEFAULT_FIELD_LONGITUDE
+    
+    transect_data = []
+    for i, (form, code) in enumerate(zip(formset.forms, application.transect_codes)):
+        transect_data.append({
+            'index': i,
+            'code': code,
+            'latitude': float(form.instance.transect_latitude) if form.instance.transect_latitude else field_latitude,
+            'longitude': float(form.instance.transect_longitude) if form.instance.transect_longitude else field_longitude
+        })
+    
     return render(request, 'grower_portal/grower/application_step3.html', {
         'application': application,
-        'formset': formset
+        'formset': formset,
+        'field_latitude': field_latitude,
+        'field_longitude': field_longitude,
+        'transect_data': json.dumps(transect_data)
     })
 
 
@@ -388,11 +394,27 @@ def application_step5(request, application_id):
             messages.success(request, f'Application {application.submission_code} saved as draft.')
             return redirect('grower_portal:dashboard')
     
+    field = application.field
+    field_latitude = float(field.latitude) if field.latitude else DEFAULT_FIELD_LATITUDE
+    field_longitude = float(field.longitude) if field.longitude else DEFAULT_FIELD_LONGITUDE
+    
+    transect_data = []
+    for i, (measurement, code) in enumerate(zip(measurements, application.transect_codes)):
+        transect_data.append({
+            'index': i,
+            'code': code,
+            'latitude': float(measurement.transect_latitude) if measurement.transect_latitude else field_latitude,
+            'longitude': float(measurement.transect_longitude) if measurement.transect_longitude else field_longitude
+        })
+    
     return render(request, 'grower_portal/grower/application_step5.html', {
         'application': application,
         'management_practices': management_practices,
         'measurements': measurements,
-        'grazing_events': grazing_events
+        'grazing_events': grazing_events,
+        'field_latitude': field_latitude,
+        'field_longitude': field_longitude,
+        'transect_data': json.dumps(transect_data)
     })
 
 
@@ -414,11 +436,27 @@ def application_view(request, application_id):
     measurements = ApplicationMeasurement.objects.filter(application=application).order_by('transect_number')
     grazing_events = GrazingEvent.objects.filter(application_measurement__application=application).order_by('event_number') if application.field.field_type == 'range' else []
     
+    field = application.field
+    field_latitude = float(field.latitude) if field.latitude else DEFAULT_FIELD_LATITUDE
+    field_longitude = float(field.longitude) if field.longitude else DEFAULT_FIELD_LONGITUDE
+    
+    transect_data = []
+    for i, (measurement, code) in enumerate(zip(measurements, application.transect_codes)):
+        transect_data.append({
+            'index': i,
+            'code': code,
+            'latitude': float(measurement.transect_latitude) if measurement.transect_latitude else field_latitude,
+            'longitude': float(measurement.transect_longitude) if measurement.transect_longitude else field_longitude
+        })
+    
     return render(request, 'grower_portal/grower/application_view.html', {
         'application': application,
         'management_practices': management_practices,
         'measurements': measurements,
-        'grazing_events': grazing_events
+        'grazing_events': grazing_events,
+        'field_latitude': field_latitude,
+        'field_longitude': field_longitude,
+        'transect_data': json.dumps(transect_data)
     })
 
 
