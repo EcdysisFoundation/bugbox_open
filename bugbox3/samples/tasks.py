@@ -377,6 +377,8 @@ def crop_panorama(img_ids, sample_id, user_id):
         return
 
     for i in images:
+        if not i.annotations:
+            continue
         try:
             imgs = crop_img_to_annotations(i.image, i.annotations)
         except SoftTimeLimitExceeded:
