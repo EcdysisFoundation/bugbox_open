@@ -126,7 +126,8 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                 if sample_ids:
                     potential_samples = [
                         (i, reverse('samples:sample', kwargs={'sample_id': i})) for i in sample_ids]
-            if self.data[constants.STITCHER_ANNOTATIONS] and self.data[constants.STITCHER_APPROVED] \
+            if (self.data[constants.STITCHER_ANNOTATIONS] or self.data[constants.STITCHER_ANNOTATIONS_UPDATED_AT]) \
+                    and self.data[constants.STITCHER_APPROVED] \
                     and self.data[constants.STITCHER_BUGBOX_SAMPLE_ID]:
                 disable_crop_save = False
         first_potential_sample = potential_samples[0][0] if potential_samples else None
