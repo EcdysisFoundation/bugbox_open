@@ -75,11 +75,12 @@ class MultiSpecimenImageDatatablesSerializer(ModelSerializer):
             constants.FIELD_MULTIIMAGE_CROPPED_TO_SPECIMEN]
 
     def pano_details(self, value):
+        anno_n = len(value.annotations) if value.annotations else 0
         rows = [
             get_img_src(value.label_image_thumbnail),
             value.panorama_filename,
             value.upload_dir_name,
-            f'annotations: {len(value.annotations)}',
+            f'annotations: {anno_n}',
             str(value.uuid),
         ]
         if settings.ON_ECDYSIS_SERVER == 'YES':
