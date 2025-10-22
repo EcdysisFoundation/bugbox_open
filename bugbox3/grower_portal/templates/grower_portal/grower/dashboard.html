@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% load i18n %}
+{% load timezone_filters %}
 
 {% block title %}Grower Dashboard{% endblock %}
 
@@ -73,7 +74,7 @@
                                                 <span class="badge bg-success">Submitted</span>
                                             {% endif %}
                                         </td>
-                                        <td>{{ application.date_sampled|date:"M d, Y" }}</td>
+                                        <td>{{ application.date_sampled|user_date_short:request.user_timezone }}</td>
                                         <td>
                                             <div class="btn-group btn-group-sm">
                                                 <a href="{% url 'grower_portal:application_view' application.id %}" class="btn btn-outline-primary btn-sm">

@@ -2,6 +2,7 @@
 {% load render_bundle from webpack_loader %}
 
 {% load i18n %}
+{% load timezone_filters %}
 
 {% block title %}View Application - {{ application.submission_code }}{% endblock %}
 
@@ -113,12 +114,12 @@
                         {% endif %}
                         <tr>
                             <th>Date Sampled:</th>
-                            <td>{{ application.date_sampled|date:"F d, Y" }}</td>
+                            <td>{{ application.date_sampled|user_date:request.user_timezone }}</td>
                         </tr>
                         {% if application.submitted_at %}
                         <tr>
                             <th>Submitted At:</th>
-                            <td>{{ application.submitted_at|date:"F d, Y g:i A" }}</td>
+                            <td>{{ application.submitted_at|user_datetime:request.user_timezone }}</td>
                         </tr>
                         {% endif %}
                         <tr>

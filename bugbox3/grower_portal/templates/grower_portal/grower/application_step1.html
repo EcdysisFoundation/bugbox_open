@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% load i18n %}
+{% load timezone_filters %}
 
 {% block title %}Application Overview - Step 1{% endblock %}
 
@@ -101,7 +102,7 @@
                         </tr>
                         <tr>
                             <th>Date Sampled:</th>
-                            <td>{{ application.date_sampled|date:"F d, Y" }}</td>
+                            <td>{{ application.date_sampled|user_date:request.user_timezone }}</td>
                         </tr>
                         <tr>
                             <th>Number of Transects:</th>

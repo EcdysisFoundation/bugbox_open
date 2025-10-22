@@ -155,6 +155,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "allauth.account.middleware.AccountMiddleware",
     "bugbox3.core.eula_middleware.EULAMiddleware",
+    "bugbox3.grower_portal.middleware.TimezoneDetectionMiddleware",
 ]
 
 REST_FRAMEWORK = {

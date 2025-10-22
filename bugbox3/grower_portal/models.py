@@ -3,13 +3,12 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
-import pytz
 import uuid
 
 from .constants import (
     GENDER_CHOICES, RACE_CHOICES, FIELD_TYPE_CHOICES,
     TRANSITIONAL_STATUS_CHOICES, INSECTICIDE_FREQUENCY_CHOICES,
-    CSV_IMPORT_STATUS_CHOICES, BROOKINGS_TIMEZONE,
+    CSV_IMPORT_STATUS_CHOICES,
     AGE_MIN, AGE_MAX, LATITUDE_MIN, LATITUDE_MAX,
     LONGITUDE_MIN, LONGITUDE_MAX, GRAZING_EVENT_NUMBER_MIN,
     GRAZING_EVENT_NUMBER_MAX, REST_PERIOD_DAYS_MIN,
@@ -328,8 +327,7 @@ class GrowerApplication(models.Model):
             self.submission_code = f"{SUBMISSION_CODE_PREFIX}-{year_suffix}-{field_initials}-{grower_initials}-{unique_suffix}"
         
         if self.is_submitted and not self.submitted_at:
-            brookings_tz = pytz.timezone(BROOKINGS_TIMEZONE)
-            self.submitted_at = timezone.now().astimezone(brookings_tz)
+            self.submitted_at = timezone.now()
         
         super().save(*args, **kwargs)
     

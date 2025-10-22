@@ -20,6 +20,7 @@ from ...forms.grower.forms import (
     ManagementPracticesForm, ApplicationMeasurementForm, GrazingEventForm
 )
 from ...constants import DEFAULT_FIELD_LATITUDE, DEFAULT_FIELD_LONGITUDE
+from ...middleware import get_user_timezone
 
 User = get_user_model()
 
@@ -70,7 +71,8 @@ def profile_complete(request):
         form = GrowerProfileCompletionForm()
 
     return render(request, 'grower_portal/grower/profile_complete.html', {
-        'form': form
+        'form': form,
+        'user_timezone': get_user_timezone(request)
     })
 
 
@@ -90,7 +92,8 @@ def dashboard(request):
     
     return render(request, 'grower_portal/grower/dashboard.html', {
         'grower_profile': grower_profile,
-        'applications': applications
+        'applications': applications,
+        'user_timezone': get_user_timezone(request)
     })
 
 
@@ -114,7 +117,8 @@ def profile_edit(request):
 
     return render(request, 'grower_portal/grower/profile_complete.html', {
         'form': form,
-        'is_edit': True
+        'is_edit': True,
+        'user_timezone': get_user_timezone(request)
     })
 
 
@@ -198,7 +202,8 @@ def application_create(request):
         form = ApplicationCreationForm()
     
     return render(request, 'grower_portal/grower/application_create.html', {
-        'form': form
+        'form': form,
+        'user_timezone': get_user_timezone(request)
     })
 
 
@@ -212,7 +217,8 @@ def application_step1(request, application_id):
     )
     
     return render(request, 'grower_portal/grower/application_step1.html', {
-        'application': application
+        'application': application,
+        'user_timezone': get_user_timezone(request)
     })
 
 
@@ -240,7 +246,8 @@ def application_step2(request, application_id):
     
     return render(request, 'grower_portal/grower/application_step2.html', {
         'application': application,
-        'form': form
+        'form': form,
+        'user_timezone': get_user_timezone(request)
     })
 
 
@@ -303,7 +310,8 @@ def application_step3(request, application_id):
         'formset': formset,
         'field_latitude': field_latitude,
         'field_longitude': field_longitude,
-        'transect_data': json.dumps(transect_data)
+        'transect_data': json.dumps(transect_data),
+        'user_timezone': get_user_timezone(request)
     })
 
 
@@ -358,7 +366,8 @@ def application_step4(request, application_id):
     
     return render(request, 'grower_portal/grower/application_step4.html', {
         'application': application,
-        'formset': formset
+        'formset': formset,
+        'user_timezone': get_user_timezone(request)
     })
 
 
@@ -414,7 +423,8 @@ def application_step5(request, application_id):
         'grazing_events': grazing_events,
         'field_latitude': field_latitude,
         'field_longitude': field_longitude,
-        'transect_data': json.dumps(transect_data)
+        'transect_data': json.dumps(transect_data),
+        'user_timezone': get_user_timezone(request)
     })
 
 
@@ -456,7 +466,8 @@ def application_view(request, application_id):
         'grazing_events': grazing_events,
         'field_latitude': field_latitude,
         'field_longitude': field_longitude,
-        'transect_data': json.dumps(transect_data)
+        'transect_data': json.dumps(transect_data),
+        'user_timezone': get_user_timezone(request)
     })
 
 
@@ -497,5 +508,6 @@ def application_delete(request, application_id):
         return redirect('grower_portal:dashboard')
     
     return render(request, 'grower_portal/grower/application_delete.html', {
-        'application': application
+        'application': application,
+        'user_timezone': get_user_timezone(request)
     })

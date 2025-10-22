@@ -45,10 +45,11 @@
 
 {% block customheadtagcontent %}
 <!--  for example, render a webpack bundle in a child .html page -->
+<script src="{% static 'js/timezone-detection.js' %}" defer></script>
 {% endblock customheadtagcontent %}
 
 </head>
-<body>
+<body data-user-timezone="{{ request.user_timezone|default:'UTC' }}">
   <div class="mb-1">
 <div class="custom-navbar">
   <a href="{% url 'about' %}">

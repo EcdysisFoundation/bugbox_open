@@ -2,6 +2,7 @@
 {% load render_bundle from webpack_loader %}
 
 {% load i18n %}
+{% load timezone_filters %}
 
 {% block title %}Review & Submit - Step 5{% endblock %}
 
@@ -112,7 +113,7 @@
                                 {% endif %}
                                 <tr>
                                     <th>Date Sampled:</th>
-                                    <td>{{ application.date_sampled|date:"F d, Y" }}</td>
+                                    <td>{{ application.date_sampled|user_date:request.user_timezone }}</td>
                                 </tr>
                                 <tr>
                                     <th>Transect Codes:</th>
