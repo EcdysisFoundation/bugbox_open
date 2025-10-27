@@ -22,9 +22,8 @@ class Command(BaseCommand):
         else:
             self.stdout.write(f'is_grower group already exists')
         
-        # Get all permissions for IS_GROWER
         permission_codenames = []
-        for perm_string in IS_GROWER:
+        for perm_string in IS_GROWER_USER:
             app_label, codename = perm_string.split('.')
             permission_codenames.append((app_label, codename))
         

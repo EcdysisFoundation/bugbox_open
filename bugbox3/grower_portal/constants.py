@@ -15,9 +15,9 @@ RACE_CHOICES = [
 ]
 
 FIELD_TYPE_CHOICES = [
-    ('crop', 'Crop Field'),
-    ('range', 'Rangeland/Pasture'),
-    ('orchard', 'Orchard'),
+    ('crop', 'Crop field'),
+    ('orchard', 'Orchard/vineyard/woody crop'),
+    ('range', 'Rangeland/pasture'),
 ]
 
 TRANSITIONAL_STATUS_CHOICES = [
@@ -71,19 +71,18 @@ AVERAGE_WEIGHT_MAX = 5000
 DURATION_DAYS_MIN = 1
 DURATION_DAYS_MAX = 365
 
-# ApplicationMeasurement Constants
-TRANSECT_NUMBER_MIN = 1
-TRANSECT_NUMBER_MAX = 4
 ACRES_SAMPLED_MIN = 0.1
 ACRES_SAMPLED_MAX = 10000
 YEARS_UNDER_MANAGEMENT_MIN = 0
-YEARS_UNDER_MANAGEMENT_MAX = 100
+YEARS_UNDER_MANAGEMENT_MAX = 500
 
 # Field Length Constants
 PHONE_MAX_LENGTH = 20
 FARM_NAME_MAX_LENGTH = 200
 FIELD_NAME_MAX_LENGTH = 200
 CROP_VARIETY_MAX_LENGTH = 200
+CROP_VARIETIES_MAX_LENGTH = 500 
+MAX_ANIMAL_ENTRIES_PER_GRAZING_EVENT = 10
 FORAGE_VARIETIES_MAX_LENGTH = 500
 PADDOCK_SIZE_MAX_LENGTH = 100
 ROOTSTOCK_SPECIES_MAX_LENGTH = 500
@@ -110,6 +109,59 @@ UUID_SUFFIX_LENGTH = 8
 # Grazing Events Constants
 MAX_GRAZING_EVENTS = 4
 DEFAULT_YEAR = 2025
+
+# Crop Type Choices
+CROP_TYPE_CHOICES = [
+    ('row_crop', 'Row crop'),
+    ('mixed_veg', 'Mixed Vegetables/herbs/specialty crops'),
+    ('hayfield', 'Hayfield'),
+]
+
+CROP_SUBTYPE_CHOICES = [
+    ('corn', 'Corn'),
+    ('soybean', 'Soybean'),
+    ('small_grain', 'Small grain'),
+    ('potato', 'Potato'),
+    ('peanut', 'Peanut'),
+    ('other', 'Other'),
+]
+
+# Cover Crop Termination Choices
+COVER_CROP_TERMINATION_CHOICES = [
+    ('grazing', 'Grazing'),
+    ('mowing', 'Mowing'),
+    ('tillage', 'Tillage'),
+    ('herbicide', 'Herbicide'),
+    ('other', 'Other'),
+]
+
+# Organic Amendment Choices
+ORGANIC_AMENDMENT_CHOICES = [
+    ('manure', 'Manure'),
+    ('compost', 'Compost'),
+    ('compost_tea', 'Compost tea'),
+    ('organic_fertilizer', 'Organic fertilizer'),
+    ('other', 'Other'),
+]
+
+# Grazer Types Choices
+GRAZER_TYPES_CHOICES = [
+    ('cattle', 'Cattle'),
+    ('sheep', 'Sheep'),
+    ('goats', 'Goats'),
+    ('hogs', 'Hogs'),
+    ('chickens', 'Chickens'),
+    ('other', 'Other'),
+]
+
+# Ground Cover Management Choices
+GROUND_COVER_MANAGEMENT_CHOICES = [
+    ('grazing', 'Grazing'),
+    ('mowing', 'Mowing'),
+    ('tilling', 'Tilling'),
+    ('herbicide', 'Herbicide'),
+    ('other', 'Other'),
+]
 
 # Form Help Text Constants
 CLASS_OF_ANIMAL_EXAMPLES = 'Examples: Cow/calf pair, yearling cattle (7-12 months), yearling cattle (12-17 months), replacement heifers (18-24 months), bull, ewe/lamb pair, non-lactating ewe, ram, wether, bison cow, bison bull, etc.'

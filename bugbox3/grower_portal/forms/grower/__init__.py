@@ -4,11 +4,11 @@ Forms used by growers for profile management, applications, etc.
 """
 from .forms import (
     GrowerProfileCompletionForm, ApplicationCreationForm,
-    ManagementPracticesForm, ApplicationMeasurementForm, GrazingEventForm
+    ManagementPracticesForm, TransectCodesForm, GrazingEventForm
 )
 
 __all__ = [
     'GrowerProfileCompletionForm', 'ApplicationCreationForm',
-    'ManagementPracticesForm', 'ApplicationMeasurementForm', 'GrazingEventForm'
+    'ManagementPracticesForm', 'TransectCodesForm', 'GrazingEventForm'
 ]
 

@@ -1,9 +1,17 @@
 {% extends "base.html" %}
+{% load render_bundle from webpack_loader %}
 
 {% load i18n %}
 {% load timezone_filters %}
+{% load crispy_forms_tags %}
+{% load static %}
 
-{% block title %}Application Overview - Step 1{% endblock %}
+{% block title %}Step 1: Field Information{% endblock %}
+
+{% block customheadtagcontent %}
+{% render_bundle 'grower_application_create' 'js' %}
+<script src="{% static 'js/grower_portal/conditional_fields.js' %}"></script>
+{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
@@ -21,7 +29,7 @@
     <div class="row">
         <div class="col-12">
             <div class="progress mb-4">
-                <div class="progress-bar" role="progressbar" style="width: 20%">Step 1 of 5</div>
+                <div class="progress-bar" role="progressbar" style="width: 20%">Step 1 of {% if application.field.field_type == 'range' %}5{% else %}4{% endif %}</div>
             </div>
         </div>
     </div>
@@ -30,104 +38,21 @@
         <div class="col-lg-8">
             <div class="card">
                 <div class="card-header">
-                    <h3 class="mb-0">Step 1: Application Overview</h3>
+                    <h3 class="mb-0">Step 1: Field Information</h3>
                 </div>
                 <div class="card-body">
-                    <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <strong>Note:</strong> Application details (farm, field, transect codes, date sampled) cannot be changed after creation. If you need to modify these details, you must delete this application and create a new one.
-                    </div>
-                    
-                    <h5>Farm Information</h5>
-                    <table class="table table-bordered">
-                        <tr>
-                            <th style="width: 30%">Farm Name:</th>
-                            <td>{{ application.field.farm.name }}</td>
-                        </tr>
-                    </table>
-                    
-                    <h5 class="mt-4">Field Information</h5>
-                    <table class="table table-bordered">
-                        <tr>
-                            <th style="width: 30%">Field Name:</th>
-                            <td>{{ application.field.field_name }}</td>
-                        </tr>
-                        <tr>
-                            <th>Field Type:</th>
-                            <td>{{ application.field.get_field_type_display }}</td>
-                        </tr>
-                        {% if application.field.latitude and application.field.longitude %}
-                        <tr>
-                            <th>GPS Coordinates:</th>
-                            <td>{{ application.field.latitude }}, {{ application.field.longitude }}</td>
-                        </tr>
-                        {% endif %}
-                        {% if application.field.crop_variety %}
-                        <tr>
-                            <th>Crop Variety:</th>
-                            <td>{{ application.field.crop_variety }}</td>
-                        </tr>
-                        {% endif %}
-                        {% if application.field.forage_varieties %}
-                        <tr>
-                            <th>Forage Varieties:</th>
-                            <td>{{ application.field.forage_varieties }}</td>
-                        </tr>
-                        {% endif %}
-                        {% if application.field.paddock_size %}
-                        <tr>
-                            <th>Paddock Size:</th>
-                            <td>{{ application.field.paddock_size }}</td>
-                        </tr>
-                        {% endif %}
-                        {% if application.field.rootstock_species %}
-                        <tr>
-                            <th>Rootstock Species:</th>
-                            <td>{{ application.field.rootstock_species }}</td>
-                        </tr>
-                        {% endif %}
-                        {% if application.field.transitional_status %}
-                        <tr>
-                            <th>Transitional Status:</th>
-                            <td>{{ application.field.get_transitional_status_display }}</td>
-                        </tr>
-                        {% endif %}
-                    </table>
-                    
-                    <h5 class="mt-4">Application Details</h5>
-                    <table class="table table-bordered">
-                        <tr>
-                            <th style="width: 30%">Submission Code:</th>
-                            <td>{{ application.submission_code }}</td>
-                        </tr>
-                        <tr>
-                            <th>Date Sampled:</th>
-                            <td>{{ application.date_sampled|user_date:request.user_timezone }}</td>
-                        </tr>
-                        <tr>
-                            <th>Number of Transects:</th>
-                            <td>{{ application.number_of_transects }}</td>
-                        </tr>
-                    </table>
-                    
-                    <h5 class="mt-4">Transect Codes</h5>
-                    <table class="table table-bordered">
-                        {% for code in application.transect_codes %}
-                        <tr>
-                            <th style="width: 30%">Transect {{ forloop.counter }}:</th>
-                            <td><code>{{ code }}</code></td>
-                        </tr>
-                        {% endfor %}
-                    </table>
-                    
-                    <div class="d-flex justify-content-between mt-4">
+                    <div class="d-flex justify-content-start mb-3">
                         <a href="{% url 'grower_portal:dashboard' %}" class="btn btn-secondary">
                             <i class="fas fa-arrow-left"></i> Back to Dashboard
                         </a>
-                        <a href="{% url 'grower_portal:application_step2' application.id %}" class="btn btn-primary">
-                            Next: Management Practices <i class="fas fa-arrow-right"></i>
-                        </a>
                     </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Note:</strong> You can modify these details until you submit the application. Once submitted, changes will not be allowed.
+                    </div>
+                    
+                    {% crispy form %}
                 </div>
             </div>
         </div>
@@ -140,14 +65,16 @@
                 <div class="card-body">
                     <ul class="list-group">
                         <li class="list-group-item active">
-                            <i class="fas fa-check-circle"></i> Step 1: Overview
+                            <i class="fas fa-check-circle"></i> Step 1: Field Information
                         </li>
                         <li class="list-group-item">Step 2: Management Practices</li>
-                        <li class="list-group-item">Step 3: Transect Measurements</li>
+                        <li class="list-group-item">Step 3: Transect Codes</li>
                         {% if application.field.field_type == 'range' %}
                         <li class="list-group-item">Step 4: Grazing Events</li>
-                        {% endif %}
                         <li class="list-group-item">Step 5: Review & Submit</li>
+                        {% else %}
+                        <li class="list-group-item">Step 4: Review & Submit</li>
+                        {% endif %}
                     </ul>
                 </div>
             </div>
@@ -155,4 +82,3 @@
     </div>
 </div>
 {% endblock %}
-

@@ -4,7 +4,7 @@
 {% load i18n %}
 {% load timezone_filters %}
 
-{% block title %}Review & Submit - Step 5{% endblock %}
+{% block title %}Review & Submit - Step {% if application.field.field_type == 'range' %}5{% else %}4{% endif %}{% endblock %}
 
 {% block customheadtagcontent %}
 <script id="json_context" type="application/json">
@@ -34,7 +34,7 @@
     <div class="row">
         <div class="col-12">
             <div class="progress mb-4">
-                <div class="progress-bar bg-success" role="progressbar" style="width: 100%">Step 5 of 5</div>
+                <div class="progress-bar bg-success" role="progressbar" style="width: 100%">Step {% if application.field.field_type == 'range' %}5 of 5{% else %}4 of 4{% endif %}</div>
             </div>
         </div>
     </div>
@@ -43,9 +43,21 @@
         <div class="col-lg-8">
             <div class="card mb-4">
                 <div class="card-header bg-success text-white">
-                    <h3 class="mb-0">Step 5: Review & Submit</h3>
+                    <h3 class="mb-0">Step {% if application.field.field_type == 'range' %}5{% else %}4{% endif %}: Review & Submit</h3>
                 </div>
                 <div class="card-body">
+                    <div class="d-flex justify-content-start mb-3">
+                        {% if application.field.field_type == 'range' %}
+                            <a href="{% url 'grower_portal:application_step4' application.id %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Previous
+                            </a>
+                        {% else %}
+                            <a href="{% url 'grower_portal:application_step3' application.id %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Previous
+                            </a>
+                        {% endif %}
+                    </div>
+                    
                     <div class="alert alert-info">
                         <i class="fas fa-info-circle"></i>
                         Please review all information below before submitting. You can edit any section by clicking the "Edit" button.
@@ -81,10 +93,34 @@
                                     <td>{{ application.field.latitude }}, {{ application.field.longitude }}</td>
                                 </tr>
                                 {% endif %}
-                                {% if application.field.crop_variety %}
+                                {% if application.field.crop_type %}
                                 <tr>
-                                    <th>Crop Variety:</th>
-                                    <td>{{ application.field.crop_variety }}</td>
+                                    <th>Crop Type:</th>
+                                    <td>{{ application.field.get_crop_type_display }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if application.field.crop_subtype %}
+                                <tr>
+                                    <th>Crop Subtype:</th>
+                                    <td>{{ application.field.get_crop_subtype_display }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if application.field.crop_subtype_other %}
+                                <tr>
+                                    <th>Other Crop Type:</th>
+                                    <td>{{ application.field.crop_subtype_other }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if application.field.small_grain_type %}
+                                <tr>
+                                    <th>Small Grain Type:</th>
+                                    <td>{{ application.field.small_grain_type }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if application.field.uses_broad_fork %}
+                                <tr>
+                                    <th>Broad Fork:</th>
+                                    <td>Yes</td>
                                 </tr>
                                 {% endif %}
                                 {% if application.field.forage_varieties %}
@@ -95,8 +131,14 @@
                                 {% endif %}
                                 {% if application.field.paddock_size %}
                                 <tr>
-                                    <th>Paddock Size:</th>
+                                    <th>{% if application.field.field_type == 'range' %}Paddock Size (acres):{% else %}Paddock Size:{% endif %}</th>
                                     <td>{{ application.field.paddock_size }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if application.field.pasture_size %}
+                                <tr>
+                                    <th>Pasture Size (acres):</th>
+                                    <td>{{ application.field.pasture_size }}</td>
                                 </tr>
                                 {% endif %}
                                 {% if application.field.rootstock_species %}
@@ -237,10 +279,22 @@
                     
                     <!-- Transect Locations Map -->
                     <div class="card mb-3">
-                        <div class="card-header bg-info text-white">
+                        <div class="card-header d-flex justify-content-between align-items-center bg-info text-white">
                             <h5 class="mb-0"><i class="fas fa-map-marked-alt"></i> Transect Locations</h5>
+                            <a href="{% url 'grower_portal:application_step3' application.id %}" class="btn btn-sm btn-outline-light">Edit</a>
                         </div>
                         <div class="card-body">
+                            <!-- Display transect codes -->
+                            <div class="mb-3">
+                                <strong>Transect Codes:</strong><br>
+                                {% for code in application.transect_codes %}
+                                    <span class="badge bg-primary me-1">{{ code }}</span>
+                                {% empty %}
+                                    <span class="text-muted">No transect codes entered</span>
+                                {% endfor %}
+                            </div>
+                            
+                            <!-- Map -->
                             <div id="map" style="height: 400px; width: 100%;"></div>
                             <div class="mt-3">
                                 <small class="text-muted">
@@ -251,42 +305,39 @@
                         </div>
                     </div>
                     
-                    <!-- Transect Measurements -->
+                    <!-- Field Measurements -->
                     <div class="card mb-3">
                         <div class="card-header d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0">Transect Measurements</h5>
-                            <a href="{% url 'grower_portal:application_step3' application.id %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                            <h5 class="mb-0">Field Measurements</h5>
+                            <a href="{% url 'grower_portal:application_step1' application.id %}" class="btn btn-sm btn-outline-primary">Edit</a>
                         </div>
                         <div class="card-body">
-                            {% for measurement in measurements %}
-                                <h6>Transect {{ measurement.transect_number }}</h6>
-                                <table class="table table-sm mb-3">
-                                    <tr>
-                                        <th style="width: 40%">Acres Sampled:</th>
-                                        <td>{{ measurement.acres_sampled|default:"Not specified" }}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>Years Under Management:</th>
-                                        <td>{{ measurement.years_under_management|default:"Not specified" }}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>Supports Dairy:</th>
-                                        <td>{{ measurement.supports_dairy|yesno:"Yes,No" }}</td>
-                                    </tr>
-                                    {% if measurement.supports_dairy %}
-                                    <tr>
-                                        <th>Confined Dairy:</th>
-                                        <td>{{ measurement.is_confined_dairy|yesno:"Yes,No" }}</td>
-                                    </tr>
-                                    {% endif %}
-                                    {% if measurement.comments %}
-                                    <tr>
-                                        <th>Comments:</th>
-                                        <td>{{ measurement.comments }}</td>
-                                    </tr>
-                                    {% endif %}
-                                </table>
-                            {% endfor %}
+                            <table class="table table-sm">
+                                <tr>
+                                    <th style="width: 40%">{% if application.field.field_type == 'range' %}Acres in paddock sampled:{% else %}Acres Sampled:{% endif %}</th>
+                                    <td>{{ application.field.acres_sampled|default:"Not specified" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Years Under Management:</th>
+                                    <td>{{ application.field.years_under_management|default:"Not specified" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Supports Dairy:</th>
+                                    <td>{{ application.field.supports_dairy|yesno:"Yes,No" }}</td>
+                                </tr>
+                                {% if application.field.supports_dairy %}
+                                <tr>
+                                    <th>Confined Dairy:</th>
+                                    <td>{{ application.field.is_confined_dairy|yesno:"Yes,No" }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if application.field.measurement_comments %}
+                                <tr>
+                                    <th>Comments:</th>
+                                    <td>{{ application.field.measurement_comments }}</td>
+                                </tr>
+                                {% endif %}
+                            </table>
                         </div>
                     </div>
                     
@@ -300,29 +351,31 @@
                         <div class="card-body">
                             {% if grazing_events %}
                                 {% for event in grazing_events %}
-                                    <h6>Grazing Event {{ forloop.counter }}</h6>
-                                    <table class="table table-sm mb-3">
-                                        <tr>
-                                            <th style="width: 40%">Class of Animal:</th>
-                                            <td>{{ event.class_of_animal|default:"Not specified" }}</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Number of Animals:</th>
-                                            <td>{{ event.number_of_animals|default:"Not specified" }}</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Average lbs per Animal:</th>
-                                            <td>{{ event.average_weight_lbs|default:"Not specified" }}</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Duration (days):</th>
-                                            <td>{{ event.duration_days|default:"Not specified" }}</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Rest Period (days):</th>
-                                            <td>{{ event.rest_period_days|default:"Not specified" }}</td>
-                                        </tr>
-                                    </table>
+                                    {% if event.animals.exists %}
+                                        <h6>Grazing Event {{ event.event_number }}</h6>
+                                        <table class="table table-sm table-bordered mb-3">
+                                            <thead>
+                                                <tr>
+                                                    <th>Class of Animal</th>
+                                                    <th>Number</th>
+                                                    <th>Avg Weight (lbs)</th>
+                                                    <th>Duration (days)</th>
+                                                    <th>Rest Period (days)</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for animal in event.animals.all %}
+                                                    <tr>
+                                                        <td>{{ animal.class_of_animal }}</td>
+                                                        <td>{{ animal.number_of_animals }}</td>
+                                                        <td>{{ animal.average_weight_lbs }}</td>
+                                                        <td>{{ animal.duration_days }}</td>
+                                                        <td>{{ animal.rest_period_days }}</td>
+                                                    </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    {% endif %}
                                 {% endfor %}
                             {% else %}
                                 <p class="text-muted">No grazing events recorded.</p>
@@ -334,18 +387,7 @@
                     <!-- Submit Actions -->
                     <form method="post">
                         {% csrf_token %}
-                        <div class="d-flex justify-content-between mt-4">
-                            <div>
-                                {% if application.field.field_type == 'range' %}
-                                    <a href="{% url 'grower_portal:application_step4' application.id %}" class="btn btn-secondary">
-                                        <i class="fas fa-arrow-left"></i> Previous
-                                    </a>
-                                {% else %}
-                                    <a href="{% url 'grower_portal:application_step3' application.id %}" class="btn btn-secondary">
-                                        <i class="fas fa-arrow-left"></i> Previous
-                                    </a>
-                                {% endif %}
-                            </div>
+                        <div class="d-flex justify-content-end mt-4">
                             <div>
                                 <button type="submit" name="action" value="save_draft" class="btn btn-warning me-2">
                                     <i class="fas fa-save"></i> Save as Draft
@@ -368,13 +410,13 @@
                 <div class="card-body">
                     <ul class="list-group">
                         <li class="list-group-item text-success">
-                            <i class="fas fa-check-circle"></i> Step 1: Overview
+                            <i class="fas fa-check-circle"></i> Step 1: Field Information
                         </li>
                         <li class="list-group-item text-success">
                             <i class="fas fa-check-circle"></i> Step 2: Management Practices
                         </li>
                         <li class="list-group-item text-success">
-                            <i class="fas fa-check-circle"></i> Step 3: Transect Measurements
+                            <i class="fas fa-check-circle"></i> Step 3: Transect Codes
                         </li>
                         {% if application.field.field_type == 'range' %}
                         <li class="list-group-item text-success">
@@ -382,7 +424,7 @@
                         </li>
                         {% endif %}
                         <li class="list-group-item active bg-success text-white">
-                            <i class="fas fa-circle"></i> Step 5: Review & Submit
+                            <i class="fas fa-circle"></i> Step {% if application.field.field_type == 'range' %}5{% else %}4{% endif %}: Review & Submit
                         </li>
                     </ul>
                 </div>

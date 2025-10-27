@@ -1,5 +1,4 @@
 window.initMapView = function() {
-    console.log('initMapView called - Google Maps API loaded');
     
     const jsonContextElement = document.getElementById('json_context');
     if (!jsonContextElement) {
@@ -10,7 +9,6 @@ window.initMapView = function() {
     let jsonContext;
     try {
         jsonContext = JSON.parse(jsonContextElement.textContent);
-        console.log('Parsed JSON context:', jsonContext);
     } catch (e) {
         console.error('Error parsing JSON context:', e);
         console.error('JSON content:', jsonContextElement.textContent);
@@ -20,8 +18,6 @@ window.initMapView = function() {
     const transectData = jsonContext.transectData;
     const fieldCenter = { lat: jsonContext.fieldLatitude, lng: jsonContext.fieldLongitude };
     
-    console.log('Transect data:', transectData);
-    console.log('Field center:', fieldCenter);
     
     const map = new google.maps.Map(document.getElementById("map"), {
         center: fieldCenter,
@@ -135,6 +131,5 @@ window.initMapView = function() {
         });
     });
     
-    console.log(`Initialized read-only map with ${transectData.length} transect markers`);
 };
 

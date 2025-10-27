@@ -4,6 +4,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const rangelandFields = document.getElementById('rangeland_fields');
     const orchardSpecificFields = document.getElementById('orchard_specific_fields');
     
+    const supportsDairyCheckbox = document.getElementById('id_supports_dairy');
+    const confinedDairyField = document.getElementById('confined_dairy_field');
+    
     function updateFieldDisplay() {
         const fieldType = fieldTypeSelect.value;
         
@@ -21,9 +24,28 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    function toggleConfinedDairy() {
+        if (confinedDairyField) {
+            if (supportsDairyCheckbox && supportsDairyCheckbox.checked) {
+                confinedDairyField.style.display = 'block';
+            } else {
+                confinedDairyField.style.display = 'none';
+                const confinedDairyCheckbox = document.getElementById('id_is_confined_dairy');
+                if (confinedDairyCheckbox) {
+                    confinedDairyCheckbox.checked = false;
+                }
+            }
+        }
+    }
+    
     if (fieldTypeSelect) {
         fieldTypeSelect.addEventListener('change', updateFieldDisplay);
         updateFieldDisplay();
+    }
+    
+    if (supportsDairyCheckbox) {
+        supportsDairyCheckbox.addEventListener('change', toggleConfinedDairy);
+        toggleConfinedDairy();
     }
 });
 

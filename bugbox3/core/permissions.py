@@ -53,10 +53,6 @@ MANAGE_GROWER_PROFILES = 'grower_portal.manage_grower_profiles'
 MANAGE_FARMS = 'grower_portal.manage_farms'
 MANAGE_FIELDS = 'grower_portal.manage_fields'
 MANAGE_GROWER_APPLICATIONS = 'grower_portal.manage_grower_applications'
-VIEW_APPLICATION_MEASUREMENTS = 'grower_portal.view_applicationmeasurement'
-ADD_APPLICATION_MEASUREMENTS = 'grower_portal.add_applicationmeasurement'
-CHANGE_APPLICATION_MEASUREMENTS = 'grower_portal.change_applicationmeasurement'
-DELETE_APPLICATION_MEASUREMENTS = 'grower_portal.delete_applicationmeasurement'
 GENERATE_TRANSECT_CODES = 'grower_portal.generate_transect_codes'
 
 IS_RESEARCH = [
@@ -105,10 +101,6 @@ IS_GROWER = [
     MANAGE_FARMS,
     MANAGE_FIELDS,
     MANAGE_GROWER_APPLICATIONS,
-    VIEW_APPLICATION_MEASUREMENTS,
-    ADD_APPLICATION_MEASUREMENTS,
-    CHANGE_APPLICATION_MEASUREMENTS,
-    DELETE_APPLICATION_MEASUREMENTS,
 ]
 
 # Permission list for grower portal administrators
@@ -118,10 +110,6 @@ IS_GROWERADMIN = [
     MANAGE_FARMS,
     MANAGE_FIELDS,
     MANAGE_GROWER_APPLICATIONS,
-    VIEW_APPLICATION_MEASUREMENTS,
-    ADD_APPLICATION_MEASUREMENTS,
-    CHANGE_APPLICATION_MEASUREMENTS,
-    DELETE_APPLICATION_MEASUREMENTS,
     GENERATE_TRANSECT_CODES,
 ]
 

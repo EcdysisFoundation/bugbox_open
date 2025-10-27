@@ -6,23 +6,43 @@ from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.generic import TemplateView
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Permission
 from django.forms import modelformset_factory
 from django.db import IntegrityError, transaction
 import json
 
 from bugbox3.core.permissions import IS_GROWER_USER, IS_GROWER
 from ...models import (
-    GrowerProfile, Farm, Field, GrowerApplication, ApplicationMeasurement,
-    ManagementPractices, GrazingEvent
+    GrowerProfile, Farm, Field, GrowerApplication,
+    ManagementPractices, GrazingEvent, TransectCode
 )
 from ...forms.grower.forms import (
     GrowerProfileCompletionForm, ApplicationCreationForm,
-    ManagementPracticesForm, ApplicationMeasurementForm, GrazingEventForm
+    ManagementPracticesForm, TransectCodesForm, GrazingEventForm,
+    GrazingEventAnimalFormSet
 )
 from ...constants import DEFAULT_FIELD_LATITUDE, DEFAULT_FIELD_LONGITUDE
 from ...middleware import get_user_timezone
 
 User = get_user_model()
+
+
+def grant_full_grower_permissions(user):
+    """Grant full IS_GROWER permissions to a user after profile completion"""
+    permissions_to_add = []
+    for perm_string in IS_GROWER:
+        app_label, codename = perm_string.split('.')
+        try:
+            perm = Permission.objects.get(
+                content_type__app_label=app_label,
+                codename=codename
+            )
+            permissions_to_add.append(perm)
+        except Permission.DoesNotExist:
+            pass
+    
+    if permissions_to_add:
+        user.user_permissions.add(*permissions_to_add)
 
 
 @login_required
@@ -48,6 +68,8 @@ def profile_complete(request):
                 grower_profile.profile_completed = True
                 grower_profile.save()
             
+            grant_full_grower_permissions(request.user)
+            
             messages.info(request, 'Profile completion skipped. You can complete it later from your dashboard.')
             return redirect('grower_portal:dashboard')
         
@@ -64,6 +86,7 @@ def profile_complete(request):
                 
                 grower_profile.profile_completed = True
                 grower_profile.save()
+                grant_full_grower_permissions(request.user)
                 
                 messages.success(request, 'Your grower profile has been completed successfully!')
                 return redirect('grower_portal:dashboard')
@@ -158,31 +181,30 @@ def application_create(request):
                             field_type=form.cleaned_data['field_type'],
                             latitude=form.cleaned_data.get('latitude'),
                             longitude=form.cleaned_data.get('longitude'),
-                            crop_variety=form.cleaned_data.get('crop_variety', ''),
+                            crop_type=form.cleaned_data.get('crop_type', ''),
+                            crop_subtype=form.cleaned_data.get('crop_subtype', ''),
+                            crop_subtype_other=form.cleaned_data.get('crop_subtype_other', ''),
+                            small_grain_type=form.cleaned_data.get('small_grain_type', ''),
+                            uses_broad_fork=form.cleaned_data.get('uses_broad_fork', False),
                             forage_varieties=form.cleaned_data.get('forage_varieties', ''),
                             paddock_size=form.cleaned_data.get('paddock_size', ''),
                             rootstock_species=form.cleaned_data.get('rootstock_species', ''),
-                            transitional_status=form.cleaned_data.get('transitional_status', '')
+                            transitional_status=form.cleaned_data.get('transitional_status', ''),
+                            acres_sampled=form.cleaned_data.get('acres_sampled'),
+                            years_under_management=form.cleaned_data.get('years_under_management'),
+                            supports_dairy=form.cleaned_data.get('supports_dairy', False),
+                            is_confined_dairy=form.cleaned_data.get('is_confined_dairy', False),
+                            measurement_comments=form.cleaned_data.get('measurement_comments', '')
                         )
                     
                     application = GrowerApplication.objects.create(
                         field=field,
                         grower=request.user,
-                        date_sampled=form.cleaned_data['date_sampled'],
-                        transect_code_1=form.cleaned_data.get('transect_code_1'),
-                        transect_code_2=form.cleaned_data.get('transect_code_2'),
-                        transect_code_3=form.cleaned_data.get('transect_code_3'),
-                        transect_code_4=form.cleaned_data.get('transect_code_4')
+                        date_sampled=form.cleaned_data['date_sampled']
                     )
                     
-                    for i, code in enumerate(application.transect_codes, 1):
-                        ApplicationMeasurement.objects.create(
-                            application=application,
-                            transect_number=i
-                        )
-                    
                     messages.success(request, f'Application {application.submission_code} created successfully!')
-                    return redirect('grower_portal:application_step1', application_id=application.id)
+                    return redirect('grower_portal:application_step2', application_id=application.id)
                     
             except IntegrityError as e:
                 if 'field_id_date_sampled' in str(e):
@@ -216,8 +238,103 @@ def application_step1(request, application_id):
         grower=request.user
     )
     
+    if not application.is_draft:
+        messages.error(request, 'You cannot edit a submitted application.')
+        return redirect('grower_portal:application_view', application_id=application.id)
+    
+    if request.method == 'POST':
+        form = ApplicationCreationForm(request.POST)
+        if form.is_valid():
+            try:
+                with transaction.atomic():
+                    farm, created = Farm.objects.get_or_create(
+                        grower=request.user,
+                        name=form.cleaned_data['farm_name']
+                    )
+                    
+                    field = application.field
+                    field.farm = farm
+                    field.field_name = form.cleaned_data['field_name']
+                    field.field_type = form.cleaned_data['field_type']
+                    field.latitude = form.cleaned_data.get('latitude')
+                    field.longitude = form.cleaned_data.get('longitude')
+                    field.acres_sampled = form.cleaned_data.get('acres_sampled')
+                    field.years_under_management = form.cleaned_data.get('years_under_management')
+                    field.supports_dairy = form.cleaned_data.get('supports_dairy', False)
+                    field.is_confined_dairy = form.cleaned_data.get('is_confined_dairy', False)
+                    field.measurement_comments = form.cleaned_data.get('measurement_comments', '')
+                    
+                    field.crop_type = form.cleaned_data.get('crop_type', '')
+                    field.crop_subtype = form.cleaned_data.get('crop_subtype', '')
+                    field.crop_subtype_other = form.cleaned_data.get('crop_subtype_other', '')
+                    field.small_grain_type = form.cleaned_data.get('small_grain_type', '')
+                    field.uses_broad_fork = form.cleaned_data.get('uses_broad_fork', False)
+                    
+                    if form.cleaned_data.get('orchard_crop_type'):
+                        field.crop_type = form.cleaned_data.get('orchard_crop_type', '')
+                    if form.cleaned_data.get('orchard_crop_subtype'):
+                        field.crop_subtype = form.cleaned_data.get('orchard_crop_subtype', '')
+                    if form.cleaned_data.get('orchard_crop_subtype_other'):
+                        field.crop_subtype_other = form.cleaned_data.get('orchard_crop_subtype_other', '')
+                    if form.cleaned_data.get('orchard_small_grain_type'):
+                        field.small_grain_type = form.cleaned_data.get('orchard_small_grain_type', '')
+                    if form.cleaned_data.get('orchard_uses_broad_fork'):
+                        field.uses_broad_fork = form.cleaned_data.get('orchard_uses_broad_fork', False)
+                    
+                    field.forage_varieties = form.cleaned_data.get('forage_varieties', '')
+                    field.paddock_size = form.cleaned_data.get('paddock_size', '')
+                    field.pasture_size = form.cleaned_data.get('pasture_size', '')
+                    
+                    field.rootstock_species = form.cleaned_data.get('rootstock_species', '')
+                    field.crop_varieties = form.cleaned_data.get('crop_varieties', '')
+                    field.transitional_status = form.cleaned_data.get('transitional_status', '')
+                    
+                    field.save()
+                    
+                    application.date_sampled = form.cleaned_data['date_sampled']
+                    application.save()
+                    
+                    messages.success(request, f'Application {application.submission_code} updated successfully!')
+                    return redirect('grower_portal:application_step2', application_id=application.id)
+                    
+            except IntegrityError as e:
+                messages.error(request, f'Error updating application: {str(e)}')
+    else:
+        form = ApplicationCreationForm(initial={
+            'farm_name': application.field.farm.name,
+            'field_name': application.field.field_name,
+            'field_type': application.field.field_type,
+            'latitude': application.field.latitude,
+            'longitude': application.field.longitude,
+            'date_sampled': application.date_sampled,
+            'acres_sampled': application.field.acres_sampled,
+            'years_under_management': application.field.years_under_management,
+            'supports_dairy': application.field.supports_dairy,
+            'is_confined_dairy': application.field.is_confined_dairy,
+            'measurement_comments': application.field.measurement_comments,
+            
+            'crop_type': application.field.crop_type,
+            'crop_subtype': application.field.crop_subtype,
+            'crop_subtype_other': application.field.crop_subtype_other,
+            'small_grain_type': application.field.small_grain_type,
+            'uses_broad_fork': application.field.uses_broad_fork,
+            'forage_varieties': application.field.forage_varieties,
+            'paddock_size': application.field.paddock_size,
+            'pasture_size': application.field.pasture_size,
+            'rootstock_species': application.field.rootstock_species,
+            'crop_varieties': application.field.crop_varieties,
+            'transitional_status': application.field.transitional_status,
+            
+            'orchard_crop_type': application.field.crop_type,
+            'orchard_crop_subtype': application.field.crop_subtype,
+            'orchard_crop_subtype_other': application.field.crop_subtype_other,
+            'orchard_small_grain_type': application.field.small_grain_type,
+            'orchard_uses_broad_fork': application.field.uses_broad_fork
+        })
+    
     return render(request, 'grower_portal/grower/application_step1.html', {
         'application': application,
+        'form': form,
         'user_timezone': get_user_timezone(request)
     })
 
@@ -254,60 +371,81 @@ def application_step2(request, application_id):
 @login_required
 @permission_required(IS_GROWER, raise_exception=True)
 def application_step3(request, application_id):
+    """Step 3: Transect Codes and Location Mapping"""
     application = get_object_or_404(
         GrowerApplication,
         id=application_id,
         grower=request.user
     )
     
-    measurements = ApplicationMeasurement.objects.filter(application=application).order_by('transect_number')
-    MeasurementFormSet = modelformset_factory(
-        ApplicationMeasurement,
-        form=ApplicationMeasurementForm,
-        extra=0,
-        can_delete=False
-    )
+    field = application.field
+    field_latitude = float(field.latitude) if field.latitude else DEFAULT_FIELD_LATITUDE
+    field_longitude = float(field.longitude) if field.longitude else DEFAULT_FIELD_LONGITUDE
     
     if request.method == 'POST':
-        formset = MeasurementFormSet(request.POST, queryset=measurements)
-        if formset.is_valid():
-            formset.save()
-            messages.success(request, 'Transect measurements saved successfully!')
+        form = TransectCodesForm(request.POST, field_type=application.field.field_type)
+        if form.is_valid():
+            application.transect_code_1 = form.cleaned_data.get('transect_code_1', '').strip()
+            application.transect_code_2 = form.cleaned_data.get('transect_code_2', '').strip()
+            application.transect_code_3 = form.cleaned_data.get('transect_code_3', '').strip()
+            application.transect_code_4 = form.cleaned_data.get('transect_code_4', '').strip()
             
+            application.transect_1_latitude = form.cleaned_data.get('transect_1_latitude')
+            application.transect_1_longitude = form.cleaned_data.get('transect_1_longitude')
+            application.transect_2_latitude = form.cleaned_data.get('transect_2_latitude')
+            application.transect_2_longitude = form.cleaned_data.get('transect_2_longitude')
+            application.transect_3_latitude = form.cleaned_data.get('transect_3_latitude')
+            application.transect_3_longitude = form.cleaned_data.get('transect_3_longitude')
+            application.transect_4_latitude = form.cleaned_data.get('transect_4_latitude')
+            application.transect_4_longitude = form.cleaned_data.get('transect_4_longitude')
+            
+            application.save()
+            
+            messages.success(request, 'Transect codes and coordinates saved successfully!')
             if application.field.field_type == 'range':
                 return redirect('grower_portal:application_step4', application_id=application.id)
             else:
                 return redirect('grower_portal:application_step5', application_id=application.id)
     else:
-        formset = MeasurementFormSet(queryset=measurements)
-    
-    for form, transect_code in zip(formset.forms, application.transect_codes):
-        form.transect_code = transect_code
-        for field_name, field in form.fields.items():
-            if field_name not in ['supports_dairy', 'is_confined_dairy']:
-                attrs = {'class': 'form-control'}
-                if field_name in ['acres_sampled', 'years_under_management']:
-                    attrs['required'] = 'required'
-                field.widget.attrs.update(attrs)
-            else:
-                field.widget.attrs.update({'class': 'form-check-input'})
-    
-    field = application.field
-    field_latitude = float(field.latitude) if field.latitude else DEFAULT_FIELD_LATITUDE
-    field_longitude = float(field.longitude) if field.longitude else DEFAULT_FIELD_LONGITUDE
+        initial_data = {
+            'transect_code_1': application.transect_code_1 or '',
+            'transect_code_2': application.transect_code_2 or '',
+            'transect_code_3': application.transect_code_3 or '',
+            'transect_code_4': application.transect_code_4 or '',
+            'transect_1_latitude': application.transect_1_latitude,
+            'transect_1_longitude': application.transect_1_longitude,
+            'transect_2_latitude': application.transect_2_latitude,
+            'transect_2_longitude': application.transect_2_longitude,
+            'transect_3_latitude': application.transect_3_latitude,
+            'transect_3_longitude': application.transect_3_longitude,
+            'transect_4_latitude': application.transect_4_latitude,
+            'transect_4_longitude': application.transect_4_longitude,
+        }
+        
+        form = TransectCodesForm(initial=initial_data, field_type=application.field.field_type)
     
     transect_data = []
-    for i, (form, code) in enumerate(zip(formset.forms, application.transect_codes)):
+    for i, code in enumerate(application.transect_codes):
+        lat_field = getattr(application, f'transect_{i+1}_latitude', None)
+        lng_field = getattr(application, f'transect_{i+1}_longitude', None)
+        
+        if lat_field and lng_field:
+            latitude = float(lat_field)
+            longitude = float(lng_field)
+        else:
+            latitude = field_latitude
+            longitude = field_longitude
+            
         transect_data.append({
             'index': i,
             'code': code,
-            'latitude': float(form.instance.transect_latitude) if form.instance.transect_latitude else field_latitude,
-            'longitude': float(form.instance.transect_longitude) if form.instance.transect_longitude else field_longitude
+            'latitude': latitude,
+            'longitude': longitude
         })
     
     return render(request, 'grower_portal/grower/application_step3.html', {
         'application': application,
-        'formset': formset,
+        'form': form,
         'field_latitude': field_latitude,
         'field_longitude': field_longitude,
         'transect_data': json.dumps(transect_data),
@@ -328,45 +466,45 @@ def application_step4(request, application_id):
         messages.warning(request, 'Grazing events are only applicable to rangeland.')
         return redirect('grower_portal:application_step5', application_id=application.id)
     
-    measurements = ApplicationMeasurement.objects.filter(application=application).order_by('transect_number')
-    
     grazing_events = []
-    for measurement in measurements:
-        events = GrazingEvent.objects.filter(application_measurement=measurement).order_by('event_number')
-        grazing_events.extend(events)
-    
-    GrazingEventFormSet = modelformset_factory(
-        GrazingEvent,
-        form=GrazingEventForm,
-        extra=max(0, 4 - len(grazing_events)),
-        max_num=4,
-        can_delete=True
-    )
+    for i in range(1, 5):
+        event, _ = GrazingEvent.objects.get_or_create(
+            application=application,
+            event_number=i
+        )
+        grazing_events.append(event)
     
     if request.method == 'POST':
-        formset = GrazingEventFormSet(request.POST, queryset=GrazingEvent.objects.filter(application_measurement__application=application))
-        if formset.is_valid():
-            instances = formset.save(commit=False)
-            for i, instance in enumerate(instances, 1):
-                if not instance.application_measurement_id:
-                    instance.application_measurement = measurements.first()
-                instance.event_number = i
-                instance.save()
-            for obj in formset.deleted_objects:
-                obj.delete()
+        formsets = {}
+        all_valid = True
+        
+        for event in grazing_events:
+            formset = GrazingEventAnimalFormSet(
+                request.POST,
+                instance=event,
+                prefix=f'event_{event.event_number}'
+            )
+            formsets[event.event_number] = formset
+            if not formset.is_valid():
+                all_valid = False
+        
+        if all_valid:
+            for formset in formsets.values():
+                formset.save()
             messages.success(request, 'Grazing events saved successfully!')
             return redirect('grower_portal:application_step5', application_id=application.id)
     else:
-        formset = GrazingEventFormSet(queryset=GrazingEvent.objects.filter(application_measurement__application=application))
-    
-    for form in formset.forms:
-        for field_name, field in form.fields.items():
-            if field_name not in ['DELETE']:
-                field.widget.attrs.update({'class': 'form-control'})
+        formsets = {}
+        for event in grazing_events:
+            formsets[event.event_number] = GrazingEventAnimalFormSet(
+                instance=event,
+                prefix=f'event_{event.event_number}'
+            )
     
     return render(request, 'grower_portal/grower/application_step4.html', {
         'application': application,
-        'formset': formset,
+        'grazing_events': grazing_events,
+        'formsets': formsets,
         'user_timezone': get_user_timezone(request)
     })
 
@@ -385,8 +523,7 @@ def application_step5(request, application_id):
     except ManagementPractices.DoesNotExist:
         management_practices = None
     
-    measurements = ApplicationMeasurement.objects.filter(application=application).order_by('transect_number')
-    grazing_events = GrazingEvent.objects.filter(application_measurement__application=application).order_by('event_number') if application.field.field_type == 'range' else []
+    grazing_events = GrazingEvent.objects.filter(application=application).prefetch_related('animals').order_by('event_number') if application.field.field_type == 'range' else []
     
     if request.method == 'POST':
         action = request.POST.get('action')
@@ -395,6 +532,17 @@ def application_step5(request, application_id):
             application.is_submitted = True
             application.is_draft = False
             application.save()
+            
+            from django.utils import timezone
+            for i in range(1, 5):
+                code = getattr(application, f'transect_code_{i}', '').strip()
+                if code:
+                    TransectCode.objects.filter(transect_code=code).update(
+                        is_used=True,
+                        used_in_application=application,
+                        used_at=timezone.now()
+                    )
+            
             messages.success(request, f'Application {application.submission_code} submitted successfully!')
             return redirect('grower_portal:dashboard')
         elif action == 'save_draft':
@@ -408,18 +556,27 @@ def application_step5(request, application_id):
     field_longitude = float(field.longitude) if field.longitude else DEFAULT_FIELD_LONGITUDE
     
     transect_data = []
-    for i, (measurement, code) in enumerate(zip(measurements, application.transect_codes)):
+    for i, code in enumerate(application.transect_codes):
+        lat_field = getattr(application, f'transect_{i+1}_latitude', None)
+        lng_field = getattr(application, f'transect_{i+1}_longitude', None)
+        
+        if lat_field and lng_field:
+            latitude = float(lat_field)
+            longitude = float(lng_field)
+        else:
+            latitude = field_latitude
+            longitude = field_longitude
+            
         transect_data.append({
             'index': i,
             'code': code,
-            'latitude': float(measurement.transect_latitude) if measurement.transect_latitude else field_latitude,
-            'longitude': float(measurement.transect_longitude) if measurement.transect_longitude else field_longitude
+            'latitude': latitude,
+            'longitude': longitude
         })
     
     return render(request, 'grower_portal/grower/application_step5.html', {
         'application': application,
         'management_practices': management_practices,
-        'measurements': measurements,
         'grazing_events': grazing_events,
         'field_latitude': field_latitude,
         'field_longitude': field_longitude,
@@ -443,26 +600,24 @@ def application_view(request, application_id):
     except ManagementPractices.DoesNotExist:
         management_practices = None
     
-    measurements = ApplicationMeasurement.objects.filter(application=application).order_by('transect_number')
-    grazing_events = GrazingEvent.objects.filter(application_measurement__application=application).order_by('event_number') if application.field.field_type == 'range' else []
+    grazing_events = GrazingEvent.objects.filter(application=application).order_by('event_number') if application.field.field_type == 'range' else []
     
     field = application.field
     field_latitude = float(field.latitude) if field.latitude else DEFAULT_FIELD_LATITUDE
     field_longitude = float(field.longitude) if field.longitude else DEFAULT_FIELD_LONGITUDE
     
     transect_data = []
-    for i, (measurement, code) in enumerate(zip(measurements, application.transect_codes)):
+    for i, code in enumerate(application.transect_codes):
         transect_data.append({
             'index': i,
             'code': code,
-            'latitude': float(measurement.transect_latitude) if measurement.transect_latitude else field_latitude,
-            'longitude': float(measurement.transect_longitude) if measurement.transect_longitude else field_longitude
+            'latitude': field_latitude,
+            'longitude': field_longitude
         })
     
     return render(request, 'grower_portal/grower/application_view.html', {
         'application': application,
         'management_practices': management_practices,
-        'measurements': measurements,
         'grazing_events': grazing_events,
         'field_latitude': field_latitude,
         'field_longitude': field_longitude,

@@ -6,8 +6,8 @@ from .models import (
     ManagementPractices,
     TransectCode,
     GrowerApplication,
-    ApplicationMeasurement,
     GrazingEvent,
+    GrazingEventAnimal,
     CSVImportLog,
     GrowerReport,
 )
@@ -58,7 +58,11 @@ class FieldAdmin(admin.ModelAdmin):
         }),
         ('Field-Specific Properties', {
             'fields': (
-                'crop_variety',
+                'crop_type',
+                'crop_subtype',
+                'crop_subtype_other',
+                'small_grain_type',
+                'uses_broad_fork',
                 'forage_varieties',
                 'paddock_size',
                 'rootstock_species',
@@ -129,11 +133,20 @@ class ManagementPracticesAdmin(admin.ModelAdmin):
 
 @admin.register(TransectCode)
 class TransectCodeAdmin(admin.ModelAdmin):
-    list_display = ('transect_code', 'is_active', 'created_by', 'created_at')
-    list_filter = ('is_active', 'created_at')
-    search_fields = ('transect_code',)
-    readonly_fields = ('created_at',)
-    autocomplete_fields = ['created_by']
+    list_display = ('transect_code', 'is_active', 'is_used', 'used_in_application', 'created_by', 'created_at')
+    list_filter = ('is_active', 'is_used', 'created_at')
+    search_fields = ('transect_code', 'used_in_application__submission_code')
+    readonly_fields = ('created_at', 'used_at')
+    autocomplete_fields = ['created_by', 'used_in_application']
+    fieldsets = (
+        ('Code Information', {
+            'fields': ('transect_code', 'is_active', 'created_by', 'created_at')
+        }),
+        ('Usage Tracking', {
+            'fields': ('is_used', 'used_in_application', 'used_at'),
+            'description': 'Tracks if this code has been used in a submitted application'
+        }),
+    )
 
 
 @admin.register(GrowerApplication)
@@ -154,10 +167,7 @@ class GrowerApplicationAdmin(admin.ModelAdmin):
         'field__field_name',
         'grower__name',
         'grower__email',
-        'transect_code_1',
-        'transect_code_2',
-        'transect_code_3',
-        'transect_code_4'
+        'transect_codes'
     )
     readonly_fields = ('submission_code', 'submitted_at', 'created_at', 'updated_at')
     autocomplete_fields = ['field', 'grower']
@@ -169,6 +179,16 @@ class GrowerApplicationAdmin(admin.ModelAdmin):
             'fields': ('transect_code_1', 'transect_code_2', 'transect_code_3', 'transect_code_4'),
             'description': 'Transect codes specific to this application'
         }),
+        ('Transect Coordinates', {
+            'fields': (
+                ('transect_1_latitude', 'transect_1_longitude'),
+                ('transect_2_latitude', 'transect_2_longitude'),
+                ('transect_3_latitude', 'transect_3_longitude'),
+                ('transect_4_latitude', 'transect_4_longitude'),
+            ),
+            'description': 'GPS coordinates for each transect marker',
+            'classes': ('collapse',)
+        }),
         ('Status', {
             'fields': ('is_draft', 'is_submitted', 'submitted_at')
         }),
@@ -179,32 +199,22 @@ class GrowerApplicationAdmin(admin.ModelAdmin):
     )
 
 
-@admin.register(ApplicationMeasurement)
-class ApplicationMeasurementAdmin(admin.ModelAdmin):
+
+
+@admin.register(GrazingEvent)
+class GrazingEventAdmin(admin.ModelAdmin):
     list_display = (
         'application',
-        'transect_number',
-        'acres_sampled',
-        'years_under_management',
-        'supports_dairy',
+        'event_number',
         'created_at'
     )
-    list_filter = ('supports_dairy', 'is_confined_dairy', 'transect_number')
-    search_fields = ('application__submission_code', 'comments')
+    list_filter = ('created_at',)
+    search_fields = ('application__submission_code',)
     readonly_fields = ('created_at', 'updated_at')
     autocomplete_fields = ['application']
     fieldsets = (
-        ('Application & Transect', {
-            'fields': ('application', 'transect_number')
-        }),
-        ('Sample Specifications', {
-            'fields': ('acres_sampled', 'years_under_management')
-        }),
-        ('Dairy Operation Context', {
-            'fields': ('supports_dairy', 'is_confined_dairy')
-        }),
-        ('Comments', {
-            'fields': ('comments',)
+        ('Application & Event', {
+            'fields': ('application', 'event_number')
         }),
         ('Timestamps', {
             'fields': ('created_at', 'updated_at'),
@@ -213,32 +223,33 @@ class ApplicationMeasurementAdmin(admin.ModelAdmin):
     )
 
 
-@admin.register(GrazingEvent)
-class GrazingEventAdmin(admin.ModelAdmin):
+@admin.register(GrazingEventAnimal)
+class GrazingEventAnimalAdmin(admin.ModelAdmin):
     list_display = (
-        'application_measurement',
-        'event_number',
+        'grazing_event',
         'class_of_animal',
         'number_of_animals',
+        'average_weight_lbs',
         'duration_days',
+        'rest_period_days',
         'created_at'
     )
     list_filter = ('created_at',)
-    search_fields = ('application_measurement__application__submission_code', 'class_of_animal')
-    readonly_fields = ('created_at', 'updated_at')
-    autocomplete_fields = ['application_measurement']
+    search_fields = ('grazing_event__application__submission_code', 'class_of_animal')
+    readonly_fields = ('created_at',)
+    autocomplete_fields = ['grazing_event']
     fieldsets = (
-        ('Measurement & Event', {
-            'fields': ('application_measurement', 'event_number', 'rest_period_days')
+        ('Grazing Event', {
+            'fields': ('grazing_event',)
         }),
         ('Animal Information', {
             'fields': ('class_of_animal', 'number_of_animals', 'average_weight_lbs')
         }),
-        ('Duration', {
-            'fields': ('duration_days',)
+        ('Grazing Schedule', {
+            'fields': ('duration_days', 'rest_period_days')
         }),
         ('Timestamps', {
-            'fields': ('created_at', 'updated_at'),
+            'fields': ('created_at',),
             'classes': ('collapse',)
         }),
     )

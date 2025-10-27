@@ -82,10 +82,34 @@
                             <td>{{ application.field.latitude }}, {{ application.field.longitude }}</td>
                         </tr>
                         {% endif %}
-                        {% if application.field.crop_variety %}
+                        {% if application.field.crop_type %}
                         <tr>
-                            <th>Crop Variety:</th>
-                            <td>{{ application.field.crop_variety }}</td>
+                            <th>Crop Type:</th>
+                            <td>{{ application.field.get_crop_type_display }}</td>
+                        </tr>
+                        {% endif %}
+                        {% if application.field.crop_subtype %}
+                        <tr>
+                            <th>Crop Subtype:</th>
+                            <td>{{ application.field.get_crop_subtype_display }}</td>
+                        </tr>
+                        {% endif %}
+                        {% if application.field.crop_subtype_other %}
+                        <tr>
+                            <th>Other Crop Type:</th>
+                            <td>{{ application.field.crop_subtype_other }}</td>
+                        </tr>
+                        {% endif %}
+                        {% if application.field.small_grain_type %}
+                        <tr>
+                            <th>Small Grain Type:</th>
+                            <td>{{ application.field.small_grain_type }}</td>
+                        </tr>
+                        {% endif %}
+                        {% if application.field.uses_broad_fork %}
+                        <tr>
+                            <th>Broad Fork:</th>
+                            <td>Yes</td>
                         </tr>
                         {% endif %}
                         {% if application.field.forage_varieties %}
@@ -257,41 +281,37 @@
                 </div>
             </div>
             
-            <!-- Transect Measurements -->
             <div class="card mb-3">
                 <div class="card-header">
-                    <h5 class="mb-0">Transect Measurements</h5>
+                    <h5 class="mb-0">Field Measurements</h5>
                 </div>
                 <div class="card-body">
-                    {% for measurement in measurements %}
-                        <h6>Transect {{ measurement.transect_number }}</h6>
-                        <table class="table table-sm mb-3">
-                            <tr>
-                                <th style="width: 40%">Acres Sampled:</th>
-                                <td>{{ measurement.acres_sampled|default:"Not specified" }}</td>
-                            </tr>
-                            <tr>
-                                <th>Years Under Management:</th>
-                                <td>{{ measurement.years_under_management|default:"Not specified" }}</td>
-                            </tr>
-                            <tr>
-                                <th>Supports Dairy:</th>
-                                <td>{{ measurement.supports_dairy|yesno:"Yes,No" }}</td>
-                            </tr>
-                                    {% if measurement.supports_dairy %}
-                                    <tr>
-                                        <th>Confined Dairy:</th>
-                                        <td>{{ measurement.is_confined_dairy|yesno:"Yes,No" }}</td>
-                                    </tr>
-                                    {% endif %}
-                                    {% if measurement.comments %}
-                                    <tr>
-                                        <th>Comments:</th>
-                                        <td>{{ measurement.comments }}</td>
-                                    </tr>
-                                    {% endif %}
-                                </table>
-                    {% endfor %}
+                    <table class="table table-sm">
+                        <tr>
+                            <th style="width: 40%">Acres Sampled:</th>
+                            <td>{{ application.field.acres_sampled|default:"Not specified" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Years Under Management:</th>
+                            <td>{{ application.field.years_under_management|default:"Not specified" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Supports Dairy:</th>
+                            <td>{{ application.field.supports_dairy|yesno:"Yes,No" }}</td>
+                        </tr>
+                        {% if application.field.supports_dairy %}
+                        <tr>
+                            <th>Confined Dairy:</th>
+                            <td>{{ application.field.is_confined_dairy|yesno:"Yes,No" }}</td>
+                        </tr>
+                        {% endif %}
+                        {% if application.field.measurement_comments %}
+                        <tr>
+                            <th>Comments:</th>
+                            <td>{{ application.field.measurement_comments }}</td>
+                        </tr>
+                        {% endif %}
+                    </table>
                 </div>
             </div>
             

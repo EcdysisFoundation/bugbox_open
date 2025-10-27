@@ -1,10 +1,10 @@
 let map;
 let markers = [];
+let fieldCenter;
 let loadingCircle = null;
 let loadingOverlay = null;
 
 window.initMap = function() {
-    console.log('initMap called - Google Maps API loaded');
     
     const jsonContextElement = document.getElementById('json_context');
     if (!jsonContextElement) {
@@ -15,18 +15,14 @@ window.initMap = function() {
     let jsonContext;
     try {
         jsonContext = JSON.parse(jsonContextElement.textContent);
-        console.log('Parsed JSON context:', jsonContext);
     } catch (e) {
         console.error('Error parsing JSON context:', e);
         console.error('JSON content:', jsonContextElement.textContent);
         return;
     }
     
-    const transectData = jsonContext.transectData;
-    const fieldCenter = { lat: jsonContext.fieldLatitude, lng: jsonContext.fieldLongitude };
+    fieldCenter = { lat: jsonContext.fieldLatitude, lng: jsonContext.fieldLongitude };
     
-    console.log('Transect data:', transectData);
-    console.log('Field center:', fieldCenter);
     
     map = new google.maps.Map(document.getElementById("map"), {
         center: fieldCenter,
@@ -63,150 +59,217 @@ window.initMap = function() {
     });
     
     const locateButton = document.getElementById('locateMe');
-    
     if (locateButton) {
-        locateButton.addEventListener('click', function() {
-            if (navigator.geolocation) {
-                locateButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Locating...';
-                locateButton.disabled = true;
-                
-                loadingCircle = new google.maps.Circle({
-                    strokeColor: '#2196F3',
-                    strokeOpacity: 0.8,
-                    strokeWeight: 2,
-                    fillColor: '#2196F3',
-                    fillOpacity: 0.15,
-                    map: map,
-                    center: map.getCenter(),
-                    radius: 50
-                });
-                
-                loadingOverlay = new google.maps.OverlayView();
-                loadingOverlay.onAdd = function() {
-                    const div = document.createElement('div');
-                    div.style.position = 'absolute';
-                    div.style.backgroundColor = '#2196F3';
-                    div.style.color = 'white';
-                    div.style.padding = '8px 16px';
-                    div.style.borderRadius = '20px';
-                    div.style.fontSize = '14px';
-                    div.style.fontWeight = 'bold';
-                    div.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)';
-                    div.style.border = '2px solid white';
-                    div.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Locating...';
-                    
-                    const panes = this.getPanes();
-                    panes.floatPane.appendChild(div);
-                    this.div = div;
-                };
-                
-                loadingOverlay.draw = function() {
-                    const projection = this.getProjection();
-                    const center = loadingCircle.getCenter();
-                    const point = projection.fromLatLngToDivPixel(center);
-                    
-                    if (this.div && point) {
-                        this.div.style.left = (point.x - this.div.offsetWidth / 2) + 'px';
-                        this.div.style.top = (point.y - this.div.offsetHeight / 2) + 'px';
-                    }
-                };
-                
-                loadingOverlay.onRemove = function() {
-                    if (this.div) {
-                        this.div.parentNode.removeChild(this.div);
-                        this.div = null;
-                    }
-                };
-                
-                loadingOverlay.setMap(map);
-                
-                let growing = true;
-                const pulseInterval = setInterval(() => {
-                    if (loadingCircle) {
-                        const currentRadius = loadingCircle.getRadius();
-                        if (growing) {
-                            loadingCircle.setRadius(currentRadius + 5);
-                            if (currentRadius >= 100) growing = false;
-                        } else {
-                            loadingCircle.setRadius(currentRadius - 5);
-                            if (currentRadius <= 50) growing = true;
-                        }
-                    } else {
-                        clearInterval(pulseInterval);
-                    }
-                }, 100);
-                
-                navigator.geolocation.getCurrentPosition(
-                    function(position) {
-                        const userLocation = {
-                            lat: position.coords.latitude,
-                            lng: position.coords.longitude
-                        };
-                        
-                        if (loadingCircle) {
-                            loadingCircle.setMap(null);
-                            loadingCircle = null;
-                        }
-                        if (loadingOverlay) {
-                            loadingOverlay.setMap(null);
-                            loadingOverlay = null;
-                        }
-                        clearInterval(pulseInterval);
-                        
-                        map.setCenter(userLocation);
-                        map.setZoom(18);
-                        
-                        locateButton.innerHTML = '<i class="fas fa-check"></i> Located!';
-                        locateButton.classList.remove('btn-primary');
-                        locateButton.classList.add('btn-success');
-                        
-                        setTimeout(() => {
-                            locateButton.innerHTML = '<i class="fas fa-crosshairs"></i> Locate Me';
-                            locateButton.classList.remove('btn-success');
-                            locateButton.classList.add('btn-primary');
-                            locateButton.disabled = false;
-                        }, 2000);
-                    },
-                    function(error) {
-                        if (loadingCircle) {
-                            loadingCircle.setMap(null);
-                            loadingCircle = null;
-                        }
-                        if (loadingOverlay) {
-                            loadingOverlay.setMap(null);
-                            loadingOverlay = null;
-                        }
-                        
-                        console.error('Geolocation error:', error);
-                        let errorMessage = 'Unable to get your location. ';
-                        if (error.code === error.PERMISSION_DENIED) {
-                            errorMessage += 'Please enable location permissions in your browser.';
-                        } else if (error.code === error.POSITION_UNAVAILABLE) {
-                            errorMessage += 'Location information is unavailable.';
-                        } else if (error.code === error.TIMEOUT) {
-                            errorMessage += 'Location request timed out.';
-                        }
-                        alert(errorMessage);
-                        locateButton.innerHTML = '<i class="fas fa-crosshairs"></i> Locate Me';
-                        locateButton.disabled = false;
-                    },
-                    {
-                        enableHighAccuracy: true,
-                        timeout: 10000,
-                        maximumAge: 0
-                    }
-                );
-            } else {
-                alert('Geolocation is not supported by your browser.');
-            }
-        });
+        locateButton.addEventListener('click', handleLocateMe);
     }
+    
+    setupTransectCodeMonitoring();
+    
+};
+
+function handleLocateMe() {
+    if (navigator.geolocation) {
+        const locateButton = document.getElementById('locateMe');
+        locateButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Locating...';
+        locateButton.disabled = true;
+        
+        loadingCircle = new google.maps.Circle({
+            strokeColor: '#2196F3',
+            strokeOpacity: 0.8,
+            strokeWeight: 2,
+            fillColor: '#2196F3',
+            fillOpacity: 0.15,
+            map: map,
+            center: map.getCenter(),
+            radius: 50
+        });
+        
+        loadingOverlay = new google.maps.OverlayView();
+        loadingOverlay.onAdd = function() {
+            const div = document.createElement('div');
+            div.style.position = 'absolute';
+            div.style.backgroundColor = '#2196F3';
+            div.style.color = 'white';
+            div.style.padding = '8px 16px';
+            div.style.borderRadius = '20px';
+            div.style.fontSize = '14px';
+            div.style.fontWeight = 'bold';
+            div.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)';
+            div.style.border = '2px solid white';
+            div.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Locating...';
+            
+            const panes = this.getPanes();
+            panes.floatPane.appendChild(div);
+            this.div = div;
+        };
+        
+        loadingOverlay.draw = function() {
+            const projection = this.getProjection();
+            const center = loadingCircle.getCenter();
+            const point = projection.fromLatLngToDivPixel(center);
+            
+            if (this.div && point) {
+                this.div.style.left = (point.x - this.div.offsetWidth / 2) + 'px';
+                this.div.style.top = (point.y - this.div.offsetHeight / 2) + 'px';
+            }
+        };
+        
+        loadingOverlay.onRemove = function() {
+            if (this.div) {
+                this.div.parentNode.removeChild(this.div);
+                this.div = null;
+            }
+        };
+        
+        loadingOverlay.setMap(map);
+        
+        let growing = true;
+        const pulseInterval = setInterval(() => {
+            if (loadingCircle) {
+                const currentRadius = loadingCircle.getRadius();
+                if (growing) {
+                    loadingCircle.setRadius(currentRadius + 5);
+                    if (currentRadius >= 100) growing = false;
+                } else {
+                    loadingCircle.setRadius(currentRadius - 5);
+                    if (currentRadius <= 50) growing = true;
+                }
+            } else {
+                clearInterval(pulseInterval);
+            }
+        }, 100);
+        
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                const userLocation = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude
+                };
+                
+                if (loadingCircle) {
+                    loadingCircle.setMap(null);
+                    loadingCircle = null;
+                }
+                if (loadingOverlay) {
+                    loadingOverlay.setMap(null);
+                    loadingOverlay = null;
+                }
+                clearInterval(pulseInterval);
+                
+                map.setCenter(userLocation);
+                map.setZoom(18);
+                
+                const locateButton = document.getElementById('locateMe');
+                locateButton.innerHTML = '<i class="fas fa-check"></i> Located!';
+                locateButton.classList.remove('btn-primary');
+                locateButton.classList.add('btn-success');
+                
+                setTimeout(() => {
+                    locateButton.innerHTML = '<i class="fas fa-crosshairs"></i> Locate Me';
+                    locateButton.classList.remove('btn-success');
+                    locateButton.classList.add('btn-primary');
+                    locateButton.disabled = false;
+                }, 2000);
+            },
+            function(error) {
+                if (loadingCircle) {
+                    loadingCircle.setMap(null);
+                    loadingCircle = null;
+                }
+                if (loadingOverlay) {
+                    loadingOverlay.setMap(null);
+                    loadingOverlay = null;
+                }
+                
+                console.error('Geolocation error:', error);
+                let errorMessage = 'Unable to get your location. ';
+                if (error.code === error.PERMISSION_DENIED) {
+                    errorMessage += 'Please enable location permissions in your browser.';
+                } else if (error.code === error.POSITION_UNAVAILABLE) {
+                    errorMessage += 'Location information is unavailable.';
+                } else if (error.code === error.TIMEOUT) {
+                    errorMessage += 'Location request timed out.';
+                }
+                alert(errorMessage);
+                const locateButton = document.getElementById('locateMe');
+                locateButton.innerHTML = '<i class="fas fa-crosshairs"></i> Locate Me';
+                locateButton.disabled = false;
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            }
+        );
+    } else {
+        alert('Geolocation is not supported by your browser.');
+    }
+}
+
+function setupTransectCodeMonitoring() {
+    const transectInputs = [
+        'id_transect_code_1',
+        'id_transect_code_2', 
+        'id_transect_code_3',
+        'id_transect_code_4'
+    ];
+    
+    transectInputs.forEach((inputId, index) => {
+        const element = document.getElementById(inputId);
+        if (element) {
+            element.addEventListener('input', () => updateTransectMarkers());
+            element.addEventListener('change', () => updateTransectMarkers());
+        }
+    });
+    
+    updateTransectMarkers();
+}
+
+function updateTransectMarkers() {
+    markers.forEach(marker => {
+        marker.setMap(null);
+        if (marker.overlay) {
+            marker.overlay.setMap(null);
+        }
+    });
+    markers = [];
     
     const markerColors = ['#FF5252', '#2196F3', '#FFC107', '#9C27B0'];
     const markerLabels = ['1', '2', '3', '4'];
     
-    transectData.forEach((transect, index) => {
-        const position = { lat: transect.latitude, lng: transect.longitude };
+    const transectCodes = [];
+    for (let i = 1; i <= 4; i++) {
+        const element = document.getElementById(`id_transect_code_${i}`);
+        if (element && element.value.trim()) {
+            const codeValue = element.value.trim();
+            transectCodes.push({
+                code: codeValue,
+                index: i - 1
+            });
+        }
+    }
+    
+    
+    transectCodes.forEach((transect, index) => {
+        const latField = document.getElementById(`id_transect_${index + 1}_latitude`);
+        const lngField = document.getElementById(`id_transect_${index + 1}_longitude`);
+        
+        let position;
+        if (latField && lngField && latField.value && lngField.value) {
+            position = {
+                lat: parseFloat(latField.value),
+                lng: parseFloat(lngField.value)
+            };
+        } else {
+            const offset = 0.0001;
+            position = {
+                lat: fieldCenter.lat + (index * offset),
+                lng: fieldCenter.lng + (index * offset)
+            };
+            
+            if (latField) latField.value = position.lat.toFixed(6);
+            if (lngField) lngField.value = position.lng.toFixed(6);
+        }
         
         const marker = new google.maps.Marker({
             position: position,
@@ -246,7 +309,6 @@ window.initMap = function() {
             
             const panes = this.getPanes();
             panes.floatPane.appendChild(div);
-            
             this.div = div;
             
             marker.addListener('position_changed', () => {
@@ -293,42 +355,41 @@ window.initMap = function() {
             const newLat = event.latLng.lat();
             const newLng = event.latLng.lng();
             
-            const latInput = document.getElementById(`id_form-${transect.index}-transect_latitude`);
-            const lngInput = document.getElementById(`id_form-${transect.index}-transect_longitude`);
-            const coordsDisplay = document.getElementById(`coords_display_${transect.index}`);
+            const latField = document.getElementById(`id_transect_${transect.index + 1}_latitude`);
+            const lngField = document.getElementById(`id_transect_${transect.index + 1}_longitude`);
             
-            if (latInput) latInput.value = newLat.toFixed(6);
-            if (lngInput) lngInput.value = newLng.toFixed(6);
-            if (coordsDisplay) {
-                coordsDisplay.textContent = `${newLat.toFixed(6)}, ${newLng.toFixed(6)}`;
-                coordsDisplay.parentElement.parentElement.classList.add('alert-success');
-                coordsDisplay.parentElement.parentElement.classList.remove('alert-light');
-            }
+            if (latField) latField.value = newLat.toFixed(6);
+            if (lngField) lngField.value = newLng.toFixed(6);
             
-            console.log(`Transect ${transect.code} moved to: ${newLat.toFixed(6)}, ${newLng.toFixed(6)}`);
         });
         
         markers.push(marker);
     });
     
-    console.log(`Initialized map with ${transectData.length} transect markers`);
-};
+    
+    updateTransectStatus(transectCodes.length);
+}
+
+function updateTransectStatus(count) {
+    const statusDiv = document.getElementById('transect-status');
+    const countSpan = document.getElementById('transect-count');
+    
+    if (statusDiv && countSpan) {
+        countSpan.textContent = count;
+        
+        if (count > 0) {
+            statusDiv.style.display = 'block';
+            statusDiv.className = 'alert alert-success';
+        } else {
+            statusDiv.style.display = 'none';
+        }
+    }
+}
 
 document.addEventListener('DOMContentLoaded', function() {
-    const supportsDairyCheckboxes = document.querySelectorAll('.supports-dairy-checkbox');
     
-    supportsDairyCheckboxes.forEach(function(checkbox) {
-        const transectIndex = checkbox.getAttribute('data-transect');
-        const confinedDiv = document.getElementById(`confined_dairy_${transectIndex}`);
-        
-        function toggleConfinedDairy() {
-            if (confinedDiv) {
-                confinedDiv.style.display = checkbox.checked ? 'block' : 'none';
-            }
-        }
-        
-        checkbox.addEventListener('change', toggleConfinedDairy);
-        toggleConfinedDairy();
-    });
+    if (map) {
+        setupTransectCodeMonitoring();
+    }
 });
 
