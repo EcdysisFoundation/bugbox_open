@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% load render_bundle from webpack_loader %}
+
+{% load i18n %}
+{% load crispy_forms_tags %}
+{% load dict_filters %}
+{% load static %}
+
+{% block title %}Grazing Events - Step 5{% endblock %}
+
+{% block customheadtagcontent %}
+{% render_bundle 'grower_application_step5' 'js' %}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'grower_portal:dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'grower_portal:application_step1' application.id %}">{{ application.submission_code }}</a></li>
+                    <li class="breadcrumb-item active">Step 5</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="progress mb-4">
+                <div class="progress-bar progress-width-83-33" role="progressbar">Step 5 of 6</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">Step 5: Grazing Events</h3>
+                    <p class="text-muted mb-0">Enter up to 4 grazing events for this paddock</p>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        If grazed in current year, provide current year grazing events and/or projections. If NOT grazed in current year, provide last four grazing events.
+                    </div>
+                    <div class="d-flex justify-content-start mb-3">
+                        <a href="{% url 'grower_portal:application_step4' application.id %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Previous
+                        </a>
+                    </div>
+                    
+                    <form method="post" id="grazing-events-form">
+                        {% csrf_token %}
+
+                        {% for event in grazing_events %}
+                            <div class="card mb-4 grazing-event-card" data-event-number="{{ event.event_number }}">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0">Grazing Event {{ event.event_number }}</h5>
+                                </div>
+                                <div class="card-body">
+                                    {% with event_form=event_forms|get_item:event.event_number %}
+                                        {% crispy event_form %}
+                                    {% endwith %}
+                                    
+                                    {% with formset=formsets|get_item:event.event_number %}
+                                        {{ formset.management_form }}
+                                    {% endwith %}
+                                    
+                                    <div class="animal-entries-container" id="animal-container-{{ event.event_number }}">
+                                        {% for form in formsets|get_item:event.event_number %}
+                                            <div class="card mb-3 animal-entry-card border-secondary" data-form-index="{{ forloop.counter0 }}">
+                                                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                                    <h6 class="mb-0">Animal Type {{ forloop.counter }}</h6>
+                                                    <button type="button" class="btn btn-sm btn-outline-danger remove-animal-btn{% if forloop.counter == 1 %} hidden-field{% endif %}">
+                                                        <i class="fas fa-times"></i> Remove
+                                                    </button>
+                                                </div>
+                                                <div class="card-body">
+                                                    {{ form.id }}
+                                                    <div class="hidden-field">{{ form.DELETE }}</div>
+                                                    
+                                                    <div class="mb-3">
+                                                        <label class="form-label">{{ form.class_of_animal.label }}</label>
+                                                        {{ form.class_of_animal }}
+                                                        <small class="form-text text-muted">{{ form.class_of_animal.help_text }}</small>
+                                                        {% if form.class_of_animal.errors %}
+                                                            <div class="text-danger">{{ form.class_of_animal.errors }}</div>
+                                                        {% endif %}
+                                                    </div>
+                                                    
+                                                    <div class="row">
+                                                        <div class="col-md-6 mb-3">
+                                                            <label class="form-label">{{ form.number_of_animals.label }}</label>
+                                                            {{ form.number_of_animals }}
+                                                            {% if form.number_of_animals.errors %}
+                                                                <div class="text-danger">{{ form.number_of_animals.errors }}</div>
+                                                            {% endif %}
+                                                        </div>
+                                                        <div class="col-md-6 mb-3">
+                                                            <label class="form-label">{{ form.average_weight_lbs.label }}</label>
+                                                            {{ form.average_weight_lbs }}
+                                                            {% if form.average_weight_lbs.errors %}
+                                                                <div class="text-danger">{{ form.average_weight_lbs.errors }}</div>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="row">
+                                                        <div class="col-md-6 mb-3">
+                                                            <label class="form-label">{{ form.duration_days.label }}</label>
+                                                            {{ form.duration_days }}
+                                                            {% if form.duration_days.errors %}
+                                                                <div class="text-danger">{{ form.duration_days.errors }}</div>
+                                                            {% endif %}
+                                                        </div>
+                                                        <div class="col-md-6 mb-3">
+                                                            <label class="form-label">{{ form.rest_period_days.label }}</label>
+                                                            {{ form.rest_period_days }}
+                                                            {% if form.rest_period_days.errors %}
+                                                                <div class="text-danger">{{ form.rest_period_days.errors }}</div>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                    
+                                    <button type="button" class="btn btn-success btn-sm add-animal-btn" data-event-number="{{ event.event_number }}">
+                                        <i class="fas fa-plus"></i> Add Another Animal Type
+                                    </button>
+                                    <small class="text-muted ms-2">
+                                        (<span class="animal-count" data-event="{{ event.event_number }}">0</span> animal type(s) added)
+                                    </small>
+                                </div>
+                            </div>
+                        {% endfor %}
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Note:</strong> You can add multiple animal types to each grazing event. All fields must be filled before proceeding to the next step.
+                        </div>
+                        
+                        <div class="d-flex justify-content-end mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                Next: Review & Submit <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Progress</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        <li class="list-group-item text-success">
+                            <i class="fas fa-check-circle"></i> Step 1: Field Information
+                        </li>
+                        <li class="list-group-item text-success">
+                            <i class="fas fa-check-circle"></i> Step 2: Management Practices
+                        </li>
+                        <li class="list-group-item text-success"><i class="fas fa-check-circle"></i> Step 3: Transect Codes</li>
+                        <li class="list-group-item text-success"><i class="fas fa-check-circle"></i> Step 4: Transect Measurements</li>
+                        <li class="list-group-item active"><i class="fas fa-circle"></i> Step 5: Grazing Events</li>
+                        <li class="list-group-item">Step 6: Review & Submit</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+

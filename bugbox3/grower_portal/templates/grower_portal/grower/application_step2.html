@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% load render_bundle from webpack_loader %}
+
+{% load i18n %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block title %}Management Practices - Step 2{% endblock %}
+
+{% block customheadtagcontent %}
+<script id="json_context" type="application/json">
+{
+    "fieldType": "{{ application.field.field_type }}"
+}
+</script>
+{% render_bundle 'grower_application_step2' 'js' %}
+{% render_bundle 'grower_conditional_fields' 'js' %}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'grower_portal:dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'grower_portal:application_step1' application.id %}">{{ application.submission_code }}</a></li>
+                    <li class="breadcrumb-item active">Step 2</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="progress mb-4">
+                <div class="progress-bar progress-width-33-33" role="progressbar">Step 2 of {% if application.field.field_type == 'range' %}6{% else %}5{% endif %}</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">Step 2: Management Practices</h3>
+                    <p class="text-muted mb-0">Field: {{ application.field.field_name }} ({{ application.field.get_field_type_display }})</p>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-start mb-3">
+                        <a href="{% url 'grower_portal:application_step1' application.id %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Previous
+                        </a>
+                    </div>
+                    
+                    {% crispy form %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Progress</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        <li class="list-group-item text-success">
+                            <i class="fas fa-check-circle"></i> Step 1: Field Information
+                        </li>
+                        <li class="list-group-item active">
+                            <i class="fas fa-circle"></i> Step 2: Management Practices
+                        </li>
+                        <li class="list-group-item">Step 3: Transect Codes</li>
+                        <li class="list-group-item">Step 4: Transect Measurements</li>
+                        {% if application.field.field_type == 'range' %}
+                        <li class="list-group-item">Step 5: Grazing Events</li>
+                        <li class="list-group-item">Step 6: Review & Submit</li>
+                        {% else %}
+                        <li class="list-group-item">Step 5: Review & Submit</li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

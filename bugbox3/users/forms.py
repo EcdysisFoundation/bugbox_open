@@ -2,6 +2,7 @@ from allauth.account.forms import SignupForm
 from allauth.socialaccount.forms import SignupForm as SocialSignupForm
 from django.contrib.auth import forms as admin_forms
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.forms import BooleanField, CharField, Form
 from django.utils.translation import gettext_lazy as _
@@ -34,10 +35,18 @@ class UserSignupForm(SignupForm):
     Check UserSocialSignupForm for accounts created from social.
     """
     name = CharField(max_length=255, label='Name of User')
+    is_grower = BooleanField(required=False, label='Sign up as Grower')
+    
     def save(self, request):
         user = super().save(request)
         user.name = self.cleaned_data["name"]
         user.save()
+        
+        # Add user to is_grower group if checkbox is checked
+        if self.cleaned_data.get("is_grower"):
+            grower_group, created = Group.objects.get_or_create(name='is_grower')
+            user.groups.add(grower_group)
+        
         return user
 
 

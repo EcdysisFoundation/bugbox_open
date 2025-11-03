@@ -6,6 +6,7 @@ from allauth.account.adapter import DefaultAccountAdapter
 from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 from django.conf import settings
 from django.http import HttpRequest
+from django.urls import reverse
 
 if typing.TYPE_CHECKING:
     from allauth.socialaccount.models import SocialLogin
@@ -16,6 +17,28 @@ if typing.TYPE_CHECKING:
 class AccountAdapter(DefaultAccountAdapter):
     def is_open_for_signup(self, request: HttpRequest) -> bool:
         return getattr(settings, "ACCOUNT_ALLOW_REGISTRATION", True)
+    
+    def get_login_redirect_url(self, request: HttpRequest) -> str:
+        """
+        Redirect growers to profile completion, others to default redirect.
+        """
+        user = request.user
+        
+        # Check if user is a member of is_grower group
+        if user.groups.filter(name='is_grower').exists():
+            # Check if grower has completed profile
+            try:
+                grower_profile = user.grower_profile
+                if grower_profile.profile_completed:
+                    return reverse('grower_portal:dashboard')
+                else:
+                    return reverse('grower_portal:profile_complete')
+            except Exception as e:
+                # If no grower profile exists, Will redirect to profile completion
+                return reverse('grower_portal:profile_complete')
+        
+        # For regular users, use default redirect
+        return super().get_login_redirect_url(request)
 
 
 class SocialAccountAdapter(DefaultSocialAccountAdapter):

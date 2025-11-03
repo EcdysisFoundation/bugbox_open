@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% load render_bundle from webpack_loader %}
+
+{% load i18n %}
+{% load crispy_forms_tags %}
+
+{% block title %}Transect Codes & Locations - Step 3{% endblock %}
+
+{% block customheadtagcontent %}
+<script id="json_context" type="application/json">
+{
+    "transectData": {{ transect_data|safe }},
+    "fieldLatitude": {{ field_latitude }},
+    "fieldLongitude": {{ field_longitude }}
+}
+</script>
+{% render_bundle 'grower_application_step3' 'js' %}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'grower_portal:dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'grower_portal:application_step1' application.id %}">{{ application.submission_code }}</a></li>
+                    <li class="breadcrumb-item active">Step 3</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="progress mb-4">
+                <div class="progress-bar progress-width-50" role="progressbar">Step 3 of {% if application.field.field_type == 'range' %}6{% else %}5{% endif %}</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-8">
+            <form method="post" id="transect-form">
+                {% csrf_token %}
+                
+                <div class="d-flex justify-content-start mb-3">
+                    <a href="{% url 'grower_portal:application_step2' application.id %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Previous
+                    </a>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h3 class="mb-0">Step 3: Transect Codes</h3>
+                        <p class="text-muted mb-0">Enter your transect codes and see them appear on the map below</p>
+                    </div>
+                    <div class="card-body">
+                        {% crispy form %}
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h4 class="mb-0"><i class="fas fa-map-marked-alt"></i> Transect Locations</h4>
+                        <p class="mb-0 small">Map updates in real-time as you enter transect codes</p>
+                    </div>
+                    <div class="card-body">
+                        <div class="position-relative">
+                            <div id="map" class="map-container"></div>
+                            <button id="locateMe" type="button" class="btn btn-primary locate-me-button">
+                                <i class="fas fa-crosshairs"></i> Locate Me
+                            </button>
+                        </div>
+                        <div class="mt-3">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i>
+                                <strong>Real-time Updates:</strong> The map automatically updates as you type transect codes. Colored markers show your transect locations.
+                            </div>
+                            <div id="transect-status" class="alert alert-light hidden-field">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span id="transect-count">0</span> transect(s) entered
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+            </form>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Progress</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        <li class="list-group-item text-success">
+                            <i class="fas fa-check-circle"></i> Step 1: Field Information
+                        </li>
+                        <li class="list-group-item text-success">
+                            <i class="fas fa-check-circle"></i> Step 2: Management Practices
+                        </li>
+                        <li class="list-group-item active">
+                            <i class="fas fa-circle"></i> Step 3: Transect Codes
+                        </li>
+                        <li class="list-group-item">Step 4: Transect Measurements</li>
+                        {% if application.field.field_type == 'range' %}
+                          <li class="list-group-item">Step 5: Grazing Events</li>
+                          <li class="list-group-item">Step 6: Review & Submit</li>
+                        {% else %}
+                          <li class="list-group-item">Step 5: Review & Submit</li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Google Maps API with callback -->
+<script src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}&callback=initMap&v=weekly" async defer></script>
+{% endblock %}
+
