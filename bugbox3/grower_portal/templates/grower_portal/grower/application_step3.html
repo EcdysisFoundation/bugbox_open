@@ -34,7 +34,7 @@
     <div class="row">
         <div class="col-12">
             <div class="progress mb-4">
-                <div class="progress-bar" role="progressbar" style="width: 60%">Step 3 of {% if application.field.field_type == 'range' %}5{% else %}4{% endif %}</div>
+                <div class="progress-bar progress-width-50" role="progressbar">Step 3 of {% if application.field.field_type == 'range' %}6{% else %}5{% endif %}</div>
             </div>
         </div>
     </div>
@@ -66,19 +66,18 @@
                         <p class="mb-0 small">Map updates in real-time as you enter transect codes</p>
                     </div>
                     <div class="card-body">
-                        <div style="position: relative;">
-                            <div id="map" style="height: 500px; width: 100%;"></div>
-                            <!-- Locate Me Button -->
-                            <button id="locateMe" type="button" class="btn btn-primary" style="position: absolute; top: 10px; left: 10px; z-index: 1000;">
+                        <div class="position-relative">
+                            <div id="map" class="map-container"></div>
+                            <button id="locateMe" type="button" class="btn btn-primary locate-me-button">
                                 <i class="fas fa-crosshairs"></i> Locate Me
                             </button>
                         </div>
                         <div class="mt-3">
                             <div class="alert alert-info">
                                 <i class="fas fa-info-circle"></i>
-                                <strong>Real-time Updates:</strong> The map automatically updates as you type transect codes. Green marker shows field center, colored markers show your transect locations.
+                                <strong>Real-time Updates:</strong> The map automatically updates as you type transect codes. Colored markers show your transect locations.
                             </div>
-                            <div id="transect-status" class="alert alert-light" style="display: none;">
+                            <div id="transect-status" class="alert alert-light hidden-field">
                                 <i class="fas fa-map-marker-alt"></i>
                                 <span id="transect-count">0</span> transect(s) entered
                             </div>
@@ -105,11 +104,12 @@
                         <li class="list-group-item active">
                             <i class="fas fa-circle"></i> Step 3: Transect Codes
                         </li>
+                        <li class="list-group-item">Step 4: Transect Measurements</li>
                         {% if application.field.field_type == 'range' %}
-                        <li class="list-group-item">Step 4: Grazing Events</li>
-                        <li class="list-group-item">Step 5: Review & Submit</li>
+                          <li class="list-group-item">Step 5: Grazing Events</li>
+                          <li class="list-group-item">Step 6: Review & Submit</li>
                         {% else %}
-                        <li class="list-group-item">Step 4: Review & Submit</li>
+                          <li class="list-group-item">Step 5: Review & Submit</li>
                         {% endif %}
                     </ul>
                 </div>

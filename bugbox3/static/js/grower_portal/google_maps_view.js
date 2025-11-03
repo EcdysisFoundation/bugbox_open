@@ -29,25 +29,6 @@ window.initMapView = function() {
         fullscreenControl: true
     });
     
-    new google.maps.Marker({
-        position: fieldCenter,
-        map: map,
-        title: "Field Center",
-        icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 10,
-            fillColor: "#4CAF50",
-            fillOpacity: 1,
-            strokeColor: "#2E7D32",
-            strokeWeight: 2
-        },
-        label: {
-            text: "FIELD",
-            color: "white",
-            fontSize: "10px",
-            fontWeight: "bold"
-        }
-    });
     
     const markerColors = ['#FF5252', '#2196F3', '#FFC107', '#9C27B0'];
     const markerLabels = ['1', '2', '3', '4'];

@@ -7,21 +7,26 @@ from crispy_forms.layout import Fieldset, Row, Column, HTML, Div, Submit, Layout
 from bugbox3.core.forms import ModelFormMixin, Html5DateInput
 from ...models import (
     GrowerProfile, Field, TransectCode, GrowerApplication,
-    ManagementPractices, GrazingEvent, GrazingEventAnimal
+    ManagementPractices, GrazingEvent, GrazingEventAnimal,
+    TransectMeasurement, DropPlateReading, VegetationReading, SoilReading,
+    SoilCompactionReading, InfiltrometerReading, InfiltrationRingReading
 )
 from ...constants import (
     GENDER_CHOICES, RACE_CHOICES, FIELD_TYPE_CHOICES,
     TRANSITIONAL_STATUS_CHOICES, INSECTICIDE_FREQUENCY_CHOICES,
-    CROP_TYPE_CHOICES, CROP_SUBTYPE_CHOICES,
+    CROP_TYPE_CHOICES, CROP_SUBTYPE_CHOICES, ORCHARD_CROP_TYPE_CHOICES,
     COVER_CROP_TERMINATION_CHOICES, ORGANIC_AMENDMENT_CHOICES,
     GRAZER_TYPES_CHOICES, GROUND_COVER_MANAGEMENT_CHOICES,
     PHONE_MAX_LENGTH, FARM_NAME_MAX_LENGTH, FIELD_NAME_MAX_LENGTH,
     CROP_VARIETY_MAX_LENGTH, CROP_VARIETIES_MAX_LENGTH, FORAGE_VARIETIES_MAX_LENGTH,
     PADDOCK_SIZE_MAX_LENGTH, ROOTSTOCK_SPECIES_MAX_LENGTH,
+    TILLAGE_METHODS_MAX_LENGTH,
     TRANSECT_CODE_MAX_LENGTH, AGE_MIN, AGE_MAX,
     LATITUDE_MIN, LATITUDE_MAX, LONGITUDE_MIN, LONGITUDE_MAX,
     ACRES_SAMPLED_MIN, ACRES_SAMPLED_MAX, YEARS_UNDER_MANAGEMENT_MIN, YEARS_UNDER_MANAGEMENT_MAX,
-    CLASS_OF_ANIMAL_EXAMPLES, MAX_ANIMAL_ENTRIES_PER_GRAZING_EVENT
+    CLASS_OF_ANIMAL_EXAMPLES, MAX_ANIMAL_ENTRIES_PER_GRAZING_EVENT,
+    DISTANCES_DROP_PLATE, POSITIONS_3POINT, INFILTROMETER_TIMES,
+    FIELD_CONDITION_CHOICES, VEGETATION_METRIC_CHOICES, SOIL_METRIC_CHOICES
 )
 
 User = get_user_model()
@@ -78,24 +83,6 @@ class ApplicationCreationForm(ModelFormMixin):
         choices=FIELD_TYPE_CHOICES,
         label='Field Type'
     )
-    latitude = forms.DecimalField(
-        max_digits=9,
-        decimal_places=6,
-        required=False,
-        min_value=LATITUDE_MIN,
-        max_value=LATITUDE_MAX,
-        label='Latitude',
-        help_text='Field latitude (-90 to 90)'
-    )
-    longitude = forms.DecimalField(
-        max_digits=9,
-        decimal_places=6,
-        required=False,
-        min_value=LONGITUDE_MIN,
-        max_value=LONGITUDE_MAX,
-        label='Longitude',
-        help_text='Field longitude (-180 to 180)'
-    )
     crop_type = forms.ChoiceField(
         choices=[('', 'Select Crop Type')] + CROP_TYPE_CHOICES,
         required=False,
@@ -120,10 +107,12 @@ class ApplicationCreationForm(ModelFormMixin):
         label='Small Grain Type',
         help_text='Specify small grain type'
     )
-    uses_broad_fork = forms.BooleanField(
+    tillage_methods = forms.CharField(
+        max_length=TILLAGE_METHODS_MAX_LENGTH,
         required=False,
-        label='Broad Fork',
-        help_text='Uses broad fork cultivation'
+        widget=forms.Textarea(attrs={'rows': 3, 'placeholder': 'e.g., disk, shanks, basket weed, broad fork, harrow, etc.'}),
+        label='Tillage Methods',
+        help_text='Tillage = any type of mechanical disturbance of the soil'
     )
     forage_varieties = forms.CharField(
         max_length=FORAGE_VARIETIES_MAX_LENGTH,
@@ -163,33 +152,16 @@ class ApplicationCreationForm(ModelFormMixin):
     
     # Orchard-specific crop type fields
     orchard_crop_type = forms.ChoiceField(
-        choices=[('', 'Select Crop Type')] + CROP_TYPE_CHOICES,
+        choices=[('', 'Select Crop Type')] + ORCHARD_CROP_TYPE_CHOICES,
         required=False,
         label='Crop Type',
         help_text='Type of crop grown in orchard'
     )
-    orchard_crop_subtype = forms.ChoiceField(
-        choices=[('', 'Select Subtype')] + CROP_SUBTYPE_CHOICES,
-        required=False,
-        label='Crop Subtype',
-        help_text='Specific type of crop'
-    )
-    orchard_crop_subtype_other = forms.CharField(
+    orchard_crop_specify = forms.CharField(
         max_length=200,
         required=False,
-        label='Other Crop Type',
-        help_text='Specify other crop type'
-    )
-    orchard_small_grain_type = forms.CharField(
-        max_length=200,
-        required=False,
-        label='Small Grain Type',
-        help_text='Specify type of small grain'
-    )
-    orchard_uses_broad_fork = forms.BooleanField(
-        required=False,
-        label='Broad Fork',
-        help_text='Uses broad fork for cultivation'
+        label='',
+        help_text='Specify the type'
     )
     
     # Crop varieties field for orchards
@@ -231,8 +203,8 @@ class ApplicationCreationForm(ModelFormMixin):
     measurement_comments = forms.CharField(
         widget=forms.Textarea(attrs={'rows': 3}),
         required=False,
-        label='Name of insecticide/dewormer and any other comments',
-        help_text='Additional comments about field measurements'
+        label='Field comments',
+        help_text='General comments about the field'
     )
     
     class Meta:
@@ -244,7 +216,6 @@ class ApplicationCreationForm(ModelFormMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
-        # Setting conditional labels based on field type
         if self.initial.get('field_type') == 'range':
             self.fields['acres_sampled'].label = 'Acres in paddock sampled'
     
@@ -258,13 +229,6 @@ class ApplicationCreationForm(ModelFormMixin):
                 'Field Information',
                 Row(Column('field_name')),
                 Row(Column('field_type')),
-                Div(
-                    Row(
-                        Column('latitude', css_class='col-md-6'),
-                        Column('longitude', css_class='col-md-6')
-                    ),
-                    css_class='gps-coordinates'
-                ),
                 Div(
                     css_id='field_specific_properties',
                     css_class='mt-3'
@@ -290,12 +254,7 @@ class ApplicationCreationForm(ModelFormMixin):
                         css_class='nested-conditional',
                         style='display:none;'
                     ),
-                    Div(
-                        Row(Column('uses_broad_fork')),
-                        css_id='broad_fork_container',
-                        css_class='nested-conditional',
-                        style='display:none;'
-                    ),
+                    Row(Column('tillage_methods')),
                     css_id='crop_type_fields',
                     css_class='field-specific',
                     style='display:none;'
@@ -312,40 +271,15 @@ class ApplicationCreationForm(ModelFormMixin):
                     style='display:none;'
                 ),
                 Div(
-                    HTML('<h6>Orchard Information</h6>'),
                     Row(Column('rootstock_species')),
-                    Row(Column('crop_varieties')),
+                    Row(Column('orchard_crop_type')),
                     Div(
-                        HTML('<h6>Crop Information</h6>'),
-                        Row(Column('orchard_crop_type')),
-                        Div(
-                            Row(Column('orchard_crop_subtype')),
-                            css_id='orchard_crop_subtype_container',
-                            css_class='nested-conditional',
-                            style='display:none;'
-                        ),
-                        Div(
-                            Row(Column('orchard_crop_subtype_other')),
-                            css_id='orchard_crop_subtype_other_container',
-                            css_class='nested-conditional',
-                            style='display:none;'
-                        ),
-                        Div(
-                            Row(Column('orchard_small_grain_type')),
-                            css_id='orchard_small_grain_container',
-                            css_class='nested-conditional',
-                            style='display:none;'
-                        ),
-                        Div(
-                            Row(Column('orchard_uses_broad_fork')),
-                            css_id='orchard_broad_fork_container',
-                            css_class='nested-conditional',
-                            style='display:none;'
-                        ),
-                        css_id='orchard_crop_type_fields',
+                        Row(Column('orchard_crop_specify')),
+                        css_id='orchard_crop_specify_container',
                         css_class='nested-conditional',
                         style='display:none;'
                     ),
+                    Row(Column('crop_varieties')),
                     css_id='orchard_specific_fields',
                     css_class='field-specific',
                     style='display:none;'
@@ -448,6 +382,11 @@ class ManagementPracticesForm(ModelFormMixin):
         label='Other Management Method',
         help_text='Specify other ground cover management method'
     )
+    uses_broad_fork = forms.BooleanField(
+        required=False,
+        label='Broad Fork',
+        help_text='Uses broad fork cultivation'
+    )
     
     class Meta:
         model = ManagementPractices
@@ -457,7 +396,9 @@ class ManagementPracticesForm(ModelFormMixin):
             'uses_synthetic_fertilizers', 'uses_synthetic_insecticides',
             'uses_synthetic_herbicides', 'uses_synthetic_fungicides',
             'uses_organic_amendments', 'organic_amendment_types', 'organic_amendment_other',
-            'uses_grazing', 'grazer_types', 'grazer_types_other',
+            'grazed_current_year', 'grazed_by_livestock_plan', 'not_grazed_comments',
+            'applies_insecticides_dewormers', 'insecticide_dewormer_frequency', 'insecticide_dewormer_comments',
+            'grazer_types', 'grazer_types_other',
             'allows_ground_cover', 'ground_cover_management', 'ground_cover_management_other', 'tills_between_rows'
         ]
     
@@ -466,85 +407,101 @@ class ManagementPracticesForm(ModelFormMixin):
     def get_primary_layout(self):
         return [
             Div(
-                Fieldset(
-                    'Tillage Practices',
-                    Row(Column('uses_tillage')),
-                    Div(
-                        Row(Column('tillage_depth')),
-                        css_id='tillage_depth_field',
-                        style='display:none;'
-                    )
-                ),
+            Fieldset(
+                'Tillage Practices',
+                Row(Column('uses_tillage')),
+                Div(
+                    Row(Column('tillage_depth')),
+                    css_id='tillage_depth_field',
+                    style='display:none;'
+                )
+            ),
                 css_id='tillage_practices_section',
                 css_class='non-orchard-only non-rangeland-only'
             ),
             Div(
-                Fieldset(
-                    'Cover Crops',
-                    Row(Column('uses_cover_crop')),
-                    Div(
-                        Row(Column('cover_crop_termination')),
+            Fieldset(
+                'Cover Crops',
+                Row(Column('uses_cover_crop')),
+                Div(
+                    Row(Column('cover_crop_termination')),
                         Div(
                             Row(Column('cover_crop_termination_other')),
                             css_id='cover_crop_termination_other_container',
                             style='display:none;'
                         ),
-                        css_id='cover_crop_fields',
-                        style='display:none;'
-                    )
-                ),
-                css_class='non-rangeland-only'
+                    css_id='cover_crop_fields',
+                    style='display:none;'
+                )
+            ),
+                css_class=''
             ),
             Div(
-                Fieldset(
-                    'Synthetic Inputs',
-                    Row(
-                        Column('uses_synthetic_fertilizers', css_class='col-md-6'),
-                        Column('uses_synthetic_insecticides', css_class='col-md-6')
-                    ),
-                    Row(
-                        Column('uses_synthetic_herbicides', css_class='col-md-6'),
-                        Column('uses_synthetic_fungicides', css_class='col-md-6')
-                    )
+            Fieldset(
+                'Synthetic Inputs',
+                Row(
+                    Column('uses_synthetic_fertilizers', css_class='col-md-6'),
+                    Column('uses_synthetic_insecticides', css_class='col-md-6')
                 ),
-                css_class='non-rangeland-only'
+                Row(
+                    Column('uses_synthetic_herbicides', css_class='col-md-6'),
+                    Column('uses_synthetic_fungicides', css_class='col-md-6')
+                )
+            ),
+                css_class=''
             ),
             Div(
-                Fieldset(
-                    'Organic Amendments',
-                    Row(Column('uses_organic_amendments')),
-                    Div(
-                        Row(Column('organic_amendment_types')),
+            Fieldset(
+                'Organic Amendments',
+                Row(Column('uses_organic_amendments')),
+                Div(
+                    Row(Column('organic_amendment_types')),
                         Div(
                             Row(Column('organic_amendment_other')),
                             css_id='organic_amendment_other_container',
                             style='display:none;'
                         ),
-                        css_id='organic_amendment_fields',
-                        style='display:none;'
-                    )
-                ),
-                css_class='non-rangeland-only'
+                    css_id='organic_amendment_fields',
+                    style='display:none;'
+                )
+            ),
+                css_class=''
             ),
             Div(
-                Fieldset(
-                    'Grazing Practices',
-                    Row(Column('uses_grazing')),
+            Fieldset(
+                'Grazing Practices',
+                    Row(Column('grazed_current_year')),
+                    Row(Column('grazed_by_livestock_plan')),
+                    Div(
+                        Row(Column('not_grazed_comments')),
+                        css_id='not_grazed_comments_container',
+                        style='display:none;'
+                    ),
+                    HTML('<hr />'),
+                    Row(Column('applies_insecticides_dewormers')),
+                    Div(
+                        Row(
+                            Column('insecticide_dewormer_frequency', css_class='col-md-6'),
+                            Column('insecticide_dewormer_comments', css_class='col-md-6')
+                        ),
+                        css_id='insecticide_dewormer_fields',
+                        style='display:none;'
+                    ),
                     Div(
                         Row(Column('grazer_types')),
                         Div(
                             Row(Column('grazer_types_other')),
                             css_id='grazer_types_other_container',
-                            style='display:none;'
-                        ),
-                        css_id='grazing_fields',
                         style='display:none;'
-                    )
+                    ),
+                    css_id='grazing_fields',
+                    style='display:none;'
+                )
                 ),
-                css_class='non-rangeland-only'
+                css_class=''
             ),
             Fieldset(
-                'Orchard-Specific Practices',
+                'Specific Practices',
                 Row(Column('allows_ground_cover')),
                 Div(
                     Row(Column('ground_cover_management')),
@@ -558,8 +515,7 @@ class ManagementPracticesForm(ModelFormMixin):
                 ),
                 Row(Column('tills_between_rows')),
                 Div(
-                    Row(Column('tillage_depth')),
-                    css_id='orchard_tillage_depth_field',
+                    css_id='orchard_tillage_depth_mount',
                     style='display:none;'
                 ),
                 css_id='orchard_practices',
@@ -621,10 +577,7 @@ class TransectCodesForm(forms.Form):
     transect_4_longitude = forms.DecimalField(required=False, widget=forms.HiddenInput())
     
     def get_primary_layout(self):
-        if self.field_type == 'range':
-            button_text = 'Next: Grazing Events'
-        else:
-            button_text = 'Next: Review & Submit'
+        button_text = 'Next: Transect Measurements'
             
         return [
             Fieldset(
@@ -681,12 +634,19 @@ class TransectCodesForm(forms.Form):
 class GrazingEventForm(ModelFormMixin):
     class Meta:
         model = GrazingEvent
-        fields = [] 
+        fields = ['start_date']
     
     required_fields = []
     
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['start_date'].label = 'Start Date (estimate is acceptable)'
+        self.fields['start_date'].required = False
+    
     def get_primary_layout(self):
-        return []
+        return [
+            Row(Column('start_date'))
+        ]
 
 
 class GrazingEventAnimalForm(forms.ModelForm):
@@ -699,6 +659,7 @@ class GrazingEventAnimalForm(forms.ModelForm):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields['duration_days'].label = 'Grazing days'
         for field in self.fields.values():
             field.widget.attrs.update({'class': 'form-control form-control-sm'})
 
@@ -711,4 +672,100 @@ GrazingEventAnimalFormSet = inlineformset_factory(
     max_num=MAX_ANIMAL_ENTRIES_PER_GRAZING_EVENT,
     can_delete=True,
     validate_max=True
+)
+
+class TransectMeasurementGeneralForm(forms.ModelForm):
+    class Meta:
+        model = TransectMeasurement
+        fields = ['general_time', 'temperature_c', 'wind_speed_ms', 'field_condition']
+
+
+class DropPlateReadingForm(forms.ModelForm):
+    class Meta:
+        model = DropPlateReading
+        fields = ['distance_m', 'value']
+
+
+DropPlateFormSet = inlineformset_factory(
+    TransectMeasurement,
+    DropPlateReading,
+    form=DropPlateReadingForm,
+    extra=0,
+    can_delete=False,
+)
+
+
+class VegetationReadingForm(forms.ModelForm):
+    class Meta:
+        model = VegetationReading
+        fields = ['metric', 'position_m', 'value']
+
+
+VegetationFormSet = inlineformset_factory(
+    TransectMeasurement,
+    VegetationReading,
+    form=VegetationReadingForm,
+    extra=0,
+    can_delete=False,
+)
+
+
+class SoilReadingForm(forms.ModelForm):
+    class Meta:
+        model = SoilReading
+        fields = ['metric', 'position_m', 'value']
+
+
+SoilFormSet = inlineformset_factory(
+    TransectMeasurement,
+    SoilReading,
+    form=SoilReadingForm,
+    extra=0,
+    can_delete=False,
+)
+
+
+class SoilCompactionReadingForm(forms.ModelForm):
+    class Meta:
+        model = SoilCompactionReading
+        fields = ['position_m', 'max_value', 'score', 'hp']
+
+
+SoilCompactionFormSet = inlineformset_factory(
+    TransectMeasurement,
+    SoilCompactionReading,
+    form=SoilCompactionReadingForm,
+    extra=0,
+    can_delete=False,
+)
+
+
+class InfiltrometerReadingForm(forms.ModelForm):
+    class Meta:
+        model = InfiltrometerReading
+        fields = ['time_mark', 'volume_ml']
+
+
+InfiltrometerFormSet = inlineformset_factory(
+    TransectMeasurement,
+    InfiltrometerReading,
+    form=InfiltrometerReadingForm,
+    extra=0,
+    can_delete=False,
+)
+
+
+class InfiltrationRingReadingForm(forms.ModelForm):
+    class Meta:
+        model = InfiltrationRingReading
+        fields = ['pour_number', 'start_depth_cm', 'infiltration_time_sec', 
+                  'depth_after_15min_cm', 'change_in_depth_cm']
+
+
+InfiltrationRingFormSet = inlineformset_factory(
+    TransectMeasurement,
+    InfiltrationRingReading,
+    form=InfiltrationRingReadingForm,
+    extra=0,
+    can_delete=False,
 )

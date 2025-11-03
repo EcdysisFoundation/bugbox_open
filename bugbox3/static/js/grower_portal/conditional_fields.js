@@ -1,16 +1,10 @@
-/**
- * Conditional Fields JavaScript for Grower Portal Forms
- * Handles show/hide logic for conditional form fields
- */
-
 document.addEventListener('DOMContentLoaded', function() {
     try {
         initCropTypeConditionals();
         initCoverCropConditionals();
         initOrganicAmendmentConditionals();
         initTillageConditionals();
-        initCoverCropUsageConditionals();
-        initOrganicAmendmentUsageConditionals();
+        initManagementPracticesConditionals();
     } catch (error) {
         console.warn('Conditional fields initialization error:', error);
     }
@@ -22,14 +16,9 @@ function initCropTypeConditionals() {
     const cropSubtypeField = document.getElementById('id_crop_subtype');
     const cropSubtypeOtherField = document.getElementById('id_crop_subtype_other');
     const smallGrainTypeField = document.getElementById('id_small_grain_type');
-    const broadForkField = document.getElementById('id_uses_broad_fork');
-    const broadForkContainer = broadForkField ? broadForkField.closest('.form-group') : null;
-    
     const orchardCropTypeField = document.getElementById('id_orchard_crop_type');
-    const orchardCropSubtypeField = document.getElementById('id_orchard_crop_subtype');
-    const orchardCropSubtypeOtherField = document.getElementById('id_orchard_crop_subtype_other');
-    const orchardSmallGrainTypeField = document.getElementById('id_orchard_small_grain_type');
-    const orchardBroadForkField = document.getElementById('id_orchard_uses_broad_fork');
+    const orchardCropSpecifyField = document.getElementById('id_orchard_crop_specify');
+    const orchardCropSpecifyContainer = document.getElementById('orchard_crop_specify_container');
 
     if (!fieldTypeField) return;
 
@@ -67,43 +56,36 @@ function initCropTypeConditionals() {
         }
         
         const orchardCropType = orchardCropTypeField ? orchardCropTypeField.value : '';
-        const orchardCropSubtypeContainer = document.getElementById('orchard_crop_subtype_container');
         
-        if (orchardCropType === 'row_crop') {
-            if (orchardCropSubtypeContainer) {
-                orchardCropSubtypeContainer.style.display = 'block';
+        if (orchardCropType === 'fruit_trees' || orchardCropType === 'nut_trees') {
+            if (orchardCropSpecifyContainer) {
+                orchardCropSpecifyContainer.style.display = 'block';
+            }
+            if (orchardCropSpecifyField) {
+                const label = orchardCropSpecifyField.closest('.form-group')?.querySelector('label');
+                if (label) {
+                    label.textContent = orchardCropType === 'fruit_trees' ? 'Specify fruit trees:' : 'Specify nut trees:';
+                }
             }
         } else {
-            if (orchardCropSubtypeContainer) {
-                orchardCropSubtypeContainer.style.display = 'none';
+            if (orchardCropSpecifyContainer) {
+                orchardCropSpecifyContainer.style.display = 'none';
             }
-            if (orchardCropSubtypeField) {
-                orchardCropSubtypeField.value = '';
+            if (orchardCropSpecifyField) {
+                orchardCropSpecifyField.value = '';
             }
         }
-
-        const broadForkContainer = document.getElementById('broad_fork_container');
-        if (cropType === 'mixed_veg') {
-            if (broadForkContainer) {
-                broadForkContainer.style.display = 'block';
-            }
-        } else {
-            if (broadForkContainer) {
-                broadForkContainer.style.display = 'none';
-            }
-            if (broadForkField) broadForkField.checked = false;
-        }
         
-        const orchardBroadForkContainer = document.getElementById('orchard_broad_fork_container');
-        if (orchardCropType === 'mixed_veg') {
-            if (orchardBroadForkContainer) {
-                orchardBroadForkContainer.style.display = 'block';
+        const tillageMethodsField = document.getElementById('id_tillage_methods');
+        if (tillageMethodsField) {
+            const tillageMethodsContainer = tillageMethodsField.closest('.form-group');
+            if (tillageMethodsContainer) {
+                if (fieldType === 'crop') {
+                    tillageMethodsContainer.style.display = 'block';
+                } else {
+                    tillageMethodsContainer.style.display = 'none';
+                }
             }
-        } else {
-            if (orchardBroadForkContainer) {
-                orchardBroadForkContainer.style.display = 'none';
-            }
-            if (orchardBroadForkField) orchardBroadForkField.checked = false;
         }
     }
 
@@ -138,38 +120,6 @@ function initCropTypeConditionals() {
             }
         }
     }
-    
-    function updateOrchardCropSubtypeFields() {
-        const orchardCropSubtype = orchardCropSubtypeField ? orchardCropSubtypeField.value : '';
-        
-        const orchardCropSubtypeOtherContainer = document.getElementById('orchard_crop_subtype_other_container');
-        if (orchardCropSubtype === 'other') {
-            if (orchardCropSubtypeOtherContainer) {
-                orchardCropSubtypeOtherContainer.style.display = 'block';
-            }
-        } else {
-            if (orchardCropSubtypeOtherContainer) {
-                orchardCropSubtypeOtherContainer.style.display = 'none';
-            }
-            if (orchardCropSubtypeOtherField) {
-                orchardCropSubtypeOtherField.value = '';
-            }
-        }
-
-        const orchardSmallGrainContainer = document.getElementById('orchard_small_grain_container');
-        if (orchardCropSubtype === 'small_grain') {
-            if (orchardSmallGrainContainer) {
-                orchardSmallGrainContainer.style.display = 'block';
-            }
-        } else {
-            if (orchardSmallGrainContainer) {
-                orchardSmallGrainContainer.style.display = 'none';
-            }
-            if (orchardSmallGrainTypeField) {
-                orchardSmallGrainTypeField.value = '';
-            }
-        }
-    }
 
     fieldTypeField.addEventListener('change', updateCropTypeFields);
     if (cropTypeField) {
@@ -178,17 +128,12 @@ function initCropTypeConditionals() {
     if (cropSubtypeField) {
         cropSubtypeField.addEventListener('change', updateCropSubtypeFields);
     }
-    
     if (orchardCropTypeField) {
         orchardCropTypeField.addEventListener('change', updateCropTypeFields);
-    }
-    if (orchardCropSubtypeField) {
-        orchardCropSubtypeField.addEventListener('change', updateOrchardCropSubtypeFields);
     }
 
     updateCropTypeFields();
     updateCropSubtypeFields();
-    updateOrchardCropSubtypeFields();
 }
 
 function initCoverCropConditionals() {
@@ -302,92 +247,7 @@ function initTillageConditionals() {
     updateTillageFields();
 }
 
-function initCoverCropUsageConditionals() {
-    const coverCropField = document.getElementById('id_uses_cover_crop');
-    const terminationField = document.getElementById('id_cover_crop_termination');
-    const terminationOtherField = document.getElementById('id_cover_crop_termination_other');
-    const coverCropFields = document.getElementById('cover_crop_fields');
-
-    if (!coverCropField || !coverCropFields) return;
-
-    function updateCoverCropUsageFields() {
-        if (coverCropField.checked) {
-            coverCropFields.style.display = 'block';
-        } else {
-            coverCropFields.style.display = 'none';
-            if (terminationField) terminationField.value = '';
-            if (terminationOtherField) terminationOtherField.value = '';
-        }
-    }
-
-    function updateTerminationUsageFields() {
-        const termination = terminationField ? terminationField.value : '';
-        const terminationOtherContainer = document.getElementById('cover_crop_termination_other_container');
-        
-        if (termination === 'other') {
-            if (terminationOtherContainer) {
-                terminationOtherContainer.style.display = 'block';
-            }
-        } else {
-            if (terminationOtherContainer) {
-                terminationOtherContainer.style.display = 'none';
-            }
-            if (terminationOtherField) {
-                terminationOtherField.value = '';
-            }
-        }
-    }
-
-    coverCropField.addEventListener('change', updateCoverCropUsageFields);
-    if (terminationField) {
-        terminationField.addEventListener('change', updateTerminationUsageFields);
-    }
-
-    updateCoverCropUsageFields();
-    updateTerminationUsageFields();
-}
-
-function initOrganicAmendmentUsageConditionals() {
-    const organicAmendmentField = document.getElementById('id_uses_organic_amendments');
-    const amendmentTypesField = document.getElementById('id_organic_amendment_types');
-    const amendmentOtherField = document.getElementById('id_organic_amendment_other');
-    const organicAmendmentFields = document.getElementById('organic_amendment_fields');
-
-    if (!organicAmendmentField || !organicAmendmentFields) return;
-
-    function updateOrganicAmendmentUsageFields() {
-        if (organicAmendmentField.checked) {
-            organicAmendmentFields.style.display = 'block';
-        } else {
-            organicAmendmentFields.style.display = 'none';
-            if (amendmentTypesField) amendmentTypesField.value = '';
-            if (amendmentOtherField) amendmentOtherField.value = '';
-        }
-    }
-
-    function updateAmendmentTypeUsageFields() {
-        const amendmentType = amendmentTypesField ? amendmentTypesField.value : '';
-        const amendmentOtherContainer = document.getElementById('organic_amendment_other_container');
-        
-        if (amendmentType === 'other') {
-            if (amendmentOtherContainer) {
-                amendmentOtherContainer.style.display = 'block';
-            }
-        } else {
-            if (amendmentOtherContainer) {
-                amendmentOtherContainer.style.display = 'none';
-            }
-            if (amendmentOtherField) {
-                amendmentOtherField.value = '';
-            }
-        }
-    }
-
-    organicAmendmentField.addEventListener('change', updateOrganicAmendmentUsageFields);
-    if (amendmentTypesField) {
-        amendmentTypesField.addEventListener('change', updateAmendmentTypeUsageFields);
-    }
-    
+function initManagementPracticesConditionals() {
     const grazerTypesField = document.getElementById('id_grazer_types');
     if (grazerTypesField) {
         grazerTypesField.addEventListener('change', updateGrazerTypesFields);
@@ -409,14 +269,46 @@ function initOrganicAmendmentUsageConditionals() {
         fieldTypeField.addEventListener('change', updateRangelandSpecificSections);
     }
 
-    updateOrganicAmendmentUsageFields();
-    updateAmendmentTypeUsageFields();
-    
     updateGrazerTypesFields();
     updateGroundCoverManagementFields();
     updateOrchardTillageDepth();
     updateFieldTypeSpecificSections();
     updateRangelandSpecificSections();
+
+    const grazedCurrentYearField = document.getElementById('id_grazed_current_year');
+    const notGrazedCommentsContainer = document.getElementById('not_grazed_comments_container');
+    function updateGrazedComments() {
+        if (!grazedCurrentYearField || !notGrazedCommentsContainer) return;
+        if (grazedCurrentYearField.checked) {
+            notGrazedCommentsContainer.style.display = 'none';
+        } else {
+            notGrazedCommentsContainer.style.display = 'block';
+        }
+    }
+    if (grazedCurrentYearField) {
+        grazedCurrentYearField.addEventListener('change', updateGrazedComments);
+        updateGrazedComments();
+    }
+
+    const appliesInsectDewormersField = document.getElementById('id_applies_insecticides_dewormers');
+    const insectDewormerFields = document.getElementById('insecticide_dewormer_fields');
+    function updateInsectDewormer() {
+        if (!appliesInsectDewormersField || !insectDewormerFields) return;
+        if (appliesInsectDewormersField.checked) {
+            insectDewormerFields.style.display = 'block';
+        } else {
+            insectDewormerFields.style.display = 'none';
+        }
+    }
+    if (appliesInsectDewormersField) {
+        appliesInsectDewormersField.addEventListener('change', updateInsectDewormer);
+        updateInsectDewormer();
+    }
+
+    setTimeout(() => {
+        updateFieldTypeSpecificSections();
+        updateRangelandSpecificSections();
+    }, 500);
 }
 
 function updateGrazerTypesFields() {
@@ -447,47 +339,106 @@ function updateGroundCoverManagementFields() {
 
 function updateOrchardTillageDepth() {
     const tillsBetweenRows = document.getElementById('id_tills_between_rows');
-    const orchardTillageDepthField = document.getElementById('orchard_tillage_depth_field');
-    
-    if (tillsBetweenRows && orchardTillageDepthField) {
-        if (tillsBetweenRows.checked) {
-            orchardTillageDepthField.style.display = 'block';
-        } else {
-            orchardTillageDepthField.style.display = 'none';
+    const fieldTypeField = document.getElementById('id_field_type');
+    const depthContainer = document.getElementById('tillage_depth_field');
+    const orchardMount = document.getElementById('orchard_tillage_depth_mount');
+    if (!tillsBetweenRows || !depthContainer || !orchardMount || !fieldTypeField) return;
+    const isOrchard = fieldTypeField.value === 'orchard';
+    if (isOrchard) {
+        if (!orchardMount.contains(depthContainer)) {
+            orchardMount.appendChild(depthContainer);
         }
+        orchardMount.style.display = tillsBetweenRows.checked ? 'block' : 'none';
+    } else {
+        orchardMount.style.display = 'none';
     }
 }
 
-function updateFieldTypeSpecificSections() {
-    const fieldTypeField = document.getElementById('id_field_type');
-    if (!fieldTypeField) return;
+function getFieldType() {
+    const jsonContext = document.getElementById('json_context');
+    let fieldType = null;
     
-    const fieldType = fieldTypeField.value;
+    if (jsonContext) {
+        try {
+            const context = JSON.parse(jsonContext.textContent);
+            fieldType = context.fieldType;
+        } catch (e) {
+            console.warn('Could not parse JSON context:', e);
+        }
+    }
+    
+    if (!fieldType) {
+        const fieldTypeField = document.getElementById('id_field_type');
+        fieldType = fieldTypeField ? fieldTypeField.value : null;
+    }
+    
+    return fieldType;
+}
+
+function updateFieldTypeSpecificSections() {
+    const fieldType = getFieldType();
+    if (!fieldType) return;
+    
     const tillageSection = document.getElementById('tillage_practices_section');
+    const tillageByClass = document.querySelector('.non-orchard-only');
     const dairyFields = document.getElementById('dairy_fields');
     
-    if (fieldType === 'orchard') {
-        if (tillageSection) tillageSection.style.display = 'none';
-        if (dairyFields) dairyFields.style.display = 'none';
+    function hideSection(section) {
+        if (section) {
+            section.style.setProperty('display', 'none', 'important');
+            if (fieldType === 'orchard') {
+                section.classList.add('hidden-for-orchard');
+                section.style.visibility = 'hidden';
+                section.style.height = '0';
+                section.style.overflow = 'hidden';
+            } else if (fieldType === 'range') {
+                section.classList.add('hidden-for-rangeland');
+            }
+        }
+    }
+    
+    function showSection(section) {
+        if (section) {
+            section.style.setProperty('display', 'block', 'important');
+            section.classList.remove('hidden-for-orchard', 'hidden-for-rangeland');
+        }
+    }
+    
+    if (fieldType === 'orchard' || fieldType === 'range') {
+        hideSection(tillageSection);
+        hideSection(tillageByClass);
+        hideSection(dairyFields);
     } else {
-        if (tillageSection) tillageSection.style.display = 'block';
-        if (dairyFields) dairyFields.style.display = 'block';
+        showSection(tillageSection);
+        showSection(tillageByClass);
+        showSection(dairyFields);
     }
 }
 
 function updateRangelandSpecificSections() {
-    const fieldTypeField = document.getElementById('id_field_type');
-    if (!fieldTypeField) return;
+    const fieldType = getFieldType();
+    if (!fieldType) return;
     
-    const fieldType = fieldTypeField.value;
-    
-    if (fieldType === 'range') {
-        document.querySelectorAll('.non-rangeland-only').forEach(section => {
-            section.style.display = 'none';
-        });
-    } else {
-        document.querySelectorAll('.non-rangeland-only').forEach(section => {
-            section.style.display = 'block';
-        });
-    }
+    document.querySelectorAll('.non-rangeland-only').forEach(section => {
+        section.style.display = 'block';
+    });
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'childList') {
+                const tillageSection = document.getElementById('tillage_practices_section');
+                if (tillageSection && tillageSection.style.display !== 'none') {
+                    updateFieldTypeSpecificSections();
+                }
+            }
+        });
+    });
+    
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+});
+

@@ -61,7 +61,7 @@
                 <div class="card-body">
                     <table class="table table-sm">
                         <tr>
-                            <th style="width: 40%">Submission Code:</th>
+                            <th class="table-col-40">Submission Code:</th>
                             <td>{{ application.submission_code }}</td>
                         </tr>
                         <tr>
@@ -167,7 +167,7 @@
                     {% if management_practices %}
                         <table class="table table-sm">
                             <tr>
-                                <th style="width: 40%">Tillage:</th>
+                                <th class="table-col-40">Tillage:</th>
                                 <td>{{ management_practices.uses_tillage|yesno:"Yes,No" }}</td>
                             </tr>
                             {% if management_practices.uses_tillage and management_practices.tillage_depth %}
@@ -271,7 +271,7 @@
                     <h5 class="mb-0"><i class="fas fa-map-marked-alt"></i> Transect Locations</h5>
                 </div>
                 <div class="card-body">
-                    <div id="map" style="height: 400px; width: 100%;"></div>
+                    <div id="map" class="map-container-view"></div>
                     <div class="mt-3">
                         <small class="text-muted">
                             <i class="fas fa-info-circle"></i>
@@ -288,7 +288,7 @@
                 <div class="card-body">
                     <table class="table table-sm">
                         <tr>
-                            <th style="width: 40%">Acres Sampled:</th>
+                            <th class="table-col-40">Acres Sampled:</th>
                             <td>{{ application.field.acres_sampled|default:"Not specified" }}</td>
                         </tr>
                         <tr>
@@ -327,7 +327,7 @@
                             <h6>Grazing Event {{ forloop.counter }}</h6>
                             <table class="table table-sm mb-3">
                                 <tr>
-                                    <th style="width: 40%">Class of Animal:</th>
+                                    <th class="table-col-40">Class of Animal:</th>
                                     <td>{{ event.class_of_animal|default:"Not specified" }}</td>
                                 </tr>
                                 <tr>
@@ -339,7 +339,7 @@
                                     <td>{{ event.average_weight_lbs|default:"Not specified" }}</td>
                                 </tr>
                                 <tr>
-                                    <th>Duration (days):</th>
+                                    <th>Grazing days:</th>
                                     <td>{{ event.duration_days|default:"Not specified" }}</td>
                                 </tr>
                                 <tr>

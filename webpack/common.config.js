@@ -28,6 +28,9 @@ module.exports = {
     grower_application_create: path.resolve(__dirname, '../bugbox3/static/js/grower_portal/application_create'),
     grower_application_step2: path.resolve(__dirname, '../bugbox3/static/js/grower_portal/application_step2'),
     grower_application_step3: path.resolve(__dirname, '../bugbox3/static/js/grower_portal/application_step3'),
+    grower_application_step4: path.resolve(__dirname, '../bugbox3/static/js/grower_portal/application_step4'),
+    grower_application_step5: path.resolve(__dirname, '../bugbox3/static/js/grower_portal/grazing_events_bundle'),
+    grower_conditional_fields: path.resolve(__dirname, '../bugbox3/static/js/grower_portal/conditional_fields_bundle'),
     grower_maps_view: path.resolve(__dirname, '../bugbox3/static/js/grower_portal/google_maps_view'),
 
   },

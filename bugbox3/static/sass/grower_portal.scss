@@ -1,0 +1,102 @@
+.measurement-section {
+  margin-bottom: 1.5rem;
+}
+
+.measurement-card {
+  border-left: 4px solid #007bff;
+}
+
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 10px;
+  
+  @media (max-width: 576px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.transect-nav {
+  position: sticky;
+  top: 10px;
+  z-index: 100;
+}
+
+.input-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+.non-orchard-only.hidden-for-orchard {
+  display: none !important;
+}
+
+.non-rangeland-only.hidden-for-rangeland {
+  display: none !important;
+}
+
+.orchard-only.hidden-for-non-orchard {
+  display: none !important;
+}
+
+.rangeland-only.hidden-for-non-rangeland {
+  display: none !important;
+}
+
+.map-container {
+  height: 500px;
+  width: 100%;
+}
+
+.map-container-view {
+  height: 400px;
+  width: 100%;
+}
+
+.locate-me-button {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 1000;
+}
+
+.table-col-40 {
+  width: 40%;
+}
+
+.hidden-field {
+  display: none;
+}
+
+.position-relative {
+  position: relative;
+}
+
+.progress-width-16-67 {
+  width: 16.67% !important;
+}
+
+.progress-width-33-33 {
+  width: 33.33% !important;
+}
+
+.progress-width-50 {
+  width: 50% !important;
+}
+
+.progress-width-66-67 {
+  width: 66.67% !important;
+}
+
+.progress-width-80 {
+  width: 80% !important;
+}
+
+.progress-width-83-33 {
+  width: 83.33% !important;
+}
+
+.progress-width-100 {
+  width: 100% !important;
+}
+

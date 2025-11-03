@@ -14,7 +14,7 @@
 }
 </script>
 {% render_bundle 'grower_application_step2' 'js' %}
-<script src="{% static 'js/grower_portal/conditional_fields.js' %}"></script>
+{% render_bundle 'grower_conditional_fields' 'js' %}
 {% endblock %}
 
 {% block content %}
@@ -34,7 +34,7 @@
     <div class="row">
         <div class="col-12">
             <div class="progress mb-4">
-                <div class="progress-bar" role="progressbar" style="width: 40%">Step 2 of {% if application.field.field_type == 'range' %}5{% else %}4{% endif %}</div>
+                <div class="progress-bar progress-width-33-33" role="progressbar">Step 2 of {% if application.field.field_type == 'range' %}6{% else %}5{% endif %}</div>
             </div>
         </div>
     </div>
@@ -72,11 +72,12 @@
                             <i class="fas fa-circle"></i> Step 2: Management Practices
                         </li>
                         <li class="list-group-item">Step 3: Transect Codes</li>
+                        <li class="list-group-item">Step 4: Transect Measurements</li>
                         {% if application.field.field_type == 'range' %}
-                        <li class="list-group-item">Step 4: Grazing Events</li>
-                        <li class="list-group-item">Step 5: Review & Submit</li>
+                        <li class="list-group-item">Step 5: Grazing Events</li>
+                        <li class="list-group-item">Step 6: Review & Submit</li>
                         {% else %}
-                        <li class="list-group-item">Step 4: Review & Submit</li>
+                        <li class="list-group-item">Step 5: Review & Submit</li>
                         {% endif %}
                     </ul>
                 </div>

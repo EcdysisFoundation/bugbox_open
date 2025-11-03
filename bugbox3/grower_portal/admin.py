@@ -10,6 +10,13 @@ from .models import (
     GrazingEventAnimal,
     CSVImportLog,
     GrowerReport,
+    TransectMeasurement,
+    DropPlateReading,
+    VegetationReading,
+    SoilReading,
+    SoilCompactionReading,
+    InfiltrometerReading,
+    InfiltrationRingReading,
 )
 
 
@@ -44,7 +51,7 @@ class FarmAdmin(admin.ModelAdmin):
 
 @admin.register(Field)
 class FieldAdmin(admin.ModelAdmin):
-    list_display = ('field_name', 'farm', 'field_type', 'latitude', 'longitude', 'created_at')
+    list_display = ('field_name', 'farm', 'field_type', 'created_at')
     list_filter = ('field_type', 'transitional_status')
     search_fields = ('field_name', 'farm__name', 'farm__grower__name')
     readonly_fields = ('created_at', 'updated_at')
@@ -52,21 +59,18 @@ class FieldAdmin(admin.ModelAdmin):
         ('Basic Information', {
             'fields': ('farm', 'field_name', 'field_type')
         }),
-        ('GPS Location', {
-            'fields': ('latitude', 'longitude'),
-            'description': 'Field location - selected via Google Maps'
-        }),
         ('Field-Specific Properties', {
             'fields': (
                 'crop_type',
                 'crop_subtype',
                 'crop_subtype_other',
                 'small_grain_type',
-                'uses_broad_fork',
+                'tillage_methods',
                 'forage_varieties',
                 'paddock_size',
                 'rootstock_species',
-                'transitional_status'
+                'transitional_status',
+                'orchard_crop_specify'
             ),
             'description': 'Fill in based on field type'
         }),
@@ -293,24 +297,56 @@ class GrowerReportAdmin(admin.ModelAdmin):
         'email_sent',
         'email_sent_at'
     )
-    list_filter = ('email_sent', 'generated_at')
-    search_fields = ('application__submission_code', 'application__grower__name')
-    readonly_fields = ('generated_at',)
-    autocomplete_fields = ['application', 'generated_by']
-    fieldsets = (
-        ('Application', {
-            'fields': ('application',)
-        }),
-        ('Report File', {
-            'fields': ('report_file',)
-        }),
-        ('Generation Information', {
-            'fields': ('generated_at', 'generated_by')
-        }),
-        ('Email Status', {
-            'fields': ('email_sent', 'email_sent_at')
-        }),
-    )
+@admin.register(TransectMeasurement)
+class TransectMeasurementAdmin(admin.ModelAdmin):
+    list_display = ('application', 'transect_index', 'transect_code', 'field_condition', 'updated_at')
+    list_filter = ('field_condition', 'updated_at')
+    search_fields = ('application__submission_code', 'transect_code')
+    readonly_fields = ('created_at', 'updated_at')
+    autocomplete_fields = ['application']
+
+
+@admin.register(DropPlateReading)
+class DropPlateReadingAdmin(admin.ModelAdmin):
+    list_display = ('measurement', 'distance_m', 'value')
+    list_filter = ('distance_m',)
+    autocomplete_fields = ['measurement']
+
+
+@admin.register(VegetationReading)
+class VegetationReadingAdmin(admin.ModelAdmin):
+    list_display = ('measurement', 'metric', 'position_m', 'value')
+    list_filter = ('metric', 'position_m')
+    autocomplete_fields = ['measurement']
+
+
+@admin.register(SoilReading)
+class SoilReadingAdmin(admin.ModelAdmin):
+    list_display = ('measurement', 'metric', 'position_m', 'value')
+    list_filter = ('metric', 'position_m')
+    autocomplete_fields = ['measurement']
+
+
+@admin.register(SoilCompactionReading)
+class SoilCompactionReadingAdmin(admin.ModelAdmin):
+    list_display = ('measurement', 'position_m', 'max_value', 'score', 'hp')
+    list_filter = ('position_m', 'score')
+    autocomplete_fields = ['measurement']
+
+
+@admin.register(InfiltrometerReading)
+class InfiltrometerReadingAdmin(admin.ModelAdmin):
+    list_display = ('measurement', 'time_mark', 'volume_ml')
+    list_filter = ('time_mark',)
+    autocomplete_fields = ['measurement']
+
+
+@admin.register(InfiltrationRingReading)
+class InfiltrationRingReadingAdmin(admin.ModelAdmin):
+    list_display = ('measurement', 'pour_number', 'start_depth_cm', 'infiltration_time_sec', 'depth_after_15min_cm', 'change_in_depth_cm')
+    list_filter = ('pour_number',)
+    autocomplete_fields = ['measurement']
+
 
 
 

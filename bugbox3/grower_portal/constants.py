@@ -87,6 +87,7 @@ FORAGE_VARIETIES_MAX_LENGTH = 500
 PADDOCK_SIZE_MAX_LENGTH = 100
 ROOTSTOCK_SPECIES_MAX_LENGTH = 500
 TILLAGE_DEPTH_MAX_LENGTH = 50
+TILLAGE_METHODS_MAX_LENGTH = 500
 COVER_CROP_TERMINATION_MAX_LENGTH = 100
 ORGANIC_AMENDMENT_TYPES_MAX_LENGTH = 500
 GRAZER_TYPES_MAX_LENGTH = 200
@@ -114,7 +115,16 @@ DEFAULT_YEAR = 2025
 CROP_TYPE_CHOICES = [
     ('row_crop', 'Row crop'),
     ('mixed_veg', 'Mixed Vegetables/herbs/specialty crops'),
-    ('hayfield', 'Hayfield'),
+    ('hayfield', 'Hayfield/Cover crop'),
+    ('cash_crop_cover', 'Cash crop with cover crop'),
+]
+
+# Orchard Crop Type Choices
+ORCHARD_CROP_TYPE_CHOICES = [
+    ('fruit_trees', 'Fruit trees'),
+    ('nut_trees', 'Nut trees'),
+    ('grapes', 'Grapes'),
+    ('blueberries', 'Blueberries'),
 ]
 
 CROP_SUBTYPE_CHOICES = [
@@ -165,4 +175,30 @@ GROUND_COVER_MANAGEMENT_CHOICES = [
 
 # Form Help Text Constants
 CLASS_OF_ANIMAL_EXAMPLES = 'Examples: Cow/calf pair, yearling cattle (7-12 months), yearling cattle (12-17 months), replacement heifers (18-24 months), bull, ewe/lamb pair, non-lactating ewe, ram, wether, bison cow, bison bull, etc.'
+
+# Measurements step constants
+DISTANCES_DROP_PLATE = [i for i in range(0, 49, 2)]  # 0,2,...,48
+POSITIONS_3POINT = [0, 25, 50]
+INFILTROMETER_TIMES = [
+    "0:00", "0:30", "1:00", "1:30", "2:00", "2:30",
+    "3:00", "3:30", "4:00", "4:30", "5:00"
+]
+
+FIELD_CONDITION_CHOICES = [
+    ('wet', 'Wet'),
+    ('dry', 'Dry'),
+    ('average', 'Average'),
+]
+
+VEGETATION_METRIC_CHOICES = [
+    ('green_cover', 'Green Cover %'),
+    ('total_groundcover', 'Total Groundcover %'),
+    ('plant_richness_no_crop', 'Plant Species Richness (no crops)'),
+    ('plant_richness_with_crop', 'Plant Species Richness (with crops)'),
+]
+
+SOIL_METRIC_CHOICES = [
+    ('moisture_pct', 'Soil Moisture %'),
+    ('temp_c', 'Soil Temperature (°C)'),
+]
 
