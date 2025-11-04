@@ -1,4 +1,5 @@
 
+from django.contrib.gis.db.models import PointField
 from django.db import migrations, models
 
 
@@ -11,90 +12,42 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name='growerapplication',
-            name='transect_1_latitude',
-            field=models.DecimalField(
-                max_digits=9,
-                decimal_places=6,
+            name='transect_1_location',
+            field=PointField(
                 null=True,
                 blank=True,
-                help_text='Transect 1 latitude'
+                srid=4326,
+                help_text='Transect 1 GPS location (longitude, latitude)'
             ),
         ),
         migrations.AddField(
             model_name='growerapplication',
-            name='transect_1_longitude',
-            field=models.DecimalField(
-                max_digits=9,
-                decimal_places=6,
+            name='transect_2_location',
+            field=PointField(
                 null=True,
                 blank=True,
-                help_text='Transect 1 longitude'
+                srid=4326,
+                help_text='Transect 2 GPS location (longitude, latitude)'
             ),
         ),
         migrations.AddField(
             model_name='growerapplication',
-            name='transect_2_latitude',
-            field=models.DecimalField(
-                max_digits=9,
-                decimal_places=6,
+            name='transect_3_location',
+            field=PointField(
                 null=True,
                 blank=True,
-                help_text='Transect 2 latitude'
+                srid=4326,
+                help_text='Transect 3 GPS location (longitude, latitude)'
             ),
         ),
         migrations.AddField(
             model_name='growerapplication',
-            name='transect_2_longitude',
-            field=models.DecimalField(
-                max_digits=9,
-                decimal_places=6,
+            name='transect_4_location',
+            field=PointField(
                 null=True,
                 blank=True,
-                help_text='Transect 2 longitude'
-            ),
-        ),
-        migrations.AddField(
-            model_name='growerapplication',
-            name='transect_3_latitude',
-            field=models.DecimalField(
-                max_digits=9,
-                decimal_places=6,
-                null=True,
-                blank=True,
-                help_text='Transect 3 latitude'
-            ),
-        ),
-        migrations.AddField(
-            model_name='growerapplication',
-            name='transect_3_longitude',
-            field=models.DecimalField(
-                max_digits=9,
-                decimal_places=6,
-                null=True,
-                blank=True,
-                help_text='Transect 3 longitude'
-            ),
-        ),
-        migrations.AddField(
-            model_name='growerapplication',
-            name='transect_4_latitude',
-            field=models.DecimalField(
-                max_digits=9,
-                decimal_places=6,
-                null=True,
-                blank=True,
-                help_text='Transect 4 latitude'
-            ),
-        ),
-        migrations.AddField(
-            model_name='growerapplication',
-            name='transect_4_longitude',
-            field=models.DecimalField(
-                max_digits=9,
-                decimal_places=6,
-                null=True,
-                blank=True,
-                help_text='Transect 4 longitude'
+                srid=4326,
+                help_text='Transect 4 GPS location (longitude, latitude)'
             ),
         ),
         migrations.AddField(

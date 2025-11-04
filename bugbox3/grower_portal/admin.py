@@ -83,18 +83,19 @@ class FieldAdmin(admin.ModelAdmin):
 
 @admin.register(ManagementPractices)
 class ManagementPracticesAdmin(admin.ModelAdmin):
-    list_display = ('field', 'uses_tillage', 'uses_cover_crop', 'uses_grazing', 'created_at')
+    list_display = ('application', 'uses_tillage', 'uses_cover_crop', 'uses_grazing', 'created_at')
     list_filter = (
         'uses_tillage',
         'uses_cover_crop',
         'uses_synthetic_fertilizers',
         'uses_grazing'
     )
-    search_fields = ('field__field_name', 'field__farm__name')
+    search_fields = ('application__submission_code', 'application__field__field_name', 'application__field__farm__name')
     readonly_fields = ('created_at', 'updated_at')
+    autocomplete_fields = ['application']
     fieldsets = (
-        ('Field', {
-            'fields': ('field',)
+        ('Application', {
+            'fields': ('application',)
         }),
         ('Tillage Practices', {
             'fields': ('uses_tillage', 'tillage_depth')
@@ -185,12 +186,12 @@ class GrowerApplicationAdmin(admin.ModelAdmin):
         }),
         ('Transect Coordinates', {
             'fields': (
-                ('transect_1_latitude', 'transect_1_longitude'),
-                ('transect_2_latitude', 'transect_2_longitude'),
-                ('transect_3_latitude', 'transect_3_longitude'),
-                ('transect_4_latitude', 'transect_4_longitude'),
+                'transect_1_location',
+                'transect_2_location',
+                'transect_3_location',
+                'transect_4_location',
             ),
-            'description': 'GPS coordinates for each transect marker',
+            'description': 'GPS coordinates for each transect marker (PointField)',
             'classes': ('collapse',)
         }),
         ('Status', {
