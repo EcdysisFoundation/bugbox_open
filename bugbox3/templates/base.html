@@ -51,7 +51,7 @@
 </head>
 <body data-user-timezone="{{ request.user_timezone|default:'UTC' }}">
   <div class="mb-1">
-<div class="custom-navbar">
+<div class="custom-navbar{% if request.user.is_authenticated %}{% for group in request.user.groups.all %}{% if group.name == 'is_groweradmin' or group.name == 'is_grower' %} grower-portal-navbar{% endif %}{% endfor %}{% endif %}">
   <a href="{% url 'about' %}">
     <img src="https://ecdysis-media.s3.amazonaws.com/site_content/logo-light.png"
         alt="logo BB"
@@ -84,6 +84,22 @@
           <div class="dropdown-menu">
             <a href="{% url 'core:lookup-choices' 0 %}">Edit Choices</a>
             <a href="{% url 'core:org-members' 0 %}">Member List</a>
+          </div>
+        </div>
+      {% endif %}
+      {% if group.name == 'is_groweradmin' %}
+        <a href="{% url 'grower_portal:admin_dashboard' %}">Admin Dashboard</a>
+        <a href="{% url 'grower_portal:admin_grower_list' %}">Growers</a>
+        <a href="{% url 'grower_portal:admin_application_list' %}">Applications</a>
+        <a href="{% url 'grower_portal:admin_report_list' %}">Reports</a>
+        <div class="dropdown-hover">
+          <a href="#">More ▼</a>
+          <div class="dropdown-menu">
+            <a href="{% url 'grower_portal:admin_farm_list' %}">Farms</a>
+            <a href="{% url 'grower_portal:admin_field_list' %}">Fields</a>
+            <a href="{% url 'grower_portal:admin_transect_code_list' %}">Transect Codes</a>
+            <a href="{% url 'grower_portal:admin_csv_upload' %}">Upload CSV</a>
+            <a href="{% url 'grower_portal:admin_csv_import_list' %}">Import History</a>
           </div>
         </div>
       {% endif %}
