@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+{% load crispy_forms_tags %}
+
+{% block title %}Generate Transect Codes{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Generate Transect Codes</h1>
+                <a href="{% url 'grower_portal:admin_transect_code_list' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to List
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Generate New Codes</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-secondary">
+                        <h6 class="alert-heading">Examples:</h6>
+                        <table class="table table-sm table-borderless mb-0">
+                            <tr>
+                                <td><strong>Without prefix:</strong></td>
+                                <td><code>00000</code>, <code>00001</code>, <code>00002</code> ... <code>99999</code>, <code>100000</code>, <code>100001</code> ...</td>
+                            </tr>
+                            <tr>
+                                <td><strong>With prefix "AVALANCHE-A":</strong></td>
+                                <td><code>AVALANCHE-A-00000</code>, <code>AVALANCHE-A-00001</code>, <code>AVALANCHE-A-00002</code> ...</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    {% crispy form %}
+
+                    {% if generated_codes %}
+                    <div class="mt-4">
+                        <div class="alert alert-success">
+                            <strong>Success!</strong> Generated {{ generated_codes|length }} transect code(s).
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">Generated Codes</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    {% for code in generated_codes %}
+                                    <div class="col-md-4 mb-2">
+                                        <div class="border p-2 text-center">
+                                            <code class="fs-5">{{ code }}</code>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3 text-center">
+                            <a href="{% url 'grower_portal:admin_transect_code_list' %}" class="btn btn-primary">
+                                View All Transect Codes
+                            </a>
+                            <a href="{% url 'grower_portal:admin_transect_code_generate' %}" class="btn btn-outline-primary">
+                                Generate More Codes
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

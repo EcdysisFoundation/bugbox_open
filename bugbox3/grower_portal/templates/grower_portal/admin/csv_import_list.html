@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+{% load timezone_filters %}
+
+{% block title %}CSV Import History{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>CSV Import History</h1>
+                <div>
+                    <a href="{% url 'grower_portal:admin_csv_upload' %}" class="btn btn-primary me-2">
+                        <i class="fas fa-upload"></i> Upload New CSV
+                    </a>
+                    <a href="{% url 'grower_portal:admin_dashboard' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">All Imports ({{ imports.paginator.count }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if imports %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Filename</th>
+                                        <th>Imported By</th>
+                                        <th>Import Date</th>
+                                        <th>Total Records</th>
+                                        <th>Successful</th>
+                                        <th>Failed</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for import in imports %}
+                                    <tr>
+                                        <td>{{ import.filename }}</td>
+                                        <td>{{ import.imported_by.name }}</td>
+                                        <td>{{ import.import_date|user_datetime:request.user_timezone }}</td>
+                                        <td>{{ import.total_records }}</td>
+                                        <td><span class="badge bg-success">{{ import.successful_records }}</span></td>
+                                        <td><span class="badge bg-danger">{{ import.failed_records }}</span></td>
+                                        <td>
+                                            {% if import.status == 'pending' %}
+                                                <span class="badge bg-warning text-dark">Pending</span>
+                                            {% elif import.status == 'processing' %}
+                                                <span class="badge bg-info">Processing</span>
+                                            {% elif import.status == 'completed' %}
+                                                <span class="badge bg-success">Completed</span>
+                                            {% elif import.status == 'failed' %}
+                                                <span class="badge bg-danger">Failed</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'grower_portal:admin_csv_import_detail' import.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i> View Details
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {% if imports.has_other_pages %}
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination justify-content-center">
+                                {% if imports.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ imports.previous_page_number }}">Previous</a>
+                                    </li>
+                                {% endif %}
+                                
+                                <li class="page-item disabled">
+                                    <span class="page-link">Page {{ imports.number }} of {{ imports.paginator.num_pages }}</span>
+                                </li>
+                                
+                                {% if imports.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ imports.next_page_number }}">Next</a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+                    {% else %}
+                        <p class="text-muted text-center py-4">No CSV imports yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+

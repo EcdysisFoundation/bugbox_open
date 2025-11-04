@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+{% load timezone_filters %}
+
+{% block title %}Field Details{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Field Details</h1>
+                <a href="{% url 'grower_portal:admin_field_list' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to List
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Field Information</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Field Name:</strong> {{ field.field_name }}</p>
+                    <p><strong>Farm:</strong> <a href="{% url 'grower_portal:admin_farm_detail' field.farm.id %}">{{ field.farm.name }}</a></p>
+                    <p><strong>Grower:</strong> <a href="{% url 'grower_portal:admin_grower_detail' field.farm.grower.id %}">{{ field.farm.grower.name }}</a></p>
+                    <p><strong>Field Type:</strong> {{ field.get_field_type_display }}</p>
+                    <p><strong>Acres Sampled:</strong> {{ field.acres_sampled|default:"N/A" }}</p>
+                    <p><strong>Years Under Management:</strong> {{ field.years_under_management|default:"N/A" }}</p>
+                    {% if field.field_type == 'crop' %}
+                        <p><strong>Crop Type:</strong> {{ field.get_crop_type_display|default:"N/A" }}</p>
+                    {% elif field.field_type == 'range' %}
+                        <p><strong>Forage Varieties:</strong> {{ field.forage_varieties|default:"N/A" }}</p>
+                        <p><strong>Paddock Size:</strong> {{ field.paddock_size|default:"N/A" }}</p>
+                    {% elif field.field_type == 'orchard' %}
+                        <p><strong>Crop Varieties:</strong> {{ field.crop_varieties|default:"N/A" }}</p>
+                        <p><strong>Rootstock Species:</strong> {{ field.rootstock_species|default:"N/A" }}</p>
+                    {% endif %}
+                    <p><strong>Created:</strong> {{ field.created_at|user_datetime:request.user_timezone }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Management Practices</h5>
+                </div>
+                <div class="card-body">
+                    {% if management_practices %}
+                        <p><strong>Uses Tillage:</strong> {% if management_practices.uses_tillage %}Yes{% else %}No{% endif %}</p>
+                        <p><strong>Uses Cover Crop:</strong> {% if management_practices.uses_cover_crop %}Yes{% else %}No{% endif %}</p>
+                        <p><strong>Synthetic Fertilizers:</strong> {% if management_practices.uses_synthetic_fertilizers %}Yes{% else %}No{% endif %}</p>
+                        <p><strong>Synthetic Insecticides:</strong> {% if management_practices.uses_synthetic_insecticides %}Yes{% else %}No{% endif %}</p>
+                        <p><strong>Synthetic Herbicides:</strong> {% if management_practices.uses_synthetic_herbicides %}Yes{% else %}No{% endif %}</p>
+                        <p><strong>Organic Amendments:</strong> {% if management_practices.uses_organic_amendments %}Yes{% else %}No{% endif %}</p>
+                        <p><strong>Uses Grazing:</strong> {% if management_practices.uses_grazing %}Yes{% else %}No{% endif %}</p>
+                    {% else %}
+                        <p class="text-muted">No management practices recorded</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Applications ({{ applications.count }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if applications %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Submission Code</th>
+                                        <th>Status</th>
+                                        <th>Date Sampled</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for application in applications %}
+                                    <tr>
+                                        <td>{{ application.submission_code }}</td>
+                                        <td>
+                                            {% if application.is_draft %}
+                                                <span class="badge bg-warning text-dark">Draft</span>
+                                            {% elif application.is_submitted %}
+                                                <span class="badge bg-success">Submitted</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ application.date_sampled|user_date_short:request.user_timezone }}</td>
+                                        <td>
+                                            <a href="{% url 'grower_portal:admin_application_detail' application.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center py-3">No applications yet</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+

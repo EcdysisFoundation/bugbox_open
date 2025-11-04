@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+{% load timezone_filters %}
+
+{% block title %}Grower Details{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Grower Details</h1>
+                <a href="{% url 'grower_portal:admin_grower_list' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to List
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Profile Information</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Name:</strong> {{ grower.name }}</p>
+                    <p><strong>Email:</strong> {{ grower.email }}</p>
+                    <p><strong>Username:</strong> {{ grower.username }}</p>
+                    {% if grower_profile %}
+                        <p><strong>Phone:</strong> {{ grower_profile.phone|default:"Not provided" }}</p>
+                        <p><strong>Gender:</strong> {{ grower_profile.get_gender_display|default:"Not provided" }}</p>
+                        <p><strong>Age:</strong> {{ grower_profile.age|default:"Not provided" }}</p>
+                        <p><strong>Race:</strong> {{ grower_profile.get_race_display|default:"Not provided" }}</p>
+                        <p><strong>Profile Completed:</strong> 
+                            {% if grower_profile.profile_completed %}
+                                <span class="badge bg-success">Yes</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">No</span>
+                            {% endif %}
+                        </p>
+                        <p><strong>Registration Date:</strong> {{ grower_profile.created_at|user_datetime:request.user_timezone }}</p>
+                    {% else %}
+                        <p class="text-muted">No profile information available</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Summary</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Total Farms:</strong> {{ farms.count }}</p>
+                    <p><strong>Total Fields:</strong> {{ fields.count }}</p>
+                    <p><strong>Total Applications:</strong> {{ applications.count }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Farms ({{ farms.count }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if farms %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Farm Name</th>
+                                        <th>Number of Fields</th>
+                                        <th>Created</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for farm in farms %}
+                                    <tr>
+                                        <td>{{ farm.name }}</td>
+                                        <td>{{ farm.fields.count }}</td>
+                                        <td>{{ farm.created_at|user_date_short:request.user_timezone }}</td>
+                                        <td>
+                                            <a href="{% url 'grower_portal:admin_farm_detail' farm.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center py-3">No farms yet</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Applications ({{ applications.count }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if applications %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Submission Code</th>
+                                        <th>Farm</th>
+                                        <th>Field</th>
+                                        <th>Status</th>
+                                        <th>Date Sampled</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for application in applications %}
+                                    <tr>
+                                        <td>{{ application.submission_code }}</td>
+                                        <td>{{ application.field.farm.name }}</td>
+                                        <td>{{ application.field.field_name }}</td>
+                                        <td>
+                                            {% if application.is_draft %}
+                                                <span class="badge bg-warning text-dark">Draft</span>
+                                            {% elif application.is_submitted %}
+                                                <span class="badge bg-success">Submitted</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ application.date_sampled|user_date_short:request.user_timezone }}</td>
+                                        <td>
+                                            <a href="{% url 'grower_portal:admin_application_detail' application.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center py-3">No applications yet</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
