@@ -2,10 +2,11 @@ from allauth.account.forms import SignupForm
 from allauth.socialaccount.forms import SignupForm as SocialSignupForm
 from django.contrib.auth import forms as admin_forms
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, Permission
 from django.core.exceptions import ValidationError
 from django.forms import BooleanField, CharField, Form
 from django.utils.translation import gettext_lazy as _
+from bugbox3.core.permissions import IS_GROWER_USER
 
 User = get_user_model()
 
@@ -45,6 +46,23 @@ class UserSignupForm(SignupForm):
         # Add user to is_grower group if checkbox is checked
         if self.cleaned_data.get("is_grower"):
             grower_group, created = Group.objects.get_or_create(name='is_grower')
+            
+            if not grower_group.permissions.exists():
+                permissions_to_add = []
+                for perm_string in IS_GROWER_USER:
+                    app_label, codename = perm_string.split('.')
+                    try:
+                        perm = Permission.objects.get(
+                            content_type__app_label=app_label,
+                            codename=codename
+                        )
+                        permissions_to_add.append(perm)
+                    except Permission.DoesNotExist:
+                        pass
+                
+                if permissions_to_add:
+                    grower_group.permissions.set(permissions_to_add)
+            
             user.groups.add(grower_group)
         
         return user

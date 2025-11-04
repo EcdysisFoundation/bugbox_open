@@ -82,7 +82,7 @@ def profile_complete(request):
 
 
 @login_required
-@permission_required(IS_GROWER, raise_exception=True)
+@permission_required(IS_GROWER_USER, raise_exception=True)
 def dashboard(request):
     """Main grower dashboard"""
     try:
