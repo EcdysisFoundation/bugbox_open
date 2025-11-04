@@ -1,6 +1,6 @@
 let map;
 let markers = [];
-let fieldCenter;
+let userLocation = null;
 let loadingCircle = null;
 let loadingOverlay = null;
 
@@ -21,12 +21,23 @@ window.initMap = function() {
         return;
     }
     
-    fieldCenter = { lat: jsonContext.fieldLatitude, lng: jsonContext.fieldLongitude };
+    let initialCenter = { lat: 37.7749, lng: -122.4194 }; // Default center (San Francisco)
+    let initialZoom = 10;
     
+    const transectData = jsonContext.transectData || [];
+    if (transectData && transectData.length > 0) {
+        const validTransects = transectData.filter(t => t.latitude && t.longitude);
+        if (validTransects.length > 0) {
+            const avgLat = validTransects.reduce((sum, t) => sum + t.latitude, 0) / validTransects.length;
+            const avgLng = validTransects.reduce((sum, t) => sum + t.longitude, 0) / validTransects.length;
+            initialCenter = { lat: avgLat, lng: avgLng };
+            initialZoom = 17;
+        }
+    }
     
     map = new google.maps.Map(document.getElementById("map"), {
-        center: fieldCenter,
-        zoom: 17,
+        center: initialCenter,
+        zoom: initialZoom,
         mapTypeId: 'hybrid',
         mapTypeControl: true,
         mapTypeControlOptions: {
@@ -38,29 +49,20 @@ window.initMap = function() {
         fullscreenControl: true
     });
     
-    new google.maps.Marker({
-        position: fieldCenter,
-        map: map,
-        title: "Field Center",
-        icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 10,
-            fillColor: "#4CAF50",
-            fillOpacity: 1,
-            strokeColor: "#2E7D32",
-            strokeWeight: 2
-        },
-        label: {
-            text: "FIELD",
-            color: "white",
-            fontSize: "10px",
-            fontWeight: "bold"
-        }
-    });
-    
     const locateButton = document.getElementById('locateMe');
     if (locateButton) {
         locateButton.addEventListener('click', handleLocateMe);
+    }
+    
+    if (transectData && transectData.length > 0) {
+        transectData.forEach((transect) => {
+            const latField = document.getElementById(`id_transect_${transect.index + 1}_latitude`);
+            const lngField = document.getElementById(`id_transect_${transect.index + 1}_longitude`);
+            if (latField && lngField && transect.latitude && transect.longitude) {
+                latField.value = transect.latitude;
+                lngField.value = transect.longitude;
+            }
+        });
     }
     
     setupTransectCodeMonitoring();
@@ -141,7 +143,7 @@ function handleLocateMe() {
         
         navigator.geolocation.getCurrentPosition(
             function(position) {
-                const userLocation = {
+                userLocation = {
                     lat: position.coords.latitude,
                     lng: position.coords.longitude
                 };
@@ -158,7 +160,7 @@ function handleLocateMe() {
                 
                 map.setCenter(userLocation);
                 map.setZoom(18);
-                
+                updateTransectMarkers();        
                 const locateButton = document.getElementById('locateMe');
                 locateButton.innerHTML = '<i class="fas fa-check"></i> Located!';
                 locateButton.classList.remove('btn-primary');
@@ -260,15 +262,17 @@ function updateTransectMarkers() {
                 lat: parseFloat(latField.value),
                 lng: parseFloat(lngField.value)
             };
-        } else {
+        } else if (userLocation) {
             const offset = 0.0001;
             position = {
-                lat: fieldCenter.lat + (index * offset),
-                lng: fieldCenter.lng + (index * offset)
+                lat: userLocation.lat + (index * offset),
+                lng: userLocation.lng + (index * offset)
             };
             
             if (latField) latField.value = position.lat.toFixed(6);
             if (lngField) lngField.value = position.lng.toFixed(6);
+        } else {
+            return;
         }
         
         const marker = new google.maps.Marker({
@@ -373,15 +377,28 @@ function updateTransectMarkers() {
 function updateTransectStatus(count) {
     const statusDiv = document.getElementById('transect-status');
     const countSpan = document.getElementById('transect-count');
+    const locateMessage = document.getElementById('locate-message');
     
     if (statusDiv && countSpan) {
         countSpan.textContent = count;
         
         if (count > 0) {
             statusDiv.style.display = 'block';
-            statusDiv.className = 'alert alert-success';
+            if (markers.length > 0) {
+                statusDiv.className = 'alert alert-success';
+            } else {
+                statusDiv.className = 'alert alert-warning';
+                statusDiv.innerHTML = '<i class="fas fa-info-circle"></i> ' + count + ' transect(s) entered. Click "Locate Me" to display markers on the map.';
+            }
         } else {
             statusDiv.style.display = 'none';
+        }
+    }
+    if (locateMessage) {
+        if (count > 0 && markers.length === 0 && !userLocation) {
+            locateMessage.style.display = 'block';
+        } else {
+            locateMessage.style.display = 'none';
         }
     }
 }

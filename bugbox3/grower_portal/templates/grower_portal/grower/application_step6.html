@@ -9,9 +9,7 @@
 {% block customheadtagcontent %}
 <script id="json_context" type="application/json">
 {
-    "transectData": {{ transect_data|safe }},
-    "fieldLatitude": {{ field_latitude }},
-    "fieldLongitude": {{ field_longitude }}
+    "transectData": {{ transect_data|safe }}
 }
 </script>
 {% render_bundle 'grower_maps_view' 'js' %}

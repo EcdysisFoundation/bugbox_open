@@ -16,11 +16,18 @@ window.initMapView = function() {
     }
     
     const transectData = jsonContext.transectData;
-    const fieldCenter = { lat: jsonContext.fieldLatitude, lng: jsonContext.fieldLongitude };
     
+    let mapCenter;
+    if (transectData && transectData.length > 0) {
+        const avgLat = transectData.reduce((sum, t) => sum + t.latitude, 0) / transectData.length;
+        const avgLng = transectData.reduce((sum, t) => sum + t.longitude, 0) / transectData.length;
+        mapCenter = { lat: avgLat, lng: avgLng };
+    } else {
+        mapCenter = { lat: 37.7749, lng: -122.4194 };
+    }
     
     const map = new google.maps.Map(document.getElementById("map"), {
-        center: fieldCenter,
+        center: mapCenter,
         zoom: 16,
         mapTypeId: 'hybrid',
         mapTypeControl: true,
@@ -28,7 +35,6 @@ window.initMapView = function() {
         streetViewControl: false,
         fullscreenControl: true
     });
-    
     
     const markerColors = ['#FF5252', '#2196F3', '#FFC107', '#9C27B0'];
     const markerLabels = ['1', '2', '3', '4'];
