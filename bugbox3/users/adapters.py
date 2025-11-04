@@ -19,14 +19,13 @@ class AccountAdapter(DefaultAccountAdapter):
         return getattr(settings, "ACCOUNT_ALLOW_REGISTRATION", True)
     
     def get_login_redirect_url(self, request: HttpRequest) -> str:
-        """
-        Redirect growers to profile completion, others to default redirect.
-        """
+        """ Redirect users based on their group"""
         user = request.user
         
-        # Check if user is a member of is_grower group
+        if user.groups.filter(name='is_groweradmin').exists():
+            return reverse('grower_portal:admin_dashboard')
+        
         if user.groups.filter(name='is_grower').exists():
-            # Check if grower has completed profile
             try:
                 grower_profile = user.grower_profile
                 if grower_profile.profile_completed:
@@ -34,10 +33,8 @@ class AccountAdapter(DefaultAccountAdapter):
                 else:
                     return reverse('grower_portal:profile_complete')
             except Exception as e:
-                # If no grower profile exists, Will redirect to profile completion
                 return reverse('grower_portal:profile_complete')
         
-        # For regular users, use default redirect
         return super().get_login_redirect_url(request)
 
 
