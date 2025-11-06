@@ -19,7 +19,6 @@ from ...forms.grower.forms import (
     SoilFormSet, SoilCompactionFormSet, InfiltrometerFormSet, InfiltrationRingFormSet
 )
 from ...constants import (
-    DEFAULT_FIELD_LATITUDE, DEFAULT_FIELD_LONGITUDE,
     DISTANCES_DROP_PLATE, POSITIONS_3POINT, INFILTROMETER_TIMES,
     VEGETATION_METRIC_CHOICES, SOIL_METRIC_CHOICES
 )
@@ -132,7 +131,7 @@ def application_step2(request, application_id):
     )
     
     practices, created = ManagementPractices.objects.get_or_create(
-        field=application.field
+        application=application
     )
     
     if request.method == 'POST':
@@ -162,8 +161,6 @@ def application_step3(request, application_id):
     )
     
     field = application.field
-    field_latitude = DEFAULT_FIELD_LATITUDE
-    field_longitude = DEFAULT_FIELD_LONGITUDE
     
     if request.method == 'POST':
         form = TransectCodesForm(request.POST, field_type=application.field.field_type)
@@ -173,14 +170,10 @@ def application_step3(request, application_id):
             application.transect_code_3 = form.cleaned_data.get('transect_code_3', '').strip()
             application.transect_code_4 = form.cleaned_data.get('transect_code_4', '').strip()
             
-            application.transect_1_latitude = form.cleaned_data.get('transect_1_latitude')
-            application.transect_1_longitude = form.cleaned_data.get('transect_1_longitude')
-            application.transect_2_latitude = form.cleaned_data.get('transect_2_latitude')
-            application.transect_2_longitude = form.cleaned_data.get('transect_2_longitude')
-            application.transect_3_latitude = form.cleaned_data.get('transect_3_latitude')
-            application.transect_3_longitude = form.cleaned_data.get('transect_3_longitude')
-            application.transect_4_latitude = form.cleaned_data.get('transect_4_latitude')
-            application.transect_4_longitude = form.cleaned_data.get('transect_4_longitude')
+            for i in range(1, 5):
+                lat = form.cleaned_data.get(f'transect_{i}_latitude')
+                lng = form.cleaned_data.get(f'transect_{i}_longitude')
+                application.set_transect_location(i, lng, lat)
             
             application.save()
             
@@ -192,42 +185,35 @@ def application_step3(request, application_id):
             'transect_code_2': application.transect_code_2 or '',
             'transect_code_3': application.transect_code_3 or '',
             'transect_code_4': application.transect_code_4 or '',
-            'transect_1_latitude': application.transect_1_latitude,
-            'transect_1_longitude': application.transect_1_longitude,
-            'transect_2_latitude': application.transect_2_latitude,
-            'transect_2_longitude': application.transect_2_longitude,
-            'transect_3_latitude': application.transect_3_latitude,
-            'transect_3_longitude': application.transect_3_longitude,
-            'transect_4_latitude': application.transect_4_latitude,
-            'transect_4_longitude': application.transect_4_longitude,
         }
+        for i in range(1, 5):
+            location = getattr(application, f'transect_{i}_location', None)
+            if location:
+                initial_data[f'transect_{i}_latitude'] = location.y
+                initial_data[f'transect_{i}_longitude'] = location.x
+            else:
+                initial_data[f'transect_{i}_latitude'] = None
+                initial_data[f'transect_{i}_longitude'] = None
         
         form = TransectCodesForm(initial=initial_data, field_type=application.field.field_type)
     
     transect_data = []
     for i, code in enumerate(application.transect_codes):
-        lat_field = getattr(application, f'transect_{i+1}_latitude', None)
-        lng_field = getattr(application, f'transect_{i+1}_longitude', None)
+        location = getattr(application, f'transect_{i+1}_location', None)
         
-        if lat_field and lng_field:
-            latitude = float(lat_field)
-            longitude = float(lng_field)
-        else:
-            latitude = field_latitude
-            longitude = field_longitude
-            
-        transect_data.append({
-            'index': i,
-            'code': code,
-            'latitude': latitude,
-            'longitude': longitude
-        })
+        if location:
+            latitude = float(location.y)
+            longitude = float(location.x)
+            transect_data.append({
+                'index': i,
+                'code': code,
+                'latitude': latitude,
+                'longitude': longitude
+            })
     
     return render(request, 'grower_portal/grower/application_step3.html', {
         'application': application,
         'form': form,
-        'field_latitude': field_latitude,
-        'field_longitude': field_longitude,
         'transect_data': json.dumps(transect_data),
         'user_timezone': get_user_timezone(request)
     })
@@ -560,7 +546,7 @@ def application_step6(request, application_id):
     )
     
     try:
-        management_practices = ManagementPractices.objects.get(field=application.field)
+        management_practices = ManagementPractices.objects.get(application=application)
     except ManagementPractices.DoesNotExist:
         management_practices = None
     
@@ -592,34 +578,25 @@ def application_step6(request, application_id):
             return redirect('grower_portal:dashboard')
     
     field = application.field
-    field_latitude = DEFAULT_FIELD_LATITUDE
-    field_longitude = DEFAULT_FIELD_LONGITUDE
     
     transect_data = []
     for i, code in enumerate(application.transect_codes):
-        lat_field = getattr(application, f'transect_{i+1}_latitude', None)
-        lng_field = getattr(application, f'transect_{i+1}_longitude', None)
+        location = getattr(application, f'transect_{i+1}_location', None)
         
-        if lat_field and lng_field:
-            latitude = float(lat_field)
-            longitude = float(lng_field)
-        else:
-            latitude = field_latitude
-            longitude = field_longitude
-            
-        transect_data.append({
-            'index': i,
-            'code': code,
-            'latitude': latitude,
-            'longitude': longitude
-        })
+        if location:
+            latitude = float(location.y)
+            longitude = float(location.x)
+            transect_data.append({
+                'index': i,
+                'code': code,
+                'latitude': latitude,
+                'longitude': longitude
+            })
     
     return render(request, 'grower_portal/grower/application_step6.html', {
         'application': application,
         'management_practices': management_practices,
         'grazing_events': grazing_events,
-        'field_latitude': field_latitude,
-        'field_longitude': field_longitude,
         'transect_data': json.dumps(transect_data),
         'user_timezone': get_user_timezone(request)
     })

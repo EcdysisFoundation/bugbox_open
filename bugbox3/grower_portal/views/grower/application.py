@@ -10,7 +10,6 @@ from ...models import (
     ManagementPractices, GrazingEvent
 )
 from ...forms.grower.forms import ApplicationCreationForm
-from ...constants import DEFAULT_FIELD_LATITUDE, DEFAULT_FIELD_LONGITUDE
 from ...middleware import get_user_timezone
 
 
@@ -113,31 +112,29 @@ def application_view(request, application_id):
     )
     
     try:
-        management_practices = ManagementPractices.objects.get(field=application.field)
+        management_practices = ManagementPractices.objects.get(application=application)
     except ManagementPractices.DoesNotExist:
         management_practices = None
     
     grazing_events = GrazingEvent.objects.filter(application=application).order_by('event_number') if application.field.field_type == 'range' else []
     
     field = application.field
-    field_latitude = float(field.latitude) if field.latitude else DEFAULT_FIELD_LATITUDE
-    field_longitude = float(field.longitude) if field.longitude else DEFAULT_FIELD_LONGITUDE
     
     transect_data = []
     for i, code in enumerate(application.transect_codes):
-        transect_data.append({
-            'index': i,
-            'code': code,
-            'latitude': field_latitude,
-            'longitude': field_longitude
-        })
+        location = getattr(application, f'transect_{i+1}_location', None)
+        if location:
+            transect_data.append({
+                'index': i,
+                'code': code,
+                'latitude': float(location.y),
+                'longitude': float(location.x)
+            })
     
     return render(request, 'grower_portal/grower/application_view.html', {
         'application': application,
         'management_practices': management_practices,
         'grazing_events': grazing_events,
-        'field_latitude': field_latitude,
-        'field_longitude': field_longitude,
         'transect_data': json.dumps(transect_data),
         'user_timezone': get_user_timezone(request)
     })

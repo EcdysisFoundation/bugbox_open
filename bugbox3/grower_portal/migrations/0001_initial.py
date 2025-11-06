@@ -546,11 +546,11 @@ class Migration(migrations.Migration):
                 ("created_at", models.DateTimeField(auto_now_add=True)),
                 ("updated_at", models.DateTimeField(auto_now=True)),
                 (
-                    "field",
-                    models.OneToOneField(
+                    "application",
+                    models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name="practices",
-                        to="grower_portal.field",
+                        related_name="management_practices",
+                        to="grower_portal.growerapplication",
                     ),
                 ),
             ],
