@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+{% load timezone_filters %}
+
+{% block title %}Grower Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1>Grower Portal Administration</h1>
+            <p class="text-muted">Welcome, {{ user.name|default:user.username }}!</p>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-3 mb-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Total Growers</h5>
+                    <h2 class="text-primary">{{ total_growers }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Total Farms</h5>
+                    <h2 class="text-success">{{ total_farms }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Total Fields</h5>
+                    <h2 class="text-info">{{ total_fields }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Total Applications</h5>
+                    <h2 class="text-warning">{{ total_applications }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Submitted Applications</h5>
+                    <h2 class="text-success">{{ submitted_applications }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Draft Applications</h5>
+                    <h2 class="text-warning">{{ draft_applications }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-search"></i> Browse</h5>
+                </div>
+                <div class="card-body">
+                    <form method="get" action="{% url 'grower_portal:admin_application_list' %}">
+                        <div class="input-group">
+                            <input type="text" class="form-control" name="search" placeholder="Search applications by submission code, transect code, grower name, farm, or field...">
+                            <button class="btn btn-primary" type="submit">
+                                <i class="fas fa-search"></i> Search
+                            </button>
+                        </div>
+                    </form>
+                    <div class="mt-2">
+                        <small class="text-muted">
+                            Quick links: 
+                            <a href="{% url 'grower_portal:admin_grower_list' %}">Search Growers</a> | 
+                            <a href="{% url 'grower_portal:admin_farm_list' %}">Search Farms</a> | 
+                            <a href="{% url 'grower_portal:admin_field_list' %}">Search Fields</a> |
+                            <a href="{% url 'grower_portal:admin_transect_code_list' %}">Search Transect Codes</a>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <a href="{% url 'grower_portal:admin_transect_code_generate' %}" class="btn btn-primary w-100 mb-2">
+                        <i class="fas fa-code"></i> Generate Transect Codes
+                    </a>
+                    <a href="{% url 'grower_portal:admin_csv_upload' %}" class="btn btn-success w-100 mb-2">
+                        <i class="fas fa-upload"></i> Upload CSV
+                    </a>
+                    <a href="{% url 'grower_portal:admin_grower_list' %}" class="btn btn-outline-primary w-100 mb-2">
+                        <i class="fas fa-users"></i> View All Growers
+                    </a>
+                    <a href="{% url 'grower_portal:admin_application_list' %}" class="btn btn-outline-success w-100">
+                        <i class="fas fa-file-alt"></i> View All Applications
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Applications</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_applications %}
+                        <div class="table-responsive">
+                            <table class="table table-hover table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Submission Code</th>
+                                        <th>Grower</th>
+                                        <th>Field</th>
+                                        <th>Status</th>
+                                        <th>Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for application in recent_applications %}
+                                    <tr>
+                                        <td>{{ application.submission_code }}</td>
+                                        <td>{{ application.grower.name }}</td>
+                                        <td>{{ application.field.field_name }}</td>
+                                        <td>
+                                            {% if application.is_draft %}
+                                                <span class="badge bg-warning text-dark">Draft</span>
+                                            {% elif application.is_submitted %}
+                                                <span class="badge bg-success">Submitted</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ application.date_sampled|user_date_short:request.user_timezone }}</td>
+                                        <td>
+                                            <a href="{% url 'grower_portal:admin_application_detail' application.id %}" class="btn btn-sm btn-outline-primary" title="View Application">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <a href="{% url 'grower_portal:admin_application_list' %}" class="btn btn-sm btn-link">View All Applications</a>
+                    {% else %}
+                        <p class="text-muted text-center py-3">No applications yet</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

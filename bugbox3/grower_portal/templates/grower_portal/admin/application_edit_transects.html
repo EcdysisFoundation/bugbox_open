@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% load render_bundle from webpack_loader %}
+
+{% load i18n %}
+{% load crispy_forms_tags %}
+
+{% block title %}Edit Application - Transect Codes{% endblock %}
+
+{% block customheadtagcontent %}
+<script id="json_context" type="application/json">
+{
+    "transectData": {{ transect_data|safe }},
+    "fieldLatitude": {{ field_latitude }},
+    "fieldLongitude": {{ field_longitude }}
+}
+</script>
+{% render_bundle 'grower_application_step3' 'js' %}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1>Edit Application: {{ application.submission_code }}</h1>
+                    <p class="text-muted">Grower: {{ application.grower.name }}</p>
+                </div>
+                <a href="{% url 'grower_portal:admin_application_detail' application.id %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Cancel
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Step 3: Transect Codes & GPS Coordinates</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> <strong>Admin Edit Mode:</strong> You are editing on behalf of {{ application.grower.name }}
+                    </div>
+
+                    {% crispy form %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

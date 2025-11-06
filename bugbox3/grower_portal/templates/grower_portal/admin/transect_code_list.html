@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+{% load crispy_forms_tags %}
+{% load timezone_filters %}
+
+{% block title %}Transect Codes{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Transect Codes</h1>
+                <div>
+                    <a href="{% url 'grower_portal:admin_transect_code_generate' %}" class="btn btn-primary me-2">
+                        <i class="fas fa-plus"></i> Generate New Codes
+                    </a>
+                    <a href="{% url 'grower_portal:admin_dashboard' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    {% crispy form %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">All Transect Codes ({{ codes.paginator.count }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if codes %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Code</th>
+                                        <th>Status</th>
+                                        <th>Used</th>
+                                        <th>Used In Application</th>
+                                        <th>Created Date</th>
+                                        <th>Created By</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for code in codes %}
+                                    <tr>
+                                        <td><strong>{{ code.transect_code }}</strong></td>
+                                        <td>
+                                            {% if code.is_active %}
+                                                <span class="badge bg-success">Active</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Inactive</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if code.is_used %}
+                                                <span class="badge bg-warning text-dark">Yes</span>
+                                            {% else %}
+                                                <span class="badge bg-info">No</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if code.used_in_application %}
+                                                <a href="{% url 'grower_portal:admin_application_detail' code.used_in_application.id %}">
+                                                    {{ code.used_in_application.submission_code }}
+                                                </a>
+                                            {% else %}
+                                                N/A
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ code.created_at|user_date_short:request.user_timezone }}</td>
+                                        <td>{{ code.created_by.name }}</td>
+                                        <td>
+                                            {% if not code.is_used and code.is_active %}
+                                                <a href="{% url 'grower_portal:admin_transect_code_deactivate' code.id %}" class="btn btn-sm btn-outline-danger">
+                                                    <i class="fas fa-ban"></i> Deactivate
+                                                </a>
+                                            {% elif not code.is_active %}
+                                                <a href="{% url 'grower_portal:admin_transect_code_reactivate' code.id %}" class="btn btn-sm btn-outline-success">
+                                                    <i class="fas fa-check"></i> Reactivate
+                                                </a>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {% if codes.has_other_pages %}
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination justify-content-center">
+                                {% if codes.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ codes.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Previous</a>
+                                    </li>
+                                {% endif %}
+                                
+                                <li class="page-item disabled">
+                                    <span class="page-link">Page {{ codes.number }} of {{ codes.paginator.num_pages }}</span>
+                                </li>
+                                
+                                {% if codes.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ codes.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Next</a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+                    {% else %}
+                        <p class="text-muted text-center py-4">No transect codes found.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

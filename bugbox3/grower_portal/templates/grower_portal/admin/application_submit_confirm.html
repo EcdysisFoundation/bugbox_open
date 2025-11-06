@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+{% block title %}Submit Application{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-check-circle"></i> Confirm Submission</h5>
+                </div>
+                <div class="card-body">
+                    <h4>Submit this application on behalf of the grower?</h4>
+                    
+                    <div class="alert alert-info mt-3">
+                        <strong>Note:</strong> You are about to submit this draft application on behalf of <strong>{{ application.grower.name }}</strong>.
+                        Once submitted, the application status will change from Draft to Submitted.
+                    </div>
+                    
+                    <div class="mt-4">
+                        <p><strong>Submission Code:</strong> {{ application.submission_code }}</p>
+                        <p><strong>Grower:</strong> {{ application.grower.name }} ({{ application.grower.email }})</p>
+                        <p><strong>Farm:</strong> {{ application.field.farm.name }}</p>
+                        <p><strong>Field:</strong> {{ application.field.field_name }}</p>
+                        <p><strong>Field Type:</strong> {{ application.field.get_field_type_display }}</p>
+                        <p><strong>Date Sampled:</strong> {{ application.date_sampled }}</p>
+                        <p><strong>Transect Codes:</strong> 
+                            {% if application.transect_code_1 %}
+                                {{ application.transect_codes|length }} code(s)
+                                ({{ application.transect_codes|join:", " }})
+                            {% else %}
+                                <span class="text-danger">⚠ No transect codes - cannot submit!</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    
+                    <form method="post" class="mt-4">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'grower_portal:admin_application_detail' application.id %}" class="btn btn-secondary me-2">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                            {% if application.transect_code_1 %}
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-paper-plane"></i> Yes, Submit Application
+                            </button>
+                            {% else %}
+                            <a href="{% url 'grower_portal:admin_application_edit_transects' application.id %}" class="btn btn-warning">
+                                <i class="fas fa-edit"></i> Add Transect Codes First
+                            </a>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+

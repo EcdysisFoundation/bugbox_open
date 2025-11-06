@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+{% load timezone_filters %}
+
+{% block title %}CSV Import Details{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>CSV Import Details</h1>
+                <a href="{% url 'grower_portal:admin_csv_import_list' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to List
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Import Information</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Filename:</strong> {{ import_log.filename }}</p>
+                    <p><strong>Imported By:</strong> {{ import_log.imported_by.name }}</p>
+                    <p><strong>Import Date:</strong> {{ import_log.import_date|user_datetime:request.user_timezone }}</p>
+                    <p><strong>Status:</strong>
+                        {% if import_log.status == 'pending' %}
+                            <span class="badge bg-warning text-dark">Pending</span>
+                        {% elif import_log.status == 'processing' %}
+                            <span class="badge bg-info">Processing</span>
+                        {% elif import_log.status == 'completed' %}
+                            <span class="badge bg-success">Completed</span>
+                        {% elif import_log.status == 'failed' %}
+                            <span class="badge bg-danger">Failed</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Import Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Total Records:</strong> {{ import_log.total_records }}</p>
+                    <p><strong>Successful Records:</strong> <span class="badge bg-success">{{ import_log.successful_records }}</span></p>
+                    <p><strong>Failed Records:</strong> <span class="badge bg-danger">{{ import_log.failed_records }}</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if import_log.error_log %}
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Error Log / Notes</h5>
+                </div>
+                <div class="card-body">
+                    <pre class="mb-0">{{ import_log.error_log }}</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+
+
+
