@@ -7,7 +7,7 @@ import json
 from bugbox3.core.permissions import IS_GROWER
 from ...models import (
     Farm, Field, GrowerApplication,
-    ManagementPractices, GrazingEvent
+    ManagementPractices, GrazingEvent, TransectMeasurement
 )
 from ...forms.grower.forms import ApplicationCreationForm
 from ...middleware import get_user_timezone
@@ -116,7 +116,7 @@ def application_view(request, application_id):
     except ManagementPractices.DoesNotExist:
         management_practices = None
     
-    grazing_events = GrazingEvent.objects.filter(application=application).order_by('event_number') if application.field.field_type == 'range' else []
+    grazing_events = GrazingEvent.objects.filter(application=application).prefetch_related('animals').order_by('event_number') if application.field.field_type == 'range' else []
     
     field = application.field
     
@@ -131,10 +131,22 @@ def application_view(request, application_id):
                 'longitude': float(location.x)
             })
     
+    transect_measurements = TransectMeasurement.objects.filter(
+        application=application
+    ).prefetch_related(
+        'drop_plate',
+        'vegetation',
+        'soil',
+        'compaction',
+        'infiltrometer',
+        'infiltration_ring'
+    ).order_by('transect_index')
+    
     return render(request, 'grower_portal/grower/application_view.html', {
         'application': application,
         'management_practices': management_practices,
         'grazing_events': grazing_events,
+        'transect_measurements': transect_measurements,
         'transect_data': json.dumps(transect_data),
         'user_timezone': get_user_timezone(request)
     })

@@ -127,6 +127,12 @@
                                     <td>{{ application.field.orchard_crop_specify }}</td>
                                 </tr>
                                 {% endif %}
+                                {% if application.field.crop_varieties %}
+                                <tr>
+                                    <th>Crop Variety(ies):</th>
+                                    <td>{{ application.field.crop_varieties }}</td>
+                                </tr>
+                                {% endif %}
                                 {% if application.field.forage_varieties %}
                                 <tr>
                                     <th>Forage Varieties:</th>
@@ -303,7 +309,7 @@
                             <div class="mt-3">
                                 <small class="text-muted">
                                     <i class="fas fa-info-circle"></i>
-                                    Green marker shows field center. Colored markers show transect locations.
+                                    Colored markers show transect locations.
                                 </small>
                             </div>
                         </div>
@@ -342,6 +348,178 @@
                                 </tr>
                                 {% endif %}
                             </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Transect Measurements -->
+                    <div class="card mb-3">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Transect Measurements</h5>
+                            <a href="{% url 'grower_portal:application_step4' application.id %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                        </div>
+                        <div class="card-body">
+                            {% if transect_measurements %}
+                                {% for measurement in transect_measurements %}
+                                    <div class="mb-4 pb-3 border-bottom">
+                                        <h6>Transect {{ measurement.transect_index }} {% if measurement.transect_code %}({{ measurement.transect_code }}){% endif %}</h6>
+                                        
+                                        <div class="row mb-2">
+                                            <div class="col-md-3"><strong>Time:</strong> {{ measurement.general_time|default:"—" }}</div>
+                                            <div class="col-md-3"><strong>Temperature:</strong> {{ measurement.temperature_c|default:"—" }}°C</div>
+                                            <div class="col-md-3"><strong>Wind Speed:</strong> {{ measurement.wind_speed_ms|default:"—" }} m/s</div>
+                                            <div class="col-md-3"><strong>Field Condition:</strong> {{ measurement.get_field_condition_display|default:"—" }}</div>
+                                        </div>
+                                        
+                                        {% if measurement.drop_plate.exists %}
+                                        <div class="mt-2">
+                                            <strong>Drop Plate Readings:</strong>
+                                            <table class="table table-sm table-bordered mt-1">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Distance (m)</th>
+                                                        <th>Value</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for reading in measurement.drop_plate.all %}
+                                                        <tr>
+                                                            <td>{{ reading.distance_m }}</td>
+                                                            <td>{{ reading.value|default:"—" }}</td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        {% endif %}
+                                        
+                                        {% if measurement.vegetation.exists %}
+                                        <div class="mt-2">
+                                            <strong>Vegetation Readings:</strong>
+                                            <table class="table table-sm table-bordered mt-1">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Metric</th>
+                                                        <th>Position (m)</th>
+                                                        <th>Value</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for reading in measurement.vegetation.all %}
+                                                        <tr>
+                                                            <td>{{ reading.get_metric_display }}</td>
+                                                            <td>{{ reading.position_m }}</td>
+                                                            <td>{{ reading.value|default:"—" }}</td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        {% endif %}
+                                        
+                                        {% if measurement.soil.exists %}
+                                        <div class="mt-2">
+                                            <strong>Soil Readings:</strong>
+                                            <table class="table table-sm table-bordered mt-1">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Metric</th>
+                                                        <th>Position (m)</th>
+                                                        <th>Value</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for reading in measurement.soil.all %}
+                                                        <tr>
+                                                            <td>{{ reading.get_metric_display }}</td>
+                                                            <td>{{ reading.position_m }}</td>
+                                                            <td>{{ reading.value|default:"—" }}</td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        {% endif %}
+                                        
+                                        {% if measurement.compaction.exists %}
+                                        <div class="mt-2">
+                                            <strong>Soil Compaction Readings:</strong>
+                                            <table class="table table-sm table-bordered mt-1">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Position (m)</th>
+                                                        <th>Max Value</th>
+                                                        <th>Score</th>
+                                                        <th>HP</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for reading in measurement.compaction.all %}
+                                                        <tr>
+                                                            <td>{{ reading.position_m }}</td>
+                                                            <td>{{ reading.max_value|default:"—" }}</td>
+                                                            <td>{{ reading.score|default:"—" }}</td>
+                                                            <td>{{ reading.hp|default:"—" }}</td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        {% endif %}
+                                        
+                                        {% if measurement.infiltrometer.exists %}
+                                        <div class="mt-2">
+                                            <strong>Infiltrometer Readings:</strong>
+                                            <table class="table table-sm table-bordered mt-1">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Time Mark</th>
+                                                        <th>Volume (ml)</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for reading in measurement.infiltrometer.all %}
+                                                        <tr>
+                                                            <td>{{ reading.time_mark }}</td>
+                                                            <td>{{ reading.volume_ml|default:"—" }}</td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        {% endif %}
+                                        
+                                        {% if measurement.infiltration_ring.exists %}
+                                        <div class="mt-2">
+                                            <strong>Infiltration Ring Readings:</strong>
+                                            <table class="table table-sm table-bordered mt-1">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Pour Number</th>
+                                                        <th>Start Depth (cm)</th>
+                                                        <th>Infiltration Time (sec)</th>
+                                                        <th>Depth After 15min (cm)</th>
+                                                        <th>Change in Depth (cm)</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for reading in measurement.infiltration_ring.all %}
+                                                        <tr>
+                                                            <td>{{ reading.pour_number }}</td>
+                                                            <td>{{ reading.start_depth_cm|default:"—" }}</td>
+                                                            <td>{{ reading.infiltration_time_sec|default:"—" }}</td>
+                                                            <td>{{ reading.depth_after_15min_cm|default:"—" }}</td>
+                                                            <td>{{ reading.change_in_depth_cm|default:"—" }}</td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted">No transect measurements recorded.</p>
+                            {% endif %}
                         </div>
                     </div>
                     

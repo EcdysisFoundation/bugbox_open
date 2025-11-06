@@ -74,22 +74,40 @@
 
                     <div class="measurement-section">
                       <h5 class="text-primary border-bottom pb-2">General Conditions</h5>
+                      {% if data.general_form.errors %}
+                        <div class="alert alert-danger">
+                          <strong>Please correct the errors below:</strong>
+                          {{ data.general_form.errors }}
+                        </div>
+                      {% endif %}
                       <div class="row g-3">
                         <div class="col-md-3">
                           <label class="form-label fw-bold">Time</label>
                           {{ data.general_form.general_time }}
+                          {% if data.general_form.general_time.errors %}
+                            <div class="text-danger small">{{ data.general_form.general_time.errors }}</div>
+                          {% endif %}
                         </div>
                         <div class="col-md-3">
                           <label class="form-label fw-bold">Temperature (°C)</label>
                           {{ data.general_form.temperature_c }}
+                          {% if data.general_form.temperature_c.errors %}
+                            <div class="text-danger small">{{ data.general_form.temperature_c.errors }}</div>
+                          {% endif %}
                         </div>
                         <div class="col-md-3">
                           <label class="form-label fw-bold">Wind Speed (m/s)</label>
                           {{ data.general_form.wind_speed_ms }}
+                          {% if data.general_form.wind_speed_ms.errors %}
+                            <div class="text-danger small">{{ data.general_form.wind_speed_ms.errors }}</div>
+                          {% endif %}
                         </div>
                         <div class="col-md-3">
                           <label class="form-label fw-bold">Field Condition</label>
                           {{ data.general_form.field_condition }}
+                          {% if data.general_form.field_condition.errors %}
+                            <div class="text-danger small">{{ data.general_form.field_condition.errors }}</div>
+                          {% endif %}
                         </div>
                       </div>
                     </div>
@@ -97,12 +115,20 @@
                     {% if application.field.field_type == 'range' or application.field.field_type == 'orchard' or application.field.field_type == 'crop' and application.field.crop_type == 'hayfield' %}
                     <div class="measurement-section">
                       <h5 class="text-primary border-bottom pb-2">Plant Biomass Drop Plate (every 2m, 0–48m)</h5>
+                      {% if data.dropplate_formset.non_form_errors %}
+                        <div class="alert alert-danger">
+                          <strong>Form errors:</strong> {{ data.dropplate_formset.non_form_errors }}
+                        </div>
+                      {% endif %}
                       {{ data.dropplate_formset.management_form }}
                       <div class="grid-container">
                         {% for form in data.dropplate_formset %}
                           <div>
                             <label class="form-label fw-bold small">{{ form.instance.distance_m }}m</label>
                             {{ form.value }}
+                            {% if form.value.errors %}
+                              <div class="text-danger small">{{ form.value.errors }}</div>
+                            {% endif %}
                             {{ form.distance_m.as_hidden }}
                             {{ form.id }}
                           </div>
@@ -113,6 +139,11 @@
 
                     <div class="measurement-section">
                       <h5 class="text-primary border-bottom pb-2">Vegetation Cover</h5>
+                      {% if data.vegetation_formset.non_form_errors %}
+                        <div class="alert alert-danger">
+                          <strong>Form errors:</strong> {{ data.vegetation_formset.non_form_errors }}
+                        </div>
+                      {% endif %}
                       {{ data.vegetation_formset.management_form }}
                       
                       <h6 class="mt-3">Green Cover (%)</h6>
@@ -122,6 +153,9 @@
                             <div class="col-md-4">
                               <label class="form-label fw-bold">{{ form.instance.position_m }}m</label>
                               {{ form.value }}
+                              {% if form.value.errors %}
+                                <div class="text-danger small">{{ form.value.errors }}</div>
+                              {% endif %}
                               {{ form.metric.as_hidden }}
                               {{ form.position_m.as_hidden }}
                               {{ form.id }}
@@ -137,6 +171,9 @@
                             <div class="col-md-4">
                               <label class="form-label fw-bold">{{ form.instance.position_m }}m</label>
                               {{ form.value }}
+                              {% if form.value.errors %}
+                                <div class="text-danger small">{{ form.value.errors }}</div>
+                              {% endif %}
                               {{ form.metric.as_hidden }}
                               {{ form.position_m.as_hidden }}
                               {{ form.id }}
@@ -152,6 +189,9 @@
                             <div class="col-md-4">
                               <label class="form-label fw-bold">{{ form.instance.position_m }}m</label>
                               {{ form.value }}
+                              {% if form.value.errors %}
+                                <div class="text-danger small">{{ form.value.errors }}</div>
+                              {% endif %}
                               {{ form.metric.as_hidden }}
                               {{ form.position_m.as_hidden }}
                               {{ form.id }}
@@ -167,6 +207,9 @@
                             <div class="col-md-4">
                               <label class="form-label fw-bold">{{ form.instance.position_m }}m</label>
                               {{ form.value }}
+                              {% if form.value.errors %}
+                                <div class="text-danger small">{{ form.value.errors }}</div>
+                              {% endif %}
                               {{ form.metric.as_hidden }}
                               {{ form.position_m.as_hidden }}
                               {{ form.id }}
@@ -178,6 +221,11 @@
 
                     <div class="measurement-section">
                       <h5 class="text-primary border-bottom pb-2">Soil Measurements</h5>
+                      {% if data.soil_formset.non_form_errors %}
+                        <div class="alert alert-danger">
+                          <strong>Form errors:</strong> {{ data.soil_formset.non_form_errors }}
+                        </div>
+                      {% endif %}
                       {{ data.soil_formset.management_form }}
                       
                       <h6 class="mt-3">Soil Moisture (%)</h6>
@@ -187,6 +235,9 @@
                             <div class="col-md-4">
                               <label class="form-label fw-bold">{{ form.instance.position_m }}m</label>
                               {{ form.value }}
+                              {% if form.value.errors %}
+                                <div class="text-danger small">{{ form.value.errors }}</div>
+                              {% endif %}
                               {{ form.metric.as_hidden }}
                               {{ form.position_m.as_hidden }}
                               {{ form.id }}
@@ -202,6 +253,9 @@
                             <div class="col-md-4">
                               <label class="form-label fw-bold">{{ form.instance.position_m }}m</label>
                               {{ form.value }}
+                              {% if form.value.errors %}
+                                <div class="text-danger small">{{ form.value.errors }}</div>
+                              {% endif %}
                               {{ form.metric.as_hidden }}
                               {{ form.position_m.as_hidden }}
                               {{ form.id }}
@@ -213,6 +267,11 @@
 
                     <div class="measurement-section">
                       <h5 class="text-primary border-bottom pb-2">Soil Compaction (0=Green, 1=Yellow, 2=Red)</h5>
+                      {% if data.compaction_formset.non_form_errors %}
+                        <div class="alert alert-danger">
+                          <strong>Form errors:</strong> {{ data.compaction_formset.non_form_errors }}
+                        </div>
+                      {% endif %}
                       {{ data.compaction_formset.management_form }}
                       
                       <div class="row g-3">
@@ -224,14 +283,23 @@
                                 <div class="mb-2">
                                   <label class="form-label fw-bold small">Max</label>
                                   {{ form.max_value }}
+                                  {% if form.max_value.errors %}
+                                    <div class="text-danger small">{{ form.max_value.errors }}</div>
+                                  {% endif %}
                                 </div>
                                 <div class="mb-2">
                                   <label class="form-label fw-bold small">Score</label>
                                   {{ form.score }}
+                                  {% if form.score.errors %}
+                                    <div class="text-danger small">{{ form.score.errors }}</div>
+                                  {% endif %}
                                 </div>
                                 <div class="mb-2">
                                   <label class="form-label fw-bold small">Hp</label>
                                   {{ form.hp }}
+                                  {% if form.hp.errors %}
+                                    <div class="text-danger small">{{ form.hp.errors }}</div>
+                                  {% endif %}
                                 </div>
                                 {{ form.position_m.as_hidden }}
                                 {{ form.id }}
@@ -244,6 +312,11 @@
 
                     <div class="measurement-section">
                       <h5 class="text-primary border-bottom pb-2">Water Infiltrometer (mL)</h5>
+                      {% if data.infiltrometer_formset.non_form_errors %}
+                        <div class="alert alert-danger">
+                          <strong>Form errors:</strong> {{ data.infiltrometer_formset.non_form_errors }}
+                        </div>
+                      {% endif %}
                       {{ data.infiltrometer_formset.management_form }}
                       
                       <div class="grid-container">
@@ -251,6 +324,9 @@
                           <div>
                             <label class="form-label fw-bold small">{{ form.instance.time_mark }}</label>
                             {{ form.volume_ml }}
+                            {% if form.volume_ml.errors %}
+                              <div class="text-danger small">{{ form.volume_ml.errors }}</div>
+                            {% endif %}
                             {{ form.time_mark.as_hidden }}
                             {{ form.id }}
                           </div>
@@ -260,6 +336,11 @@
 
                     <div class="measurement-section">
                       <h5 class="text-primary border-bottom pb-2">Water Infiltration Ring</h5>
+                      {% if data.ring_formset.non_form_errors %}
+                        <div class="alert alert-danger">
+                          <strong>Form errors:</strong> {{ data.ring_formset.non_form_errors }}
+                        </div>
+                      {% endif %}
                       {{ data.ring_formset.management_form }}
                       
                       {% for form in data.ring_formset %}
@@ -270,18 +351,30 @@
                               <div class="col-md-6">
                                 <label class="form-label fw-bold">Start Depth (cm)</label>
                                 {{ form.start_depth_cm }}
+                                {% if form.start_depth_cm.errors %}
+                                  <div class="text-danger small">{{ form.start_depth_cm.errors }}</div>
+                                {% endif %}
                               </div>
                               <div class="col-md-6">
                                 <label class="form-label fw-bold">Infiltration Time (sec)</label>
                                 {{ form.infiltration_time_sec }}
+                                {% if form.infiltration_time_sec.errors %}
+                                  <div class="text-danger small">{{ form.infiltration_time_sec.errors }}</div>
+                                {% endif %}
                               </div>
                               <div class="col-md-6">
                                 <label class="form-label fw-bold">Depth After 15 min (cm, if needed)</label>
                                 {{ form.depth_after_15min_cm }}
+                                {% if form.depth_after_15min_cm.errors %}
+                                  <div class="text-danger small">{{ form.depth_after_15min_cm.errors }}</div>
+                                {% endif %}
                               </div>
                               <div class="col-md-6">
                                 <label class="form-label fw-bold">Change in Depth (cm)</label>
                                 {{ form.change_in_depth_cm }}
+                                {% if form.change_in_depth_cm.errors %}
+                                  <div class="text-danger small">{{ form.change_in_depth_cm.errors }}</div>
+                                {% endif %}
                               </div>
                             </div>
                             {{ form.pour_number.as_hidden }}
