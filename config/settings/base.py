@@ -48,7 +48,7 @@ AI_INFERENCE_URL = 'http://10.147.19.124:8070/'
 
 # GOOGLE MAPS
 # ------------------------------------------------------------------------------
-GOOGLE_MAPS_API_KEY = env("GOOGLE_MAPS_API_KEY", default="AIzaSyCKcLKDWIujKdNm-70q1dQYqvaiwh1eeTQ")
+GOOGLE_MAPS_API_KEY = env("GOOGLE_MAPS_API_KEY")
 
 # DATABASES
 # ------------------------------------------------------------------------------

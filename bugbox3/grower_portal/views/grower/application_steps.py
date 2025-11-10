@@ -485,7 +485,9 @@ def application_step5(request, application_id):
     if request.method == 'POST':
         event_forms = {}
         formsets = {}
+        formsets_has_data = {}
         all_valid = True
+        formset_errors = {}
 
         for event in grazing_events:
             event_form = GrazingEventForm(
@@ -496,6 +498,7 @@ def application_step5(request, application_id):
             event_forms[event.event_number] = event_form
             if not event_form.is_valid():
                 all_valid = False
+                formset_errors[event.event_number] = event_form.errors
             
             formset = GrazingEventAnimalFormSet(
                 request.POST,
@@ -503,16 +506,57 @@ def application_step5(request, application_id):
                 prefix=f'event_{event.event_number}'
             )
             formsets[event.event_number] = formset
-            if not formset.is_valid():
-                all_valid = False
+            
+            prefix = f'event_{event.event_number}'
+            has_any_data = False
+            total_forms = int(request.POST.get(f'{prefix}-TOTAL_FORMS', '0'))
+            
+            for i in range(total_forms):
+                is_deleted = request.POST.get(f'{prefix}-{i}-DELETE', '') == 'on'
+                if is_deleted:
+                    continue
+                
+                class_of_animal = request.POST.get(f'{prefix}-{i}-class_of_animal', '').strip()
+                number_of_animals = request.POST.get(f'{prefix}-{i}-number_of_animals', '').strip()
+                average_weight_lbs = request.POST.get(f'{prefix}-{i}-average_weight_lbs', '').strip()
+                duration_days = request.POST.get(f'{prefix}-{i}-duration_days', '').strip()
+                rest_period_days = request.POST.get(f'{prefix}-{i}-rest_period_days', '').strip()
+                
+                if any([class_of_animal, number_of_animals, average_weight_lbs, duration_days, rest_period_days]):
+                    has_any_data = True
+                    break
+            
+            formsets_has_data[event.event_number] = has_any_data
+            
+            if has_any_data:
+                if not formset.is_valid():
+                    all_valid = False
+                    formset_errors[event.event_number] = formset.errors
         
         if all_valid:
-            for form in event_forms.values():
-                form.save()
-            for formset in formsets.values():
-                formset.save()
-            messages.success(request, 'Grazing events saved successfully!')
-            return redirect('grower_portal:application_step6', application_id=application.id)
+            try:
+                for form in event_forms.values():
+                    form.save()
+                for event_num, formset in formsets.items():
+                    if formsets_has_data.get(event_num, False):
+                        if formset.is_valid():
+                            formset.save()
+                        else:
+                            raise ValueError(f"Formset validation failed for event {event_num}: {formset.errors}")
+                    else:
+                        formset.is_valid()
+                        formset.save()
+                messages.success(request, 'Grazing events saved successfully!')
+                return redirect('grower_portal:application_step6', application_id=application.id)
+            except Exception as e:
+                messages.error(request, f'Error saving grazing events: {str(e)}')
+        else:
+            error_details = []
+            for event_num, errors in formset_errors.items():
+                error_details.append(f"Event {event_num}: {errors}")
+            messages.error(request, 'Please correct the errors below.')
+            if error_details:
+                messages.error(request, f'Details: {"; ".join(error_details)}')
     else:
         event_forms = {}
         formsets = {}
@@ -593,10 +637,22 @@ def application_step6(request, application_id):
                 'longitude': longitude
             })
     
+    transect_measurements = TransectMeasurement.objects.filter(
+        application=application
+    ).prefetch_related(
+        'drop_plate',
+        'vegetation',
+        'soil',
+        'compaction',
+        'infiltrometer',
+        'infiltration_ring'
+    ).order_by('transect_index')
+    
     return render(request, 'grower_portal/grower/application_step6.html', {
         'application': application,
         'management_practices': management_practices,
         'grazing_events': grazing_events,
+        'transect_measurements': transect_measurements,
         'transect_data': json.dumps(transect_data),
         'user_timezone': get_user_timezone(request)
     })

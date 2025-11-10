@@ -640,8 +640,10 @@ class GrazingEventForm(ModelFormMixin):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields['start_date'].widget = Html5DateInput()
         self.fields['start_date'].label = 'Start Date (estimate is acceptable)'
         self.fields['start_date'].required = False
+        self.helper.form_tag = False
     
     def get_primary_layout(self):
         return [
@@ -661,7 +663,44 @@ class GrazingEventAnimalForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['duration_days'].label = 'Grazing days'
         for field in self.fields.values():
+            field.required = False
             field.widget.attrs.update({'class': 'form-control form-control-sm'})
+    
+    def clean(self):
+        """Validate that if any field is filled, all required fields must be filled"""
+        cleaned_data = super().clean()
+        
+        class_of_animal = cleaned_data.get('class_of_animal', '').strip() if cleaned_data.get('class_of_animal') else ''
+        number_of_animals = cleaned_data.get('number_of_animals')
+        average_weight_lbs = cleaned_data.get('average_weight_lbs')
+        duration_days = cleaned_data.get('duration_days')
+        rest_period_days = cleaned_data.get('rest_period_days')
+        
+        has_any_value = any([
+            class_of_animal,
+            number_of_animals not in (None, ''),
+            average_weight_lbs not in (None, ''),
+            duration_days not in (None, ''),
+            rest_period_days not in (None, '')
+        ])
+        
+        if not has_any_value:
+            return cleaned_data
+        
+        required_fields = ['class_of_animal', 'number_of_animals', 'average_weight_lbs', 
+                         'duration_days', 'rest_period_days']
+        missing_fields = []
+        for field_name in required_fields:
+            value = cleaned_data.get(field_name)
+            if value in (None, '', []):
+                missing_fields.append(self.fields[field_name].label or field_name)
+        
+        if missing_fields:
+            raise forms.ValidationError(
+                f'If you fill in any field, all fields must be completed. Missing: {", ".join(missing_fields)}'
+            )
+        
+        return cleaned_data
 
 
 GrazingEventAnimalFormSet = inlineformset_factory(
@@ -669,6 +708,7 @@ GrazingEventAnimalFormSet = inlineformset_factory(
     GrazingEventAnimal,
     form=GrazingEventAnimalForm,
     extra=1,
+    min_num=0,
     max_num=MAX_ANIMAL_ENTRIES_PER_GRAZING_EVENT,
     can_delete=True,
     validate_max=True
@@ -678,12 +718,23 @@ class TransectMeasurementGeneralForm(forms.ModelForm):
     class Meta:
         model = TransectMeasurement
         fields = ['general_time', 'temperature_c', 'wind_speed_ms', 'field_condition']
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['general_time'].required = True
+        self.fields['temperature_c'].required = True
+        self.fields['wind_speed_ms'].required = True
+        self.fields['field_condition'].required = True
 
 
 class DropPlateReadingForm(forms.ModelForm):
     class Meta:
         model = DropPlateReading
         fields = ['distance_m', 'value']
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['value'].required = True
 
 
 DropPlateFormSet = inlineformset_factory(
@@ -699,6 +750,10 @@ class VegetationReadingForm(forms.ModelForm):
     class Meta:
         model = VegetationReading
         fields = ['metric', 'position_m', 'value']
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['value'].required = True
 
 
 VegetationFormSet = inlineformset_factory(
@@ -714,6 +769,10 @@ class SoilReadingForm(forms.ModelForm):
     class Meta:
         model = SoilReading
         fields = ['metric', 'position_m', 'value']
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['value'].required = True
 
 
 SoilFormSet = inlineformset_factory(
@@ -729,6 +788,12 @@ class SoilCompactionReadingForm(forms.ModelForm):
     class Meta:
         model = SoilCompactionReading
         fields = ['position_m', 'max_value', 'score', 'hp']
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['max_value'].required = True
+        self.fields['score'].required = True
+        self.fields['hp'].required = True
 
 
 SoilCompactionFormSet = inlineformset_factory(
@@ -744,6 +809,10 @@ class InfiltrometerReadingForm(forms.ModelForm):
     class Meta:
         model = InfiltrometerReading
         fields = ['time_mark', 'volume_ml']
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['volume_ml'].required = True
 
 
 InfiltrometerFormSet = inlineformset_factory(
@@ -760,6 +829,13 @@ class InfiltrationRingReadingForm(forms.ModelForm):
         model = InfiltrationRingReading
         fields = ['pour_number', 'start_depth_cm', 'infiltration_time_sec', 
                   'depth_after_15min_cm', 'change_in_depth_cm']
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['start_depth_cm'].required = True
+        self.fields['infiltration_time_sec'].required = True
+        self.fields['depth_after_15min_cm'].required = True
+        self.fields['change_in_depth_cm'].required = True
 
 
 InfiltrationRingFormSet = inlineformset_factory(

@@ -85,5 +85,40 @@ document.addEventListener('DOMContentLoaded', function() {
         const eventNumber = card.dataset.eventNumber;
         updateAnimalCount(eventNumber);
     });
+    
+    function setupSubmitButton() {
+        const submitBtn = document.getElementById('step5-submit-btn');
+        if (submitBtn) {
+            const newBtn = submitBtn.cloneNode(true);
+            submitBtn.parentNode.replaceChild(newBtn, submitBtn);
+            
+            newBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const form = document.getElementById('grazing-events-form');
+                if (form) {
+                    form.submit();
+                }
+            });
+            return true;
+        }
+        return false;
+    }
+    
+    if (!setupSubmitButton()) {
+        setTimeout(function() {
+            if (!setupSubmitButton()) {
+                setTimeout(setupSubmitButton, 500);
+            }
+        }, 100);
+    }
+    
+    document.addEventListener('click', function(e) {
+        if (e.target && (e.target.id === 'step5-submit-btn' || 
+            (e.target.type === 'submit' && e.target.closest('#grazing-events-form')))) {
+            const form = document.getElementById('grazing-events-form');
+            if (form && !form.checkValidity()) {
+                form.submit();
+            }
+        }
+    }, true);
 });
-
