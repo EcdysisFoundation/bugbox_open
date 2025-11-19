@@ -20,19 +20,23 @@ def image_prediction(image_bytes):
         response = requests.post(
             settings.AI_INFERENCE_URL + 'metaformer-predict',
             files=files,
-            timeout=10  #timeout to avoid hanging requests
+            timeout=60  # timeout to avoid hanging requests
         )
         response.raise_for_status()
         response = response.json()
-        return response[0] if response else None  #check for empty response
+        # check for empty response
+        return response[0] if response else None
     except requests.exceptions.ConnectionError as e:
-        logging.error(f"[AI_INFERENCE] Connection refused: {e}")  # Log if inference server is unreachable (connection refused)
+        # Log if inference server is unreachable (connection refused)
+        logging.error(f"[AI_INFERENCE] Connection refused: {e}")
     except requests.exceptions.Timeout as e:
-        logging.error(f"[AI_INFERENCE] Request timed out: {e}")  #Timeout logging
+        # Timeout logging
+        logging.error(f"[AI_INFERENCE] Request timed out: {e}")
     except requests.exceptions.RequestException as e:
         logging.error(f"[AI_INFERENCE] General request failure: {e}")
     except Exception as e:
-        logging.exception(f"[AI_INFERENCE] Unexpected error occurred during image prediction {e}")  # Catch-all errors
+        # Catch-all errors
+        logging.exception(f"[AI_INFERENCE] Unexpected error occurred during image prediction {e}")
     return None
 
 
@@ -70,7 +74,8 @@ def id_image(id):
 
     # dont make changes if we didnt get data (dont update DB if no detection result was returned)
     if not data:
-        logging.info(f"No AI classification returned for specimen id: {id}")  #log missing prediction
+        # log missing prediction
+        logging.info(f"No AI classification returned for specimen id: {id}")
         return
 
     Morphospecies = apps.get_model(app_label='taxonomy', model_name='Morphospecies')
