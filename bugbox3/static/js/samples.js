@@ -167,4 +167,44 @@ $(function () {
         });
     });
 
+    const excludedModal = document.getElementById('excludedFromIndicesModal');
+    let parentModalId = null;
+    
+    if (excludedModal) {
+        const infoIcons = document.querySelectorAll('[data-bs-target="#excludedFromIndicesModal"]');
+        infoIcons.forEach(icon => {
+            icon.addEventListener('click', function() {
+                const parentModal = this.closest('.modal');
+                if (parentModal) {
+                    parentModalId = parentModal.id;
+                }
+            });
+        });
+        
+        excludedModal.addEventListener('hidden.bs.modal', function () {
+            if (parentModalId) {
+                const parentModal = document.getElementById(parentModalId);
+                if (parentModal) {
+                    setTimeout(function() {
+                        parentModal.classList.add('show');
+                        parentModal.style.display = 'block';
+                        parentModal.setAttribute('aria-modal', 'true');
+                        parentModal.removeAttribute('aria-hidden');
+                        
+                        document.body.classList.add('modal-open');
+                        
+                        let backdrop = document.querySelector('.modal-backdrop');
+                        if (!backdrop) {
+                            backdrop = document.createElement('div');
+                            backdrop.className = 'modal-backdrop fade show';
+                            document.body.appendChild(backdrop);
+                        }
+                    }, 150);
+                    
+                    parentModalId = null;
+                }
+            }
+        });
+    }
+
 })
