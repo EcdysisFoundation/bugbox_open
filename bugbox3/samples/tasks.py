@@ -61,6 +61,8 @@ def export_csv(
     unknown_species = 'Not identified'
     skip_morphospecies_ids = get_skip_morphospecies_ids()
     immature_morphospecies_ids = get_immature_morphospecies_ids()
+    skip_ids_for_indices = skip_morphospecies_ids
+    immature_ids_for_indices = immature_morphospecies_ids
 
     if include_immatures_skipped:
         skip_morphospecies_ids = []
@@ -127,12 +129,9 @@ def export_csv(
                         else specimen.ai_classification_id
                     )
 
+                morpho = None
                 if morphospecies_id:
                     morpho = Morphospecies.objects.get(id=morphospecies_id)
-                    if morpho.gbif_class == "Arachnida":
-
-                        if "Mites" in morpho.name or "Acari" in morpho.name:
-                            continue
 
                     if level == "family":
                         name = morpho.gbif_family if morpho.gbif_family else "Unspecified Family"
@@ -140,15 +139,6 @@ def export_csv(
                         morpho_headers[1][name] = morpho.gbif_family
                         morpho_headers[2][name] = ""
                     else:
-                        if morpho.exclude_from_export:
-                            is_immature = morpho.id in immature_morphospecies_ids or "immature" in morpho.name.lower()
-                            is_skipped = morpho.id in skip_morphospecies_ids
-                            if include_immatures_skipped and (is_immature or is_skipped):
-                                print(f"Override exclude_from_export: including {morpho.name}")
-                            else:
-                                print(f"Excluded from export (exclude_from_export=True): {morpho.name}")
-                                continue
-
                         name = morpho.name
                         morpho_headers[0][name] = morpho.gbif_order
                         morpho_headers[1][name] = morpho.gbif_family
@@ -164,7 +154,9 @@ def export_csv(
                 row[name] = row.get(name, 0) + total
                 n += total
 
-                if morphospecies_id in immature_morphospecies_ids or morphospecies_id in skip_morphospecies_ids:
+                if morphospecies_id in immature_ids_for_indices or morphospecies_id in skip_ids_for_indices:
+                    excluded_names_in_row.add(name)
+                if morpho and morpho.exclude_from_export:
                     excluded_names_in_row.add(name)
 
             if indices:
@@ -241,6 +233,9 @@ def export_csv_by_location(user_id, experiment_id, habitats, countries, states, 
 
     skip_ids = get_skip_morphospecies_ids()
     immature_ids = get_immature_morphospecies_ids()
+    skip_ids_for_indices = skip_ids
+    immature_ids_for_indices = immature_ids
+    
     if include_immatures_skipped:
         skip_ids = []
         immature_ids = []
@@ -292,16 +287,9 @@ def export_csv_by_location(user_id, experiment_id, habitats, countries, states, 
             else:
                 morphospecies_id = specimen.classification_id or specimen.ai_classification_id
 
+            morpho = None
             if morphospecies_id:
                 morpho = Morphospecies.objects.get(id=morphospecies_id)
-                if morpho.exclude_from_export:
-                    is_immature = morpho.id in immature_ids or "immature" in morpho.name.lower()
-                    is_skipped = morpho.id in skip_ids
-                    if include_immatures_skipped and (is_immature or is_skipped):
-                        print(f"Override exclude_from_export: including {morpho.name}")
-                    else:
-                        print(f"Excluded from export (exclude_from_export=True): {morpho.name}")
-                        continue
 
                 if level == "family":
                     name = morpho.gbif_family if morpho.gbif_family else "Unspecified Family"
@@ -322,7 +310,9 @@ def export_csv_by_location(user_id, experiment_id, habitats, countries, states, 
             total_count = 1 + specimen.partial_count
             row[name] = row.get(name, 0) + total_count
 
-            if morphospecies_id in skip_ids or morphospecies_id in immature_ids:
+            if morphospecies_id in skip_ids_for_indices or morphospecies_id in immature_ids_for_indices:
+                excluded_names.add(name)
+            if morpho and morpho.exclude_from_export:
                 excluded_names.add(name)
 
         if indices:

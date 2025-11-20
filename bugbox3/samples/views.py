@@ -32,6 +32,7 @@ from ..libs.ui_helpers import (calc_image_height, get_datatables_container,
 from ..libs.utilities import get_json_context, get_media_url
 from ..taxonomy import constants as taxa_const
 from ..taxonomy.models import Morphospecies
+from ..taxonomy.utils import get_skip_morphospecies_ids, get_immature_morphospecies_ids
 from . import constants
 from .forms import (ExperimentForm, JSONFieldSpecimensForm, MultiSpecimenForm,
                     SampleDetailForm, SampleForm, SamplePlanForm, SiteForm,
@@ -96,6 +97,44 @@ class ExperimentView(PermissionRequiredMixin, TemplateView):
 
     template_name = 'samples/experiment.html'
 
+    def _get_excluded_from_indices_list(self, experiment_id):
+        skip_ids = get_skip_morphospecies_ids()
+        immature_ids = get_immature_morphospecies_ids()
+        all_experiment_morpho_ids = set()
+        
+        specimens = Specimen.objects.filter(
+            sample__site_visit__site__experiment_id=experiment_id
+        ).values('classification_id', 'ai_classification_id')
+        
+        for specimen in specimens:
+            morpho_id = specimen['classification_id'] or specimen['ai_classification_id']
+            if morpho_id:
+                all_experiment_morpho_ids.add(morpho_id)
+        
+        excluded_by_flag = Morphospecies.objects.filter(
+            id__in=all_experiment_morpho_ids,
+            exclude_from_export=True
+        ).values_list('name', flat=True).order_by('name')
+        
+        experiment_immature_ids = all_experiment_morpho_ids & set(immature_ids)
+        immature_morphos = Morphospecies.objects.filter(
+            id__in=experiment_immature_ids,
+            exclude_from_export=False
+        ).values_list('name', flat=True).order_by('name')
+        
+        experiment_skip_ids = all_experiment_morpho_ids & set(skip_ids)
+        skipped_morphos = Morphospecies.objects.filter(
+            id__in=experiment_skip_ids,
+            exclude_from_export=False
+        ).exclude(id__in=immature_ids).values_list('name', flat=True).order_by('name')
+        
+        return {
+            'exclude_from_export': list(excluded_by_flag),
+            'immature': list(immature_morphos),
+            'skipped': list(skipped_morphos),
+            'total_count': len(excluded_by_flag) + len(immature_morphos) + len(skipped_morphos)
+        }
+
     def get_context_data(self, **kwargs):
         context = super(ExperimentView, self).get_context_data(**kwargs)
         try:
@@ -138,6 +177,7 @@ class ExperimentView(PermissionRequiredMixin, TemplateView):
             'review_permission': self.request.user.has_perm(REVIEW_SPECIMEN_PAGE),
             'skip_morphospecies': ', '.join(
                 [v[taxa_const.FIELD_MORPHO_NAME] for v in taxa_const.SKIP_MORPHOSPECIES]),
+            'excluded_from_indices': self._get_excluded_from_indices_list(experiment.id),
             'container_row_header': get_datatables_container(
                 get_datatables_row([
                     'Site Name',
