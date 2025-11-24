@@ -1,6 +1,7 @@
 from io import BytesIO
 
 from django.conf import settings
+from django.contrib.postgres.fields import ArrayField
 from django.db.models import (CASCADE, SET_NULL, BooleanField, CharField,
                               DateField, DateTimeField, FloatField, ForeignKey,
                               ImageField, IntegerField, Model, BigIntegerField)
@@ -35,6 +36,7 @@ class Morphospecies(Model):
     image_thumbnail = ImageField(upload_to='morpho_images/', null=True, blank=True)
     update_thumbs = BooleanField(null=True)
     exclude_from_export = BooleanField(default=False)
+    tags = ArrayField(CharField(max_length=1000, blank=True), default=list)
     class Meta:
         app_label = 'taxonomy'
 
