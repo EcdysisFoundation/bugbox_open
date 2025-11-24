@@ -11,6 +11,7 @@ from rest_framework.response import Response
 
 from ..samples.constants import (FIELD_SAMPLE_TYPE, FIELD_SITE_HABITAT_TYPE,
                                  FIELD_SITE_TREATMENT, FIELD_SPECIMEN_TAGS)
+from ..taxonomy.constants import FIELD_MORPHO_TAGS_LOOKUP
 from . import constants
 from .forms import LookupChoicesForm
 from .models import LookupChoices
@@ -91,6 +92,8 @@ class LookupChoicesView(PermissionRequiredMixin, TemplateView):
                 selected_org_id, FIELD_SPECIMEN_TAGS),
             FIELD_SAMPLE_TYPE: LookupChoices.objects.get_field_choices_w_id(
                 selected_org_id, FIELD_SAMPLE_TYPE),
+            FIELD_MORPHO_TAGS_LOOKUP: LookupChoices.objects.get_field_choices_w_id(
+                selected_org_id, FIELD_MORPHO_TAGS_LOOKUP),
             'org_choices': org_choices,
             'selected_org_name': selected_org_name,
             'selected_org_id': selected_org_id

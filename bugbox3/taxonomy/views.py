@@ -22,6 +22,8 @@ from ..libs.ui_helpers import (calc_image_height, get_datatables_container,
                                get_datatables_row)
 from ..libs.utilities import get_json_context, get_media_url
 from ..samples import constants as samples_constants
+from organizations.models import OrganizationUser
+from ..core.models import LookupChoices
 from ..samples.models import Sample, Specimen, SpecimenImage
 from . import constants
 from .forms import (MorphospeciesCombineForm, MorphospeciesForm,
@@ -44,13 +46,18 @@ class MorphospeciesDatatablesViewSet(PermissionRequiredMixin, DatatablesModelVie
     def get_queryset(self):
         gbif_rank = None
         first_check = None
+        tags_filter = None
         morphospecies = Morphospecies.objects.all()
         if self.request.query_params.get('first_filter'):
             gbif_rank = self.request.query_params.get('first_filter')
         if self.request.query_params.get('first_check'):
             first_check = self.request.query_params.get('first_check')
+        if self.request.query_params.get('tags_filter'):
+            tags_filter = self.request.query_params.get('tags_filter')
         if gbif_rank in constants.GBIF_RANK_VALUES:
             morphospecies = morphospecies.filter(gbif_rank=gbif_rank)
+        if tags_filter:
+            morphospecies = morphospecies.filter(tags__contains=[tags_filter])
         if not first_check:
             morphospecies = morphospecies.exclude(defunt_date__isnull=False)
         return morphospecies.order_by(constants.FIELD_MORPHO_NAME)
@@ -86,12 +93,19 @@ class MophospeciesView(PermissionRequiredMixin, TemplateView):
         Forat the datatables context, including the url from rest_framework.reverse
         as datatables_url
         """
+        org_user = OrganizationUser.objects.filter(user=self.request.user).first()
+        tags_choices = []
+        if org_user:
+            tags_choices = LookupChoices.objects.get_field_choices(
+                org_user.organization_id, constants.FIELD_MORPHO_TAGS_LOOKUP)
         return {
             'json_context': get_json_context({
                 'datatables_url': datatables_url,
                 'first_picker_choices': constants.GBIF_RANK_CHOICES_WO_BLANK_LIST,
                 'first_picker_text': 'any rank',
-                'first_check': self.first_check_txt
+                'first_check': self.first_check_txt,
+                'tags_picker_choices': tags_choices,
+                'tags_picker_text': 'any tag'
             }),
             'container_row_header': get_datatables_container(
                 get_datatables_row([
@@ -285,6 +299,13 @@ class MorphospeciesUpdateView(PermissionRequiredMixin, UpdateView):
 
     def get_object(self, queryset=None):
         return get_object_or_404(Morphospecies, id=self.kwargs['id'])
+
+    def get_form_kwargs(self):
+        kwargs = super(MorphospeciesUpdateView, self).get_form_kwargs()
+        org_user = OrganizationUser.objects.filter(user=self.request.user).first()
+        if org_user:
+            kwargs['org_id'] = org_user.organization_id
+        return kwargs
 
     def get_context_data(self, **kwargs):
         context = super(MorphospeciesUpdateView, self).get_context_data(**kwargs)
