@@ -42,8 +42,12 @@ class Command(BaseCommand):
 
         # inventory specimen_images to see which have already been downloaded.
         for s in specimen_images:
-            local_paths = [self.local_storage + getattr(s, i).name for i in self.image_files]
-            if all([os.path.isfile(v) for v in local_paths]):
+            local_paths = []
+            for i in self.image_files:
+                image = getattr(s, i)
+                if image and hasattr(image, 'name') and image.name:
+                    local_paths.append(self.local_storage + image.name)
+            if local_paths and all([os.path.isfile(v) for v in local_paths]):
                 # image already downloaded, so set to true and dont download
                 s.downloaded_image = True
                 s.save()
@@ -51,4 +55,5 @@ class Command(BaseCommand):
                 # download the images.
                 for i in self.image_files:
                     image = getattr(s, i)
-                    download_s3_media(image.name, self.local_storage + image.name)
+                    if image and hasattr(image, 'name') and image.name:
+                        download_s3_media(image.name, self.local_storage + image.name)
