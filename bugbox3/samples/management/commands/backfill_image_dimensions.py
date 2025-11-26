@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand
 from django.core.files.storage import default_storage
 from django.core.files.images import get_image_dimensions
-from samples.models import SpecimenImage
+from bugbox3.samples.models import SpecimenImage
 
 
 class Command(BaseCommand):
