@@ -2,6 +2,7 @@ from django.core.management.base import BaseCommand
 from django.core.files.storage import default_storage
 from django.core.files.images import get_image_dimensions
 from bugbox3.samples.models import SpecimenImage
+import gc
 
 
 class Command(BaseCommand):
@@ -91,6 +92,7 @@ class Command(BaseCommand):
                     processed += 1
                     if processed % 500 == 0:
                         self.stdout.write(f'Processed {processed}/{total} records ({updated} updated, {errors} errors)...')
+                        gc.collect()
                         
                 except Exception as e:
                     errors += 1
@@ -98,6 +100,8 @@ class Command(BaseCommand):
                         self.style.ERROR(f'Error processing SpecimenImage {specimen_image.id}: {e}')
                     )
                     continue
+            
+            gc.collect()
         
         self.stdout.write(
             self.style.SUCCESS(
