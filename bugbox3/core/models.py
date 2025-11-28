@@ -4,9 +4,11 @@ from django.contrib.gis.db.models import (CASCADE, BigIntegerField, CharField,
                                           MultiPolygonField,
                                           SlugField)
 from django.db.models.fields import BLANK_CHOICE_DASH
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
 from organizations.models import Organization
 
-from .constants import FIELD_DISPLAY_TXT
+from .constants import FIELD_DISPLAY_TXT, FIELD_MORPHO_TAGS_LOOKUP
 from .customstorage import PublicMediaStorage
 
 
@@ -61,6 +63,27 @@ class LookupChoices(Model):
     def __str__(self):
         return str(self.display_txt)
 
+
+@receiver(post_delete, sender=LookupChoices)
+def cleanup_orphaned_tags(sender, instance, **kwargs):
+    """
+    When a LookupChoices tag entry is deleted, this will remove that tag value
+    from all Morphospecies and Specimen records that have it.
+    """
+    if instance.field == FIELD_MORPHO_TAGS_LOOKUP:
+        from ..taxonomy.models import Morphospecies
+        morphospecies_with_tag = Morphospecies.objects.filter(tags__contains=[instance.entry])
+        for morpho in morphospecies_with_tag:
+            if instance.entry in morpho.tags:
+                morpho.tags.remove(instance.entry)
+                morpho.save(update_fields=['tags'])
+    elif instance.field == 'tags':
+        from ..samples.models import Specimen
+        specimens_with_tag = Specimen.objects.filter(tags__contains=[instance.entry])
+        for specimen in specimens_with_tag:
+            if instance.entry in specimen.tags:
+                specimen.tags.remove(instance.entry)
+                specimen.save(update_fields=['tags'])
 
 class PublicSiteContent(Model):
     title = SlugField(max_length=30, unique=True)

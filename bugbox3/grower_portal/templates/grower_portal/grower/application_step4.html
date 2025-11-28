@@ -1,0 +1,448 @@
+{% extends "base.html" %}
+{% load render_bundle from webpack_loader %}
+{% load static %}
+
+{% block title %}Step 4: Transect Measurements{% endblock %}
+
+{% block customheadtagcontent %}
+{% render_bundle 'grower_application_step4' 'css' %}
+{% render_bundle 'grower_application_step4' 'js' %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+  <div class="row">
+    <div class="col-12">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="{% url 'grower_portal:dashboard' %}">Dashboard</a></li>
+          <li class="breadcrumb-item"><a href="{% url 'grower_portal:application_step1' application.id %}">{{ application.submission_code }}</a></li>
+          <li class="breadcrumb-item active">Step 4</li>
+        </ol>
+      </nav>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-12">
+      <div class="progress mb-4">
+        {% if application.field.field_type == 'range' %}
+          <div class="progress-bar progress-width-66-67" role="progressbar">Step 4 of 6</div>
+        {% else %}
+          <div class="progress-bar progress-width-80" role="progressbar">Step 4 of 5</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-9">
+      <div class="card">
+        <div class="card-header bg-primary text-white">
+          <h3 class="mb-0">Step 4: Transect Field Measurements</h3>
+          <p class="text-white-50 mb-0">Complete all measurement sections for each transect.</p>
+        </div>
+        <div class="card-body">
+          <div class="d-flex justify-content-start mb-3">
+            <a href="{% url 'grower_portal:application_step3' application.id %}" class="btn btn-secondary">
+              <i class="fas fa-arrow-left"></i> Previous
+            </a>
+          </div>
+
+          {% if messages %}
+            {% for message in messages %}
+              <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+              </div>
+            {% endfor %}
+          {% endif %}
+
+          <form method="post" id="measurements-form">
+            {% csrf_token %}
+
+            {% for data in transect_data %}
+              <div class="transect-section mb-5">
+                <div class="card measurement-card">
+                  <div class="card-header bg-light">
+                    <h4 class="mb-0">
+                      Transect {{ data.measurement.transect_index }}
+                      {% if data.measurement.transect_code %}<span class="text-muted">— {{ data.measurement.transect_code }}</span>{% endif %}
+                    </h4>
+                  </div>
+                  <div class="card-body">
+
+                    <div class="measurement-section">
+                      <h5 class="text-primary border-bottom pb-2">General Conditions</h5>
+                      {% if data.general_form.errors %}
+                        <div class="alert alert-danger">
+                          <strong>Please correct the errors below:</strong>
+                          {{ data.general_form.errors }}
+                        </div>
+                      {% endif %}
+                      <div class="row g-3">
+                        <div class="col-md-3">
+                          <label class="form-label fw-bold">Time</label>
+                          {{ data.general_form.general_time }}
+                          {% if data.general_form.general_time.errors %}
+                            <div class="text-danger small">{{ data.general_form.general_time.errors }}</div>
+                          {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                          <label class="form-label fw-bold">Temperature (°C)</label>
+                          {{ data.general_form.temperature_c }}
+                          {% if data.general_form.temperature_c.errors %}
+                            <div class="text-danger small">{{ data.general_form.temperature_c.errors }}</div>
+                          {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                          <label class="form-label fw-bold">Wind Speed (m/s)</label>
+                          {{ data.general_form.wind_speed_ms }}
+                          {% if data.general_form.wind_speed_ms.errors %}
+                            <div class="text-danger small">{{ data.general_form.wind_speed_ms.errors }}</div>
+                          {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                          <label class="form-label fw-bold">Field Condition</label>
+                          {{ data.general_form.field_condition }}
+                          {% if data.general_form.field_condition.errors %}
+                            <div class="text-danger small">{{ data.general_form.field_condition.errors }}</div>
+                          {% endif %}
+                        </div>
+                      </div>
+                    </div>
+
+                    {% if application.field.field_type == 'range' or application.field.field_type == 'orchard' or application.field.field_type == 'crop' and application.field.crop_type == 'hayfield' %}
+                    <div class="measurement-section">
+                      <h5 class="text-primary border-bottom pb-2">Plant Biomass Drop Plate (every 2m, 0–48m)</h5>
+                      {% if data.dropplate_formset.non_form_errors %}
+                        <div class="alert alert-danger">
+                          <strong>Form errors:</strong> {{ data.dropplate_formset.non_form_errors }}
+                        </div>
+                      {% endif %}
+                      {{ data.dropplate_formset.management_form }}
+                      <div class="grid-container">
+                        {% for form in data.dropplate_formset %}
+                          <div>
+                            <label class="form-label fw-bold small">{{ form.instance.distance_m }}m</label>
+                            {{ form.value }}
+                            {% if form.value.errors %}
+                              <div class="text-danger small">{{ form.value.errors }}</div>
+                            {% endif %}
+                            {{ form.distance_m.as_hidden }}
+                            {{ form.id }}
+                          </div>
+                        {% endfor %}
+                      </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="measurement-section">
+                      <h5 class="text-primary border-bottom pb-2">Vegetation Cover</h5>
+                      {% if data.vegetation_formset.non_form_errors %}
+                        <div class="alert alert-danger">
+                          <strong>Form errors:</strong> {{ data.vegetation_formset.non_form_errors }}
+                        </div>
+                      {% endif %}
+                      {{ data.vegetation_formset.management_form }}
+                      
+                      <h6 class="mt-3">Green Cover (%)</h6>
+                      <div class="row g-3">
+                        {% for form in data.vegetation_formset %}
+                          {% if form.instance.metric == 'green_cover' %}
+                            <div class="col-md-4">
+                              <label class="form-label fw-bold">{{ form.instance.position_m }}m</label>
+                              {{ form.value }}
+                              {% if form.value.errors %}
+                                <div class="text-danger small">{{ form.value.errors }}</div>
+                              {% endif %}
+                              {{ form.metric.as_hidden }}
+                              {{ form.position_m.as_hidden }}
+                              {{ form.id }}
+                            </div>
+                          {% endif %}
+                        {% endfor %}
+                      </div>
+
+                      <h6 class="mt-3">Total Groundcover (%)</h6>
+                      <div class="row g-3">
+                        {% for form in data.vegetation_formset %}
+                          {% if form.instance.metric == 'total_groundcover' %}
+                            <div class="col-md-4">
+                              <label class="form-label fw-bold">{{ form.instance.position_m }}m</label>
+                              {{ form.value }}
+                              {% if form.value.errors %}
+                                <div class="text-danger small">{{ form.value.errors }}</div>
+                              {% endif %}
+                              {{ form.metric.as_hidden }}
+                              {{ form.position_m.as_hidden }}
+                              {{ form.id }}
+                            </div>
+                          {% endif %}
+                        {% endfor %}
+                      </div>
+
+                      <h6 class="mt-3">Plant Species Richness WITHOUT Crops</h6>
+                      <div class="row g-3">
+                        {% for form in data.vegetation_formset %}
+                          {% if form.instance.metric == 'plant_richness_no_crop' %}
+                            <div class="col-md-4">
+                              <label class="form-label fw-bold">{{ form.instance.position_m }}m</label>
+                              {{ form.value }}
+                              {% if form.value.errors %}
+                                <div class="text-danger small">{{ form.value.errors }}</div>
+                              {% endif %}
+                              {{ form.metric.as_hidden }}
+                              {{ form.position_m.as_hidden }}
+                              {{ form.id }}
+                            </div>
+                          {% endif %}
+                        {% endfor %}
+                      </div>
+
+                      <h6 class="mt-3">Plant Species Richness WITH Crops</h6>
+                      <div class="row g-3">
+                        {% for form in data.vegetation_formset %}
+                          {% if form.instance.metric == 'plant_richness_with_crop' %}
+                            <div class="col-md-4">
+                              <label class="form-label fw-bold">{{ form.instance.position_m }}m</label>
+                              {{ form.value }}
+                              {% if form.value.errors %}
+                                <div class="text-danger small">{{ form.value.errors }}</div>
+                              {% endif %}
+                              {{ form.metric.as_hidden }}
+                              {{ form.position_m.as_hidden }}
+                              {{ form.id }}
+                            </div>
+                          {% endif %}
+                        {% endfor %}
+                      </div>
+                    </div>
+
+                    <div class="measurement-section">
+                      <h5 class="text-primary border-bottom pb-2">Soil Measurements</h5>
+                      {% if data.soil_formset.non_form_errors %}
+                        <div class="alert alert-danger">
+                          <strong>Form errors:</strong> {{ data.soil_formset.non_form_errors }}
+                        </div>
+                      {% endif %}
+                      {{ data.soil_formset.management_form }}
+                      
+                      <h6 class="mt-3">Soil Moisture (%)</h6>
+                      <div class="row g-3">
+                        {% for form in data.soil_formset %}
+                          {% if form.instance.metric == 'moisture_pct' %}
+                            <div class="col-md-4">
+                              <label class="form-label fw-bold">{{ form.instance.position_m }}m</label>
+                              {{ form.value }}
+                              {% if form.value.errors %}
+                                <div class="text-danger small">{{ form.value.errors }}</div>
+                              {% endif %}
+                              {{ form.metric.as_hidden }}
+                              {{ form.position_m.as_hidden }}
+                              {{ form.id }}
+                            </div>
+                          {% endif %}
+                        {% endfor %}
+                      </div>
+
+                      <h6 class="mt-3">Soil Temperature (°C)</h6>
+                      <div class="row g-3">
+                        {% for form in data.soil_formset %}
+                          {% if form.instance.metric == 'temp_c' %}
+                            <div class="col-md-4">
+                              <label class="form-label fw-bold">{{ form.instance.position_m }}m</label>
+                              {{ form.value }}
+                              {% if form.value.errors %}
+                                <div class="text-danger small">{{ form.value.errors }}</div>
+                              {% endif %}
+                              {{ form.metric.as_hidden }}
+                              {{ form.position_m.as_hidden }}
+                              {{ form.id }}
+                            </div>
+                          {% endif %}
+                        {% endfor %}
+                      </div>
+                    </div>
+
+                    <div class="measurement-section">
+                      <h5 class="text-primary border-bottom pb-2">Soil Compaction (0=Green, 1=Yellow, 2=Red)</h5>
+                      {% if data.compaction_formset.non_form_errors %}
+                        <div class="alert alert-danger">
+                          <strong>Form errors:</strong> {{ data.compaction_formset.non_form_errors }}
+                        </div>
+                      {% endif %}
+                      {{ data.compaction_formset.management_form }}
+                      
+                      <div class="row g-3">
+                        {% for form in data.compaction_formset %}
+                          <div class="col-md-4">
+                            <div class="card bg-light">
+                              <div class="card-body">
+                                <h6 class="card-title">{{ form.instance.position_m }}m</h6>
+                                <div class="mb-2">
+                                  <label class="form-label fw-bold small">Max</label>
+                                  {{ form.max_value }}
+                                  {% if form.max_value.errors %}
+                                    <div class="text-danger small">{{ form.max_value.errors }}</div>
+                                  {% endif %}
+                                </div>
+                                <div class="mb-2">
+                                  <label class="form-label fw-bold small">Score</label>
+                                  {{ form.score }}
+                                  {% if form.score.errors %}
+                                    <div class="text-danger small">{{ form.score.errors }}</div>
+                                  {% endif %}
+                                </div>
+                                <div class="mb-2">
+                                  <label class="form-label fw-bold small">Hp</label>
+                                  {{ form.hp }}
+                                  {% if form.hp.errors %}
+                                    <div class="text-danger small">{{ form.hp.errors }}</div>
+                                  {% endif %}
+                                </div>
+                                {{ form.position_m.as_hidden }}
+                                {{ form.id }}
+                              </div>
+                            </div>
+                          </div>
+                        {% endfor %}
+                      </div>
+                    </div>
+
+                    <div class="measurement-section">
+                      <h5 class="text-primary border-bottom pb-2">Water Infiltrometer (mL)</h5>
+                      {% if data.infiltrometer_formset.non_form_errors %}
+                        <div class="alert alert-danger">
+                          <strong>Form errors:</strong> {{ data.infiltrometer_formset.non_form_errors }}
+                        </div>
+                      {% endif %}
+                      {{ data.infiltrometer_formset.management_form }}
+                      
+                      <div class="grid-container">
+                        {% for form in data.infiltrometer_formset %}
+                          <div>
+                            <label class="form-label fw-bold small">{{ form.instance.time_mark }}</label>
+                            {{ form.volume_ml }}
+                            {% if form.volume_ml.errors %}
+                              <div class="text-danger small">{{ form.volume_ml.errors }}</div>
+                            {% endif %}
+                            {{ form.time_mark.as_hidden }}
+                            {{ form.id }}
+                          </div>
+                        {% endfor %}
+                      </div>
+                    </div>
+
+                    <div class="measurement-section">
+                      <h5 class="text-primary border-bottom pb-2">Water Infiltration Ring</h5>
+                      {% if data.ring_formset.non_form_errors %}
+                        <div class="alert alert-danger">
+                          <strong>Form errors:</strong> {{ data.ring_formset.non_form_errors }}
+                        </div>
+                      {% endif %}
+                      {{ data.ring_formset.management_form }}
+                      
+                      {% for form in data.ring_formset %}
+                        <div class="card bg-light mb-3">
+                          <div class="card-body">
+                            <h6 class="card-title">Pour #{{ form.instance.pour_number }}</h6>
+                            <div class="row g-3">
+                              <div class="col-md-6">
+                                <label class="form-label fw-bold">Start Depth (cm)</label>
+                                {{ form.start_depth_cm }}
+                                {% if form.start_depth_cm.errors %}
+                                  <div class="text-danger small">{{ form.start_depth_cm.errors }}</div>
+                                {% endif %}
+                              </div>
+                              <div class="col-md-6">
+                                <label class="form-label fw-bold">Infiltration Time (sec)</label>
+                                {{ form.infiltration_time_sec }}
+                                {% if form.infiltration_time_sec.errors %}
+                                  <div class="text-danger small">{{ form.infiltration_time_sec.errors }}</div>
+                                {% endif %}
+                              </div>
+                              <div class="col-md-6">
+                                <label class="form-label fw-bold">Depth After 15 min (cm, if needed)</label>
+                                {{ form.depth_after_15min_cm }}
+                                {% if form.depth_after_15min_cm.errors %}
+                                  <div class="text-danger small">{{ form.depth_after_15min_cm.errors }}</div>
+                                {% endif %}
+                              </div>
+                              <div class="col-md-6">
+                                <label class="form-label fw-bold">Change in Depth (cm)</label>
+                                {{ form.change_in_depth_cm }}
+                                {% if form.change_in_depth_cm.errors %}
+                                  <div class="text-danger small">{{ form.change_in_depth_cm.errors }}</div>
+                                {% endif %}
+                              </div>
+                            </div>
+                            {{ form.pour_number.as_hidden }}
+                            {{ form.id }}
+                          </div>
+                        </div>
+                      {% endfor %}
+                    </div>
+
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+
+            <div class="d-flex justify-content-end mt-4">
+              <button type="submit" class="btn btn-primary btn-lg">
+                Next: {% if application.field.field_type == 'range' %}Grazing Events{% else %}Review & Submit{% endif %} 
+                <i class="fas fa-arrow-right"></i>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-3">
+      <div class="card transect-nav">
+        <div class="card-header bg-secondary text-white">
+          <h5 class="mb-0">Progress</h5>
+        </div>
+        <div class="card-body">
+          <ul class="list-group">
+            <li class="list-group-item text-success">
+              <i class="fas fa-check-circle"></i> Step 1: Field Information
+            </li>
+            <li class="list-group-item text-success">
+              <i class="fas fa-check-circle"></i> Step 2: Management Practices
+            </li>
+            <li class="list-group-item text-success">
+              <i class="fas fa-check-circle"></i> Step 3: Transect Codes
+            </li>
+            <li class="list-group-item active">
+              <i class="fas fa-circle"></i> Step 4: Transect Measurements
+            </li>
+            {% if application.field.field_type == 'range' %}
+              <li class="list-group-item">Step 5: Grazing Events</li>
+              <li class="list-group-item">Step 6: Review & Submit</li>
+            {% else %}
+              <li class="list-group-item">Step 5: Review & Submit</li>
+            {% endif %}
+          </ul>
+
+          <div class="mt-3">
+            <h6>Transects:</h6>
+            <ul class="list-unstyled">
+              {% for data in transect_data %}
+                <li>
+                  <a href="#transect-{{ data.measurement.transect_index }}" class="text-decoration-none">
+                    Transect {{ data.measurement.transect_index }}
+                    {% if data.measurement.transect_code %}<small class="text-muted">({{ data.measurement.transect_code }})</small>{% endif %}
+                  </a>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

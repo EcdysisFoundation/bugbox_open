@@ -46,6 +46,10 @@ LOCALE_PATHS = [str(BASE_DIR / "locale")]
 # Torchserve is down
 AI_INFERENCE_URL = 'http://10.147.19.124:8070/'
 
+# GOOGLE MAPS
+# ------------------------------------------------------------------------------
+GOOGLE_MAPS_API_KEY = env("GOOGLE_MAPS_API_KEY")
+
 # DATABASES
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#databases
@@ -94,7 +98,8 @@ LOCAL_APPS = [
     "bugbox3.users",
     "bugbox3.core",
     "bugbox3.samples",
-    "bugbox3.taxonomy"
+    "bugbox3.taxonomy",
+    "bugbox3.grower_portal"
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -150,6 +155,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "allauth.account.middleware.AccountMiddleware",
     "bugbox3.core.eula_middleware.EULAMiddleware",
+    "bugbox3.grower_portal.middleware.TimezoneDetectionMiddleware",
 ]
 
 REST_FRAMEWORK = {
@@ -200,6 +206,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "bugbox3.users.context_processors.allauth_settings",
                 "bugbox3.core.context_processors.global_settings",
+                "bugbox3.grower_portal.context_processors.grower_portal_constants",
             ],
         },
     }

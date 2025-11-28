@@ -3,6 +3,7 @@
 
 // custom
 @import 'forms';
+@import 'grower_portal';
 
 // datatables scss
 @import 'select.bootstrap5';
@@ -164,4 +165,20 @@ tr.details td.details-control {
 .dropdown-menu a:hover {
   background-color: #f1f1f1;
   color: #000;
+}
+
+// Grower Portal Nav bar
+
+.grower-portal-navbar {
+  background-color: #0d6efd;
+  background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+}
+
+.grower-portal-navbar a {
+  color: #b8d4ff;
+}
+
+.grower-portal-navbar > a:hover,
+.grower-portal-navbar > .dropdown-hover > a:hover {
+  color: #ffffff;
 }

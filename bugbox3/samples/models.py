@@ -367,6 +367,10 @@ class SpecimenImage(Model):
     image_notfound = BooleanField(default=False)
     date_added = DateTimeField(auto_now_add=True)
     uploaded_by_user = ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=SET_NULL)
+    image_width = PositiveIntegerField(null=True, blank=True)
+    image_height = PositiveIntegerField(null=True, blank=True)
+    image_thumbnail_large_width = PositiveIntegerField(null=True, blank=True)
+    image_thumbnail_large_height = PositiveIntegerField(null=True, blank=True)
     # object_det fields based on image_thumbnail_large
     object_det_sent = DateTimeField(null=True)
     object_det_label = JSONField(null=True, blank=True)
