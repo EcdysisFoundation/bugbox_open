@@ -1,0 +1,310 @@
+{% extends "base.html" %}
+
+{% load render_bundle from webpack_loader %}
+
+{% block title %}
+    Specimen
+{% endblock title %}
+
+{% block customheadtagcontent %}
+{% render_bundle 'demo' 'css' %}
+{% render_bundle 'demo' 'js' attrs='defer' %}
+{{ json_context|safe }}
+{% endblock customheadtagcontent %}
+
+{% block content %}
+
+  <div class="modal fade" id="setPrimaryModal" tabindex="-1" aria-labelledby="setPrimaryModal" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="setPrimaryModal">Select primary image</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> This is a demo. Image changes are not saved.
+          </div>
+          <div class="row">
+              {% for i in image_set_small %}
+              <div class="col-lg-6">
+                <label class="option">
+                  <span class="option-control">
+                    <span class="radio">
+                      <input type="radio" name="primary_picker" id="primary_picker" value="{{i.id}}" />
+                    </span>
+                  </span>
+                  <span class="option-label">
+                    <span class="option-body">
+                      <img src="{{i.path}}" class="mw-100" />
+                    </span>
+                  </span>
+                </label>
+              </div>
+              {% endfor %}
+            </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary mt-4 ms-3" id="submit-primary-btn">Submit (Demo)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModal" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="deleteModal">Delete an image</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> This is a demo. Image deletion is not saved.
+          </div>
+          <div class="row">
+              {% for i in image_set_small %}
+              <div class="col-lg-6">
+                <label class="option">
+                  <span class="option-control">
+                    <span class="radio">
+                      <input type="radio" name="delete_picker" id="delete_picker" value="{{i.id}}" />
+                    </span>
+                  </span>
+                  <span class="option-label">
+                    <span class="option-body">
+                      <img src="{{i.path}}" class="mw-100" />
+                    </span>
+                  </span>
+                </label>
+              </div>
+              {% endfor %}
+            </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-danger mt-4 ms-3" id="delete-image-btn">Delete (Demo)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- #confirmRejectModal -->
+  <div class="modal fade" id="confirmRejectModal" tabindex="-1" aria-labelledby="confirmRejectModal" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="confirmRejectModal">Confirm or Reject AI Prediction</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> This is a demo. Acceptance changes are not saved to the database.
+          </div>
+          <div class="row">
+            <div class="col">
+            {% for i in acceptance_choices %}
+
+                <label class="option">
+                  <span class="option-control">
+                    <span class="radio">
+                      <input type="radio" name="determin_picker" id="determin_picker" value="{{ i.0 }}" {% if specimen.acceptance == i.0 %}checked{% endif %} />
+                    </span>
+                  </span>
+                  <span class="option-label">
+
+                    <span class="option-body">
+                      {{ i.1 }}
+                    </span>
+                  </span>
+                </label>
+                <br/>
+
+              {% endfor %}
+            </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary mt-4 ms-3" id="submit-determination-btn">Submit determination (Demo)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+<div class="container">
+
+    <div class="row">
+        <div class="col-12 mb-3 mt-2 p-0">
+            <div class="card">
+                <div class="card-header align-items-center bg-ecdysis text-white d-flex justify-content-between">
+                    <div class="col-md-8">
+                      <h5>
+                        <a href="{% url 'samples:demo-experiment' specimen.sample.site_visit.site.experiment.id %}" class="link-light">
+                            {{ specimen.sample.site_visit.site.experiment }}</a> -
+                        Site: <a href="{% url 'samples:demo-site' specimen.sample.site_visit.site.id %}" class="link-light">
+                            {{ specimen.sample.site_visit.site.site_name }}</a> -
+                        {{ specimen.sample.site_visit.visit_date }}
+                        Sample: <a href="{% url 'samples:demo-sample' specimen.sample.id %}" class="link-light">
+                            {{ specimen.sample.name_no }}</a>
+                        ({{ specimen.sample.sample_type }})
+                    </h5>
+                    </div>
+                    <div class="col">
+                        <button type="button" class="btn btn-light" id="edit-specimen-btn">
+                            Edit Specimen
+                        </button>
+                    </div>
+                    <div class="col">
+                        <button type="button" class="btn btn-danger" id="delete-specimen-btn">
+                          Delete Specimen
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-md-5">
+                        <ul class="list-group list-group-flush">
+                          <li class="list-group-item">
+                              <b>Name:</b>
+                              {% if selected_classification.id %}
+                                <a href="{% url 'taxonomy:morphospecies-detail' selected_classification.id %}">{{ selected_classification.name }}</a>
+                              {% else %}
+                                {{ selected_classification.name }}
+                              {% endif %}
+                          </li>
+                          <li class="list-group-item">
+                            <b>Canonical Name:</b> {% if selected_classification.gbif_rank == 'SPECIES' %}<i>{% endif %}
+                            {{ selected_classification.gbif_canonical_name }}
+                            {% if selected_classification.gbif_rank == 'SPECIES' %}</i>{% endif %}
+                        </li>
+                          <li class="list-group-item"><b>Class:</b> {{ selected_classification.gbif_class }}</li>
+                          <li class="list-group-item"><b>Order:</b> {{ selected_classification.gbif_order }}</li>
+                          <li class="list-group-item"><b>Family:</b> {{ selected_classification.gbif_family }}</li>
+                          <li class="list-group-item"><b>Genus:</b> <i>{{ selected_classification.gbif_genus }}</i></li>
+                          <li class="list-group-item"><b>Species:</b> <i>{{ selected_classification.gbif_species }}</i></li>
+                          <li class="list-group-item"><b>Determined by:</b>
+                              {% if specimen.reviewer_user %}
+                                {{ specimen.reviewer_user }}
+                              {% elif specimen.ai_classification and not specimen.classification %}
+                                BugBox
+                              {% endif %}
+                          </li>
+                          <hr/>
+                          <li class="list-group-item">AI Prediction
+                            {% if acceptance != '' %}
+                            <button type="button" class="btn btn-sm ms-3
+                              {% if specimen.acceptance == 0 %}
+                                btn-info
+                              {% elif specimen.acceptance == 1 %}
+                                btn-success
+                              {% elif specimen.acceptance == 2 %}
+                                btn-warning
+                              {% endif %}
+                            "
+                            {% if ai_classification.name %}
+                            data-bs-toggle="modal" data-bs-target="#confirmRejectModal" id="aiPredictionBtn"
+                            {% else %}
+                              disabled
+                            {% endif %}
+                            >
+                              {{ acceptance }}</button>
+                            {% endif %}
+
+                          </li>
+                          <li class="list-group-item">
+                              <b>AI Model Used:</b>
+                              {% if specimen.ai_model_name %}
+                                  MorphoMF v{{ specimen.ai_model_name }}
+                              {% else %}
+                                  Unknown Model
+                              {% endif %}
+                          </li>
+                          <li class="list-group-item"><b>Primary prediction:</b> {{ ai_classification.name }}</li>
+                          <li class="list-group-item">{{ probability|safe }}</li>
+                          <li class="list-group-item"><b>Secondary prediction:</b> {{ specimen.optional_pred_one.class_op }} </li>
+                          <li class="list-group-item"><b>Tertiary prediction:</b> {{ specimen.optional_pred_two.class_op }}</li>
+                          <hr/>
+                          <li class="list-group-item"><b>Partial count:</b> {{ specimen.partial_count }}</li>
+                          <li class="list-group-item"><b>Tags:</b>
+                            {% for t in specimen.tags %}
+                            <span class="badge rounded-pill text-bg-primary">{{t}}</span>
+                            {% endfor %}
+                          </li>
+                          {% if specimen.archival_identifier %}
+                              <hr/>
+                              <li class="list-group-item">Collection information:</li>
+                              <li class="list-group-item"><b>Archival identifier:</b> {{ specimen.archival_identifier }}</li>
+                              <li class="list-group-item"><b>Archival preservation:</b> {{ specimen.archival_preservation }}</li>
+                              <li class="list-group-item"><b>Archival stored:</b> {{ specimen.archival_stored }}</li>
+                          {% endif %}
+                          {% if specimen.object_det_train %}
+                            <li class="list-group-item">* Selected for object detection model training</li>
+                          {% endif %}
+                      </ul>
+                    </div>
+
+                    <div class="col-md-7">
+                      {% if image_set_large %}
+                        <div id="carouselControls" class="carousel slide" data-bs-ride="carousel">
+                            <div class="carousel-inner">
+                                {% for i in image_set_large %}
+                                    <div class="carousel-item{% if forloop.first %} active{% endif %}" data-bs-interval="1000000">
+                                        <img src="{{ i.path }}" class="d-block w-100" alt="insect">
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            <button class="carousel-control-prev" type="button" data-bs-target="#carouselControls" data-bs-slide="prev">
+                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Previous</span>
+                            </button>
+                            <button class="carousel-control-next" type="button" data-bs-target="#carouselControls" data-bs-slide="next">
+                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Next</span>
+                            </button>
+                        </div>
+
+                        <hr/>
+                        {% for i in image_set_small %}
+                            <img src="{{i.path}}" width="{{ i.width }}" height="{{ i.height }}" class="mb-2">
+                        {% endfor %}
+                        {% elif single_image %}
+                          <img src="{{single_image.path}}" width="{{ single_image.width }}" height="{{ single_image.height }}" class="mb-2">
+                        {% endif %}
+
+                        <form enctype="multipart/form-data" action="#" method="POST" id="upload-images-form">
+                            {% csrf_token %}
+                            <label for="image_files" class="form-label">
+                                Add Specimen Images
+                            </label>
+                            <input type="file" name="image_files" accept=".jpg, .png, .jpeg" class="form-control" multiple id="image_files">
+                            <input type="submit" value="Submit (Demo)" class="btn btn-secondary mt-2 ms-3">
+                        </form>
+
+                        {% if image_set_small %}
+                            <button type="button" class="btn btn-info mt-3 mb-5" data-bs-toggle="modal" data-bs-target="#setPrimaryModal">
+                                Set Primary Image
+                            </button>
+                            <button type="button" class="btn btn-warning mt-3 mb-5" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                                Delete Image
+                            </button>
+                        {% endif %}
+                    </div>
+                  </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+      <div class="col">
+        <section id="timeline-section"></section>
+      </div>
+    </div>
+
+</div>
+
+{% endblock %}

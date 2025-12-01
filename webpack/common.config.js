@@ -24,6 +24,7 @@ module.exports = {
     stitcher: path.resolve(__dirname, '../bugbox3/static/js/stitcher'),
     stitcher_form: path.resolve(__dirname, '../bugbox3/static/js/stitcher_form'),
     site_form: path.resolve(__dirname, '../bugbox3/static/js/site_form'),
+    demo: path.resolve(__dirname, '../bugbox3/static/js/demo'),
     // Grower Portal app
     grower_application_create: path.resolve(__dirname, '../bugbox3/static/js/grower_portal/application_create'),
     grower_application_step2: path.resolve(__dirname, '../bugbox3/static/js/grower_portal/application_step2'),
