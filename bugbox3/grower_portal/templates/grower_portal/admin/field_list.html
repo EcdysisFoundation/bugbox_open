@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+{% load crispy_forms_tags %}
+{% load timezone_filters %}
+
+{% block title %}Fields List{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Fields</h1>
+                <a href="{% url 'grower_portal:admin_dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    {% crispy form %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">All Fields ({{ fields.paginator.count }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if fields %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Field Name</th>
+                                        <th>Farm</th>
+                                        <th>Type</th>
+                                        <th>Grower</th>
+                                        <th>Created Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for field in fields %}
+                                    <tr>
+                                        <td>{{ field.field_name }}</td>
+                                        <td>{{ field.farm.name }}</td>
+                                        <td>{{ field.get_field_type_display }}</td>
+                                        <td>{{ field.farm.grower.name }}</td>
+                                        <td>{{ field.created_at|user_date_short:request.user_timezone }}</td>
+                                        <td>
+                                            <a href="{% url 'grower_portal:admin_field_detail' field.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {% if fields.has_other_pages %}
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination justify-content-center">
+                                {% if fields.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ fields.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Previous</a>
+                                    </li>
+                                {% endif %}
+                                
+                                <li class="page-item disabled">
+                                    <span class="page-link">Page {{ fields.number }} of {{ fields.paginator.num_pages }}</span>
+                                </li>
+                                
+                                {% if fields.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ fields.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Next</a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+                    {% else %}
+                        <p class="text-muted text-center py-4">No fields found.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+

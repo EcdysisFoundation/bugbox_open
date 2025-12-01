@@ -62,6 +62,29 @@
             </div>
             <div class="accordion-item">
               <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseOneMorpho" aria-expanded="false" aria-controls="flush-collapseOneMorpho">
+                 <p><b>Tags</b> (<i>Morphospecies</i>)</p>
+                </button>
+              </h2>
+              <div id="flush-collapseOneMorpho" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample">
+                <div class="accordion-body">
+
+                    <ul class="list-group">
+                        {% for v in morpho_tags %}
+                            <a href="{% url 'core:lookup-choices-update' v.2 %}" class="list-group-item list-group-item-action">
+                                {% if v.0|lower == v.1|lower %} {{ v.1 }} {% else %} {{ v.0 }} | {{ v.1 }} {% endif %}
+                            </a>
+                        {% endfor %}
+                        <a href="{% url 'core:lookup-choices-create' 'morpho_tags' selected_org_id %}" class="list-group-item list-group-item-action">
+                            <i class="bi bi-plus-square"></i>
+                        </a>
+                    </ul>
+
+                </div>
+              </div>
+            </div>
+            <div class="accordion-item">
+              <h2 class="accordion-header">
                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseTwo" aria-expanded="false" aria-controls="flush-collapseTwo">
                     <p><b>Habitat Type</b> (<i>Site</i>)</p>
                 </button>

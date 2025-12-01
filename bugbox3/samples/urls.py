@@ -16,6 +16,17 @@ from .views_dtables import (CollectionDatatablesViewSet,
                             SamplesDatatablesViewSet, SitesDatatablesViewSet,
                             SpecimenDatatablesViewSet,
                             SpecimensAllDatatablesViewSet)
+from .views_dtables_demo import (
+    DemoExperimentsDatatablesViewSet,
+    DemoSitesDatatablesViewSet,
+    DemoSpecimenDatatablesViewSet,
+)
+from .views_demo import (
+    DemoExperimentsView, DemoExperimentView,
+    DemoSiteView, DemoSampleView, DemoSpecimenView,
+    DemoExperimentCreateView, DemoSiteCreateView,
+    DemoSampleUpdateView, DemoSpecimenCreateView, DemoSpecimensWithoutImagesFormView,
+)
 from .views_drf import MultiSpecimenViewSet
 from .views_public import CollectionDownloadView, CollectionView
 from . import views
@@ -39,6 +50,13 @@ router.register(r'collections-data/(?P<org_id>[^/]+)', CollectionDatatablesViewS
                 basename='collection-data')
 router.register(r'multispecimens/(?P<sample_id>[^/]+)', MultiSpecimenViewSet,
                 basename='multispecimen')
+# Demo Dtables (no auth required)
+router.register(r'demo-experiments-data', DemoExperimentsDatatablesViewSet,
+                basename='demo-experiment-data')
+router.register(r'demo-sites-data/(?P<experiment_id>[^/]+)', DemoSitesDatatablesViewSet,
+                basename='demo-site-data')
+router.register(r'demo-specimens-data/(?P<sample_id>[^/]+)', DemoSpecimenDatatablesViewSet,
+                basename='demo-specimen-data')
 
 app_name = "samples"
 urlpatterns = [
@@ -72,4 +90,15 @@ urlpatterns = [
      path('export-by-location/', views.export_by_location_csv, name='export-by-location'),
      path('export-by-location-progress/<int:experiment_id>/', views.export_by_location_progress, name='export-by-location-progress'),
      path('ajax/get-region/', get_region_by_coordinates, name='get-region'),
+     # Demo public routes
+     path('demo/experiments/', DemoExperimentsView.as_view(), name='demo-experiments'),
+     path('demo/experiment/create/', DemoExperimentCreateView.as_view(), name='demo-experiment-create'),
+     path('demo/experiment/<int:experiment_id>/', DemoExperimentView.as_view(), name='demo-experiment'),
+     path('demo/site/create/<int:experiment_id>/', DemoSiteCreateView.as_view(), name='demo-site-create'),
+     path('demo/site/<int:site_id>/', DemoSiteView.as_view(), name='demo-site'),
+     path('demo/sample/<int:sample_id>/', DemoSampleView.as_view(), name='demo-sample'),
+     path('demo/sample-update/<int:sample_id>/', DemoSampleUpdateView.as_view(), name='demo-sample-update'),
+     path('demo/specimen-create/<int:sample_id>/', DemoSpecimenCreateView.as_view(), name='demo-specimen-create'),
+     path('demo/specimens-wo-img/<int:sample_id>/', DemoSpecimensWithoutImagesFormView.as_view(), name='demo-specimens-wo-img'),
+     path('demo/specimen/<int:id>/', DemoSpecimenView.as_view(), name='demo-specimen'),
 ]

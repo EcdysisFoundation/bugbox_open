@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+{% load crispy_forms_tags %}
+{% load timezone_filters %}
+
+{% block title %}Farms List{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Farms</h1>
+                <a href="{% url 'grower_portal:admin_dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    {% crispy form %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">All Farms ({{ farms.paginator.count }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if farms %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Farm Name</th>
+                                        <th>Grower</th>
+                                        <th>Number of Fields</th>
+                                        <th>Created Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for farm in farms %}
+                                    <tr>
+                                        <td>{{ farm.name }}</td>
+                                        <td>{{ farm.grower.name }}</td>
+                                        <td>{{ farm.field_count }}</td>
+                                        <td>{{ farm.created_at|user_date_short:request.user_timezone }}</td>
+                                        <td>
+                                            <a href="{% url 'grower_portal:admin_farm_detail' farm.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {% if farms.has_other_pages %}
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination justify-content-center">
+                                {% if farms.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ farms.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Previous</a>
+                                    </li>
+                                {% endif %}
+                                
+                                <li class="page-item disabled">
+                                    <span class="page-link">Page {{ farms.number }} of {{ farms.paginator.num_pages }}</span>
+                                </li>
+                                
+                                {% if farms.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ farms.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Next</a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+                    {% else %}
+                        <p class="text-muted text-center py-4">No farms found.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+

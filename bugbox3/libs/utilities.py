@@ -173,7 +173,13 @@ def save_specimen_img_thumbs(instance):
     a = None
     b = None
     c = None
+    needs_save = False
     dims = get_image_dimensions(instance.image)
+    if dims[0] and dims[1]:
+        instance.image_width = dims[0]
+        instance.image_height = dims[1]
+        needs_save = True
+    
     if not instance.image_thumbnail and dims[0] > constants.SPECIMEN_IMAGE_THUMBSIZE:
         a = BytesIO()
         instance.image_thumbnail = resized_thumbnail(
@@ -181,6 +187,7 @@ def save_specimen_img_thumbs(instance):
             constants.SPECIMEN_IMAGE_THUMBSIZE,
             constants.SPECIMEN_IMAGE_THUMBSIZE,
             a)
+        needs_save = True
     if not instance.image_thumbnail_medium and dims[0] > constants.SPECIMEN_IMAGE_THUMBSIZE_MEDIUM:
         b = BytesIO()
         instance.image_thumbnail_medium = resized_thumbnail(
@@ -188,6 +195,7 @@ def save_specimen_img_thumbs(instance):
             constants.SPECIMEN_IMAGE_THUMBSIZE_MEDIUM,
             constants.SPECIMEN_IMAGE_THUMBSIZE_MEDIUM,
             b, 'thumbnail_medium')
+        needs_save = True
     if not instance.image_thumbnail_large and dims[0] > constants.SPECIMEN_IMAGE_THUMBSIZE_LARGE:
         c = BytesIO()
         instance.image_thumbnail_large = resized_thumbnail(
@@ -195,11 +203,22 @@ def save_specimen_img_thumbs(instance):
             constants.SPECIMEN_IMAGE_THUMBSIZE_LARGE,
             constants.SPECIMEN_IMAGE_THUMBSIZE_LARGE,
             c, 'thumbnail_large')
-    if any((a, b, c)):
+        needs_save = True
+    
+    if instance.image_thumbnail_large:
+        thumb_dims = get_image_dimensions(instance.image_thumbnail_large)
+        if thumb_dims[0] and thumb_dims[1]:
+            instance.image_thumbnail_large_width = thumb_dims[0]
+            instance.image_thumbnail_large_height = thumb_dims[1]
+            needs_save = True
+    
+    if needs_save:
         instance.save()
-        for i in (a, b, c):
-            if i:
-                i.close()
+    
+    for i in (a, b, c):
+        if i:
+            i.close()
+    
     return
 
 

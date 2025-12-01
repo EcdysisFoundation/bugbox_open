@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% load render_bundle from webpack_loader %}
+
+{% block title %}
+    Experiments
+{% endblock title %}
+
+{% block customheadtagcontent %}
+
+{% render_bundle 'demo' 'css' %}
+{% render_bundle 'demo' 'js' attrs='defer' %}
+{% render_bundle 'experiments' 'js' attrs='defer' %}
+{{ json_context|safe }}
+
+{% endblock customheadtagcontent %}
+
+{% block content %}
+
+<div class="container">
+
+    <div class="row bg-ecdysis mt-3">
+        <div class="col">
+            <div class="align-items-center bg-ecdysis text-white d-flex justify-content-between">
+                <h2 class="text-light mt-1">Experiments</h2>
+                <button id="start-tour-btn" class="btn btn-primary btn-lg" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                    <i class="bi bi-compass"></i> Take a Guided Tour
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="row bg-light pt-2 pb-2">
+        <div class="col-3">
+            <div class="create-button"></div>
+        </div>
+    </div>
+
+    <div class="row pb-2 mt-2">
+        <div class="col">
+            <table id="experiments-table" class="table table-striped table-responsive nowrap compact" width="100%">
+            <thead>
+                <tr>
+                <th>{{ container_row_header|safe }}</th>
+                </tr>
+            </thead>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+{% endblock content %}

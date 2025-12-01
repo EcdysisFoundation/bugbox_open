@@ -12,6 +12,7 @@ urlpatterns = [
     path("core/", include("bugbox3.core.urls", namespace="core")),
     path("samples/", include("bugbox3.samples.urls", namespace="samples")),
     path("taxonomy/", include("bugbox3.taxonomy.urls", namespace="taxonomy")),
+    path("grower-portal/", include("bugbox3.grower_portal.urls", namespace="grower_portal")),
     # Django Admin, use {% url 'admin:index' %}
     path(settings.ADMIN_URL, admin.site.urls),
     # User management

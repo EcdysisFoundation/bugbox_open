@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+{% load render_bundle from webpack_loader %}
+
+{% block title %}
+    Sample
+{% endblock title %}
+
+{% block customheadtagcontent %}
+
+{% render_bundle 'demo' 'css' %}
+{% render_bundle 'demo' 'js' attrs='defer' %}
+{% render_bundle 'sample_detail' 'js' attrs='defer' %}
+{{ json_context|safe }}
+
+{% endblock customheadtagcontent %}
+
+{% block content %}
+
+<div class="container">
+
+    <div class="modal fade" id="deleteSpecimensModal" tabindex="-1" aria-labelledby="deleteSpecimensModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+
+            <div class="modal-header">
+              <h5>Confirm Delete</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Demo mode - delete functionality is not available.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="moveSpecimensModal" tabindex="-1" aria-labelledby="moveSpecimensModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+
+            <div class="modal-header">
+              <h5>Move Specimens</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Demo mode - move functionality is not available.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12 mb-3 mt-2 p-0">
+            <div class="card">
+                <div class="card-header align-items-center bg-ecdysis text-white d-flex justify-content-between">
+                    <div class="col-md-6">
+                        <h5>{{ sample_info.site }} - {{ sample_info.visit_date }} - {{ sample_info.sample_type }} {{ sample_info.name_no }}</h5>
+                    </div>
+                    <div class="col-auto">
+                        <a href="{% url 'samples:demo-experiment' sample_info.experiment_id %}" class="btn btn-light">Experiment</a>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <table class="table table-sm" style="border-collapse: collapse; width: 100%;">
+                                <tbody>
+                                    <tr>
+                                        <th style="border: none;">Experiment:</th>
+                                        <td style="border: none;">{{ sample_info.experiment_name }}</td>
+                                        <th style="border: none;">Sample Type:</th>
+                                        <td style="border: none;">{{ sample_info.sample_type }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th style="border: none;">Site:</th>
+                                        <td style="border: none;">{{ sample_info.site }}</td>
+                                        <th style="border: none;">Name/No:</th>
+                                        <td style="border: none;">{{ sample_info.name_no }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th style="border: none;">Location:</th>
+                                        <td colspan="3" style="border: none;">{{ sample_info.country }}, {{ sample_info.state }}, {{ sample_info.county }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="4" style="border: none;">
+                                            <div style="border-bottom: 2px solid black; width: 43%; margin-left: auto;"></div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th style="border: none;">Date:</th>
+                                        <td style="border: none;">{{ sample_info.visit_date }}</td>
+                                        <th style="border: none;">Completed:</th>
+                                        <td style="border: none;">{{ sample_info.completed }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th style="border: none;">Habitat:</th>
+                                        <td style="border: none;">{{ sample_info.habitat }}</td>
+                                        <th style="border: none;">Entered By:</th>
+                                        <td style="border: none;">{{ sample_info.entered_by }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th style="border: none;">Treatment:</th>
+                                        <td colspan="3" style="border: none;">{{ sample_info.treatment }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="4" style="border-bottom: 2px solid black;"></td>
+                                    </tr>
+                                    <tr>
+                                        <th style="border: none;">UUID:</th>
+                                        <td colspan="3" style="border: none;">{{ sample_info.uuid }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th style="border: none;">Notes:</th>
+                                        <td colspan="3" style="border: none;">{{ sample_info.notes }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="col-md-4 text-center">
+                            <p class="card-text"><b>Sample Label:</b></p>
+                            {% if sample_info.img_thumbnail %}
+                                <img src="{{ sample_info.img_thumbnail.path }}" width="{{ sample_info.img_thumbnail.width }}" height="{{ sample_info.img_thumbnail.height }}">
+                            {% else %}
+                                <a href="{% url 'samples:demo-sample-update' sample_info.sample_id %}" class="btn btn-light">
+                                    <i class="bi bi-plus-lg"></i>
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-header align-items-center bg-ecdysis text-white d-flex justify-content-between">
+                    <div class="col-auto">
+                        <h5>Multi-Specimen Images</h5>
+                    </div>
+                    <div class="col-auto">
+                        <p class="text-white mb-0"><small>Demo mode - images view only</small></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12 mb-3 mt-2 p-0">
+            <div class="card">
+                <div class="card-header align-items-center bg-ecdysis text-white">
+                    <div class="row">
+                    <div class="col">
+                        <h5>Individual Specimens</h5>
+                        <a role="button" class="btn btn-secondary btn-sm {% if sample_info.completed %} disabled" aria-disabled="true"{% else %}"{% endif %}
+                           href="{% url 'samples:demo-specimen-create' sample_info.sample_id %}">
+                           Add 1 specimen</a>
+                           <br/>
+                           <a role="button" class="btn btn-dark btn-sm mt-1{% if sample_info.completed %} disabled" aria-disabled="true"{% else %}"{% endif %}
+                                href="{% url 'samples:demo-specimens-wo-img' sample_info.sample_id %}">
+                            Add specimens w/o images</a>
+                    </div>
+
+                    <div class="col">
+                        <div class="d-grid">
+                            <button id="uppyImagesUpload" class="btn btn-light mt-3" {% if sample_info.completed %} disabled {% endif %}>
+                                Upload images <br/>as specimens</button>
+                                </div>
+                    </div>
+                    <div class="col">
+                        <button type="button" class="btn btn-info btn-sm" id="select-all-btn" {% if sample_info.completed %}disabled{% endif %}>Toggle Select</button>
+                        <br/>
+                        <button type="button" class="btn btn-warning btn-sm mt-1" data-bs-toggle="modal" data-bs-target="#moveSpecimensModal" id="openMoveModal" {% if sample_info.completed %}disabled{% endif %}>
+                            Move Selected
+                        </button>
+                        <br/>
+                        <button type="button" class="btn btn-danger btn-sm mt-1" data-bs-toggle="modal" data-bs-target="#deleteSpecimensModal" id="openDeleteModal" {% if sample_info.completed %}disabled{% endif %}>
+                            Delete Selected
+                        </button>
+                    </div>
+
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col">
+                            <table id="specimens-table" class="table table-striped table-responsive nowrap compact" width="100%">
+                                <thead>
+                                    <tr>
+                                    <th>Select</th>
+                                    <th>{{ container_row_header|safe }}</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}
