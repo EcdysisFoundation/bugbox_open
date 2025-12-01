@@ -60,6 +60,7 @@
 
   <a href="{% url 'about' %}">About</a>
   <a href="{% url 'samples:collection' 1 %}">Collections</a>
+  <a href="{% url 'samples:demo-experiments' %}">Demo</a>
 
   {% if request.user.is_authenticated %}
     {% if ON_ECDYSIS_SERVER %}

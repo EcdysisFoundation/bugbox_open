@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% load django_bootstrap5 %}
+{% load render_bundle from webpack_loader %}
+
+{% block title %}Site{% endblock %}
+
+{% block customheadtagcontent %}
+
+{% render_bundle 'demo' 'css' %}
+{% render_bundle 'demo' 'js' attrs='defer' %}
+{{ json_context|safe }}
+
+{% endblock customheadtagcontent %}
+
+{% block content %}
+<div class="container">
+  <div class="row">
+    <div class="col-12 mb-3 mt-2 p-0 bg-form">
+      <div class="card">
+        <div class="card-header align-items-center bg-ecdysis text-white d-flex justify-content-between">
+          <h5>View Site for Experiment: {{ experiment_details.experiment.name }}</h5>
+          <a href="{% url 'samples:demo-experiment' experiment_details.experiment.id %}" class="btn btn-light">
+            View Experiment
+          </a>
+        </div>
+        <div class="card-body">
+          {% crispy form %}
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-12 mb-3 mt-2 p-0 bg-form">
+      <div class="card">
+        <div class="card-header align-items-center bg-ecdysis text-white d-flex justify-content-between">
+          <h4>Sample Dates</h4>
+        </div>
+        <div class="card-body">
+          {% if experiment_details.plans %}
+            <p class="card-text">Sample plans for this experiment:<br/>
+              <ul>
+              {% for plan in experiment_details.plans %}
+              <li>{{ plan.description }}</li>
+              {% endfor %}
+              </ul>
+            </p>
+          {% endif %}
+          <div class="accordion accordion-flush" id="visitsAccordion">
+            {% for visit, visit_samples in visits_with_samples %}
+              <div class="accordion-item">
+                <h2 class="accordion-header" id="heading{{ visit.id }}">
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                          data-bs-target="#collapse{{ visit.id }}" aria-expanded="false" 
+                          aria-controls="collapse{{ visit.id }}">
+                    <strong>{{ visit.visit_date|date:"F d, Y" }}</strong>
+                    <span class="ms-2 text-muted">
+                      ({% for sample in visit_samples %}{{ sample.name_no }}{% if not forloop.last %}, {% endif %}{% endfor %})
+                    </span>
+                  </button>
+                </h2>
+                <div id="collapse{{ visit.id }}" class="accordion-collapse collapse" 
+                     aria-labelledby="heading{{ visit.id }}" data-bs-parent="#visitsAccordion">
+                  <div class="accordion-body">
+                    <div class="list-group">
+                      {% for sample in visit_samples %}
+                        <a href="{% url 'samples:demo-sample' sample.id %}" class="list-group-item list-group-item-action">
+                          <strong>{{ sample.name_no }}</strong> - {{ sample.sample_type|title }}
+                          {% if sample.completed %}
+                            <span class="badge bg-success ms-2">Completed</span>
+                          {% endif %}
+                        </a>
+                      {% endfor %}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

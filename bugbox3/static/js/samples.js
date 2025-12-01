@@ -68,40 +68,61 @@ $(function () {
     pollLocationExportProgress(json_context.experiment.id);
     }
 
-    document.querySelector('#check-all_sites').onchange = (e) => {
-        document.querySelectorAll('[name=sites]').forEach(el => {
-            el.checked = e.target.checked
-        })
+    const checkAllSites = document.querySelector('#check-all_sites');
+    if (checkAllSites) {
+        checkAllSites.onchange = (e) => {
+            document.querySelectorAll('[name=sites]').forEach(el => {
+                el.checked = e.target.checked
+            })
+        }
     }
-    document.querySelector('#check-all_sampleTypes').onchange = (e) => {
-        document.querySelectorAll('[name=sampleTypes]').forEach(el => {
-            el.checked = e.target.checked
-        })
+    const checkAllSampleTypes = document.querySelector('#check-all_sampleTypes');
+    if (checkAllSampleTypes) {
+        checkAllSampleTypes.onchange = (e) => {
+            document.querySelectorAll('[name=sampleTypes]').forEach(el => {
+                el.checked = e.target.checked
+            })
+        }
     }
-    document.querySelector('#check-all_otherExperiments').onchange = (e) => {
-        document.querySelectorAll('[name=otherExperiments]').forEach(el => {
-            el.checked = e.target.checked
-        })
+    const checkAllOtherExperiments = document.querySelector('#check-all_otherExperiments');
+    if (checkAllOtherExperiments) {
+        checkAllOtherExperiments.onchange = (e) => {
+            document.querySelectorAll('[name=otherExperiments]').forEach(el => {
+                el.checked = e.target.checked
+            })
+        }
     }
-    document.querySelector('#check-all_sites2').onchange = (e) => {
-        document.querySelectorAll('[name=sites2]').forEach(el => {
-            el.checked = e.target.checked
-        })
+    const checkAllSites2 = document.querySelector('#check-all_sites2');
+    if (checkAllSites2) {
+        checkAllSites2.onchange = (e) => {
+            document.querySelectorAll('[name=sites2]').forEach(el => {
+                el.checked = e.target.checked
+            })
+        }
     }
-    document.querySelector('#check-all_sampleTypes2').onchange = (e) => {
-        document.querySelectorAll('[name=sampleTypes2]').forEach(el => {
-            el.checked = e.target.checked
-        })
+    const checkAllSampleTypes2 = document.querySelector('#check-all_sampleTypes2');
+    if (checkAllSampleTypes2) {
+        checkAllSampleTypes2.onchange = (e) => {
+            document.querySelectorAll('[name=sampleTypes2]').forEach(el => {
+                el.checked = e.target.checked
+            })
+        }
     }
-    document.querySelector('#check-all_otherExperiments2').onchange = (e) => {
-        document.querySelectorAll('[name=otherExperiments2]').forEach(el => {
-            el.checked = e.target.checked
-        })
+    const checkAllOtherExperiments2 = document.querySelector('#check-all_otherExperiments2');
+    if (checkAllOtherExperiments2) {
+        checkAllOtherExperiments2.onchange = (e) => {
+            document.querySelectorAll('[name=otherExperiments2]').forEach(el => {
+                el.checked = e.target.checked
+            })
+        }
     }
-    document.querySelector('#check-all_indices').onchange = (e) => {
-        document.querySelectorAll('[name=indices]').forEach(el => {
-            el.checked = e.target.checked
-        })
+    const checkAllIndices = document.querySelector('#check-all_indices');
+    if (checkAllIndices) {
+        checkAllIndices.onchange = (e) => {
+            document.querySelectorAll('[name=indices]').forEach(el => {
+                el.checked = e.target.checked
+            })
+        }
     }
 
     var samples_table = $('#samples-table').DataTable({
