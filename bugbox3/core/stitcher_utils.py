@@ -2,6 +2,7 @@ import os
 from io import BytesIO
 from pathlib import Path
 from PIL import Image
+from uuid import uuid4
 
 from django.core.files import File
 from django.core.files.storage import default_storage
@@ -84,3 +85,45 @@ def crop_img_to_annotations(image, anno):
     ]
     bytes_imgs = crop_and_save_images(image, static_bboxes)
     return bytes_imgs
+
+
+def create_segmentation(
+    label, segmentation, from_name, image_height, image_width, to_name
+):
+    """
+    FROM: https://github.com/HumanSignal/label-studio-sdk/blob/master/src/label_studio_sdk/converter/imports/coco.py#L78C5-L78C24
+    Convert COCO segmentation annotation to Label Studio polygon format.
+
+    COCO segmentation format: flat array of [x1,y1,x2,y2,...] coordinates
+    Label Studio format: array of [x,y] points as percentages
+
+    Args:
+        label (txt): label for object
+        segmentation (list): Flat list of polygon coordinates [x1,y1,x2,y2,...]
+        from_name (str): Control tag name from Label Studio labeling config
+        image_height (int): Height of the source image in pixels
+        image_width (int): Width of the source image in pixels
+        to_name (str): Object name from Label Studio labeling config
+
+    Returns:
+        dict: Label Studio polygon annotation item
+    """
+    # Convert flat array [x1,y1,x2,y2,...] to array of points [[x1,y1],[x2,y2],...]
+    points = [list(x) for x in zip(*[iter(segmentation)] * 2)]
+
+    # Convert absolute coordinates to percentages
+    for i in range(len(points)):
+        points[i][0] = points[i][0] / image_width * 100.0
+        points[i][1] = points[i][1] / image_height * 100.0
+
+    item = {
+        "id": uuid4().hex[0:10],
+        "type": "polygonlabels",
+        "value": {"points": points, "polygonlabels": [label]},
+        "to_name": to_name,
+        "from_name": from_name,
+        "image_rotation": 0,
+        "original_width": image_width,
+        "original_height": image_height,
+    }
+    return item
