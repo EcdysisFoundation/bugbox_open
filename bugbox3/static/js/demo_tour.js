@@ -794,11 +794,11 @@ function convertStepToShepherd(step, stepIndex, globalStepIndex, tour, totalStep
     }
 
     if (hasNext && !step.popover.onNextClick) {
-        const isLastStep = stepIndex === totalStepsCount - 1;
+        const isLastStep = globalStepIndex === 19;
         buttons.push({
-            text: step.popover.nextBtnText || (isLastStep ? 'Complete' : 'Next'),
+            text: step.popover.nextBtnText || (isLastStep ? 'Complete Tour' : 'Next'),
             action: () => {
-                if (isLastStep) {
+                if (globalStepIndex === 19) {
                     tour.complete();
                 } else {
                     tour.next();
@@ -848,40 +848,9 @@ function createTour() {
         return null;
     }
     
-    if (!document.getElementById('shepherd-light-overlay-style')) {
-        const style = document.createElement('style');
-        style.id = 'shepherd-light-overlay-style';
-        style.textContent = `
-            .shepherd-modal-overlay-container,
-            .shepherd-modal-overlay-container.shepherd-modal-is-visible,
-            div[class*="shepherd-modal"],
-            div[class*="shepherd-overlay"] {
-                background: rgba(255, 255, 255, 0.12) !important;
-                background-color: rgba(255, 255, 255, 0.12) !important;
-                backdrop-filter: blur(15px) brightness(1.08) saturate(1.3) !important;
-                -webkit-backdrop-filter: blur(15px) brightness(1.08) saturate(1.3) !important;
-                mask-image: none !important;
-                -webkit-mask-image: none !important;
-                clip-path: none !important;
-            }
-            .shepherd-modal-overlay-container svg,
-            .shepherd-modal-overlay-container path,
-            [class*="shepherd"] svg,
-            [class*="shepherd"] path {
-                display: none !important;
-                visibility: hidden !important;
-            }
-            body.shepherd-active,
-            html.shepherd-active {
-                background: transparent !important;
-                background-color: transparent !important;
-            }
-        `;
-        document.head.appendChild(style);
-    }
 
     tourObj = new Shepherd.Tour({
-        useModalOverlay: true,
+        useModalOverlay: false,
         defaultStepOptions: {
             cancelIcon: {
                 enabled: true
@@ -909,79 +878,6 @@ function createTour() {
         }
     });
 
-    const forceLightOverlay = () => {
-        const svgMasks = document.querySelectorAll('.shepherd-modal-overlay-container svg, .shepherd-modal-overlay-container path, [class*="shepherd"] svg, [class*="shepherd"] path');
-        svgMasks.forEach(svg => {
-            if (svg.tagName === 'PATH') {
-                svg.remove();
-            } else if (svg.tagName === 'SVG') {
-                svg.querySelectorAll('path').forEach(path => path.remove());
-                if (!svg.querySelector('*:not(defs)')) {
-                    svg.remove();
-                }
-            }
-        });
-        
-        const selectors = [
-            '.shepherd-modal-overlay-container',
-            '[class*="shepherd-modal"]',
-            '[class*="shepherd-overlay"]',
-            'div[data-shepherd-modal-overlay]'
-        ];
-        
-        selectors.forEach(selector => {
-            const overlays = document.querySelectorAll(selector);
-            overlays.forEach(overlay => {
-                const svgs = overlay.querySelectorAll('svg');
-                svgs.forEach(svg => {
-                    const paths = svg.querySelectorAll('path');
-                    paths.forEach(path => path.remove());
-                    if (!svg.querySelector('*:not(defs)')) {
-                        svg.remove();
-                    }
-                });
-                
-                overlay.style.setProperty('mask-image', 'none', 'important');
-                overlay.style.setProperty('-webkit-mask-image', 'none', 'important');
-                overlay.style.setProperty('clip-path', 'none', 'important');
-                
-                overlay.style.setProperty('background', 'rgba(255, 255, 255, 0.12)', 'important');
-                overlay.style.setProperty('background-color', 'rgba(255, 255, 255, 0.12)', 'important');
-                overlay.style.setProperty('backdrop-filter', 'blur(15px) brightness(1.08) saturate(1.3)', 'important');
-                overlay.style.setProperty('-webkit-backdrop-filter', 'blur(15px) brightness(1.08) saturate(1.3)', 'important');
-                
-                try {
-                    const computedStyle = window.getComputedStyle(overlay);
-                    const bgColor = computedStyle.backgroundColor;
-                    if (bgColor && (bgColor.includes('rgb(0') || bgColor.includes('rgba(0') || bgColor.includes('black') || bgColor === 'transparent')) {
-                        overlay.style.setProperty('background', 'rgba(255, 255, 255, 0.12)', 'important');
-                        overlay.style.setProperty('background-color', 'rgba(255, 255, 255, 0.12)', 'important');
-                    }
-                } catch (e) {
-                }
-            });
-        });
-        
-        if (document.body) {
-            const bodyBg = window.getComputedStyle(document.body).backgroundColor;
-            if (bodyBg && (bodyBg.includes('rgb(0') || bodyBg.includes('rgba(0') || bodyBg.includes('black'))) {
-                document.body.style.setProperty('background', 'transparent', 'important');
-            }
-        }
-    };
-
-    let overlayInterval = null;
-    const startOverlayWatcher = () => {
-        if (overlayInterval) clearInterval(overlayInterval);
-        overlayInterval = setInterval(forceLightOverlay, 100);
-    };
-    
-    const stopOverlayWatcher = () => {
-        if (overlayInterval) {
-            clearInterval(overlayInterval);
-            overlayInterval = null;
-        }
-    };
 
     tourObj.on('show', (event) => {
         if (event.step) {
@@ -994,16 +890,12 @@ function createTour() {
             if (oldWrapper18 && stepNumber !== 18) oldWrapper18.remove();
             if (oldWrapper19 && stepNumber !== 19) oldWrapper19.remove();
             
-            forceLightOverlay();
-            startOverlayWatcher();
-            
             const element = event.step.options.attachTo?.element;
             if (element) {
                 const el = typeof element === 'string' ? document.querySelector(element) : element;
                 if (el) {
                     setTimeout(() => {
                         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        forceLightOverlay();
                         
                         if (stepNumber === 18) {
                             const wrapper = document.getElementById('tour-classification-wrapper');
@@ -1063,33 +955,30 @@ function createTour() {
         }
     });
 
-    const overlayObserver = new MutationObserver((mutations) => {
-        mutations.forEach(() => {
-            forceLightOverlay();
-        });
-    });
-    
-    overlayObserver.observe(document.body, {
-        childList: true,
-        subtree: true,
-        attributes: true,
-        attributeFilter: ['style', 'class']
-    });
-    
-    setTimeout(() => {
-        forceLightOverlay();
-        startOverlayWatcher();
-    }, 50);
 
-    tourObj.on('complete', () => {
-        stopOverlayWatcher();
+    tourObj.on('complete', (event) => {
         const wrapper18 = document.getElementById('tour-classification-wrapper');
         const wrapper19 = document.getElementById('tour-ai-prediction-wrapper');
         if (wrapper18) wrapper18.remove();
         if (wrapper19) wrapper19.remove();
-            clearTourState();
-            isStartingTour = false;
+
+        const { step: currentStep } = getTourState();
         
+        let stepNumber = null;
+        if (event && event.step) {
+            const stepId = event.step.id;
+            if (stepId) {
+                stepNumber = parseInt(stepId.replace('step-', ''), 10);
+            }
+        }
+        
+        const finalStepIndex = tourObj._finalStepIndex || 19;
+        const shouldShowCompletion = (currentStep === finalStepIndex) || (stepNumber === finalStepIndex);
+        
+        clearTourState();
+        isStartingTour = false;
+        
+        if (shouldShowCompletion) {
             const completionAlert = document.createElement('div');
             completionAlert.className = 'alert alert-success alert-dismissible fade show';
             completionAlert.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 10002; min-width: 300px;';
@@ -1104,10 +993,10 @@ function createTour() {
                     completionAlert.remove();
                 }
             }, 5000);
+        }
     });
 
     tourObj.on('cancel', () => {
-        stopOverlayWatcher();
         const wrapper18 = document.getElementById('tour-classification-wrapper');
         const wrapper19 = document.getElementById('tour-ai-prediction-wrapper');
         if (wrapper18) wrapper18.remove();
@@ -1124,6 +1013,7 @@ function createTour() {
     
     tourObj._pageStartIndex = pageStartIndex;
     tourObj._validStepsCount = validSteps.length;
+    tourObj._finalStepIndex = 19;
 
     return tourObj;
 }
@@ -1176,31 +1066,6 @@ function startTour(startStep = 0) {
                 tourInstance.show(localStepIndex);
             }
             
-            const forceOverlay = () => {
-                const selectors = [
-                    '.shepherd-modal-overlay-container',
-                    '[class*="shepherd-modal"]',
-                    '[class*="shepherd-overlay"]'
-                ];
-                selectors.forEach(selector => {
-                    const overlays = document.querySelectorAll(selector);
-                    overlays.forEach(overlay => {
-                        overlay.style.setProperty('background', 'rgba(255, 255, 255, 0.1)', 'important');
-                        overlay.style.setProperty('background-color', 'rgba(255, 255, 255, 0.1)', 'important');
-                        overlay.style.setProperty('backdrop-filter', 'blur(12px) brightness(1.05) saturate(1.2)', 'important');
-                        overlay.style.setProperty('-webkit-backdrop-filter', 'blur(12px) brightness(1.05) saturate(1.2)', 'important');
-                    });
-                });
-            };
-            
-            setTimeout(forceOverlay, 50);
-            setTimeout(forceOverlay, 150);
-            setTimeout(forceOverlay, 300);
-            setTimeout(forceOverlay, 500);
-            
-            // Also set up continuous monitoring
-            const intervalId = setInterval(forceOverlay, 200);
-            setTimeout(() => clearInterval(intervalId), 5000); // Stop after 5 seconds
             
             setTimeout(() => {
                 isStartingTour = false;
@@ -1213,7 +1078,7 @@ function startTour(startStep = 0) {
     }, 300);
 }
 
-// Public API
+
 export default {
     start: startTour,
     init: initTour,
