@@ -1,6 +1,6 @@
 from django.core.files.storage import default_storage
 from django.db import transaction
-from django.http import Http404, HttpResponseForbidden
+from django.http import Http404
 from django.urls import reverse
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib import messages
@@ -29,10 +29,8 @@ DEMO_ORG_SLUG = "bugbox-demo-organization"
 
 
 class DemoAccessMixin:
-    """Mixin to restrict demo access to non-authenticated users only."""
+    """Mixin for demo views. available to all users (authenticated and unauthenticated)."""
     def dispatch(self, request, *args, **kwargs):
-        if request.user.is_authenticated:
-            return HttpResponseForbidden("Demo is only available to non-authenticated users.")
         return super().dispatch(request, *args, **kwargs)
 
 
