@@ -1,6 +1,7 @@
 from django.http import Http404
 from rest_framework.viewsets import ReadOnlyModelViewSet
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import BasePermission
+from rest_framework.exceptions import PermissionDenied
 
 from ..core.views import DatatablesModelViewSetMixin
 from ..samples.models import Experiment, Site, Sample, Specimen
@@ -19,6 +20,14 @@ from ..samples.utils import resolve_entered_by
 from django.urls import reverse
 
 
+class DemoOnlyPermission(BasePermission):
+    """Permission class that only allows non-authenticated users."""
+    def has_permission(self, request, view):
+        if request.user.is_authenticated:
+            raise PermissionDenied("Demo is only available to non-authenticated users.")
+        return True
+
+
 class DemoExperimentsDatatablesSerializer(ExperimentsDatatablesSerializer):
     
     def get_experiment_link(self, v):
@@ -28,7 +37,7 @@ class DemoExperimentsDatatablesSerializer(ExperimentsDatatablesSerializer):
 
 class DemoExperimentsDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
     
-    permission_classes = [AllowAny]
+    permission_classes = [DemoOnlyPermission]
     serializer_class = DemoExperimentsDatatablesSerializer
     search_vector = [constants.FIELD_NAME, constants.FIELD_ABBREVIATION]
 
@@ -107,7 +116,7 @@ class DemoSitesDatatablesSerializer(SitesDatatablesSerializer):
 
 class DemoSitesDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
     
-    permission_classes = [AllowAny]
+    permission_classes = [DemoOnlyPermission]
     serializer_class = DemoSitesDatatablesSerializer
     search_vector = [constants.FIELD_SITE_SITE_NAME]
 
@@ -155,7 +164,7 @@ class DemoSpecimenDatatablesSerializer(SpecimenDatatablesSerializer):
 
 class DemoSpecimenDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
     
-    permission_classes = [AllowAny]
+    permission_classes = [DemoOnlyPermission]
     serializer_class = DemoSpecimenDatatablesSerializer
     search_vector = ['classification__name', 'ai_classification__name']
 

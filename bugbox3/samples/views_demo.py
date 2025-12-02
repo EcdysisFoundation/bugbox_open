@@ -1,6 +1,6 @@
 from django.core.files.storage import default_storage
 from django.db import transaction
-from django.http import Http404
+from django.http import Http404, HttpResponseForbidden
 from django.urls import reverse
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib import messages
@@ -28,6 +28,14 @@ DEMO_ORG_NAME = "Bugbox Demo Organization"
 DEMO_ORG_SLUG = "bugbox-demo-organization"
 
 
+class DemoAccessMixin:
+    """Mixin to restrict demo access to non-authenticated users only."""
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return HttpResponseForbidden("Demo is only available to non-authenticated users.")
+        return super().dispatch(request, *args, **kwargs)
+
+
 def get_demo_organization():
     """Get or create the demo organization."""
     org, created = Organization.objects.get_or_create(
@@ -37,7 +45,7 @@ def get_demo_organization():
     return org
 
 
-class DemoExperimentsView(TemplateView):
+class DemoExperimentsView(DemoAccessMixin, TemplateView):
     template_name = 'samples/demo_experiments.html'
 
     def get_context_data(self, **kwargs):
@@ -69,7 +77,7 @@ class DemoExperimentsView(TemplateView):
         return context
 
 
-class DemoExperimentView(TemplateView):
+class DemoExperimentView(DemoAccessMixin, TemplateView):
     template_name = 'samples/demo_experiment.html'
 
     def get_context_data(self, **kwargs):
@@ -138,7 +146,7 @@ class DemoExperimentView(TemplateView):
         return context
 
 
-class DemoSiteView(TemplateView):
+class DemoSiteView(DemoAccessMixin, TemplateView):
     template_name = 'samples/demo_site.html'
 
     def get_context_data(self, **kwargs):
@@ -189,7 +197,7 @@ class DemoSiteView(TemplateView):
         return context
 
 
-class DemoSampleView(TemplateView):
+class DemoSampleView(DemoAccessMixin, TemplateView):
     template_name = 'samples/demo_sample.html'
 
     def get_context_data(self, **kwargs):
@@ -281,7 +289,7 @@ class DemoSampleView(TemplateView):
         return context
 
 
-class DemoSpecimenView(TemplateView):
+class DemoSpecimenView(DemoAccessMixin, TemplateView):
     template_name = 'samples/demo_specimen.html'
 
     def get_context_data(self, **kwargs):
@@ -377,7 +385,7 @@ class DemoSpecimenView(TemplateView):
         return context
 
 
-class DemoExperimentCreateView(CreateView):
+class DemoExperimentCreateView(DemoAccessMixin, CreateView):
     form_class = ExperimentForm
     template_name = 'samples/experiment_form.html'
     action = 'create'
@@ -428,7 +436,7 @@ class DemoExperimentCreateView(CreateView):
         return reverse('samples:demo-experiment', kwargs={'experiment_id': self.object.id})
 
 
-class DemoSiteCreateView(CreateView):
+class DemoSiteCreateView(DemoAccessMixin, CreateView):
     form_class = SiteForm
     template_name = 'samples/site_form.html'
     action = 'create'
@@ -493,7 +501,7 @@ class DemoSiteCreateView(CreateView):
         return reverse('samples:demo-experiment', kwargs={'experiment_id': self.kwargs['experiment_id']})
 
 
-class DemoSampleUpdateView(UpdateView):
+class DemoSampleUpdateView(DemoAccessMixin, UpdateView):
     form_class = SampleForm
     template_name = 'samples/sample_form.html'
     action = 'update'
@@ -522,7 +530,7 @@ class DemoSampleUpdateView(UpdateView):
         return reverse('samples:demo-sample', kwargs={'sample_id': self.kwargs['sample_id']})
 
 
-class DemoSpecimenCreateView(CreateView):
+class DemoSpecimenCreateView(DemoAccessMixin, CreateView):
     form_class = SpecimenForm
     template_name = 'samples/specimen_create.html'
     action = 'create'
@@ -588,7 +596,7 @@ class DemoSpecimenCreateView(CreateView):
         return reverse('samples:demo-specimen', kwargs={'id': self.object.id})
 
 
-class DemoSpecimensWithoutImagesFormView(FormView):
+class DemoSpecimensWithoutImagesFormView(DemoAccessMixin, FormView):
     form_class = SpecimensWithoutImagesForm
     template_name = 'samples/specimens_wo_images.html'
 
