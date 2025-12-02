@@ -798,7 +798,7 @@ function convertStepToShepherd(step, stepIndex, globalStepIndex, tour, totalStep
         buttons.push({
             text: step.popover.nextBtnText || (isLastStep ? 'Complete Tour' : 'Next'),
             action: () => {
-                if (isLastStep) {
+                if (globalStepIndex === 19) {
                     tour.complete();
                 } else {
                     tour.next();
@@ -956,14 +956,29 @@ function createTour() {
     });
 
 
-    tourObj.on('complete', () => {
+    tourObj.on('complete', (event) => {
         const wrapper18 = document.getElementById('tour-classification-wrapper');
         const wrapper19 = document.getElementById('tour-ai-prediction-wrapper');
         if (wrapper18) wrapper18.remove();
         if (wrapper19) wrapper19.remove();
-            clearTourState();
-            isStartingTour = false;
+
+        const { step: currentStep } = getTourState();
         
+        let stepNumber = null;
+        if (event && event.step) {
+            const stepId = event.step.id;
+            if (stepId) {
+                stepNumber = parseInt(stepId.replace('step-', ''), 10);
+            }
+        }
+        
+        const finalStepIndex = tourObj._finalStepIndex || 19;
+        const shouldShowCompletion = (currentStep === finalStepIndex) || (stepNumber === finalStepIndex);
+        
+        clearTourState();
+        isStartingTour = false;
+        
+        if (shouldShowCompletion) {
             const completionAlert = document.createElement('div');
             completionAlert.className = 'alert alert-success alert-dismissible fade show';
             completionAlert.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 10002; min-width: 300px;';
@@ -978,6 +993,7 @@ function createTour() {
                     completionAlert.remove();
                 }
             }, 5000);
+        }
     });
 
     tourObj.on('cancel', () => {
@@ -997,6 +1013,7 @@ function createTour() {
     
     tourObj._pageStartIndex = pageStartIndex;
     tourObj._validStepsCount = validSteps.length;
+    tourObj._finalStepIndex = 19;
 
     return tourObj;
 }
