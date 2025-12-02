@@ -1,7 +1,6 @@
 from django.http import Http404
 from rest_framework.viewsets import ReadOnlyModelViewSet
 from rest_framework.permissions import BasePermission
-from rest_framework.exceptions import PermissionDenied
 
 from ..core.views import DatatablesModelViewSetMixin
 from ..samples.models import Experiment, Site, Sample, Specimen
@@ -21,10 +20,8 @@ from django.urls import reverse
 
 
 class DemoOnlyPermission(BasePermission):
-    """Permission class that only allows non-authenticated users."""
+    """Permission class that allows all users (authenticated and unauthenticated)."""
     def has_permission(self, request, view):
-        if request.user.is_authenticated:
-            raise PermissionDenied("Demo is only available to non-authenticated users.")
         return True
 
 
