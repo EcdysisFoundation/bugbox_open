@@ -507,7 +507,6 @@ class DemoSampleUpdateView(DemoAccessMixin, UpdateView):
         return context
 
     def form_valid(self, form):
-        # Demo mode: prevent database writes
         messages.info(
             self.request,
             'This is a demo. No data is saved. In a real account, your sample would be updated successfully.'
@@ -565,7 +564,6 @@ class DemoSpecimenCreateView(DemoAccessMixin, CreateView):
         return context
 
     def form_valid(self, form):
-        # Demo mode: prevent database writes
         demo_org = get_demo_organization()
         try:
             sample = Sample.objects.filter(
@@ -631,7 +629,6 @@ class DemoSpecimensWithoutImagesFormView(DemoAccessMixin, FormView):
         return context
 
     def form_valid(self, form):
-        # Demo mode: prevent database writes
         demo_org = get_demo_organization()
         try:
             sample = Sample.objects.filter(
