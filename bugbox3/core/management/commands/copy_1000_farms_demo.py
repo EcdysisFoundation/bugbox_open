@@ -405,36 +405,47 @@ class Command(BaseCommand):
                 object_det_updated_at=source_image.object_det_updated_at,
             )
 
-            image_fields = ['image', 'image_thumbnail', 'image_thumbnail_medium', 'image_thumbnail_large']
-            main_image_copied = False
+            main_image_exists = False
             
-            for field_name in image_fields:
+            source_main_image = getattr(source_image, 'image', None)
+            if source_main_image and source_main_image.name:
+                try:
+                    if default_storage.exists(source_main_image.name):
+                        image.image.name = source_main_image.name
+                        main_image_exists = True
+                        self.stdout.write(f'    Referenced main image: {image.image.name}')
+                    else:
+                        self.stdout.write(
+                            self.style.WARNING(f'  Main image file not found in storage: {source_main_image.name}')
+                        )
+                except Exception as e:
+                    self.stdout.write(
+                        self.style.WARNING(f'  Could not reference main image: {e}')
+                    )
+            
+            for field_name in ['image_thumbnail', 'image_thumbnail_medium', 'image_thumbnail_large']:
                 source_field = getattr(source_image, field_name, None)
                 if source_field and source_field.name:
                     try:
                         if default_storage.exists(source_field.name):
-                            with default_storage.open(source_field.name, 'rb') as f:
-                                file_content = f.read()
-                                image_field = getattr(image, field_name)
-                                filename = source_field.name.split('/')[-1]
-                                image_field.save(
-                                    filename,
-                                    ContentFile(file_content),
-                                    save=False
-                                )
-                                if field_name == 'image':
-                                    main_image_copied = True
+                            image_field = getattr(image, field_name)
+                            image_field.name = source_field.name
+                            self.stdout.write(f'    Referenced {field_name}: {image_field.name}')
+                        else:
+                            self.stdout.write(
+                                self.style.WARNING(f'  {field_name} file not found in storage: {source_field.name}')
+                            )
                     except Exception as e:
                         self.stdout.write(
-                            self.style.WARNING(f'  Could not copy {field_name}: {e}')
+                            self.style.WARNING(f'  Could not reference {field_name}: {e}')
                         )
 
-            if main_image_copied:
+            if main_image_exists:
                 image.save()
                 copied_count += 1
             else:
                 self.stdout.write(
-                    self.style.WARNING(f'  Skipping specimen image - main image file not found or could not be copied')
+                    self.style.WARNING(f'  Skipping specimen image - main image file not found')
                 )
 
         return copied_count
