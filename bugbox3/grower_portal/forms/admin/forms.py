@@ -3,10 +3,12 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Submit, Div, Row, Column, Field
+import csv
+import io
 
 from bugbox3.core.forms import ModelFormMixin
 from ...models import TransectCode, CSVImportLog, GrowerApplication, GrowerProfile, Farm, Field
-from ...constants import FIELD_TYPE_CHOICES
+from ...constants import FIELD_TYPE_CHOICES, CSV_IMPORT_SCHEMAS
 
 User = get_user_model()
 
@@ -70,6 +72,27 @@ class CSVUploadForm(forms.Form):
             Submit('submit', 'Upload CSV', css_class='btn btn-primary')
         )
 
+    def _classify_and_get_missing_headers(self, headers):
+        """
+        Classify the CSV file into haney, plfa, or basic based on the headers, and return missing headers.
+        """
+        headers = set(headers)
+
+        # Calculate how much the csv headers overlap with each schema's required headers
+        candidates = {}
+        for schema_key, schema_config in CSV_IMPORT_SCHEMAS.items():
+            required_headers = set(schema_config['required_headers'])
+            overlap_count = len(headers & required_headers)
+            candidates[schema_key] = overlap_count
+
+        # Get the schema with the highest overlap
+        best_schema_key = max(candidates, key=candidates.get)
+        schema_config = CSV_IMPORT_SCHEMAS[best_schema_key]
+        required = set(schema_config['required_headers'])
+        missing = required - headers
+
+        return schema_config['name'], missing
+
     def clean_csv_file(self):
         csv_file = self.cleaned_data.get('csv_file')
         if csv_file:
@@ -77,6 +100,42 @@ class CSVUploadForm(forms.Form):
                 raise ValidationError('File must be a CSV file (.csv extension)')
             if csv_file.size > 10 * 1024 * 1024:
                 raise ValidationError('File size must not exceed 10MB')
+
+            # Read and validate CSV headers
+            try:
+                csv_file.seek(0)
+                content = csv_file.read()
+                if isinstance(content, bytes):
+                    content = content.decode('utf-8-sig')
+
+                csv_reader = csv.DictReader(io.StringIO(content))
+                headers = csv_reader.fieldnames
+
+                if not headers:
+                    raise ValidationError(
+                        'CSV file appears to be empty or has no headers'
+                    )
+
+                # Check for required fields
+                headers_stripped = [h.strip() if h else '' for h in headers]
+                schema, missing_headers = self._classify_and_get_missing_headers(headers_stripped)
+
+                if missing_headers:
+                    missing_list = ', '.join(missing_headers)
+                    raise ValidationError(
+                        f'{schema} CSV file is missing required columns: {missing_list}. '
+                        f'Please ensure all required columns are present in the header row.'
+                    )
+
+            except csv.Error as e:
+                raise ValidationError(f'Error reading CSV file: {str(e)}')
+            except UnicodeDecodeError as _e:
+                raise ValidationError(
+                    'CSV file encoding error. Please ensure the file is UTF-8 encoded.'
+                )
+            except Exception as e:
+                raise ValidationError(f'Error validating CSV file: {str(e)}')
+
         return csv_file
 
 
@@ -270,4 +329,3 @@ class FieldFilterForm(forms.Form):
             ),
             Submit('filter', 'Apply Filters', css_class='btn btn-primary btn-sm')
         )
-

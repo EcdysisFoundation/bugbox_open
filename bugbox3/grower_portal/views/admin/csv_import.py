@@ -10,6 +10,7 @@ from bugbox3.core.permissions import IS_GROWERADMIN
 from ...models import CSVImportLog
 from ...forms.admin.forms import CSVUploadForm
 from ...middleware import get_user_timezone
+from ...constants import CSV_IMPORT_SCHEMAS
 
 
 @login_required
@@ -45,7 +46,8 @@ def csv_upload(request):
     
     context = {
         'form': form,
-        'user_timezone': get_user_timezone(request)
+        'user_timezone': get_user_timezone(request),
+        'csv_import_schemas': CSV_IMPORT_SCHEMAS,
     }
     
     return render(request, 'grower_portal/admin/csv_upload.html', context)
