@@ -65,7 +65,15 @@
                     <h5 class="mb-0">Error Log / Notes</h5>
                 </div>
                 <div class="card-body">
-                    <pre class="mb-0">{{ import_log.error_log }}</pre>
+                    {% for row in pretty_error_log %}
+                        <p><strong>Row Number:</strong> {{ row.row_number }}</p>
+                        <p><strong>Error:</strong> {{ row.error }}</p>
+                        <details>
+                            <summary><strong>View Row Data</strong></summary>
+                            <pre>{{ row.row_data }}</pre>
+                        </details>
+                        <hr/>
+                    {% endfor %}
                 </div>
             </div>
         </div>

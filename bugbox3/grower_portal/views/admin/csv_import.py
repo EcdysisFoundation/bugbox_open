@@ -4,14 +4,103 @@ from django.contrib import messages
 from django.core.paginator import Paginator
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
-import os
+import csv
+import io
+import json
 
 from bugbox3.core.permissions import IS_GROWERADMIN
-from ...models import CSVImportLog
+from ...models import CSVImportLog, CSVImportFieldValue, TransectCode
 from ...forms.admin.forms import CSVUploadForm
 from ...middleware import get_user_timezone
 from ...constants import CSV_IMPORT_SCHEMAS
 
+TRANSECT_CODE_COLUMN_PREFIX = 'Sample ID'
+
+def _get_transect_codes(row):
+    transect_codes = set()
+    for name, value in row.items():
+        if name.startswith(TRANSECT_CODE_COLUMN_PREFIX) and value.strip():
+            transect_codes.add(value)
+    return list(transect_codes)
+
+def _add_to_error_log(error_log, row_number, row, message):
+    """Helper function to log errors with consistent formatting."""
+    error_log.append({
+        "row_number": row_number,
+        "row_data": row,
+        "error": message
+    })
+
+def _validate_transect_code(row_number, row, error_log):
+    """
+    Validate row's transect code and return the TransectCode object if valid.
+    Returns the TransectCode object if valid, otherwise None.
+    """
+    transect_codes = _get_transect_codes(row)
+
+    if not transect_codes:
+        _add_to_error_log(error_log, row_number, row, 'Row is missing transect code')
+        return None
+
+    if len(transect_codes) > 1:
+        _add_to_error_log(error_log, row_number, row, f'Row has multiple transect codes: {transect_codes}')
+        return None
+
+    transect_code = transect_codes[0]
+
+    try:
+        transect_code_object = TransectCode.objects.get(transect_code=transect_code)
+    except TransectCode.DoesNotExist:
+        _add_to_error_log(error_log, row_number, row, f'Transect code does not exist: {transect_code}')
+        return None
+
+    if not transect_code_object.is_active:
+        _add_to_error_log(error_log, row_number, row, f'Transect code is inactive: {transect_code}')
+        return None
+
+    if not transect_code_object.used_in_application:
+        _add_to_error_log(error_log, row_number, row, f'Transect code is not used in an application: {transect_code}')
+        return None
+
+    return transect_code_object
+
+def _process_csv_file(csv_import_log, csv_file):
+    csv_file.seek(0)
+    content = csv_file.read()
+    if isinstance(content, bytes):
+        content = content.decode('utf-8-sig')
+
+    csv_reader = csv.DictReader(io.StringIO(content))
+    successful_count = 0
+    failed_count = 0
+    error_log = []
+
+    for i, row in enumerate(csv_reader):
+        try:
+
+            transect_code_object = _validate_transect_code(
+                i, row, error_log
+            )
+
+            if not transect_code_object:
+                failed_count += 1
+                continue
+
+            for field_name, field_value in row.items():
+                CSVImportFieldValue.objects.create(
+                    import_log=csv_import_log,
+                    transect_code=transect_code_object,
+                    field_name=field_name,
+                    field_value=field_value,
+                    row_number=i
+                )
+            successful_count += 1
+        except Exception as e:
+            failed_count += 1
+            _add_to_error_log(error_log, i, row, f'Unexpected error: {e}')
+            continue
+
+    return successful_count + failed_count, successful_count, failed_count, error_log
 
 @login_required
 @permission_required(IS_GROWERADMIN, raise_exception=True)
@@ -34,7 +123,16 @@ def csv_upload(request):
                 failed_records=0,
                 error_log=f'File saved to: {saved_path}\n\nDescription: {description}'
             )
-            
+
+            total, successful, failed, error_log = _process_csv_file(csv_import_log, csv_file)
+
+            csv_import_log.status = 'completed'
+            csv_import_log.total_records = total
+            csv_import_log.successful_records = successful
+            csv_import_log.failed_records = failed
+            csv_import_log.error_log = error_log
+            csv_import_log.save()
+
             messages.success(
                 request,
                 f'CSV file "{csv_file.name}" uploaded successfully. Import log ID: {csv_import_log.id}'
@@ -77,9 +175,20 @@ def csv_import_detail(request, import_id):
         CSVImportLog.objects.select_related('imported_by'),
         id=import_id
     )
-    
+
+    pretty_error_log = []
+    for obj in import_log.error_log:
+        pretty = json.dumps(obj.get('row_data', ''), indent=4)
+        pretty_error_log.append({
+            "error": obj.get('error', ''),
+            "row_number": obj.get('row_number', ''),
+            "row_data": pretty
+        })
+
+    # Format JSON before sending to template
     context = {
         'import_log': import_log,
+        'pretty_error_log': pretty_error_log,
         'user_timezone': get_user_timezone(request)
     }
     
