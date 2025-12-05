@@ -74,6 +74,7 @@ def _process_csv_file(csv_import_log, csv_file):
     successful_count = 0
     failed_count = 0
     error_log = []
+    validated_field_values = []
 
     for i, row in enumerate(csv_reader):
         try:
@@ -87,18 +88,22 @@ def _process_csv_file(csv_import_log, csv_file):
                 continue
 
             for field_name, field_value in row.items():
-                CSVImportFieldValue.objects.create(
+                validated_field_values.append(CSVImportFieldValue(
                     import_log=csv_import_log,
                     transect_code=transect_code_object,
                     field_name=field_name,
                     field_value=field_value,
                     row_number=i
-                )
+                ))
             successful_count += 1
         except Exception as e:
             failed_count += 1
             _add_to_error_log(error_log, i, row, f'Unexpected error: {e}')
             continue
+
+    # Only save validated field values if there are no errors
+    if not error_log:
+        CSVImportFieldValue.objects.bulk_create(validated_field_values)
 
     return successful_count + failed_count, successful_count, failed_count, error_log
 
@@ -126,17 +131,23 @@ def csv_upload(request):
 
             total, successful, failed, error_log = _process_csv_file(csv_import_log, csv_file)
 
-            csv_import_log.status = 'completed'
+            csv_import_log.status = 'completed' if not error_log else 'failed'
             csv_import_log.total_records = total
             csv_import_log.successful_records = successful
             csv_import_log.failed_records = failed
             csv_import_log.error_log = error_log
             csv_import_log.save()
 
-            messages.success(
-                request,
-                f'CSV file "{csv_file.name}" uploaded successfully. Import log ID: {csv_import_log.id}'
-            )
+            if not error_log:
+                messages.success(
+                    request,
+                    f'CSV file "{csv_file.name}" uploaded successfully. Import log ID: {csv_import_log.id}'
+                )
+            else:
+                messages.error(
+                    request,
+                    f'CSV file "{csv_file.name}" contains errors. File has been saved but not processed. Please correct the errors and try again. Import log ID: {csv_import_log.id}'
+                )
             
             return redirect('grower_portal:admin_csv_import_detail', import_id=csv_import_log.id)
     else:

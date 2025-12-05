@@ -49,8 +49,13 @@
                     <h5 class="mb-0">Import Statistics</h5>
                 </div>
                 <div class="card-body">
+                    {% if import_log.error_log %}
+                    <div class="alert alert-warning" role="alert">
+                        <strong>Validation Failed:</strong> No records were imported due to validation errors.<br>These statistics reflect the contents found in the file during validation, not what was actually imported.
+                    </div>
+                    {% endif %}
                     <p><strong>Total Records:</strong> {{ import_log.total_records }}</p>
-                    <p><strong>Successful Records:</strong> <span class="badge bg-success">{{ import_log.successful_records }}</span></p>
+                    <p><strong>Validated Records:</strong> <span class="badge bg-success">{{ import_log.successful_records }}</span></p>
                     <p><strong>Failed Records:</strong> <span class="badge bg-danger">{{ import_log.failed_records }}</span></p>
                 </div>
             </div>
