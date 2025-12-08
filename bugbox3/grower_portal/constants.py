@@ -202,3 +202,54 @@ SOIL_METRIC_CHOICES = [
     ('temp_c', 'Soil Temperature (°C)'),
 ]
 
+# CSV Import Schema Configuration
+CSV_IMPORT_SCHEMAS = {
+    'haney': {
+        'name': 'Haney',
+        'required_headers': [
+            'Cust ID',
+            'Name',
+            'Company',
+            'Address 1',
+            'Address 2',
+            'City',
+            'ST',
+            'Zip',
+            'Date Recd',
+            'Date Rept',
+            'Lab No',
+            'Grower',
+            'Field ID',
+        ],
+    },
+    'plfa': {
+        'name': 'PLFA',
+        'required_headers': [
+            'Sample Type',
+            'Lab ID',
+            'Test ID',
+            'Date Received',
+            'Date Reported',
+            'Customer ID',
+            'Name',
+            'Company',
+            'Grower',
+            'Field ID',
+        ],
+    },
+    'basic': {
+        'name': 'Basic',
+        'required_headers': [
+            'Sample Type',
+            'Lab No',
+            'Test ID',
+            'Date Recd',
+            'Date Rept',
+            'Cust ID',
+            'Name',
+            'Company',
+            'Grower',
+            'Field ID',
+        ],
+    },
+}
