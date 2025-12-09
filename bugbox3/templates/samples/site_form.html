@@ -21,9 +21,15 @@
         <div class="card">
           <div class="card-header align-items-center bg-ecdysis text-white d-flex justify-content-between">
             <h5>{{ action|capfirst }} Site for Experiment: {{ experiment_details.experiment.name }}</h5>
+            {% if is_demo %}
+            <a href="{% url 'samples:demo-experiment' experiment_details.experiment.id %}" class="btn btn-light">
+              View Experiment
+            </a>
+            {% else %}
             <a href="{% url 'samples:experiment' experiment_details.experiment.id %}" class="btn btn-light">
               View Experiment
             </a>
+            {% endif %}
             {% if action == 'update' %}
             <a href="{% url 'samples:site-delete' site_id experiment_details.experiment.id %}" type="button" class="btn btn-light
             {% if has_related_data %} disabled{% endif %}">

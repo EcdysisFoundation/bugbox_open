@@ -454,6 +454,7 @@ class DemoSiteCreateView(DemoAccessMixin, CreateView):
 
         context.update({
             'action': self.action,
+            'is_demo': True,
             'experiment_details': {
                 'experiment': experiment,
                 'plans': get_sample_plan_descriptions(experiment.id)
