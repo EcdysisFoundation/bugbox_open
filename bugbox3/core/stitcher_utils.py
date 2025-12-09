@@ -88,7 +88,7 @@ def crop_img_to_annotations(image, anno):
 
 
 def create_segmentation(
-    label, segmentation, from_name, image_height, image_width, to_name
+    label, segmentation, image_height, image_width
 ):
     """
     FROM: https://github.com/HumanSignal/label-studio-sdk/blob/master/src/label_studio_sdk/converter/imports/coco.py#L78C5-L78C24
@@ -120,8 +120,8 @@ def create_segmentation(
         "id": uuid4().hex[0:10],
         "type": "polygonlabels",
         "value": {"points": points, "polygonlabels": [label]},
-        "to_name": to_name,
-        "from_name": from_name,
+        "to_name": "image",
+        "from_name": "label",
         "image_rotation": 0,
         "original_width": image_width,
         "original_height": image_height,
