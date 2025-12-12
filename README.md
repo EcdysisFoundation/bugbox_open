@@ -129,6 +129,8 @@ A get request
 
 When creating new Organizations, these new Organizations will need their LookupChoices populated to be able to create Experiments and use other forms. Populate a default set of LookupChoices to get them started, by running the management command `populate_org_choices`, passing the required argument of the new organization ID.
 
+Certain features of the app assume the first created organization is the apps primary organization. Example `bugbox3.taxonomy.constants.ECDYSIS_ORGANIZATION_ID` == 1 is defined to assume the taxonomy app Morphospecies model contents is determined by the primary organization.
+
 
 ## Ecdysis01 management commands
 
@@ -167,6 +169,6 @@ When first building and brining the app up, migrations should run succesfully cr
 
 - To assign your new user account permissions, a superuser account is required to access the Django admin to assing permissions there. Therefore, its easiest to create a superuser account instead of a normal user account. `docker compose -f local.yml run --rm django python manage.py createsuperuser` and answer the questions presented in the console.
 
-- The app expects some permission groups for certain views. To create  these Django groups and assign the the proper permisions to them, use the following management command. Then a testing user can be configured in the Django adming to access the page being developed.
+- The app expects some permission groups for certain views and that at least one Organization exists. To create, these Django groups and assign the proper permisions to them, use the following management command, after creating your dev user.  This command will also create a default, primary organization (see organization info above). It will then add your user account to this organization and provide some default entries for the organization. Finally, your testing user can be configured in the Django adming to access the page being developed if it for example needs access to a specific Django permission group (see premission requirements for the particular view function).
 
-`docker compose -f local.yml run --rm django python manage.py setup_app`
+`docker compose -f local.yml run --rm django python manage.py setup_app --username 'my_username'`

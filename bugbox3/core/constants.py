@@ -119,3 +119,81 @@ STITCHER_FORM_REQUIRED_KEYS = [
     STITCHER_UPLOAD_DIR_NAME
 ]
 STITCHER_LABEL_IMG = 'label_r_001.jpg'
+
+# Default LookupChoices
+DEFAULT_TAGS = (
+    'adult',
+    'egg',
+    'female',
+    'juvenile',
+    'larva',
+    'male',
+    'mummy',
+    'nymph',
+    'parasite',
+    'pupa',
+    'queen',
+    'worker',
+)
+DEFAULT_TAG_CHOICES = [(v, v) for v in DEFAULT_TAGS]
+
+DEFAULT_SITE_HABITAT_TYPES = (
+    'alfalfa',
+    'almonds',
+    'apples',
+    'bare',
+    'barley',
+    'barn',
+    'berries',
+    'bison',
+    'canola',
+    'cattle',
+    'cherries',
+    'citrus',
+    'corn',
+    'cover crop',
+    'dairy',
+    'flax',
+    'goat',
+    'green beans',
+    'hay',
+    'hazelnut',
+    'kernza',
+    'lentils',
+    'livestock',
+    'milo',
+    'mixed orchard',
+    'n/a',
+    'native praire',
+    'not in list',
+    'oats',
+    'pasture',
+    'peas',
+    'pig',
+    'prairie',
+    'rangeland',
+    'rye',
+    'sheep',
+    'silvopasture',
+    'sorghum',
+    'soybeans',
+    'sunflower',
+    'unknown',
+    'vegetable',
+    'vineyard',
+    'wetland',
+    'wheat',
+    'winter wheat',
+    'woods',
+)
+DEFAULT_SITE_HABITAT_TYPE_CHOICES = [(v, v.capitalize()) for v in DEFAULT_SITE_HABITAT_TYPES]
+
+DEFAULT_SITE_TREATMENT_TYPES = (
+    'conventional',
+    'regenerative',
+    'transitional',
+    'unknown',
+    'not in list',
+)
+
+DEFAULT_SITE_TREATMENT_CHOICES = [(v, v.capitalize()) for v in DEFAULT_SITE_TREATMENT_TYPES]
