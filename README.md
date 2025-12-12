@@ -163,7 +163,7 @@ For local development, the app uses Docker with the local.yml file
 
 - `docker compose -f local.yml up`
 
-When first building and brining the app up, migrations should run succesfully creating a database generally empty of records. Docker saves the database state in a volume.
+When first building and brining the app up, migrations should run succesfully creating a database generally empty of records. Docker saves the database state in a volume. In local.yml, there is an env_file entry commented out `# - ./.envs/.local/.secrets` so that the app doesnt fail if you dont have this file. The app should generally work without these vairables, but the variables may be needed if developing a feature that uses them, example an S3 integration.
 
 - To create a **normal user account** for development of pages that dont need special user permissions, just go to Sign Up and fill out the form. Once you submit it, you'll see a "Verify Your E-mail Address" page. Go to your console to see a simulated email verification message. Copy the link into your browser. Now the user's email should be verified and ready to go.
 

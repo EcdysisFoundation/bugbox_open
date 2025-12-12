@@ -16,7 +16,7 @@ services:
     env_file:
       - ./.envs/.local/.django
       - ./.envs/.local/.postgres
-      - ./.envs/.local/.secrets
+      # - ./.envs/.local/.secrets
     ports:
       - '8002:8002'
     command: /start
