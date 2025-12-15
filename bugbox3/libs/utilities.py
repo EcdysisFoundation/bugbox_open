@@ -14,7 +14,7 @@ from PIL import Image
 from bugbox3.samples import constants
 
 
-if 's3storage' in default_storage.__class__.__name__ :
+if 's3storage' in default_storage.__class__.__name__.lower():
     S3_CLIENT = boto3.client(
             's3',
             aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
