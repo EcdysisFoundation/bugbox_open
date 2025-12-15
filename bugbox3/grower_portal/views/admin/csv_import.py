@@ -243,7 +243,7 @@ def csv_import_download_error_log(request, import_id):
 
     # Create HTTP response
     response = HttpResponse(error_log_df.to_csv(index=False), content_type='text/csv')
-    response['Content-Disposition'] = f'attachment; filename="{f'ERROR_LOG_{import_log.filename}'}"'
+    response['Content-Disposition'] = f'attachment; filename="ERROR_LOG_{import_log.filename}"'
     return response
 
 
@@ -257,8 +257,12 @@ def csv_import_delete(request, import_id):
     import_log_id = import_log.id
 
     # Delete assoociated field value records, source file, and import log record
+    try:
+        default_storage.delete(import_log.file_path)
+    except Exception as e:
+        raise RuntimeError(f"Error deleting import log file: {e}")
+
     CSVImportFieldValue.objects.filter(import_log=import_log).delete()
-    default_storage.delete(import_log.file_path)
     import_log.delete()
 
     messages.success(request, f'Import log {import_log_filename} (ID: {import_log_id}) has been deleted.')
