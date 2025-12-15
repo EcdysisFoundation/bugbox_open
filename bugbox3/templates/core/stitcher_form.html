@@ -43,12 +43,12 @@
                     </li>
                 {% endif %}
                 <li class="list-group-item">
-                    <b>Predictions:</b> {{ data.predictions|length }}
+                    <b>Predictions:</b> {{ data.predictions_coco|length }}
                 </li>
                 <li class="list-group-item">
-                    <b>Annotations:</b> {{ data.annotations|length }}
-                    {% if data.annotations_updated_at %}
-                        <br/> Updated at: {{ data.annotations_updated_at }}
+                    <b>Annotations:</b> {{ data.annotations_segment|length }}
+                    {% if data.annotations_updated_at_segment %}
+                        <br/> Updated at: {{ data.annotations_updated_at_segment }}
                     {% endif %}
                 </li>
                 {% if not data.bugbox_sample_id %}
