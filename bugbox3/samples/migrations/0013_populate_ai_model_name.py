@@ -1,17 +1,19 @@
 from django.db import migrations
 
 
-def create_entries(apps, schema_editor):
+#def create_entries(apps, schema_editor):
+#
+#    Specimen = apps.get_model('samples', 'Specimen')
+#
+#    recs = Specimen.objects.filter(
+#        ai_version__isnull=False).values('id', 'ai_version__version')
+#    for r in recs:
+#        Specimen.objects.filter(id=r['id']).update(
+#            ai_model_name=r['ai_version__version']
+#        )
 
-    Specimen = apps.get_model('samples', 'Specimen')
-
-    recs = Specimen.objects.filter(
-        ai_version__isnull=False).values('id', 'ai_version__version')
-    for r in recs:
-        Specimen.objects.filter(id=r['id']).update(
-            ai_model_name=r['ai_version__version']
-        )
-
+def print_notice(apps, schema_editor):
+    print('function create_entries removed')
 
 class Migration(migrations.Migration):
     dependencies = [
@@ -19,5 +21,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(create_entries)
+        migrations.RunPython(print_notice)
     ]

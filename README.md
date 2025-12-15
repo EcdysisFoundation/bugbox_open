@@ -75,48 +75,20 @@ This application is deployed to Heroku for most user access scenarios at bugbox.
 
 1. On Ecdsyis01, bring down the app
 2. On Heroku, deploy the new version, ensure migrations run succesfully
-3. Ecdysis01, pull new version from github, pull new docker.io images if applicable
+3. Ecdysis01, pull new version from github
 4. Ecdysis01, bring app back up. No migrations should run because they already ran on Heroku.
 
 #### Deployment to Ecdysis01 server
 
 local-cloud.yml is the .yml to use. This will establish a local Django app, and Node dev container. The database and filesystem is the production system on Heroku and AWS S3. This is not for development purposes. This is to have a Django instance running on Ecdsyis01 to manage image identifications and other needs to communicate from Ecdysis01 and Heroku database and AWS S3 storage.
 
-Custom images built locally (not on Ecdysis01) and are pushed to docker hub repo. Standard images used from their source. Always on the Ecdysis01 server, do not build custom docker images there. Django build may fail there at this time. Filesystem space recovery and performance of other running continers are other reasons to not build them there. Build them locally and push to docker hub.
+If specific non-custom image needs built, specificy it individually (referring to non-custom images when on Ecdysis01)
+
+    docker compose -f local-cloud.yml build SERVICE_NAME
 
 The Django container image is shared with Celery containers, so if any python library changes, build all of them, on local dev environment.
 
     docker compose -f local.yml build django celeryworker celerybeat flower
-
-Note: Various ports are changed from default due to conflicting ports on Ecdysis01.
-
-Locally built custom images. Push these to Docker Hub if changes are made to libraries.
-
-    docker push mikaylaelectra/ecdysis_django:latest
-
-    docker push mikaylaelectra/ecdysis_celeryworker:latest
-
-    docker push mikaylaelectra/ecdysis_celerybeat:latest
-
-    docker push mikaylaelectra/ecdysis_flower:latest
-
-    docker push mikaylaelectra/ecdysis_node:latest
-
-On remote pull these down, if new versions were pushed to Docker Hub
-
-    docker pull mikaylaelectra/ecdysis_django:latest
-
-    docker pull mikaylaelectra/ecdysis_celeryworker:latest
-
-    docker pull mikaylaelectra/ecdysis_celerybeat:latest
-
-    docker pull mikaylaelectra/ecdysis_flower:latest
-
-    docker pull mikaylaelectra/ecdysis_node:latest
-
-If specific non-custom image needs built, specificy it individually (referring to non-custom images when on Ecdysis01)
-
-    docker compose -f local-cloud.yml build SERVICE_NAME
 
 Bring up containers with images prebuilt
 
@@ -140,8 +112,6 @@ API_INFERENCE_URL is defined in settings. This relates to inference run against 
 
 ### Setting Up Your Users
 
-- To create a **normal user account** for development, just go to Sign Up and fill out the form. Once you submit it, you'll see a "Verify Your E-mail Address" page. Go to your console to see a simulated email verification message. Copy the link into your browser. Now the user's email should be verified and ready to go.
-
 - To gain access to most UI features, the user then must be both assigned permissions to access views (see `bugbox3.core.permissions`), and be provided membership to at least one organization. When users are removed from all organizations, they also need their permssions to be revoked.
 
 ## Organizations
@@ -158,6 +128,8 @@ A get request
             raise Http404
 
 When creating new Organizations, these new Organizations will need their LookupChoices populated to be able to create Experiments and use other forms. Populate a default set of LookupChoices to get them started, by running the management command `populate_org_choices`, passing the required argument of the new organization ID.
+
+Certain features of the app assume the first created organization is the apps primary organization. Example `bugbox3.taxonomy.constants.ECDYSIS_ORGANIZATION_ID` == 1 is defined to assume the taxonomy app Morphospecies model contents is determined by the primary organization.
 
 
 ## Ecdysis01 management commands
@@ -181,3 +153,22 @@ local.yml uses local storage and a local database
 local-cloud.yml uses cloud storage and the cloud database. This should typically not be used for development.
 
 For site static media content such as a homepage image, or a downloadable document, use core.models.PublicSiteContent to upload new media content through the Django Admin. A slugfield provides a uniqe identifier. This media is uploaded to the S3 media bucket with a public acl, instead of being set to private by default as regular media files are set. Using the slug field, a queryset can be used to insert the url to the media into the view. Note on development machines, if the local database does not have the entry, the queryset will return none, while if the entry is present, it will use the S3 url for the file.
+
+
+## Development setup
+
+For local development, the app uses Docker with the local.yml file
+
+- `docker compose -f local.yml build`
+
+- `docker compose -f local.yml up`
+
+When first building and brining the app up, migrations should run succesfully creating a database generally empty of records. Docker saves the database state in a volume. In local.yml, there is an env_file entry commented out `# - ./.envs/.local/.secrets` so that the app doesnt fail if you dont have this file. The app should generally work without these vairables, but the variables may be needed if developing a feature that uses them, example an S3 integration.
+
+- To create a **normal user account** for development of pages that dont need special user permissions, just go to Sign Up and fill out the form. Once you submit it, you'll see a "Verify Your E-mail Address" page. Go to your console to see a simulated email verification message. Copy the link into your browser. Now the user's email should be verified and ready to go.
+
+- To assign your new user account permissions, a superuser account is required to access the Django admin to assing permissions there. Therefore, its easiest to create a superuser account instead of a normal user account. `docker compose -f local.yml run --rm django python manage.py createsuperuser` and answer the questions presented in the console.
+
+- The app expects some permission groups for certain views and that at least one Organization exists. To create, these Django groups and assign the proper permisions to them, use the following management command, after creating your dev user.  This command will also create a default, primary organization (see organization info above). It will then add your user account to this organization and provide some default entries for the organization. Finally, your testing user can be configured in the Django adming to access the page being developed if it for example needs access to a specific Django permission group (see premission requirements for the particular view function).
+
+`docker compose -f local.yml run --rm django python manage.py setup_app --username 'my_username'`

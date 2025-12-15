@@ -1,5 +1,7 @@
 import csv
 import time
+import zipfile
+from io import BytesIO
 from tempfile import SpooledTemporaryFile
 
 import pandas as pd
@@ -233,7 +235,7 @@ def public_reviewed_img_export(org_id):
     if not isinstance(org_id, int):
         raise TypeError('public_images_export only accepts integers for the org_id')
     compression_method = 'zip'
-    filename = get_filename_org_timestamp(PUBLIC_IMAGES_EXPORT_TITLE, org_id, 'csv.' + compression_method)
+    filename = get_filename_org_timestamp(PUBLIC_IMAGES_EXPORT_TITLE, org_id, compression_method)
     headers = get_public_export_headers(constants.FIELD_SPECIMEN_CLASSIFICATION)
     data = public_reviewed_images_q(org_id, headers['query_fields'])
     df = pd.DataFrame.from_records(data)
@@ -242,11 +244,22 @@ def public_reviewed_img_export(org_id):
     df['public_url'] = df.apply(get_public_media_url, axis=1)
     description = get_public_description(df)
 
-    # max memory size very high due to error when writing to disk
-    max_mem_size = 5000 * (2**20)  # max memory size before it writes to disk
-    with SpooledTemporaryFile(mode='wb', max_size=max_mem_size) as tmpfile:
-        df.to_csv(tmpfile, compression={'method': compression_method}, index=False)
-        file_obj = File(tmpfile, name=filename)
+    csv_buffer = BytesIO()
+    df.to_csv(
+        csv_buffer,
+        index=False,
+        sep=',',
+        encoding='utf-8-sig'
+    )
+    csv_buffer.seek(0)
+    
+    csv_filename = filename.replace('.zip', '.csv')
+    max_mem_size = 5000 * (2**20)
+    with SpooledTemporaryFile(mode='wb', max_size=max_mem_size) as zipfile_obj:
+        with zipfile.ZipFile(zipfile_obj, 'w', zipfile.ZIP_DEFLATED) as zf:
+            zf.writestr(csv_filename, csv_buffer.getvalue())
+        zipfile_obj.seek(0)
+        file_obj = File(zipfile_obj, name=filename)
 
         Exports.objects.create(
             organization_id=org_id,
@@ -263,7 +276,7 @@ def public_all_img_export(org_id):
         raise TypeError('public_images_export only accepts integers for the org_id')
 
     compression_method = 'zip'
-    filename = get_filename_org_timestamp(PUBLIC_ALL_IMAGES_EXPORT_TITLE, org_id, 'csv.' + compression_method)
+    filename = get_filename_org_timestamp(PUBLIC_ALL_IMAGES_EXPORT_TITLE, org_id, compression_method)
 
     # get reviewed data
     reviewed_headers = get_public_export_headers(constants.FIELD_SPECIMEN_CLASSIFICATION)
@@ -290,11 +303,22 @@ def public_all_img_export(org_id):
     df['public_url'] = df.apply(get_public_media_url, axis=1)
     description = get_public_description(df)
 
-    # max memory size very high due to error when writing to disk
-    max_mem_size = 5000 * (2**20)  # max memory size before it writes to disk
-    with SpooledTemporaryFile(mode='wb', max_size=max_mem_size) as tempfile:
-        df.to_csv(tempfile, compression={'method': compression_method}, index=False)
-        file_obj = File(tempfile, name=filename)
+    csv_buffer = BytesIO()
+    df.to_csv(
+        csv_buffer,
+        index=False,
+        sep=',',
+        encoding='utf-8-sig'
+    )
+    csv_buffer.seek(0)
+    
+    csv_filename = filename.replace('.zip', '.csv')
+    max_mem_size = 5000 * (2**20)
+    with SpooledTemporaryFile(mode='wb', max_size=max_mem_size) as zipfile_obj:
+        with zipfile.ZipFile(zipfile_obj, 'w', zipfile.ZIP_DEFLATED) as zf:
+            zf.writestr(csv_filename, csv_buffer.getvalue())
+        zipfile_obj.seek(0)
+        file_obj = File(zipfile_obj, name=filename)
         Exports.objects.create(
             organization_id=org_id,
             title=PUBLIC_ALL_IMAGES_EXPORT_TITLE,
