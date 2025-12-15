@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib import messages
-from django.contrib.auth.models import Permission
+from django.contrib.auth.models import Group, Permission
 
 from bugbox3.core.permissions import IS_GROWER_USER, IS_GROWER
 from ...models import GrowerProfile, GrowerApplication
@@ -10,7 +10,9 @@ from ...middleware import get_user_timezone
 
 
 def grant_full_grower_permissions(user):
-    """Grant full IS_GROWER permissions to a user after profile completion"""
+    """Add user to is_grower group with IS_GROWER permissions"""
+    grower_group, created = Group.objects.get_or_create(name='is_grower')
+    
     permissions_to_add = []
     for perm_string in IS_GROWER:
         app_label, codename = perm_string.split('.')
@@ -24,7 +26,10 @@ def grant_full_grower_permissions(user):
             pass
     
     if permissions_to_add:
-        user.user_permissions.add(*permissions_to_add)
+        grower_group.permissions.set(permissions_to_add)
+    
+    if not user.groups.filter(name='is_grower').exists():
+        user.groups.add(grower_group)
 
 
 @login_required
