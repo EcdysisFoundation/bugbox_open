@@ -11,9 +11,12 @@ def download_s3_media(source_obj, destination_path):
         print('Currently this task is only supported on Ecdysis01')
         return
 
-    S3_CLIENT.download_file(
-        Bucket=settings.AWS_STORAGE_BUCKET_NAME_MEDIA,
-        Key=source_obj,
-        Filename=destination_path
-    )
+    if S3_CLIENT:
+        S3_CLIENT.download_file(
+            Bucket=settings.AWS_STORAGE_BUCKET_NAME_MEDIA,
+            Key=source_obj,
+            Filename=destination_path
+        )
+    else:
+        print('S3_CLIENT is disabled, check default_storage status')
     return
