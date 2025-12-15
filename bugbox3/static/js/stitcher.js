@@ -109,26 +109,26 @@ $(function () {
                 data: 'guid',
                 render: getFormButton
             },{
-                data: 'approved',
-                render: getApproved
-            },{
-                data: 'bugbox_croped_saved',
-                render: getSent
+                data: 'panorama_path',
+                render: getPanoramaSrc
             },{
                 data: 'bugbox_sample_id',
                 render: getSampleUrl
             },{
-                data: 'panorama_path',
-                render: getPanoramaSrc
+                data: 'approved',
+                render: getApproved
             },{
                 data: 'sent_label_studio',
                 render: getFilename
             },{
+                data: 'predictions_timestamp',
+                render: concatTen
+            },{
                 data: 'annotations_updated_at',
                 render: concatTen
             },{
-                data: 'predictions_timestamp',
-                render: concatTen
+                data: 'bugbox_croped_saved',
+                render: getSent
             }
         ]
     })
