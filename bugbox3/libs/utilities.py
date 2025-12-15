@@ -14,12 +14,15 @@ from PIL import Image
 from bugbox3.samples import constants
 
 
-S3_CLIENT = boto3.client(
-        's3',
-        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-        region_name=settings.AWS_REGION,
-    )
+if 's3storage' in default_storage.__class__.__name__.lower():
+    S3_CLIENT = boto3.client(
+            's3',
+            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+            region_name=settings.AWS_REGION,
+        )
+else:
+    S3_CLIENT = None
 
 
 def encode_json(data):
@@ -54,19 +57,22 @@ def get_media_url(file, public=False):
     """
     if not file:
         return ''
-    if settings.MEDIA_URL == '/media/':
+    elif settings.MEDIA_URL == '/media/':
         # assume local storage
         return file.url
-    if public:
+    elif public:
         # if for example SpecimenImage.public_image = True, pass it in
         # requires acl='public-read' on S3 object
         return settings.MEDIA_URL + file.name
-    return S3_CLIENT.generate_presigned_url(
-        'get_object',
-        Params={'Bucket': settings.AWS_STORAGE_BUCKET_NAME_MEDIA,
-                'Key': file.name},
-        HttpMethod="GET",
-        ExpiresIn=3600)
+    elif S3_CLIENT:
+        return S3_CLIENT.generate_presigned_url(
+            'get_object',
+            Params={'Bucket': settings.AWS_STORAGE_BUCKET_NAME_MEDIA,
+                    'Key': file.name},
+            HttpMethod="GET",
+            ExpiresIn=3600)
+    else:
+        return ''
 
 
 IMAGE_TYPES = {
@@ -179,7 +185,7 @@ def save_specimen_img_thumbs(instance):
         instance.image_width = dims[0]
         instance.image_height = dims[1]
         needs_save = True
-    
+
     if not instance.image_thumbnail and dims[0] > constants.SPECIMEN_IMAGE_THUMBSIZE:
         a = BytesIO()
         instance.image_thumbnail = resized_thumbnail(
@@ -204,21 +210,21 @@ def save_specimen_img_thumbs(instance):
             constants.SPECIMEN_IMAGE_THUMBSIZE_LARGE,
             c, 'thumbnail_large')
         needs_save = True
-    
+
     if instance.image_thumbnail_large:
         thumb_dims = get_image_dimensions(instance.image_thumbnail_large)
         if thumb_dims[0] and thumb_dims[1]:
             instance.image_thumbnail_large_width = thumb_dims[0]
             instance.image_thumbnail_large_height = thumb_dims[1]
             needs_save = True
-    
+
     if needs_save:
         instance.save()
-    
+
     for i in (a, b, c):
         if i:
             i.close()
-    
+
     return
 
 

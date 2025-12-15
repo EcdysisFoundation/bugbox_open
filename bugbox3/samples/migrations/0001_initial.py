@@ -137,12 +137,12 @@ class Migration(migrations.Migration):
                         to="taxonomy.morphospecies",
                     ),
                 ),
-                (
-                    "ai_version",
-                    models.ForeignKey(
-                        blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to="taxonomy.aiversion"
-                    ),
-                ),
+                #(
+                #    "ai_version",
+                #    models.ForeignKey(
+                #        blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to="taxonomy.aiversion"
+                #    ),
+                #),
                 (
                     "classification",
                     models.ForeignKey(

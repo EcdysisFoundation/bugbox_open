@@ -4,9 +4,11 @@ from django.contrib import messages
 from django.core.paginator import Paginator
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
+from django.http import HttpResponse, Http404
 import csv
 import io
 import json
+import pandas as pd
 
 from bugbox3.core.permissions import IS_GROWERADMIN
 from ...models import CSVImportLog, CSVImportFieldValue, TransectCode
@@ -117,16 +119,18 @@ def csv_upload(request):
             description = form.cleaned_data.get('description', '')
             
             file_path = f'csv_imports/{csv_file.name}'
+            csv_file.seek(0)
             saved_path = default_storage.save(file_path, ContentFile(csv_file.read()))
-            
+
             csv_import_log = CSVImportLog.objects.create(
                 filename=csv_file.name,
                 imported_by=request.user,
+                file_path=saved_path,
+                description=description,
                 status='pending',
                 total_records=0,
                 successful_records=0,
                 failed_records=0,
-                error_log=f'File saved to: {saved_path}\n\nDescription: {description}'
             )
 
             total, successful, failed, error_log = _process_csv_file(csv_import_log, csv_file)
@@ -205,3 +209,61 @@ def csv_import_detail(request, import_id):
     
     return render(request, 'grower_portal/admin/csv_import_detail.html', context)
 
+
+@login_required
+@permission_required(IS_GROWERADMIN, raise_exception=True)
+def csv_import_download(request, import_id):
+    """Download the CSV file associated with an import log."""
+    import_log = get_object_or_404(CSVImportLog, id=import_id)
+
+    if not import_log.file_path:
+        raise Http404("File not found for this import log")
+    try:
+        with default_storage.open(import_log.file_path, 'rb') as file:
+            file_content = file.read()
+
+        response = HttpResponse(file_content, content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; filename="{import_log.filename}"'
+        return response
+    except Exception:
+        raise Http404("File could not be retrieved")
+
+
+@login_required
+@permission_required(IS_GROWERADMIN, raise_exception=True)
+def csv_import_download_error_log(request, import_id):
+    """Download the error log as a CSV file."""
+    import_log = get_object_or_404(CSVImportLog, id=import_id)
+
+    if not import_log.error_log:
+        raise Http404("No error log found for this import")
+
+    error_log_df = pd.DataFrame(import_log.error_log)
+    error_log_df = error_log_df.reindex(columns=['row_number', 'error', 'row_data'])
+
+    # Create HTTP response
+    response = HttpResponse(error_log_df.to_csv(index=False), content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="ERROR_LOG_{import_log.filename}"'
+    return response
+
+
+@login_required
+@permission_required(IS_GROWERADMIN, raise_exception=True)
+def csv_import_delete(request, import_id):
+    """Download the CSV file associated with an import log."""
+    import_log = get_object_or_404(CSVImportLog, id=import_id)
+
+    import_log_filename = import_log.filename
+    import_log_id = import_log.id
+
+    # Delete assoociated field value records, source file, and import log record
+    try:
+        default_storage.delete(import_log.file_path)
+    except Exception as e:
+        raise RuntimeError(f"Error deleting import log file: {e}")
+
+    CSVImportFieldValue.objects.filter(import_log=import_log).delete()
+    import_log.delete()
+
+    messages.success(request, f'Import log {import_log_filename} (ID: {import_log_id}) has been deleted.')
+    return redirect('grower_portal:admin_csv_import_list')
