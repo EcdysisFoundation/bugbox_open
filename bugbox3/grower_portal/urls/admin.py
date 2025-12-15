@@ -11,7 +11,7 @@ from ..views.admin import (
     admin_application_edit_basic, admin_application_edit_management,
     admin_application_edit_transects, admin_application_submit,
     transect_code_list, transect_code_generate, transect_code_deactivate, transect_code_reactivate,
-    csv_upload, csv_import_list, csv_import_detail,
+    csv_upload, csv_import_list, csv_import_detail, csv_import_download, csv_import_download_error_log, csv_import_delete,
     report_list, report_detail
 )
 
@@ -44,6 +44,9 @@ urlpatterns = [
     path('csv-upload/', csv_upload, name='admin_csv_upload'),
     path('csv-imports/', csv_import_list, name='admin_csv_import_list'),
     path('csv-imports/<int:import_id>/', csv_import_detail, name='admin_csv_import_detail'),
+    path('csv-imports/<int:import_id>/download/', csv_import_download, name='admin_csv_import_download'),
+    path('csv-imports/<int:import_id>/download-error-log/', csv_import_download_error_log, name='admin_csv_import_download_error_log'),
+    path('csv-imports/<int:import_id>/delete/', csv_import_delete, name='admin_csv_import_delete'),
     
     path('reports/', report_list, name='admin_report_list'),
     path('reports/<int:report_id>/', report_detail, name='admin_report_detail'),
