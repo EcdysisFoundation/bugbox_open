@@ -118,13 +118,12 @@ $(function () {
                 data: 'approved',
                 render: getApproved
             },{
-                data: 'sent_label_studio',
-                render: getFilename
+                data: 'label_studio_project'
             },{
-                data: 'predictions_timestamp',
+                data: 'predictions_timestamp_coco',
                 render: concatTen
             },{
-                data: 'annotations_updated_at',
+                data: 'annotations_updated_at_segment',
                 render: concatTen
             },{
                 data: 'bugbox_croped_saved',
