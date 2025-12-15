@@ -165,11 +165,15 @@ def create_entries(apps, schema_editor):
     print('completed creating entries for lookupchoices')
 
 
+def print_notice(apps, schema_editor):
+    print('original function removed, see core.management.commands.populate_org_choices to enter')
+
+
 class Migration(migrations.Migration):
     dependencies = [
         ('core', '0003_lookupchoices'),
     ]
 
     operations = [
-        migrations.RunPython(create_entries)
+        migrations.RunPython(print_notice)
     ]

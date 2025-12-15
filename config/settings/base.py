@@ -344,16 +344,16 @@ DATA_UPLOAD_MAX_NUMBER_FILES = 400
 
 # AWS S3
 # ------------------------------------------------------------------------------
-AWS_ACCESS_KEY_ID = env("DJANGO_AWS_ACCESS_KEY_ID")
+AWS_ACCESS_KEY_ID = env("DJANGO_AWS_ACCESS_KEY_ID", default="")
 # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
-AWS_SECRET_ACCESS_KEY = env("DJANGO_AWS_SECRET_ACCESS_KEY")
+AWS_SECRET_ACCESS_KEY = env("DJANGO_AWS_SECRET_ACCESS_KEY", default="")
 # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
-AWS_STORAGE_BUCKET_NAME = env("DJANGO_AWS_STORAGE_BUCKET_NAME")
-AWS_STORAGE_BUCKET_NAME_MEDIA = env("DJANGO_AWS_STORAGE_BUCKET_NAME_MEDIA")
-AWS_STORAGE_BUCKET_NAME_STATIC = env("DJANGO_AWS_STORAGE_BUCKET_NAME_STATIC")
+AWS_STORAGE_BUCKET_NAME = env("DJANGO_AWS_STORAGE_BUCKET_NAME", default="")
+AWS_STORAGE_BUCKET_NAME_MEDIA = env("DJANGO_AWS_STORAGE_BUCKET_NAME_MEDIA", default="")
+AWS_STORAGE_BUCKET_NAME_STATIC = env("DJANGO_AWS_STORAGE_BUCKET_NAME_STATIC", default="")
 AWS_STORAGE_BUCKET_NAME_PUBLIC = "ecdysis-public"
-AWS_REGION = env("DJANGO_AWS_REGION_NAME")
-AWS_DEFAULT_REGION = env("DJANGO_AWS_REGION_NAME")
+AWS_REGION = env("DJANGO_AWS_REGION_NAME", default="")
+AWS_DEFAULT_REGION = env("DJANGO_AWS_REGION_NAME", default="")
 
 # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
 AWS_QUERYSTRING_AUTH = False
