@@ -5,8 +5,7 @@ from storages.backends.s3boto3 import S3Boto3Storage
 
 class PublicMediaStorage(Storage):
     """
-    Storage backend figured, otherwise falls back to local file storage.or public media files.
-    Uses S3 when conf
+    Storage backend for public media files. Uses S3 when configured, or if not, falls back to local file storage.
     """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
