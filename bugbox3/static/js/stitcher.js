@@ -55,7 +55,7 @@ function sendZipFile(formData, api_url) {
 
 function getSampleUrl(data) {
     if (data) {
-        return `<a href="/samples/sample/${data}">${data}</a>`
+        return `<a href="/samples/sample/${data}" target="_blank">${data}</a>`
     } else { return '' }
 }
 
@@ -83,7 +83,7 @@ $(function () {
         if (filename) {
             let result = `<a href="${json_context.STITCHER_URL}`
             let s = String(data).replace('media', 'static')
-            result += `${s}">${filename}</a>`;
+            result += `${s}" target="_blank">${filename}</a>`;
             return result
         } else {
             return 'no panorama available'
@@ -134,7 +134,7 @@ $(function () {
 
     $('#stitcher-table', 'body').on('click', '.stitcher-form-button', function () {
         var guid = $(this).data('row-id');
-        window.location.href = `/core/stitcher-form/${guid}`;
+        window.open(`/core/stitcher-form/${guid}`, '_blank');
         })
 
 
