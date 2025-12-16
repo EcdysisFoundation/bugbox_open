@@ -12,7 +12,8 @@ from ..views.admin import (
     admin_application_edit_transects, admin_application_submit,
     transect_code_list, transect_code_generate, transect_code_deactivate, transect_code_reactivate,
     csv_upload, csv_import_list, csv_import_detail, csv_import_download, csv_import_download_error_log, csv_import_delete,
-    report_list, report_detail
+    report_list, report_detail,
+    label_management, label_generation_list, label_generation_detail, label_generation_download
 )
 
 urlpatterns = [
@@ -47,6 +48,11 @@ urlpatterns = [
     path('csv-imports/<int:import_id>/download/', csv_import_download, name='admin_csv_import_download'),
     path('csv-imports/<int:import_id>/download-error-log/', csv_import_download_error_log, name='admin_csv_import_download_error_log'),
     path('csv-imports/<int:import_id>/delete/', csv_import_delete, name='admin_csv_import_delete'),
+    
+    path('label-management/', label_management, name='label_management'),
+    path('label-generations/', label_generation_list, name='label_generation_list'),
+    path('label-generations/<int:generation_id>/', label_generation_detail, name='label_generation_detail'),
+    path('label-generations/<int:generation_id>/download/', label_generation_download, name='label_generation_download'),
     
     path('reports/', report_list, name='admin_report_list'),
     path('reports/<int:report_id>/', report_detail, name='admin_report_detail'),

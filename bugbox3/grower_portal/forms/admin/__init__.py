@@ -7,6 +7,7 @@ from .forms import (
     FarmFilterForm,
     FieldFilterForm,
 )
+from .label_forms import LabelGenerationForm, QuickLabelGenerationForm
 
 __all__ = [
     'TransectCodeGenerationForm',
@@ -16,4 +17,6 @@ __all__ = [
     'GrowerFilterForm',
     'FarmFilterForm',
     'FieldFilterForm',
+    'LabelGenerationForm',
+    'QuickLabelGenerationForm',
 ]
