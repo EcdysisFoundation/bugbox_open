@@ -198,10 +198,10 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                 instance = MultiSpecimenImage(
                     sample=this_sample,
                     panorama_filename=self.panorama_name,
-                    annotations=self.data[constants.STITCHER_ANNOTATIONS_SEGMENT],
-                    annotations_updated_at=auat if auat else '',
-                    predictions=self.data[constants.STITCHER_PREDICTIONS_COCO],
-                    predictions_timestamp=predictions_timestamp,
+                    annotations_segment=self.data[constants.STITCHER_ANNOTATIONS_SEGMENT],
+                    annotations_updated_at_segment=auat if auat else '',
+                    predictions_coco=self.data[constants.STITCHER_PREDICTIONS_COCO],
+                    predictions_timestamp_coco=predictions_timestamp,
                     upload_dir_name=self.data[constants.STITCHER_UPLOAD_DIR_NAME],
                     uuid=self.data[constants.STITCHER_GUID],
                     uploaded_by_user=self.request.user)

@@ -2,12 +2,13 @@ import json
 import requests
 
 STITCHER_URL = 'http://host.docker.internal:8090'
+# STITCHER_URL = 'http://10.147.19.124:8090'
 
 # move js_URLs dev differences to local.yml and local-cloud.yml
-STITCHER_JS_URL_ZEROTIER = 'http://10.147.19.124:8090'
+# STITCHER_JS_URL_ZEROTIER = 'http://10.147.19.124:8090'
 
 # for local dev
-# STITCHER_JS_URL_ZEROTIER = 'http://localhost:8090'
+STITCHER_JS_URL_ZEROTIER = 'http://localhost:8090'
 
 STITCHER_JS_URL = 'http://ecdysis01.local:8090'
 
