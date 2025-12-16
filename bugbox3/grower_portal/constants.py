@@ -254,3 +254,37 @@ CSV_IMPORT_SCHEMAS = {
         ],
     },
 }
+
+LABEL_PROJECT_CHOICES = [
+    ('avalanche', 'Avalanche'),
+    ('1000_farms', '1000 Farms'),
+]
+
+LABEL_CATEGORY_CHOICES = [
+    ('inner', 'Inner labels'),
+    ('outer', 'Outer labels'),
+]
+
+SAMPLE_TYPES = [
+    ('soil_core_0_60cm', 'Soil core 0-60cm'),
+    ('soil_core_0_5cm', 'Soil core 0-5cm'),
+    ('soil_core_5_10cm', 'Soil core 5-10cm'),
+    ('soil_core_10_15cm', 'Soil core 10-15cm'),
+    ('soil_core_15_30cm', 'Soil core 15-30cm'),
+    ('soil_core_30_60cm', 'Soil core 30-60cm'),
+    ('soil_core_0_15cm', 'Soil core 0-15cm'),
+    ('soil_archive', 'Soil archive'),
+    ('insect_quads', 'Insect quads'),
+    ('insect_sweeps', 'Insect sweeps'),
+    ('plant_dna', 'Plant DNA'),
+    ('bulk_density', 'Bulk density'),
+    ('forage', 'Forage'),
+    ('yield_sample', 'Yield/Crop Sample'),
+]
+
+LABEL_COUNT_MIN = 1
+LABEL_COUNT_MAX = 1000
+CLUSTER_NUMBER_MAX_LENGTH = 10
+LABEL_FILE_MAX_LENGTH = 255
+LABEL_DESCRIPTION_MAX_LENGTH = 500
+LABEL_TEMPLATE_SLUG = 'labels-template'
