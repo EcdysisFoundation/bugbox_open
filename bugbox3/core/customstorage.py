@@ -1,8 +1,10 @@
 from django.conf import settings
 from django.core.files.storage import FileSystemStorage, Storage
+from django.utils.deconstruct import deconstructible
 from storages.backends.s3boto3 import S3Boto3Storage
 
 
+@deconstructible
 class PublicMediaStorage(Storage):
     """
     Storage backend for public media files. Uses S3 when configured, or if not, falls back to local file storage.
