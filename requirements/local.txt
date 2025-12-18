@@ -24,4 +24,3 @@ factory-boy==3.3.1  # https://github.com/FactoryBoy/factory_boy
 django-debug-toolbar==5.2.0  # https://github.com/jazzband/django-debug-toolbar
 pytest-django==4.9.0  # https://github.com/pytest-dev/pytest-django
 openpyxl
-opencv-python-headless
