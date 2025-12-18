@@ -1,11 +1,16 @@
-import os
+import numpy as np
+from contextlib import closing
 from io import BytesIO
 from pathlib import Path
 from PIL import Image
 from uuid import uuid4
 
+from django.conf import settings
 from django.core.files import File
+from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
+
+import cv2
 
 
 def crop_and_save_images(image, bounding_boxes):
@@ -13,7 +18,9 @@ def crop_and_save_images(image, bounding_boxes):
     Crops images based on a list of bounding boxes and saves them to a directory.
     """
     result = []
-    original_max_pixels = Image.MAX_IMAGE_PIXELS
+
+    # avoid DecompressionBombError
+    original_max_pixels = Image.MAX_IMAGE_PIXELS  # save to reset it later
     if not original_max_pixels:
         raise ValueError('MAX_IMAGE_PIXELS was not set')
     Image.MAX_IMAGE_PIXELS = None
@@ -127,3 +134,79 @@ def create_segmentation(
         "original_height": image_height,
     }
     return item
+
+
+def get_polygon_area(x, y):
+    """
+    From https://github.com/HumanSignal/label-studio-sdk/blob/master/src/label_studio_sdk/converter/utils.py
+    https://en.wikipedia.org/wiki/Shoelace_formula
+
+    """
+
+    assert len(x) == len(y)
+    return float(0.5 * np.abs(np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1))))
+
+
+def get_polygon_bounding_box(x, y):
+    """
+    From https://github.com/HumanSignal/label-studio-sdk/blob/master/src/label_studio_sdk/converter/utils.py
+    """
+
+    assert len(x) == len(y)
+    x1, y1, x2, y2 = min(x), min(y), max(x), max(y)
+    return [x1, y1, x2 - x1, y2 - y1]
+
+
+def convert_ls_polygonlabels(
+        points, width, height):
+    """
+    From https://github.com/HumanSignal/label-studio-sdk/blob/master/src/label_studio_sdk/converter/converter.py#L836
+    """
+    points_abs = [
+        (x / 100 * width, y / 100 * height) for x, y in points
+    ]
+    x, y = zip(*points_abs)
+
+    return {
+        'segmentation':
+            [
+                [coord for point in points_abs for coord in point]
+            ],
+        'bbox': convert_coco_bbox_to_pil(get_polygon_bounding_box(x, y))
+    }
+
+
+def crop_img_with_segmentation(image, annotations_segment):
+    if False:  # temp disable settings.ON_ECDYSIS_SERVER != 'YES':
+        # high memory usage, do on local server
+        print('Warning: function disabled when not ON_ECDYSIS_SERVER')
+        return
+
+    width = annotations_segment[0]['original_width']
+    height = annotations_segment[0]['original_height']
+    conv = [convert_ls_polygonlabels(
+        v['points'],
+        v['original_width'],
+        v['original_height']) for v in annotations_segment]
+    points = [v['segmentation'] for v in conv]
+    bboxs = [v['bbox'] for v in conv]
+
+    mask = np.zeros((height, width), dtype=np.uint8)
+    polys = [np.array(poly, dtype=np.int32).reshape(-1, 2) for poly in points]
+    cv2.fillPoly(mask, polys, 255)  # all polygons in one call
+
+    with closing(image.open()) as img:
+        file_bytes = img.read()
+        np_arr = np.frombuffer(file_bytes, np.uint8)
+        np_arr = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+
+    if np_arr.shape[2] == 3:
+        np_arr = cv2.cvtColor(np_arr, cv2.COLOR_BGR2BGRA)
+
+    np_arr[:, :, 3] = mask
+    success, buffer = cv2.imencode(".png", np_arr)
+    print(success)
+
+    content = ContentFile(buffer.tobytes())
+
+    return content
