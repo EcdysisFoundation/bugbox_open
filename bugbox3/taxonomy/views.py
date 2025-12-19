@@ -206,6 +206,71 @@ class MorphospeciesDetailView(PermissionRequiredMixin, FormView):
             'recall': [[a.entered_date, a.recall] for a in ai],
             'total': [a.train for a in ai]
         }
+        
+        reviewed_specimens = Specimen.objects.filter(
+            classification=morphospecies
+        ).exclude(acceptance=samples_constants.ACCEPTANCE_PENDING)
+        
+        misidentification_counts = {}
+        for specimen in reviewed_specimens:
+            # Check top-3: ai_classification, optional_pred_one, optional_pred_two
+            top3_morphospecies = []
+            
+            if specimen.ai_classification and specimen.ai_classification.id != morphospecies.id:
+                top3_morphospecies.append(specimen.ai_classification)
+            
+            # Secondary prediction
+            if specimen.optional_pred_one:
+                pred_one_morpho = None
+                if 'morphospecies_id' in specimen.optional_pred_one:
+                    try:
+                        pred_one_morpho = Morphospecies.objects.get(pk=specimen.optional_pred_one['morphospecies_id'])
+                    except (Morphospecies.DoesNotExist, ValueError, TypeError):
+                        pass
+                elif 'class_op' in specimen.optional_pred_one:
+                    pred_one_name = specimen.optional_pred_one.get('class_op')
+                    if pred_one_name:
+                        try:
+                            pred_one_morpho = Morphospecies.objects.get(name=pred_one_name)
+                        except Morphospecies.DoesNotExist:
+                            pass
+                if pred_one_morpho and pred_one_morpho.id != morphospecies.id:
+                    top3_morphospecies.append(pred_one_morpho)
+            
+            # Tertiary prediction
+            if specimen.optional_pred_two:
+                pred_two_morpho = None
+                if 'morphospecies_id' in specimen.optional_pred_two:
+                    try:
+                        pred_two_morpho = Morphospecies.objects.get(pk=specimen.optional_pred_two['morphospecies_id'])
+                    except (Morphospecies.DoesNotExist, ValueError, TypeError):
+                        pass
+                elif 'class_op' in specimen.optional_pred_two:
+                    pred_two_name = specimen.optional_pred_two.get('class_op')
+                    if pred_two_name:
+                        try:
+                            pred_two_morpho = Morphospecies.objects.get(name=pred_two_name)
+                        except Morphospecies.DoesNotExist:
+                            pass
+                if pred_two_morpho and pred_two_morpho.id != morphospecies.id:
+                    top3_morphospecies.append(pred_two_morpho)
+            
+            # count the occurrences
+            for misidentified_morpho in top3_morphospecies:
+                if misidentified_morpho.id not in misidentification_counts:
+                    misidentification_counts[misidentified_morpho.id] = {
+                        'morphospecies': misidentified_morpho,
+                        'count': 0
+                    }
+                misidentification_counts[misidentified_morpho.id]['count'] += 1
+        
+        #  sort by count and geting the top results -descending-
+        common_misidentifications = sorted(
+            misidentification_counts.values(),
+            key=lambda x: x['count'],
+            reverse=True
+        )
+        
         context.update({
             'can_edit': self.request.user.has_perm(CHANGE_MORPHOSPECIES),
             'display_name': display_name,
@@ -220,6 +285,7 @@ class MorphospeciesDetailView(PermissionRequiredMixin, FormView):
                     'pk', distinct=True,
                     filter=~Q(acceptance=samples_constants.ACCEPTANCE_PENDING)), pending=Count(
                         'pk', distinct=True, filter=Q(acceptance=samples_constants.ACCEPTANCE_PENDING))),
+            'common_misidentifications': common_misidentifications,
             'json_context': get_json_context({
                 'ai_accuracy_over_time': ai_accuracy_over_time,
                 'datatables_url': api_reverse('taxonomy:morphospecies-picker-list',

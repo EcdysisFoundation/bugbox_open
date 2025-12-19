@@ -126,7 +126,8 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                 if sample_ids:
                     potential_samples = [
                         (i, reverse('samples:sample', kwargs={'sample_id': i})) for i in sample_ids]
-            if (self.data[constants.STITCHER_ANNOTATIONS] or self.data[constants.STITCHER_ANNOTATIONS_UPDATED_AT]) \
+            if (self.data[constants.STITCHER_ANNOTATIONS_SEGMENT] \
+                    or self.data[constants.STITCHER_ANNOTATIONS_UPDATED_AT_SEGMENT]) \
                     and self.data[constants.STITCHER_APPROVED] \
                     and self.data[constants.STITCHER_BUGBOX_SAMPLE_ID]:
                 disable_crop_save = False
@@ -192,15 +193,15 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                 img_url = f'{self.stitcher_url}{self.img_src}'
                 response = requests.get(img_url, stream=True)
                 response.raise_for_status()
-                predictions_timestamp = cast_utc_time(self.data[constants.STITCHER_PREDICTIONS_TIMESTAMP])
-                auat = self.data[constants.STITCHER_ANNOTATIONS_UPDATED_AT]
+                predictions_timestamp = cast_utc_time(self.data[constants.STITCHER_PREDICTIONS_TIMESTAMP_COCO])
+                auat = self.data[constants.STITCHER_ANNOTATIONS_UPDATED_AT_SEGMENT]
                 instance = MultiSpecimenImage(
                     sample=this_sample,
                     panorama_filename=self.panorama_name,
-                    annotations=self.data[constants.STITCHER_ANNOTATIONS],
-                    annotations_updated_at=auat if auat else '',
-                    predictions=self.data[constants.STITCHER_PREDICTIONS],
-                    predictions_timestamp=predictions_timestamp,
+                    annotations_segment=self.data[constants.STITCHER_ANNOTATIONS_SEGMENT],
+                    annotations_updated_at_segment=auat if auat else '',
+                    predictions_coco=self.data[constants.STITCHER_PREDICTIONS_COCO],
+                    predictions_timestamp_coco=predictions_timestamp,
                     upload_dir_name=self.data[constants.STITCHER_UPLOAD_DIR_NAME],
                     uuid=self.data[constants.STITCHER_GUID],
                     uploaded_by_user=self.request.user)

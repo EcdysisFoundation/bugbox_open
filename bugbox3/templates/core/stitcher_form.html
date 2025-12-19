@@ -39,16 +39,19 @@
                 </li>
                 {% if data.sent_label_studio %}
                     <li class="list-group-item list-group-item-info">
-                        Sent to label studio
+                        Sent to Label Studio{% if data.label_studio_project %}: {{ data.label_studio_project }}
+                        {% endif %}
                     </li>
                 {% endif %}
                 <li class="list-group-item">
-                    <b>Predictions:</b> {{ data.predictions|length }}
+                    <b>Predictions:</b> {% if data.predictions_timestamp_coco %}
+                        {{ data.predictions_coco|length }}
+                    {% endif %}
                 </li>
                 <li class="list-group-item">
-                    <b>Annotations:</b> {{ data.annotations|length }}
-                    {% if data.annotations_updated_at %}
-                        <br/> Updated at: {{ data.annotations_updated_at }}
+                    <b>Annotations:</b> {% if data.annotations_updated_at_segment %}
+                        {{ data.annotations_segment|length }}
+                        <br/> Updated at: {{ data.annotations_updated_at_segment }}
                     {% endif %}
                 </li>
                 {% if not data.bugbox_sample_id %}

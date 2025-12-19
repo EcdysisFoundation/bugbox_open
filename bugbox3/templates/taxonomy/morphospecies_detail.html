@@ -157,6 +157,44 @@
             </div>
             {% endif %}
 
+            {% if common_misidentifications %}
+            <br/>
+            <div class="row">
+                <div class="col-12 mb-3 mt-2 p-0">
+                    <div class="card">
+                        <div class="card-header bg-ecdysis text-white">
+                            <h5 class="text-light mt-1 mb-0">Most Common Misidentifications</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted">Morphospecies that appeared as any of the top-3 suggestions for Reviewed specimens of this morphospecies.</p>
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Morphospecies</th>
+                                            <th>Count</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for misid in common_misidentifications %}
+                                        <tr>
+                                            <td>
+                                                <a href="{% url 'taxonomy:morphospecies-detail' misid.morphospecies.id %}">
+                                                    {{ misid.morphospecies.name }}
+                                                </a>
+                                            </td>
+                                            <td>{{ misid.count }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
         </div>
     </div>
 
