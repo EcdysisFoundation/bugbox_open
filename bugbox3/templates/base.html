@@ -60,9 +60,7 @@
 
   <a href="{% url 'about' %}">About</a>
   <a href="{% url 'samples:collection' 1 %}">Collections</a>
-  {% if not request.user.is_authenticated %}
   <a href="{% url 'samples:demo-experiments' %}">Demo</a>
-  {% endif %}
 
   {% if request.user.is_authenticated %}
     {% if ON_ECDYSIS_SERVER %}
@@ -101,6 +99,7 @@
             <a href="{% url 'grower_portal:admin_farm_list' %}">Farms</a>
             <a href="{% url 'grower_portal:admin_field_list' %}">Fields</a>
             <a href="{% url 'grower_portal:admin_transect_code_list' %}">Transect Codes</a>
+            <a href="{% url 'grower_portal:label_management' %}">Label Management</a>
             <a href="{% url 'grower_portal:admin_csv_upload' %}">Upload CSV</a>
             <a href="{% url 'grower_portal:admin_csv_import_list' %}">Import History</a>
           </div>

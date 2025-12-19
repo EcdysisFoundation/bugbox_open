@@ -50,7 +50,6 @@ router.register(r'collections-data/(?P<org_id>[^/]+)', CollectionDatatablesViewS
                 basename='collection-data')
 router.register(r'multispecimens/(?P<sample_id>[^/]+)', MultiSpecimenViewSet,
                 basename='multispecimen')
-# Demo Dtables (no auth required)
 router.register(r'demo-experiments-data', DemoExperimentsDatatablesViewSet,
                 basename='demo-experiment-data')
 router.register(r'demo-sites-data/(?P<experiment_id>[^/]+)', DemoSitesDatatablesViewSet,

@@ -248,6 +248,12 @@ def application_step4(request, application_id):
 
     transect_data = []
     all_valid = True
+    
+    should_show_dropplate = (
+        application.field.field_type == 'range' or 
+        application.field.field_type == 'orchard' or 
+        (application.field.field_type == 'crop' and application.field.crop_type == 'hayfield')
+    )
 
     if request.method == 'POST':
         with transaction.atomic():
@@ -261,18 +267,23 @@ def application_step4(request, application_id):
                 if not general_form.is_valid():
                     all_valid = False
                 
-                dp_qs = m.drop_plate.order_by('distance_m')
-                if dp_qs.count() == 0:
-                    objs = [DropPlateReading(measurement=m, distance_m=d) for d in DISTANCES_DROP_PLATE]
-                    DropPlateReading.objects.bulk_create(objs)
+                if should_show_dropplate:
                     dp_qs = m.drop_plate.order_by('distance_m')
-                
-                dp_formset = DropPlateFormSet(
-                    request.POST, instance=m, prefix=f'dp{m.transect_index}', queryset=dp_qs
-                )
-                data['dropplate_formset'] = dp_formset
-                if not dp_formset.is_valid():
-                    all_valid = False
+                    if dp_qs.count() == 0:
+                        objs = [DropPlateReading(measurement=m, distance_m=d) for d in DISTANCES_DROP_PLATE]
+                        DropPlateReading.objects.bulk_create(objs)
+                        dp_qs = m.drop_plate.order_by('distance_m')
+                    
+                    dp_formset = DropPlateFormSet(
+                        request.POST, instance=m, prefix=f'dp{m.transect_index}', queryset=dp_qs
+                    )
+                    data['dropplate_formset'] = dp_formset
+                    if not dp_formset.is_valid():
+                        all_valid = False
+                else:
+                    data['dropplate_formset'] = DropPlateFormSet(
+                        instance=m, prefix=f'dp{m.transect_index}', queryset=DropPlateReading.objects.none()
+                    )
                 
                 veg_qs = m.vegetation.order_by('metric', 'position_m')
                 if veg_qs.count() == 0:
@@ -359,7 +370,8 @@ def application_step4(request, application_id):
             if all_valid:
                 for data in transect_data:
                     data['general_form'].save()
-                    data['dropplate_formset'].save()
+                    if should_show_dropplate:
+                        data['dropplate_formset'].save()
                     data['vegetation_formset'].save()
                     data['soil_formset'].save()
                     data['compaction_formset'].save()
@@ -382,14 +394,19 @@ def application_step4(request, application_id):
                 prefix=f'm{m.transect_index}', instance=m
             )
             
-            dp_qs = m.drop_plate.order_by('distance_m')
-            if dp_qs.count() == 0:
-                objs = [DropPlateReading(measurement=m, distance_m=d) for d in DISTANCES_DROP_PLATE]
-                DropPlateReading.objects.bulk_create(objs)
+            if should_show_dropplate:
                 dp_qs = m.drop_plate.order_by('distance_m')
-            data['dropplate_formset'] = DropPlateFormSet(
-                instance=m, prefix=f'dp{m.transect_index}', queryset=dp_qs
-            )
+                if dp_qs.count() == 0:
+                    objs = [DropPlateReading(measurement=m, distance_m=d) for d in DISTANCES_DROP_PLATE]
+                    DropPlateReading.objects.bulk_create(objs)
+                    dp_qs = m.drop_plate.order_by('distance_m')
+                data['dropplate_formset'] = DropPlateFormSet(
+                    instance=m, prefix=f'dp{m.transect_index}', queryset=dp_qs
+                )
+            else:
+                data['dropplate_formset'] = DropPlateFormSet(
+                    instance=m, prefix=f'dp{m.transect_index}', queryset=DropPlateReading.objects.none()
+                )
             
             veg_qs = m.vegetation.order_by('metric', 'position_m')
             if veg_qs.count() == 0:

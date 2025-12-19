@@ -1,6 +1,5 @@
 from django.core.files.storage import default_storage
-from django.db import transaction
-from django.http import Http404, HttpResponseForbidden
+from django.http import Http404
 from django.urls import reverse
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib import messages
@@ -29,10 +28,8 @@ DEMO_ORG_SLUG = "bugbox-demo-organization"
 
 
 class DemoAccessMixin:
-    """Mixin to restrict demo access to non-authenticated users only."""
+    """Mixin for demo views. available to all users (authenticated and unauthenticated)."""
     def dispatch(self, request, *args, **kwargs):
-        if request.user.is_authenticated:
-            return HttpResponseForbidden("Demo is only available to non-authenticated users.")
         return super().dispatch(request, *args, **kwargs)
 
 
@@ -135,9 +132,9 @@ class DemoExperimentView(DemoAccessMixin, TemplateView):
                 'experiment': {'id': experiment.id},
                 'last_location_exported_file_status': None,
             }),
-            'all_habitats': Site.objects.filter(experiment_id=experiment.id).exclude(habitat_type='').values_list('habitat_type', flat=True).distinct(),
-            'all_countries': Site.objects.filter(experiment_id=experiment.id).exclude(country='').values_list('country', flat=True).distinct(),
-            'all_states': Site.objects.filter(experiment_id=experiment.id).exclude(state_region='').values_list('state_region', flat=True).distinct(),
+            'all_habitats': Site.objects.filter(experiment_id=experiment.id).exclude(habitat_type='').order_by('habitat_type').values_list('habitat_type', flat=True).distinct(),
+            'all_countries': Site.objects.filter(experiment_id=experiment.id).exclude(country='').order_by('country').values_list('country', flat=True).distinct(),
+            'all_states': Site.objects.filter(experiment_id=experiment.id).exclude(state_region='').order_by('state_region').values_list('state_region', flat=True).distinct(),
             'last_exported_file': None,
             'last_exported_file_status': None,
             'last_location_exported_file': None,
@@ -419,21 +416,14 @@ class DemoExperimentCreateView(DemoAccessMixin, CreateView):
         return context
 
     def form_valid(self, form):
-        demo_org = get_demo_organization()
-        form.instance.organization = demo_org
-        context = self.get_context_data()
-        formsets = context['formsets']
-        with transaction.atomic():
-            self.object = form.save()
-            if formsets.is_valid():
-                formsets.instance = self.object
-                formsets.save()
-            else:
-                print('ERRORS_formsets: ' + str(formsets.errors))
-        return super().form_valid(form)
+        messages.info(
+            self.request,
+            'This is a demo. No data is saved. In a real account, your experiment would be created successfully.'
+        )
+        return redirect('samples:demo-experiments')
 
     def get_success_url(self):
-        return reverse('samples:demo-experiment', kwargs={'experiment_id': self.object.id})
+        return reverse('samples:demo-experiments')
 
 
 class DemoSiteCreateView(DemoAccessMixin, CreateView):
@@ -464,6 +454,7 @@ class DemoSiteCreateView(DemoAccessMixin, CreateView):
 
         context.update({
             'action': self.action,
+            'is_demo': True,
             'experiment_details': {
                 'experiment': experiment,
                 'plans': get_sample_plan_descriptions(experiment.id)
@@ -481,21 +472,11 @@ class DemoSiteCreateView(DemoAccessMixin, CreateView):
         return context
 
     def form_valid(self, form):
-        context = self.get_context_data()
-        form.instance.experiment_id = context['experiment_details']['experiment'].id
-        formsets = context['formsets']
-        self.object = form.save()
-        if formsets.is_valid():
-            formsets.instance = self.object
-            instances = formsets.save(commit=False)
-            for i in instances:
-                if hasattr(i, 'created_by_user_id'):
-                    i.created_by_user_id = None
-                i.save()
-            formsets.save()
-        else:
-            print('ERRORS_formsets: ' + str(formsets.errors))
-        return super().form_valid(form)
+        messages.info(
+            self.request,
+            'This is a demo. No data is saved. In a real account, your site would be created successfully.'
+        )
+        return redirect('samples:demo-experiment', experiment_id=self.kwargs['experiment_id'])
 
     def get_success_url(self):
         return reverse('samples:demo-experiment', kwargs={'experiment_id': self.kwargs['experiment_id']})
@@ -525,6 +506,13 @@ class DemoSampleUpdateView(DemoAccessMixin, UpdateView):
         context = super().get_context_data(**kwargs)
         context['form_action_url'] = reverse('samples:demo-sample-update', kwargs={'sample_id': self.kwargs['sample_id']})
         return context
+
+    def form_valid(self, form):
+        messages.info(
+            self.request,
+            'This is a demo. No data is saved. In a real account, your sample would be updated successfully.'
+        )
+        return redirect('samples:demo-sample', sample_id=self.kwargs['sample_id'])
 
     def get_success_url(self):
         return reverse('samples:demo-sample', kwargs={'sample_id': self.kwargs['sample_id']})
@@ -588,12 +576,14 @@ class DemoSpecimenCreateView(DemoAccessMixin, CreateView):
             messages.error(
                 self.request, 'A verified classification is required, please select one to create.')
             return redirect('samples:demo-specimen-create', sample_id=sample.id)
-        form.instance.sample_id = sample.id
-        form.instance.created_by_user_id = None
-        return super().form_valid(form)
+        messages.info(
+            self.request,
+            'This is a demo. No data is saved. In a real account, your specimen would be created successfully.'
+        )
+        return redirect('samples:demo-sample', sample_id=sample.id)
 
     def get_success_url(self):
-        return reverse('samples:demo-specimen', kwargs={'id': self.object.id})
+        return reverse('samples:demo-sample', kwargs={'sample_id': self.kwargs['sample_id']})
 
 
 class DemoSpecimensWithoutImagesFormView(DemoAccessMixin, FormView):
@@ -652,19 +642,18 @@ class DemoSpecimensWithoutImagesFormView(DemoAccessMixin, FormView):
             name = v[taxa_const.FIELD_MORPHO_NAME]
             if name in form.cleaned_data:
                 if form.cleaned_data[name]:
-                    morphospecies = get_object_or_404(Morphospecies, name=name)
-                    Specimen.objects.create(
-                        sample=sample,
-                        classification=morphospecies,
-                        created_by_user=None,
-                        partial_count=form.cleaned_data[name]
-                    )
                     entered_names.append(name)
-        messages.success(
-            self.request, 'Successfully entered counts for {0}'.format(
-                ', '.join(entered_names)
-            ))
-        return super().form_valid(form)
+        if entered_names:
+            messages.info(
+                self.request,
+                f'This is a demo. No data is saved. In a real account, counts for {", ".join(entered_names)} would be created successfully.'
+            )
+        else:
+            messages.info(
+                self.request,
+                'This is a demo. No data is saved.'
+            )
+        return redirect('samples:demo-sample', sample_id=sample.id)
 
     def get_success_url(self):
         return reverse('samples:demo-sample', kwargs={'sample_id': self.kwargs['sample_id']})

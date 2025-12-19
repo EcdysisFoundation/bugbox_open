@@ -193,9 +193,9 @@ class ExperimentView(PermissionRequiredMixin, TemplateView):
                      location_export.exported_file_status if location_export else None
                  )
                  }),
-            'all_habitats': Site.objects.filter(experiment_id=experiment.id).exclude(habitat_type='').values_list('habitat_type', flat=True).distinct(),
-            'all_countries': Site.objects.filter(experiment_id=experiment.id).exclude(country='').values_list('country', flat=True).distinct(),
-            'all_states': Site.objects.filter(experiment_id=experiment.id).exclude(state_region='').values_list('state_region', flat=True).distinct(),
+            'all_habitats': Site.objects.filter(experiment_id=experiment.id).exclude(habitat_type='').order_by('habitat_type').values_list('habitat_type', flat=True).distinct(),
+            'all_countries': Site.objects.filter(experiment_id=experiment.id).exclude(country='').order_by('country').values_list('country', flat=True).distinct(),
+            'all_states': Site.objects.filter(experiment_id=experiment.id).exclude(state_region='').order_by('state_region').values_list('state_region', flat=True).distinct(),
         })
 
         user_experiment_file, created = UserExperimentFile.objects.get_or_create(

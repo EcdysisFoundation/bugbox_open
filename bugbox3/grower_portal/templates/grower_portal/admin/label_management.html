@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load render_bundle from webpack_loader %}
+
+{% block title %}Label Management{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Label Management</h1>
+    <p class="text-muted">Generate labels for sample bags</p>
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card mb-4 border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-bolt"></i> Quick Generate - Full Trip Labels</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Generate all labels for a field trip with one click. For Avalanche: Generates all sample types for each transect (yield/crop and forage get 2 labels each).</p>
+                    <form method="post" id="quick-label-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="form_type" value="quick">
+                        
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                {{ quick_form.project_type.label_tag }}
+                                {{ quick_form.project_type }}
+                                {% if quick_form.project_type.errors %}
+                                    <div class="text-danger">{{ quick_form.project_type.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-3 mb-3">
+                                {{ quick_form.cluster_number.label_tag }}
+                                {{ quick_form.cluster_number }}
+                                <small class="form-text text-muted">{{ quick_form.cluster_number.help_text }}</small>
+                                {% if quick_form.cluster_number.errors %}
+                                    <div class="text-danger">{{ quick_form.cluster_number.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-2 mb-3">
+                                {{ quick_form.year.label_tag }}
+                                {{ quick_form.year }}
+                                {% if quick_form.year.errors %}
+                                    <div class="text-danger">{{ quick_form.year.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-2 mb-3">
+                                {{ quick_form.number_of_transects.label_tag }}
+                                {{ quick_form.number_of_transects }}
+                                <small class="form-text text-muted">{{ quick_form.number_of_transects.help_text }}</small>
+                                {% if quick_form.number_of_transects.errors %}
+                                    <div class="text-danger">{{ quick_form.number_of_transects.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-2 mb-3 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-bolt"></i> Quick Generate
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-cog"></i> Advanced - Custom Label Generation</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="label-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="form_type" value="detailed">
+                        
+                        <div class="mb-3">
+                            {{ form.project_type.label_tag }}
+                            {{ form.project_type }}
+                            {% if form.project_type.errors %}
+                                <div class="text-danger">{{ form.project_type.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.label_category.label_tag }}
+                            {{ form.label_category }}
+                            {% if form.label_category.errors %}
+                                <div class="text-danger">{{ form.label_category.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div id="inner-labels-section" style="display: none;">
+                            <div class="mb-3">
+                                {{ form.cluster_number.label_tag }}
+                                {{ form.cluster_number }}
+                                <small class="form-text text-muted">{{ form.cluster_number.help_text }}</small>
+                                {% if form.cluster_number.errors %}
+                                    <div class="text-danger">{{ form.cluster_number.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                {{ form.year.label_tag }}
+                                {{ form.year }}
+                                {% if form.year.errors %}
+                                    <div class="text-danger">{{ form.year.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label>Sample Types (select one or more)</label>
+                                <div id="sample-types-container">
+                                    <div id="avalanche-sample-types" style="display: none;">
+                                        {% for value, label in avalanche_sample_types %}
+                                        <div class="form-check">
+                                            <input class="form-check-input sample-type-checkbox" type="checkbox" name="sample_types" value="{{ value }}" id="id_sample_{{ value }}">
+                                            <label class="form-check-label" for="id_sample_{{ value }}">
+                                                {{ label }}
+                                            </label>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    <div id="1000farms-sample-types" style="display: none;">
+                                        {% for value, label in thousand_farms_sample_types %}
+                                        <div class="form-check">
+                                            <input class="form-check-input sample-type-checkbox" type="checkbox" name="sample_types" value="{{ value }}" id="id_sample_1000_{{ value }}">
+                                            <label class="form-check-label" for="id_sample_1000_{{ value }}">
+                                                {{ label }}
+                                            </label>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% if form.sample_types.errors %}
+                                    <div class="text-danger">{{ form.sample_types.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                {{ form.labels_per_type.label_tag }}
+                                {{ form.labels_per_type }}
+                                <small class="form-text text-muted">{{ form.labels_per_type.help_text }}</small>
+                                {% if form.labels_per_type.errors %}
+                                    <div class="text-danger">{{ form.labels_per_type.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                {{ form.description.label_tag }}
+                                {{ form.description }}
+                                {% if form.description.errors %}
+                                    <div class="text-danger">{{ form.description.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-file-word"></i> Generate Labels
+                            </button>
+                        </div>
+
+                        <div id="outer-labels-message" style="display: none;">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i>
+                                Outer labels functionality will be implemented in a future update.
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Label History</h5>
+                </div>
+                <div class="card-body">
+                    <a href="{% url 'grower_portal:label_generation_list' %}" class="btn btn-outline-primary w-100">
+                        <i class="fas fa-history"></i> View All Generated Labels
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block customheadtagcontent %}
+{% render_bundle 'grower_label_management' 'js' %}
+{% endblock %}
+

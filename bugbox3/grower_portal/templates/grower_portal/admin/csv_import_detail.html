@@ -11,9 +11,28 @@
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h1>CSV Import Details</h1>
-                <a href="{% url 'grower_portal:admin_csv_import_list' %}" class="btn btn-outline-secondary">
-                    <i class="fas fa-arrow-left"></i> Back to List
-                </a>
+                <div>
+                    <a href="{% url 'grower_portal:admin_csv_import_download' import_id=import_log.id %}" class="btn btn-success me-2">
+                        <i class="fas fa-download"></i> Download File
+                    </a>
+                    {% if import_log.error_log %}
+                        <a href="{% url 'grower_portal:admin_csv_import_download_error_log' import_id=import_log.id %}" class="btn btn-success me-2">
+                            <i class="fas fa-download"></i> Download Error Report
+                        </a>
+                    {% else %}
+                        <span title="No error log available. This import has no errors to report.">
+                            <button type="button" class="btn btn-success me-2" disabled>
+                                <i class="fas fa-download"></i> Download Error Report
+                            </button>
+                        </span>
+                    {% endif %}
+                    <button type="button" class="btn btn-outline-danger me-2" data-bs-toggle="modal" data-bs-target="#deleteModal{{ import_log.id }}">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                    <a href="{% url 'grower_portal:admin_csv_import_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to List
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -26,6 +45,8 @@
                 </div>
                 <div class="card-body">
                     <p><strong>Filename:</strong> {{ import_log.filename }}</p>
+                    <p><strong>File ID:</strong> {{ import_log.id }}</p>
+                    <p><strong>Description:</strong> {{ import_log.description }}</p>
                     <p><strong>Imported By:</strong> {{ import_log.imported_by.name }}</p>
                     <p><strong>Import Date:</strong> {{ import_log.import_date|user_datetime:request.user_timezone }}</p>
                     <p><strong>Status:</strong>
@@ -49,8 +70,13 @@
                     <h5 class="mb-0">Import Statistics</h5>
                 </div>
                 <div class="card-body">
+                    {% if import_log.error_log %}
+                    <div class="alert alert-warning" role="alert">
+                        <strong>Validation Failed:</strong> No records were imported due to validation errors.<br>These statistics reflect the contents found in the file during validation, not what was actually imported.
+                    </div>
+                    {% endif %}
                     <p><strong>Total Records:</strong> {{ import_log.total_records }}</p>
-                    <p><strong>Successful Records:</strong> <span class="badge bg-success">{{ import_log.successful_records }}</span></p>
+                    <p><strong>Validated Records:</strong> <span class="badge bg-success">{{ import_log.successful_records }}</span></p>
                     <p><strong>Failed Records:</strong> <span class="badge bg-danger">{{ import_log.failed_records }}</span></p>
                 </div>
             </div>
@@ -62,18 +88,25 @@
         <div class="col-12 mb-4">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0">Error Log / Notes</h5>
+                    <h5 class="mb-0">Error Log</h5>
                 </div>
                 <div class="card-body">
-                    <pre class="mb-0">{{ import_log.error_log }}</pre>
+                    {% for row in pretty_error_log %}
+                        <p><strong>Row Number:</strong> {{ row.row_number }}</p>
+                        <p><strong>Error:</strong> {{ row.error }}</p>
+                        <details>
+                            <summary><strong>View Row Data</strong></summary>
+                            <pre>{{ row.row_data }}</pre>
+                        </details>
+                        <hr/>
+                    {% endfor %}
                 </div>
             </div>
         </div>
     </div>
     {% endif %}
 </div>
+
+{% include 'grower_portal/admin/csv_import_delete_modal.html' with import=import_log %}
+
 {% endblock %}
-
-
-
-

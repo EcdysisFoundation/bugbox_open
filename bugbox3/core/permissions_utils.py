@@ -37,7 +37,9 @@ def create_app_groups():
     groups_permissions = (
         ('is_admin', permissions.IS_ADMIN),
         ('is_research', permissions.IS_RESEARCH),
-        ('review_page', [permissions.REVIEW_SPECIMEN_PAGE])
+        ('review_page', [permissions.REVIEW_SPECIMEN_PAGE]),
+        ('is_grower', permissions.IS_GROWER),
+        ('is_groweradmin', permissions.IS_GROWERADMIN),
     )
 
     for entry in groups_permissions:
@@ -45,5 +47,7 @@ def create_app_groups():
         results.append(f'{entry[0]} created {created}')
         if created:
             results.append(add_group_permissions(group, entry[1]))
+        else:
+            add_group_permissions(group, entry[1])
 
     return f'Groups created with permissions: {results}'
