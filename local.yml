@@ -8,6 +8,8 @@ services:
       context: .
       dockerfile: ./compose/local/django/Dockerfile
     container_name: bugbox3_local_django
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       - postgres
       - redis
