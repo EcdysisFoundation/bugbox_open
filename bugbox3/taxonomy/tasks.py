@@ -81,12 +81,16 @@ def id_image(id):
     Morphospecies = apps.get_model(app_label='taxonomy', model_name='Morphospecies')
     morphospecies_id = data.get("morphospecies_id")
     if morphospecies_id:
-        specimen.ai_classification = Morphospecies.objects.get(pk=int(morphospecies_id))
-        specimen.ai_model_name = data.get("modelVersion")
-        specimen.confidence = float(data.get("confidence"))
-        specimen.optional_pred_one = data.get("optional_preds")[0]
-        specimen.optional_pred_two = data.get("optional_preds")[1]
-        specimen.save()
+        try:
+            m = Morphospecies.objects.get(pk=int(morphospecies_id))
+            specimen.ai_classification = m
+            specimen.ai_model_name = data.get("modelVersion")
+            specimen.confidence = float(data.get("confidence"))
+            specimen.optional_pred_one = data.get("optional_preds")[0]
+            specimen.optional_pred_two = data.get("optional_preds")[1]
+            specimen.save()
+        except Morphospecies.DoesNotExist:
+            logging.warning(f"Warning morphospecies_id {morphospecies_id} does not exist, not saved.")
     else:
         logging.warning(f"Did not get a morphospecies_id for specimen_id={id}. Raw response: {data}")
     return

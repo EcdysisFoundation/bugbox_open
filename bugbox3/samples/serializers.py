@@ -75,7 +75,7 @@ class MultiSpecimenImageDatatablesSerializer(ModelSerializer):
             constants.FIELD_MULTIIMAGE_CROPPED_TO_SPECIMEN]
 
     def pano_details(self, value):
-        anno_n = len(value.annotations) if value.annotations else 0
+        anno_n = len(value.annotations_segment) if value.annotations_segment else 0
         rows = [
             get_img_src(value.label_image_thumbnail),
             value.panorama_filename,
@@ -304,7 +304,7 @@ class SpecimensAllDatatablesSerializer(ModelSerializer):
                 else:
                     width = specimen_image.image_width or ''
                     height = specimen_image.image_height or ''
-                
+
                 img_thumbnail_large = {
                     'url': get_media_url(
                         modal_thumb_img, public=specimen_image.public_image),

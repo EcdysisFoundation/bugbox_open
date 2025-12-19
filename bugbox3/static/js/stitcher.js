@@ -55,7 +55,7 @@ function sendZipFile(formData, api_url) {
 
 function getSampleUrl(data) {
     if (data) {
-        return `<a href="/samples/sample/${data}">${data}</a>`
+        return `<a href="/samples/sample/${data}" target="_blank">${data}</a>`
     } else { return '' }
 }
 
@@ -83,7 +83,7 @@ $(function () {
         if (filename) {
             let result = `<a href="${json_context.STITCHER_URL}`
             let s = String(data).replace('media', 'static')
-            result += `${s}">${filename}</a>`;
+            result += `${s}" target="_blank">${filename}</a>`;
             return result
         } else {
             return 'no panorama available'
@@ -109,33 +109,32 @@ $(function () {
                 data: 'guid',
                 render: getFormButton
             },{
-                data: 'approved',
-                render: getApproved
-            },{
-                data: 'bugbox_croped_saved',
-                render: getSent
+                data: 'panorama_path',
+                render: getPanoramaSrc
             },{
                 data: 'bugbox_sample_id',
                 render: getSampleUrl
             },{
-                data: 'panorama_path',
-                render: getPanoramaSrc
+                data: 'approved',
+                render: getApproved
             },{
-                data: 'sent_label_studio',
-                render: getFilename
+                data: 'label_studio_project'
             },{
-                data: 'annotations_updated_at',
+                data: 'predictions_timestamp_coco',
                 render: concatTen
             },{
-                data: 'predictions_timestamp',
+                data: 'annotations_updated_at_segment',
                 render: concatTen
+            },{
+                data: 'bugbox_croped_saved',
+                render: getSent
             }
         ]
     })
 
     $('#stitcher-table', 'body').on('click', '.stitcher-form-button', function () {
         var guid = $(this).data('row-id');
-        window.location.href = `/core/stitcher-form/${guid}`;
+        window.open(`/core/stitcher-form/${guid}`, '_blank');
         })
 
 
