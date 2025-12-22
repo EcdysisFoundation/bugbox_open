@@ -17,6 +17,7 @@ from .permissions import IS_RESEARCH, ZEROTIER_USERS, IS_ADMIN
 from .forms import StitcherForm, StitcherDeleteForm
 from .stitcher_api import (
     get_root_message,
+    get_stitcher_stats,
     get_upload_file,
     patch_upload_file,
     delete_upload_file,
@@ -37,9 +38,13 @@ class StitcherView(PermissionRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         stitcher_url = STITCHER_JS_URL_ZEROTIER if \
             str(self.request.user) in ZEROTIER_USERS else STITCHER_JS_URL
+        stats = get_stitcher_stats()
+        ls_projects_choices = [(v[0], f'{v[0]} ({v[1]})')
+                               for v in stats[constants.STITCHER_STATS_LS_PROJECTS]]
         context.update({
             'json_context': get_json_context({
-                'STITCHER_URL': stitcher_url
+                'STITCHER_URL': stitcher_url,
+                'ls_projects_choices': ls_projects_choices,
             })
         })
         root_message = get_root_message()

@@ -191,13 +191,8 @@ class LookupChoicesForm(ModelFormMixin):
 
 
 class StitcherForm(Form):
-    choices = [
-        (None, '---'),
-        (True, 'Approved'),
-        (False, 'Dissaprove')
-    ]
     approved = ChoiceField(
-        choices=choices,
+        choices=constants.STITCHER_APPROVED_CHOICES,
         label="Approve/Dissaprove",
         help_text="Updating the stitching is disabled when approved or dissaproved.",
         required=False)

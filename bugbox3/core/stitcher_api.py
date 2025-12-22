@@ -102,3 +102,17 @@ def get_root_message():
     except Exception as e:
         print(e)
         return {ERROR_MSG_KEY: e}
+
+
+def get_stitcher_stats():
+    api_url = STITCHER_URL + '/stats/'
+    try:
+        response = requests.get(api_url)
+        if response.status_code == 200:
+            data = response.json()
+            return data
+        else:
+            return {ERROR_MSG_KEY: response.status_code}
+    except Exception as e:
+        print(e)
+        return {ERROR_MSG_KEY: e}

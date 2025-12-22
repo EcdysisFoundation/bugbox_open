@@ -131,6 +131,12 @@ STITCHER_FORM_REQUIRED_KEYS = [
     STITCHER_UPLOAD_DIR_NAME
 ]
 STITCHER_LABEL_IMG = 'label_r_001.jpg'
+STITCHER_APPROVED_CHOICES = (
+        (None, '---'),
+        (True, 'Approved'),
+        (False, 'Dissaprove')
+    )
+STITCHER_STATS_LS_PROJECTS = 'label_studio_projects'
 
 # Default LookupChoices
 DEFAULT_TAGS = (

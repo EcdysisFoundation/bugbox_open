@@ -7,6 +7,23 @@ let messageModal = new Modal(document.getElementById('messageModal'), {
     keyboard: false
   })
 
+
+function getUrl(dt_url, ls_project_val) {
+    let args_gtzero = false
+    let lsp = ''
+    let sep = '?'
+    if (ls_project_val) {
+        if (args_gtzero) {
+            sep = '&'
+        }
+        // more sanitation required if view not on private network
+        let cleaned_val = encodeURIComponent(ls_project_val)
+        lsp = `${sep}lsproject=${cleaned_val}`
+        args_gtzero = true
+    }
+    return `${dt_url}/uploads${lsp}`
+}
+
 function getFilename(path) {
   if (path) {
     const lastSlashIndex = path.lastIndexOf('/');
@@ -158,6 +175,19 @@ $(function () {
         formData.append('confidence_threshold', confidence)
         const params = `?confidence_threshold=${confidence}`
         sendZipFile(formData, json_context.STITCHER_URL + '/upload-zip-images/' + params)
+    });
+
+    // api_url filters
+    let new_datatables_url = '';
+    let $lsProjectPicker = $('<select placeholder="Filter by" aria-label="Filter by" id="approved-picker" class="form-select"></select>')
+        $('.label-studio-picker').append($lsProjectPicker)
+        $lsProjectPicker.append(`<option value="">` + 'LS Projects' + `</option>`)
+        $lsProjectPicker.append(json_context.ls_projects_choices.map(value => `<option value="${value[0]}">${value[1]}</option>`))
+        $lsProjectPicker.val('')
+
+    $lsProjectPicker.on('change', () => {
+        new_datatables_url = getUrl(json_context.STITCHER_URL, $lsProjectPicker.val())
+        stitcher_table.ajax.url( new_datatables_url ).load();
     })
 
 
