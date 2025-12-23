@@ -8,20 +8,23 @@ let messageModal = new Modal(document.getElementById('messageModal'), {
   })
 
 
-function getUrl(dt_url, ls_project_val) {
-    let args_gtzero = false
-    let lsp = ''
-    let sep = '?'
-    if (ls_project_val) {
-        if (args_gtzero) {
-            sep = '&'
-        }
+function getUrl(dt_url, data_filters) {
+
+    let url_args = '';
+    let sep = '?';
+    if (data_filters.ls_project) {
         // more sanitation required if view not on private network
-        let cleaned_val = encodeURIComponent(ls_project_val)
-        lsp = `${sep}lsproject=${cleaned_val}`
-        args_gtzero = true
-    }
-    return `${dt_url}/uploads${lsp}`
+        let cleaned_val = encodeURIComponent(data_filters.ls_project)
+        url_args = `${sep}lsproject=${cleaned_val}`
+        sep = '&'
+    };
+    // true false filters
+    url_args += `${sep}unreviewed=${data_filters.unreviewed}`;
+    if (sep == '?') {sep = '&'}; // there is at least one arg here
+    url_args += `${sep}approved=${data_filters.approved}`;
+    url_args += `${sep}disapproved=${data_filters.disapproved}`;
+
+    return `${dt_url}/uploads${url_args}`
 }
 
 function getFilename(path) {
@@ -91,6 +94,13 @@ function getSent(data) {
 
 $(function () {
     const json_context = JSON.parse(document.getElementById('json_context').textContent)
+    // take this out, just keep up with vars in functions verbose
+    let data_filters = {
+        ls_project: '',
+        unreviewed: true,
+        approved: true,
+        disapproved: false
+    }
 
     let $confidenceInput = $('<input type="number" step="0.1" id="formConfidence" class="form-control" value="0.6" max="0.9" min="0.1" required="true">')
     $('.confidence-input').append($confidenceInput)
@@ -113,7 +123,7 @@ $(function () {
         processing: true,
         serverSide: true,
         ajax: {
-            url: json_context.STITCHER_URL + '/uploads',
+            url: getUrl(json_context.STITCHER_URL, data_filters),
             dataSrc: 'data'
         },
         language: {
@@ -186,7 +196,47 @@ $(function () {
         $lsProjectPicker.val('')
 
     $lsProjectPicker.on('change', () => {
-        new_datatables_url = getUrl(json_context.STITCHER_URL, $lsProjectPicker.val())
+        data_filters.ls_project = $lsProjectPicker.val()
+        new_datatables_url = getUrl(json_context.STITCHER_URL, data_filters)
+        stitcher_table.ajax.url( new_datatables_url ).load();
+    })
+
+    let unreviewed_check = '';
+    if (data_filters.unreviewed) {
+        unreviewed_check = 'checked';
+    };
+    let $unreviewedCheck = $(`<input class="form-check-input" type="checkbox" value="" id="unreviewedCheck" ${unreviewed_check}>`)
+    $('.unreviewed-check').append($unreviewedCheck)
+
+    $unreviewedCheck.on('change', () => {
+        data_filters.unreviewed = $unreviewedCheck.prop("checked");
+        new_datatables_url = getUrl(json_context.STITCHER_URL, data_filters);
+        stitcher_table.ajax.url( new_datatables_url ).load();
+    })
+
+    let approved_check = '';
+    if (data_filters.approved) {
+        approved_check = 'checked';
+    };
+    let $approvedCheck = $(`<input class="form-check-input" type="checkbox" value="" id="approvedCheck" ${approved_check}>`)
+    $('.approved-check').append($approvedCheck)
+
+    $approvedCheck.on('change', () => {
+        data_filters.approved = $approvedCheck.prop("checked");
+        new_datatables_url = getUrl(json_context.STITCHER_URL, data_filters);
+        stitcher_table.ajax.url( new_datatables_url ).load();
+    })
+
+    let disapprove_check = '';
+    if (data_filters.disapprove) {
+        disapprove_check = 'checked';
+    };
+    let $disapprovedCheck = $(`<input class="form-check-input" type="checkbox" value="" id="disapprovedCheck" ${disapprove_check}>`)
+    $('.disapproved-check').append($disapprovedCheck)
+
+    $disapprovedCheck.on('change', () => {
+        data_filters.disapproved = $disapprovedCheck.prop("checked");
+        new_datatables_url = getUrl(json_context.STITCHER_URL, data_filters);
         stitcher_table.ajax.url( new_datatables_url ).load();
     })
 
