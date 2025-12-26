@@ -132,7 +132,17 @@ $(function () {
     };
 
     var stitcher_table = $('#stitcher-table').DataTable({
-        order: [[1, 'desc']],
+        layout: {
+            top: 'info',
+            topStart:{
+            pageLength: {
+                    menu: [ 10, 25, 50, 100 ]
+                }
+            },
+            topEnd: 'search',
+            bottomStart: 'info',
+            bottomEnd: 'paging'
+        },
         ordering: false,
         processing: true,
         serverSide: true,
