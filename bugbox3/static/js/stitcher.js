@@ -7,6 +7,31 @@ let messageModal = new Modal(document.getElementById('messageModal'), {
     keyboard: false
   })
 
+
+function getUrl(dt_url, data_filters) {
+
+    let url_args = '';
+    let sep = '?';
+    if (data_filters.ls_project) {
+        // more sanitation required if view not on private network
+        let cleaned_val = encodeURIComponent(data_filters.ls_project)
+        url_args = `${sep}lsproject=${cleaned_val}`
+        sep = '&'
+    };
+    // true false filters
+    url_args += `${sep}unreviewed=${data_filters.unreviewed}`;
+    if (sep == '?') {sep = '&'}; // there is at least one arg here
+    url_args += `${sep}approved=${data_filters.approved}`;
+    url_args += `${sep}disapproved=${data_filters.disapproved}`;
+    url_args += `${sep}predictions=${data_filters.predictions}`;
+    url_args += `${sep}annotations=${data_filters.annotations}`;
+    url_args += `${sep}completed=${data_filters.completed}`;
+    url_args += `${sep}sample_linked=${data_filters.sample_linked}`;
+    url_args += `${sep}nota_sample=${data_filters.nota_sample}`;
+
+    return `${dt_url}/uploads${url_args}`
+}
+
 function getFilename(path) {
   if (path) {
     const lastSlashIndex = path.lastIndexOf('/');
@@ -53,10 +78,14 @@ function sendZipFile(formData, api_url) {
     });
 }
 
-function getSampleUrl(data) {
-    if (data) {
-        return `<a href="/samples/sample/${data}" target="_blank">${data}</a>`
-    } else { return '' }
+function getSampleUrl(data, type, row) {
+    if (row.bugbox_sample_id) {
+        return `<a href="/samples/sample/${row.bugbox_sample_id}" target="_blank">${row.bugbox_sample_id}</a>`
+    } else {
+        if (row.nota_sample) {
+            return '<i class="bi bi-ban"></i>'
+        } else { return '' }
+    }
 }
 
 function concatTen(data) {
@@ -74,6 +103,17 @@ function getSent(data) {
 
 $(function () {
     const json_context = JSON.parse(document.getElementById('json_context').textContent)
+    let data_filters = {
+        ls_project: '',
+        sample_linked: false,
+        nota_sample: false,
+        unreviewed: true,
+        approved: true,
+        disapproved: false,
+        predictions: false,
+        annotations: false,
+        completed: false
+    }
 
     let $confidenceInput = $('<input type="number" step="0.1" id="formConfidence" class="form-control" value="0.6" max="0.9" min="0.1" required="true">')
     $('.confidence-input').append($confidenceInput)
@@ -91,12 +131,22 @@ $(function () {
     };
 
     var stitcher_table = $('#stitcher-table').DataTable({
-        order: [[1, 'desc']],
+        layout: {
+            top: 'info',
+            topStart:{
+            pageLength: {
+                    menu: [ 10, 25, 50, 100 ]
+                }
+            },
+            topEnd: 'search',
+            bottomStart: 'info',
+            bottomEnd: 'paging'
+        },
         ordering: false,
         processing: true,
         serverSide: true,
         ajax: {
-            url: json_context.STITCHER_URL + '/uploads',
+            url: getUrl(json_context.STITCHER_URL, data_filters),
             dataSrc: 'data'
         },
         language: {
@@ -112,7 +162,7 @@ $(function () {
                 data: 'panorama_path',
                 render: getPanoramaSrc
             },{
-                data: 'bugbox_sample_id',
+                data: '',
                 render: getSampleUrl
             },{
                 data: 'approved',
@@ -158,6 +208,115 @@ $(function () {
         formData.append('confidence_threshold', confidence)
         const params = `?confidence_threshold=${confidence}`
         sendZipFile(formData, json_context.STITCHER_URL + '/upload-zip-images/' + params)
+    });
+
+    // api_url filters
+    let new_datatables_url = '';
+    let $lsProjectPicker = $('<select placeholder="Filter by" aria-label="Filter by" id="approved-picker" class="form-select"></select>')
+        $('.label-studio-picker').append($lsProjectPicker)
+        $lsProjectPicker.append(`<option value="">` + 'LS Projects' + `</option>`)
+        $lsProjectPicker.append(json_context.ls_projects_choices.map(value => `<option value="${value[0]}">${value[1]}</option>`))
+        $lsProjectPicker.val('')
+    $lsProjectPicker.on('change', () => {
+        data_filters.ls_project = $lsProjectPicker.val()
+        new_datatables_url = getUrl(json_context.STITCHER_URL, data_filters)
+        stitcher_table.ajax.url( new_datatables_url ).load();
+    })
+
+    let unreviewed_check = '';
+    if (data_filters.unreviewed) {
+        unreviewed_check = 'checked';
+    };
+    let $unreviewedCheck = $(`<input class="form-check-input" type="checkbox" value="" id="unreviewedCheck" ${unreviewed_check}>`)
+    $('.unreviewed-check').append($unreviewedCheck)
+    $unreviewedCheck.on('change', () => {
+        data_filters.unreviewed = $unreviewedCheck.prop("checked");
+        new_datatables_url = getUrl(json_context.STITCHER_URL, data_filters);
+        stitcher_table.ajax.url( new_datatables_url ).load();
+    })
+
+    let approved_check = '';
+    if (data_filters.approved) {
+        approved_check = 'checked';
+    };
+    let $approvedCheck = $(`<input class="form-check-input" type="checkbox" value="" id="approvedCheck" ${approved_check}>`)
+    $('.approved-check').append($approvedCheck)
+    $approvedCheck.on('change', () => {
+        data_filters.approved = $approvedCheck.prop("checked");
+        new_datatables_url = getUrl(json_context.STITCHER_URL, data_filters);
+        stitcher_table.ajax.url( new_datatables_url ).load();
+    })
+
+    let disapprove_check = '';
+    if (data_filters.disapprove) {
+        disapprove_check = 'checked';
+    };
+    let $disapprovedCheck = $(`<input class="form-check-input" type="checkbox" value="" id="disapprovedCheck" ${disapprove_check}>`)
+    $('.disapproved-check').append($disapprovedCheck)
+    $disapprovedCheck.on('change', () => {
+        data_filters.disapproved = $disapprovedCheck.prop("checked");
+        new_datatables_url = getUrl(json_context.STITCHER_URL, data_filters);
+        stitcher_table.ajax.url( new_datatables_url ).load();
+    })
+
+    let predictions_check = '';
+    if (data_filters.predictions) {
+        predictions_check = 'checked';
+    };
+    let $predictionsCheck = $(`<input class="form-check-input" type="checkbox" value="" id="predictionsCheck" ${predictions_check}>`)
+    $('.predictions-check').append($predictionsCheck)
+    $predictionsCheck.on('change', () => {
+        data_filters.predictions = $predictionsCheck.prop("checked");
+        new_datatables_url = getUrl(json_context.STITCHER_URL, data_filters);
+        stitcher_table.ajax.url( new_datatables_url ).load();
+    })
+
+    let annotations_check = '';
+    if (data_filters.annotations) {
+        annotations_check = 'checked';
+    };
+    let $annotationsCheck = $(`<input class="form-check-input" type="checkbox" value="" id="annotationsCheck" ${annotations_check}>`)
+    $('.annotations-check').append($annotationsCheck)
+    $annotationsCheck.on('change', () => {
+        data_filters.annotations = $annotationsCheck.prop("checked");
+        new_datatables_url = getUrl(json_context.STITCHER_URL, data_filters);
+        stitcher_table.ajax.url( new_datatables_url ).load();
+    })
+
+    let completed_check = '';
+    if (data_filters.completed) {
+        completed_check = 'checked';
+    };
+    let $completedCheck = $(`<input class="form-check-input" type="checkbox" value="" id="completedCheck" ${completed_check}>`)
+    $('.completed-check').append($completedCheck)
+    $completedCheck.on('change', () => {
+        data_filters.completed = $completedCheck.prop("checked");
+        new_datatables_url = getUrl(json_context.STITCHER_URL, data_filters);
+        stitcher_table.ajax.url( new_datatables_url ).load();
+    })
+
+    let sample_linked_check = '';
+    if (data_filters.sample_linked) {
+        sample_linked_check = 'checked';
+    };
+    let $sampleLinkedCheck = $(`<input class="form-check-input" type="checkbox" value="" id="sampleLinkedCheck" ${sample_linked_check}>`)
+    $('.sample-linked-check').append($sampleLinkedCheck)
+    $sampleLinkedCheck.on('change', () => {
+        data_filters.sample_linked = $sampleLinkedCheck.prop("checked");
+        new_datatables_url = getUrl(json_context.STITCHER_URL, data_filters);
+        stitcher_table.ajax.url( new_datatables_url ).load();
+    })
+
+    let nota_sample_check = '';
+    if (data_filters.nota_sample) {
+        nota_sample_check = 'checked';
+    };
+    let $notaSampleCheck = $(`<input class="form-check-input" type="checkbox" value="" id="notaSampleCheck" ${nota_sample_check}>`)
+    $('.nota-sample-check').append($notaSampleCheck)
+    $notaSampleCheck.on('change', () => {
+        data_filters.nota_sample = $notaSampleCheck.prop("checked");
+        new_datatables_url = getUrl(json_context.STITCHER_URL, data_filters);
+        stitcher_table.ajax.url( new_datatables_url ).load();
     })
 
 

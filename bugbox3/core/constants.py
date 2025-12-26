@@ -114,7 +114,10 @@ STITCHER_ANNOTATIONS_SEGMENT = 'annotations_segment'
 STITCHER_ANNOTATOR_SEGMENT = 'annotator_segment'
 STITCHER_ANNOTATIONS_UPDATED_AT_SEGMENT = 'annotations_updated_at_segment'
 STITCHER_BUGBOX_SAMPLE_ID = 'bugbox_sample_id'
+STITCHER_NOTA_SAMPLE = 'nota_sample'
 STITCHER_BUGBOX_CROPED_SAVED = 'bugbox_croped_saved'
+
+STITCHER_ERROR = 'ERROR'
 
 STITCHER_TIMEFIELDS = [
     STITCHER_STITCHING_EXCEPTION_AT,
@@ -131,6 +134,12 @@ STITCHER_FORM_REQUIRED_KEYS = [
     STITCHER_UPLOAD_DIR_NAME
 ]
 STITCHER_LABEL_IMG = 'label_r_001.jpg'
+STITCHER_APPROVED_CHOICES = (
+        (None, '---'),
+        (True, 'Approved'),
+        (False, 'Dissaprove')
+    )
+STITCHER_STATS_LS_PROJECTS = 'label_studio_projects'
 
 # Default LookupChoices
 DEFAULT_TAGS = (
