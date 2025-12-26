@@ -103,7 +103,6 @@ function getSent(data) {
 
 $(function () {
     const json_context = JSON.parse(document.getElementById('json_context').textContent)
-    // take this out, just keep up with vars in functions verbose
     let data_filters = {
         ls_project: '',
         sample_linked: false,

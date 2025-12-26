@@ -184,7 +184,6 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
         if formdata[constants.STITCHER_FORM_IDENT] == constants.STITCHER_FORM_DEFAULT:
             if formdata[constants.STITCHER_APPROVED] == '':
                 formdata[constants.STITCHER_APPROVED] = None
-            print(formdata)
             v = patch_upload_file(self.guid, formdata)
             if constants.STITCHER_ERROR in v.keys():
                 messages.error(
