@@ -26,6 +26,8 @@ function getUrl(dt_url, data_filters) {
     url_args += `${sep}predictions=${data_filters.predictions}`;
     url_args += `${sep}annotations=${data_filters.annotations}`;
     url_args += `${sep}completed=${data_filters.completed}`;
+    url_args += `${sep}sample_linked=${data_filters.sample_linked}`;
+    url_args += `${sep}nota_sample=${data_filters.nota_sample}`;
 
     return `${dt_url}/uploads${url_args}`
 }
@@ -76,10 +78,14 @@ function sendZipFile(formData, api_url) {
     });
 }
 
-function getSampleUrl(data) {
-    if (data) {
-        return `<a href="/samples/sample/${data}" target="_blank">${data}</a>`
-    } else { return '' }
+function getSampleUrl(data, type, row) {
+    if (row.bugbox_sample_id) {
+        return `<a href="/samples/sample/${row.bugbox_sample_id}" target="_blank">${row.bugbox_sample_id}</a>`
+    } else {
+        if (row.nota_sample) {
+            return '<i class="bi bi-ban"></i>'
+        } else { return '' }
+    }
 }
 
 function concatTen(data) {
@@ -100,6 +106,8 @@ $(function () {
     // take this out, just keep up with vars in functions verbose
     let data_filters = {
         ls_project: '',
+        sample_linked: false,
+        nota_sample: false,
         unreviewed: true,
         approved: true,
         disapproved: false,
@@ -145,7 +153,7 @@ $(function () {
                 data: 'panorama_path',
                 render: getPanoramaSrc
             },{
-                data: 'bugbox_sample_id',
+                data: '',
                 render: getSampleUrl
             },{
                 data: 'approved',
@@ -274,6 +282,30 @@ $(function () {
     $('.completed-check').append($completedCheck)
     $completedCheck.on('change', () => {
         data_filters.completed = $completedCheck.prop("checked");
+        new_datatables_url = getUrl(json_context.STITCHER_URL, data_filters);
+        stitcher_table.ajax.url( new_datatables_url ).load();
+    })
+
+    let sample_linked_check = '';
+    if (data_filters.sample_linked) {
+        sample_linked_check = 'checked';
+    };
+    let $sampleLinkedCheck = $(`<input class="form-check-input" type="checkbox" value="" id="sampleLinkedCheck" ${sample_linked_check}>`)
+    $('.sample-linked-check').append($sampleLinkedCheck)
+    $sampleLinkedCheck.on('change', () => {
+        data_filters.sample_linked = $sampleLinkedCheck.prop("checked");
+        new_datatables_url = getUrl(json_context.STITCHER_URL, data_filters);
+        stitcher_table.ajax.url( new_datatables_url ).load();
+    })
+
+    let nota_sample_check = '';
+    if (data_filters.nota_sample) {
+        nota_sample_check = 'checked';
+    };
+    let $notaSampleCheck = $(`<input class="form-check-input" type="checkbox" value="" id="notaSampleCheck" ${nota_sample_check}>`)
+    $('.nota-sample-check').append($notaSampleCheck)
+    $notaSampleCheck.on('change', () => {
+        data_filters.nota_sample = $notaSampleCheck.prop("checked");
         new_datatables_url = getUrl(json_context.STITCHER_URL, data_filters);
         stitcher_table.ajax.url( new_datatables_url ).load();
     })

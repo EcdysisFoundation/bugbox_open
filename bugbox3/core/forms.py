@@ -2,7 +2,8 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Button, Column, Field, Layout, Row, Submit
 from crispy_bootstrap5.bootstrap5 import FloatingField
 from django.conf import settings
-from django.forms import (ClearableFileInput,
+from django.forms import (BooleanField,
+                          ClearableFileInput,
                           CharField,
                           ChoiceField,
                           DateInput, FileField,
@@ -202,6 +203,10 @@ class StitcherForm(Form):
         help_text="Annotations will be used to save images to the entered Sample ID",
         required=False)
 
+    nota_sample = BooleanField(
+        label="Mark as not a sample (Sample ID must be blank)",
+        required=False)
+
     upload_dir_name = CharField(required=False)
 
     bugbox_croped_saved = CharField(required=False)
@@ -215,6 +220,7 @@ class StitcherForm(Form):
             FloatingField(constants.STITCHER_BUGBOX_SAMPLE_ID),
             FloatingField(constants.STITCHER_UPLOAD_DIR_NAME, required=True),
             FloatingField(constants.STITCHER_APPROVED),
+            constants.STITCHER_NOTA_SAMPLE,
             constants.STITCHER_FORM_IDENT,
             Button('cancel', 'Back / Cancel', css_class='btn-secondary',
                    onclick="window.location.href = '{}';".format(reverse('core:stitcher'))),

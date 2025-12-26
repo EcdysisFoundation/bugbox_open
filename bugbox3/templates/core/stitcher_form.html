@@ -55,8 +55,11 @@
                     {% endif %}
                 </li>
                 {% if not data.bugbox_sample_id %}
-
-                    {% if potential_samples %}
+                    {% if nota_sample %}
+                        <li class="list-group-item list-group-item-danger">
+                            Marked as having no sample to link to
+                        </li>
+                    {% elif potential_samples %}
                         <li class="list-group-item list-group-item-success">
                             Potential Sample IDs in BugBox {% for p, l in potential_samples %}
                                 <a href="{{ l }}" target="_blank">{{ p }}</a>&nbsp;
@@ -94,7 +97,7 @@
 
                     <li class="list-group-item">
                         <p class="text-secondary">
-                            <i>To crop out arthropods and save to BugBox,
+                            <i>To save to BugBox, and then crop out arthropods,
                                 the Sample ID must first be linked, there must be annotations and the image must be marked as Approved.
                                 Changes above will be ignored, unless first submitted.
                             </i>

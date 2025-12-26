@@ -43,43 +43,39 @@
         <div class="col-3">
             Sample
         </div>
-        <div class="col-3">
+        <div class="col-2">
             Approved
         </div>
+        <div class="col-3">
+            Label Studio
+        </div>
+        <div class="col-3">
+            Segmentation and final save
+        </div>
 
-        <div class="col-2">
-            <div class="form-check">
-                <div class="predictions-check"></div>
-                <label class="form-check-label" for="predictionsCheck">
-                    Predictions
-                </label>
-            </div>
-        </div>
-        <div class="col-2">
-            <div class="form-check">
-                <div class="annotations-check"></div>
-                <label class="form-check-label" for="annotationsCheck">
-                    Annotations
-                </label>
-            </div>
-        </div>
-        <div class="col-2">
-            <div class="form-check">
-                <div class="completed-check"></div>
-                <label class="form-check-label" for="completedCheck">
-                    Completed
-                </label>
-            </div>
-        </div>
     </div>
 
     <div class="row bg-light rounded pt-2 pb-1 mb-1">
         <div class="col-3">
-            sample info
+                <div class="row">
+                    <div class="form-check">
+                        <div class="sample-linked-check"></div>
+                        <label class="form-check-label" for="sampleLinkedCheck">
+                            linked
+                        </label>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="form-check">
+                        <div class="nota-sample-check"></div>
+                        <label class="form-check-label" for="notaSampleCheck">
+                            not a sample
+                        </label>
+                    </div>
+                </div>
         </div>
         <div class="col-2">
-            <div class="row">
-                <div class="col">
+                <div class="row">
                     <div class="form-check">
                         <div class="unreviewed-check"></div>
                         <label class="form-check-label" for="unreviewedCheck">
@@ -87,7 +83,7 @@
                         </label>
                     </div>
                 </div>
-                <div class="col">
+                <div class="row">
                     <div class="form-check">
                         <div class="approved-check"></div>
                         <label class="form-check-label" for="approvedCheck">
@@ -95,7 +91,7 @@
                         </label>
                     </div>
                 </div>
-                <div class="col">
+                <div class="row">
                     <div class="form-check">
                         <div class="disapproved-check"></div>
                         <label class="form-check-label" for="disapprovedCheck">
@@ -103,11 +99,35 @@
                         </label>
                     </div>
                 </div>
-            </div>
         </div>
         <div class="col-3">
-            Label Studio Projects
             <div class="label-studio-picker"></div>
+        </div>
+        <div class="col-3">
+            <div class="row">
+                <div class="form-check">
+                    <div class="predictions-check"></div>
+                    <label class="form-check-label" for="predictionsCheck">
+                        Predictions
+                    </label>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-check">
+                    <div class="annotations-check"></div>
+                    <label class="form-check-label" for="annotationsCheck">
+                        Annotations
+                    </label>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-check">
+                    <div class="completed-check"></div>
+                    <label class="form-check-label" for="completedCheck">
+                        Completed
+                    </label>
+                </div>
+            </div>
         </div>
     </div>
 
