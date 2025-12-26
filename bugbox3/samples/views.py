@@ -21,7 +21,7 @@ from rest_framework.reverse import reverse as api_reverse
 
 from bugbox3.samples.utils import resolve_entered_by
 
-from .tasks import export_csv_by_location, crop_panorama
+from .tasks import export_csv_by_location, crop_panorama_segmentation
 from ..core import constants as constants_core
 from ..core.models import LookupChoices
 from ..core.permissions import IS_RESEARCH, REVIEW_SPECIMEN_PAGE
@@ -1401,7 +1401,7 @@ class MultiSpecimenImageView(PermissionRequiredMixin, FormView):
             user_id = self.request.user.id
             img_ids = [i.id for i in selected_images]
             if img_ids:
-                crop_panorama.delay(img_ids, sample_id, user_id)
+                crop_panorama_segmentation.delay(img_ids, sample_id, user_id)
             messages.warning(self.request, 'Succesfully sent {0} images to be cropped. {1}'.format(
                 len(selected_images),
                 str(prev_cropped) + ' images were skipped as already cropped.' if prev_cropped else ''

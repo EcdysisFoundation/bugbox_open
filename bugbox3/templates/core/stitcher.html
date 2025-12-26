@@ -15,28 +15,122 @@
 {% block content %}
 
     <div class="container">
-        <div class="row mt-2">
-            <div class="col-3">
-                <h3>
-                    Shimsy Images
-                </h3>
-            </div>
-            <div class="col-1">
-                <label for="formConfidence" class="form-label">Confidence</label>
-                <div class="confidence-input"></div>
-            </div>
-            <div class="col-5">
-                <div class="mb-3">
-                    <label for="formFile" class="form-label">
-                        <strong>Upload a zip file of images to make a panorama.</strong>
-                    </label>
-                    <input class="form-control" type="file" id="formFile"></input>
-                </div>
-            </div>
-            <div class="col-3">
-                <div class="upload-button mt-4"></div>
+
+    <div class="row mt-2">
+        <div class="col-3">
+            <h3>
+                Shimsy Images
+            </h3>
+        </div>
+        <div class="col-1">
+            <label for="formConfidence" class="form-label">Confidence</label>
+            <div class="confidence-input"></div>
+        </div>
+        <div class="col-5">
+            <div class="mb-3">
+                <label for="formFile" class="form-label">
+                    <strong>Upload a zip file of images to make a panorama.</strong>
+                </label>
+                <input class="form-control" type="file" id="formFile"></input>
             </div>
         </div>
+        <div class="col-3">
+            <div class="upload-button mt-4"></div>
+        </div>
+    </div>
+
+    <div class="row bg-light rounded pt-2 pb-1 mb-1">
+        <div class="col-3">
+            Sample
+        </div>
+        <div class="col-2">
+            Approved
+        </div>
+        <div class="col-3">
+            Label Studio
+        </div>
+        <div class="col-3">
+            Segmentation and final save
+        </div>
+
+    </div>
+
+    <div class="row bg-light rounded pt-2 pb-1 mb-1">
+        <div class="col-3">
+                <div class="row">
+                    <div class="form-check">
+                        <div class="sample-linked-check"></div>
+                        <label class="form-check-label" for="sampleLinkedCheck">
+                            linked
+                        </label>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="form-check">
+                        <div class="nota-sample-check"></div>
+                        <label class="form-check-label" for="notaSampleCheck">
+                            not a sample
+                        </label>
+                    </div>
+                </div>
+        </div>
+        <div class="col-2">
+                <div class="row">
+                    <div class="form-check">
+                        <div class="unreviewed-check"></div>
+                        <label class="form-check-label" for="unreviewedCheck">
+                            unreviewed
+                        </label>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="form-check">
+                        <div class="approved-check"></div>
+                        <label class="form-check-label" for="approvedCheck">
+                            approved
+                        </label>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="form-check">
+                        <div class="disapproved-check"></div>
+                        <label class="form-check-label" for="disapprovedCheck">
+                            disapproved
+                        </label>
+                    </div>
+                </div>
+        </div>
+        <div class="col-3">
+            <div class="label-studio-picker"></div>
+        </div>
+        <div class="col-3">
+            <div class="row">
+                <div class="form-check">
+                    <div class="predictions-check"></div>
+                    <label class="form-check-label" for="predictionsCheck">
+                        Predictions
+                    </label>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-check">
+                    <div class="annotations-check"></div>
+                    <label class="form-check-label" for="annotationsCheck">
+                        Annotations
+                    </label>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-check">
+                    <div class="completed-check"></div>
+                    <label class="form-check-label" for="completedCheck">
+                        Completed
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
         <div class="row pb-2 mt-2">
             <div class="col">
                 <table id="stitcher-table" class="table table-striped table-responsive nowrap compact" width="100%">

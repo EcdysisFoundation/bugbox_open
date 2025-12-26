@@ -17,6 +17,7 @@ from .permissions import IS_RESEARCH, ZEROTIER_USERS, IS_ADMIN
 from .forms import StitcherForm, StitcherDeleteForm
 from .stitcher_api import (
     get_root_message,
+    get_stitcher_stats,
     get_upload_file,
     patch_upload_file,
     delete_upload_file,
@@ -37,9 +38,13 @@ class StitcherView(PermissionRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         stitcher_url = STITCHER_JS_URL_ZEROTIER if \
             str(self.request.user) in ZEROTIER_USERS else STITCHER_JS_URL
+        stats = get_stitcher_stats()
+        ls_projects_choices = [(v[0], f'{v[0]} ({v[1]})')
+                               for v in stats[constants.STITCHER_STATS_LS_PROJECTS]]
         context.update({
             'json_context': get_json_context({
-                'STITCHER_URL': stitcher_url
+                'STITCHER_URL': stitcher_url,
+                'ls_projects_choices': ls_projects_choices,
             })
         })
         root_message = get_root_message()
@@ -71,10 +76,13 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
         self.panorama_name = ''
         self.img_src = ''
         self.label_src = f'/static/{self.guid}/{constants.STITCHER_LABEL_IMG}'
+        self.nota_sample = None
         if constants.STITCHER_PANORAMA_PATH in self.data.keys():
             if self.data[constants.STITCHER_PANORAMA_PATH]:
                 self.img_src = self.data[constants.STITCHER_PANORAMA_PATH].replace('/media/', '/static/')
                 self.panorama_name = os.path.basename(self.data[constants.STITCHER_PANORAMA_PATH])
+        if constants.STITCHER_NOTA_SAMPLE in self.data.keys():
+            self.nota_sample = self.data[constants.STITCHER_NOTA_SAMPLE]
 
         return kwargs
 
@@ -138,6 +146,7 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
             'img_src': f'{self.stitcher_js_url}{self.img_src}',
             'label_src': f'{self.stitcher_js_url}{self.label_src}',
             'potential_samples': potential_samples,
+            'nota_sample': self.nota_sample,
             'first_potential_sample': first_potential_sample,
             'form_action_url': reverse(
                 'core:stitcher-form', kwargs={'guid': str(self.guid)}),
@@ -166,6 +175,8 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
             initial[constants.STITCHER_UPLOAD_DIR_NAME] = data[constants.STITCHER_UPLOAD_DIR_NAME]
         if constants.STITCHER_BUGBOX_SAMPLE_ID in data.keys():
             initial[constants.STITCHER_BUGBOX_SAMPLE_ID] = data[constants.STITCHER_BUGBOX_SAMPLE_ID]
+        if constants.STITCHER_NOTA_SAMPLE in data.keys():
+            initial[constants.STITCHER_NOTA_SAMPLE] = data[constants.STITCHER_NOTA_SAMPLE]
         return initial
 
     def form_valid(self, form):
@@ -173,10 +184,15 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
         if formdata[constants.STITCHER_FORM_IDENT] == constants.STITCHER_FORM_DEFAULT:
             if formdata[constants.STITCHER_APPROVED] == '':
                 formdata[constants.STITCHER_APPROVED] = None
-            patch_upload_file(self.guid, formdata)
-            messages.success(
-                self.request, f'Succesfully updated {self.guid}'
-            )
+            v = patch_upload_file(self.guid, formdata)
+            if constants.STITCHER_ERROR in v.keys():
+                messages.error(
+                    self.request, f'{v[constants.STITCHER_ERROR]}'
+                )
+            else:
+                messages.success(
+                    self.request, f'Succesfully updated {self.guid}'
+                )
         elif formdata[constants.STITCHER_FORM_IDENT] == constants.STITCHER_FORM_CROPSAVE:
             try:
                 this_sample = Sample.objects.user_access(self.request.user).get(

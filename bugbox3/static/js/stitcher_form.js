@@ -43,6 +43,9 @@ $(function () {
         $('#id_bugbox_sample_id').val(json_context.first_potential_sample);
     });
 
+    let $notaSample = $(`<input class="form-check-input" type="checkbox" value="" id="notaSampleCheck">`)
+    $('.nota-sample-check').append($notaSample)
+
     let $deleteButton = $(`<a href="${json_context.stitcher_delete_url}" class="btn btn-danger mb-3 mt-2 text-nowrap" type="button">Delete</a>`)
     if ( json_context.disable_delete ) {
         $deleteButton.addClass('disabled');
