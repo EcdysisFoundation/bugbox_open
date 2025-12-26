@@ -15,6 +15,7 @@ from ..views.admin import (
     report_list, report_detail,
     label_management, label_generation_list, label_generation_detail, label_generation_download
 )
+from ..views.admin.submittal_management import generate_submittal_form
 
 urlpatterns = [
     path('dashboard/', admin_dashboard, name='admin_dashboard'),
@@ -54,6 +55,7 @@ urlpatterns = [
     path('label-generations/<int:generation_id>/', label_generation_detail, name='label_generation_detail'),
     path('label-generations/<int:generation_id>/download/', label_generation_download, name='label_generation_download'),
     
+    path('submittal-form-generator/', generate_submittal_form, name='submittal_form_generator'),
     path('reports/', report_list, name='admin_report_list'),
     path('reports/<int:report_id>/', report_detail, name='admin_report_detail'),
 ]
