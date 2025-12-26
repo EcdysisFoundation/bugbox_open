@@ -6,17 +6,20 @@ from celery import shared_task
 from celery.exceptions import SoftTimeLimitExceeded
 from config import celery_app
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 
-from bugbox3.samples.models import UserLocationExportFile
-from bugbox3.core.stitcher_utils import crop_img_to_annotations
+from bugbox3.core.stitcher_utils import (
+    crop_img_to_annotations,
+    crop_img_with_segmentation
+)
 from ..taxonomy.models import Morphospecies
 from ..taxonomy.utils import (get_immature_morphospecies_ids,
                               get_skip_morphospecies_ids)
 from . import constants
 from .calculations import get_indices
-from .models import (
+from bugbox3.samples.models import (
     Experiment, Sample, Site, SiteVisit,
     UserExperimentFile, UserLocationExportFile,
     Specimen, SpecimenImage,
@@ -235,7 +238,7 @@ def export_csv_by_location(user_id, experiment_id, habitats, countries, states, 
     immature_ids = get_immature_morphospecies_ids()
     skip_ids_for_indices = skip_ids
     immature_ids_for_indices = immature_ids
-    
+
     if include_immatures_skipped:
         skip_ids = []
         immature_ids = []
@@ -356,6 +359,9 @@ def export_csv_by_location(user_id, experiment_id, habitats, countries, states, 
 
 @celery_app.task(soft_time_limit=240)
 def crop_panorama(img_ids, sample_id, user_id):
+    if settings.ON_ECDYSIS_SERVER != 'YES':
+        # High memory usage, run only on local server
+        return
     try:
         sample = Sample.objects.get(id=sample_id)
         user = User.objects.get(id=user_id)
@@ -388,3 +394,36 @@ def crop_panorama(img_ids, sample_id, user_id):
                 cropped_i[0].close()
             i.cropped_to_specimen = True
             i.save()
+
+
+@celery_app.task(soft_time_limit=240)
+def crop_panorama_segmentation(img_ids, sample_id, user_id):
+    if settings.ON_ECDYSIS_SERVER != 'YES':
+        # High memory usage, run only on local server
+        return
+    try:
+        sample_instance = Sample.objects.get(id=sample_id)
+        user_instance = User.objects.get(id=user_id)
+        images = MultiSpecimenImage.objects.filter(id__in=img_ids)
+    except Exception as e:
+        print(f'Warning: {e}')
+        return
+    if not images:
+        return
+
+    for i in images:
+        if not i.annotations_segment:
+            continue
+        try:
+            success = crop_img_with_segmentation(
+                i.image,
+                i.annotations_segment,
+                sample_instance,
+                user_instance,
+                i.uuid)
+
+        except SoftTimeLimitExceeded:
+            return
+
+        i.cropped_to_specimen = success
+        i.save()

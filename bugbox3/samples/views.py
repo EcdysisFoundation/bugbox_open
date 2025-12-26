@@ -21,7 +21,7 @@ from rest_framework.reverse import reverse as api_reverse
 
 from bugbox3.samples.utils import resolve_entered_by
 
-from .tasks import export_csv_by_location, crop_panorama
+from .tasks import export_csv_by_location, crop_panorama_segmentation
 from ..core import constants as constants_core
 from ..core.models import LookupChoices
 from ..core.permissions import IS_RESEARCH, REVIEW_SPECIMEN_PAGE
@@ -101,33 +101,33 @@ class ExperimentView(PermissionRequiredMixin, TemplateView):
         skip_ids = get_skip_morphospecies_ids()
         immature_ids = get_immature_morphospecies_ids()
         all_experiment_morpho_ids = set()
-        
+
         specimens = Specimen.objects.filter(
             sample__site_visit__site__experiment_id=experiment_id
         ).values('classification_id', 'ai_classification_id')
-        
+
         for specimen in specimens:
             morpho_id = specimen['classification_id'] or specimen['ai_classification_id']
             if morpho_id:
                 all_experiment_morpho_ids.add(morpho_id)
-        
+
         excluded_by_flag = Morphospecies.objects.filter(
             id__in=all_experiment_morpho_ids,
             exclude_from_export=True
         ).values_list('name', flat=True).order_by('name')
-        
+
         experiment_immature_ids = all_experiment_morpho_ids & set(immature_ids)
         immature_morphos = Morphospecies.objects.filter(
             id__in=experiment_immature_ids,
             exclude_from_export=False
         ).values_list('name', flat=True).order_by('name')
-        
+
         experiment_skip_ids = all_experiment_morpho_ids & set(skip_ids)
         skipped_morphos = Morphospecies.objects.filter(
             id__in=experiment_skip_ids,
             exclude_from_export=False
         ).exclude(id__in=immature_ids).values_list('name', flat=True).order_by('name')
-        
+
         return {
             'exclude_from_export': list(excluded_by_flag),
             'immature': list(immature_morphos),
@@ -265,7 +265,6 @@ def export_by_location_csv(request):
                 .distinct()
             )
 
-
         indices = constants.INDICES_ALWAYS_INCLUDED + [
             i for i in indices if i not in constants.INDICES_ALWAYS_INCLUDED
         ]
@@ -289,6 +288,7 @@ def export_by_location_csv(request):
         return redirect('samples:experiment', experiment_id=experiment.id)
 
     raise Http404
+
 
 @permission_required(IS_RESEARCH)
 def export_by_location_progress(request, experiment_id):
@@ -1355,6 +1355,7 @@ class MultiSpecimenImageView(PermissionRequiredMixin, FormView):
         datatables_url = api_reverse(
             'samples:multispecimen-data-list', request=self.request, kwargs=self.kwargs
         )
+        # crop_disabled unless ON_ECDYSIS_SERVER due to high memory usage
         crop_disabled = False if settings.ON_ECDYSIS_SERVER == 'YES' else True
         if sample.completed:
             crop_disabled = True
@@ -1400,8 +1401,7 @@ class MultiSpecimenImageView(PermissionRequiredMixin, FormView):
             user_id = self.request.user.id
             img_ids = [i.id for i in selected_images]
             if img_ids:
-                crop_panorama.delay(img_ids, sample_id, user_id)
-            MultiSpecimenImage.objects.filter(id__in=img_ids).update(cropped_to_specimen=True)
+                crop_panorama_segmentation.delay(img_ids, sample_id, user_id)
             messages.warning(self.request, 'Succesfully sent {0} images to be cropped. {1}'.format(
                 len(selected_images),
                 str(prev_cropped) + ' images were skipped as already cropped.' if prev_cropped else ''

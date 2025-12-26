@@ -39,21 +39,27 @@
                 </li>
                 {% if data.sent_label_studio %}
                     <li class="list-group-item list-group-item-info">
-                        Sent to label studio
+                        Sent to Label Studio{% if data.label_studio_project %}: {{ data.label_studio_project }}
+                        {% endif %}
                     </li>
                 {% endif %}
                 <li class="list-group-item">
-                    <b>Predictions:</b> {{ data.predictions|length }}
+                    <b>Predictions:</b> {% if data.predictions_timestamp_coco %}
+                        {{ data.predictions_coco|length }}
+                    {% endif %}
                 </li>
                 <li class="list-group-item">
-                    <b>Annotations:</b> {{ data.annotations|length }}
-                    {% if data.annotations_updated_at %}
-                        <br/> Updated at: {{ data.annotations_updated_at }}
+                    <b>Annotations:</b> {% if data.annotations_updated_at_segment %}
+                        {{ data.annotations_segment|length }}
+                        <br/> Updated at: {{ data.annotations_updated_at_segment }}
                     {% endif %}
                 </li>
                 {% if not data.bugbox_sample_id %}
-
-                    {% if potential_samples %}
+                    {% if nota_sample %}
+                        <li class="list-group-item list-group-item-danger">
+                            Marked as having no sample to link to
+                        </li>
+                    {% elif potential_samples %}
                         <li class="list-group-item list-group-item-success">
                             Potential Sample IDs in BugBox {% for p, l in potential_samples %}
                                 <a href="{{ l }}" target="_blank">{{ p }}</a>&nbsp;
@@ -75,7 +81,7 @@
                         </li>
                 {% elif data.bugbox_sample_id %}
                         <li class="list-group-item list-group-item-success">
-                            Sample ID <a href="{% url 'samples:sample' data.bugbox_sample_id %}">
+                            Sample ID <a href="{% url 'samples:sample' data.bugbox_sample_id %}" target="_blank">
                                 {{ data.bugbox_sample_id }}</a>
                         </li>
                 {% endif %}
@@ -91,7 +97,7 @@
 
                     <li class="list-group-item">
                         <p class="text-secondary">
-                            <i>To crop out arthropods and save to BugBox,
+                            <i>To save to BugBox, and then crop out arthropods,
                                 the Sample ID must first be linked, there must be annotations and the image must be marked as Approved.
                                 Changes above will be ignored, unless first submitted.
                             </i>
