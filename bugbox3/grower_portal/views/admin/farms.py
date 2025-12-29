@@ -40,7 +40,10 @@ def farm_list(request):
     
     return render(request, 'grower_portal/admin/farm_list.html', context)
 
-
+@login_required
+@permission_required(IS_GROWERADMIN, raise_exception=True)
+def submittal_forms(request):
+    return render(request, 'grower_portal/admin/')
 @login_required
 @permission_required(IS_GROWERADMIN, raise_exception=True)
 def farm_detail(request, farm_id):
