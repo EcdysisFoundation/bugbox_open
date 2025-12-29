@@ -1,7 +1,9 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib import messages
-from django.http import FileResponse
+from django.http import FileResponse, HttpResponse
+from io import BytesIO
+import zipfile
 
 from bugbox3.core.permissions import IS_GROWERADMIN
 from ...forms.admin.submittal_forms import SubmittalFormGenerationForm
@@ -20,21 +22,51 @@ def generate_submittal_form(request):
         if form.is_valid():
             cluster = form.cleaned_data['cluster_number']
             year = form.cleaned_data['year']
+            generate_soil = form.cleaned_data.get('generate_soil', True)
+            generate_plant = form.cleaned_data.get('generate_plant', True)
             
             try:
                 generator = SubmittalFormGenerator(cluster, year)
-                buffer, filename = generator.generate_submittal_form()
-                
-                response = FileResponse(
-                    buffer,
-                    as_attachment=True,
-                    filename=filename
+                files = generator.generate_submittal_form(
+                    generate_soil=generate_soil,
+                    generate_plant=generate_plant
                 )
-                response['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                
+                if len(files) == 1:
+                    buffer, filename = files[0]
+                    response = FileResponse(
+                        buffer,
+                        as_attachment=True,
+                        filename=filename
+                    )
+                    response['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                    
+                    messages.success(
+                        request,
+                        f'Submittal form generated successfully for cluster {cluster} ({year})'
+                    )
+                    
+                    return response
+                
+                # zip for multiple files
+                zip_buffer = BytesIO()
+                with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+                    for buffer, filename in files:
+                        buffer.seek(0)
+                        zip_file.writestr(filename, buffer.read())
+                
+                zip_buffer.seek(0)
+                zip_filename = f"Submittal_Forms_{cluster}_{year}.zip"
+                
+                response = HttpResponse(
+                    zip_buffer.read(),
+                    content_type='application/zip'
+                )
+                response['Content-Disposition'] = f'attachment; filename="{zip_filename}"'
                 
                 messages.success(
                     request,
-                    f'Submittal form generated successfully for cluster {cluster} ({year})'
+                    f'Submittal forms generated successfully for cluster {cluster} ({year})'
                 )
                 
                 return response
