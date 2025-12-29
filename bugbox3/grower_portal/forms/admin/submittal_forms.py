@@ -30,6 +30,28 @@ class SubmittalFormGenerationForm(forms.Form):
         help_text='Year for the submittal form'
     )
     
+    generate_soil = forms.BooleanField(
+        required=False,
+        initial=True,
+        widget=forms.CheckboxInput(attrs={
+            'class': 'form-check-input',
+            'id': 'id_generate_soil'
+        }),
+        label='Generate Soil Submittal Form',
+        help_text='Generate submittal form for soil samples'
+    )
+    
+    generate_plant = forms.BooleanField(
+        required=False,
+        initial=True,
+        widget=forms.CheckboxInput(attrs={
+            'class': 'form-check-input',
+            'id': 'id_generate_plant'
+        }),
+        label='Generate Plant Submittal Form',
+        help_text='Generate submittal form for plant samples (forage)'
+    )
+    
     def clean(self):
         """Validate that LabelGeneration exists for the cluster and year"""
         cleaned_data = super().clean()

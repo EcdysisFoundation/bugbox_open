@@ -42,6 +42,32 @@
                             {% endif %}
                         </div>
 
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ form.generate_soil }}
+                                <label class="form-check-label" for="{{ form.generate_soil.id_for_label }}">
+                                    {{ form.generate_soil.label }}
+                                </label>
+                                <small class="form-text text-muted d-block">{{ form.generate_soil.help_text }}</small>
+                            </div>
+                            {% if form.generate_soil.errors %}
+                                <div class="text-danger">{{ form.generate_soil.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ form.generate_plant }}
+                                <label class="form-check-label" for="{{ form.generate_plant.id_for_label }}">
+                                    {{ form.generate_plant.label }}
+                                </label>
+                                <small class="form-text text-muted d-block">{{ form.generate_plant.help_text }}</small>
+                            </div>
+                            {% if form.generate_plant.errors %}
+                                <div class="text-danger">{{ form.generate_plant.errors }}</div>
+                            {% endif %}
+                        </div>
+
                         {% if form.non_field_errors %}
                             <div class="alert alert-danger">
                                 {{ form.non_field_errors }}
@@ -68,11 +94,12 @@
                     <ol>
                         <li>Enter the cluster number (e.g., C1, C2)</li>
                         <li>Enter the year</li>
+                        <li>Select which submittal forms to generate (Soil and/or Plant)</li>
                         <li>System finds the latest label generation for that cluster</li>
-                        <li>Extracts all transect codes from the label generation</li>
-                        <li>Creates 5 rows per transect (one for each depth: 0-5, 5-10, 10-15, 15-30, 30-60 cm)</li>
+                        <li>For Soil: Creates 5 rows per transect (one for each depth: 0-5, 5-10, 10-15, 15-30, 30-60 cm)</li>
+                        <li>For Plant: Creates 1 row per transect with forage type (only for transects with forage labels)</li>
                         <li>Populates grower names from submitted applications</li>
-                        <li>Downloads Excel file ready for submission</li>
+                        <li>Downloads Excel file(s) ready for submission</li>
                     </ol>
                 </div>
             </div>
