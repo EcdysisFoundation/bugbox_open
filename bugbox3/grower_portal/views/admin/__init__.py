@@ -16,7 +16,8 @@ from .label_management import (
     label_management,
     label_generation_list,
     label_generation_detail,
-    label_generation_download
+    label_generation_download,
+    inner_label_generations_json
 )
 
 __all__ = [
@@ -51,4 +52,5 @@ __all__ = [
     'label_generation_list',
     'label_generation_detail',
     'label_generation_download',
+    'inner_label_generations_json',
 ]

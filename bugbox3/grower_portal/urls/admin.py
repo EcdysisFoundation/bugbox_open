@@ -13,7 +13,8 @@ from ..views.admin import (
     transect_code_list, transect_code_generate, transect_code_deactivate, transect_code_reactivate,
     csv_upload, csv_import_list, csv_import_detail, csv_import_download, csv_import_download_error_log, csv_import_delete,
     report_list, report_detail,
-    label_management, label_generation_list, label_generation_detail, label_generation_download
+    label_management, label_generation_list, label_generation_detail, label_generation_download,
+    inner_label_generations_json
 )
 from ..views.admin.submittal_management import generate_submittal_form
 
@@ -52,6 +53,7 @@ urlpatterns = [
     
     path('label-management/', label_management, name='label_management'),
     path('label-generations/', label_generation_list, name='label_generation_list'),
+    path('label-generations/inner/', inner_label_generations_json, name='inner_label_generations_json'),
     path('label-generations/<int:generation_id>/', label_generation_detail, name='label_generation_detail'),
     path('label-generations/<int:generation_id>/download/', label_generation_download, name='label_generation_download'),
     
