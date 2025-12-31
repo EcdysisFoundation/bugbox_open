@@ -31,6 +31,14 @@
                             </div>
                             
                             <div class="col-md-3 mb-3">
+                                {{ quick_form.label_category.label_tag }}
+                                {{ quick_form.label_category }}
+                                {% if quick_form.label_category.errors %}
+                                    <div class="text-danger">{{ quick_form.label_category.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-2 mb-3">
                                 {{ quick_form.cluster_number.label_tag }}
                                 {{ quick_form.cluster_number }}
                                 <small class="form-text text-muted">{{ quick_form.cluster_number.help_text }}</small>
@@ -47,7 +55,15 @@
                                 {% endif %}
                             </div>
                             
-                            <div class="col-md-2 mb-3">
+                            <div class="col-md-2 mb-3 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-bolt"></i> Quick Generate
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="row" id="inner-labels-quick-section">
+                            <div class="col-md-3 mb-3">
                                 {{ quick_form.number_of_transects.label_tag }}
                                 {{ quick_form.number_of_transects }}
                                 <small class="form-text text-muted">{{ quick_form.number_of_transects.help_text }}</small>
@@ -55,11 +71,16 @@
                                     <div class="text-danger">{{ quick_form.number_of_transects.errors }}</div>
                                 {% endif %}
                             </div>
-                            
-                            <div class="col-md-2 mb-3 d-flex align-items-end">
-                                <button type="submit" class="btn btn-primary w-100">
-                                    <i class="fas fa-bolt"></i> Quick Generate
-                                </button>
+                        </div>
+                        
+                        <div class="row" id="outer-labels-quick-section" style="display: none;">
+                            <div class="col-md-6 mb-3">
+                                {{ quick_form.inner_label_generation.label_tag }}
+                                {{ quick_form.inner_label_generation }}
+                                <small class="form-text text-muted">{{ quick_form.inner_label_generation.help_text }}</small>
+                                {% if quick_form.inner_label_generation.errors %}
+                                    <div class="text-danger">{{ quick_form.inner_label_generation.errors }}</div>
+                                {% endif %}
                             </div>
                         </div>
                     </form>
@@ -193,5 +214,107 @@
 
 {% block customheadtagcontent %}
 {% render_bundle 'grower_label_management' 'js' %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const labelCategorySelect = document.getElementById('id_quick_label_category');
+    const numberOfTransectsSection = document.getElementById('inner-labels-quick-section');
+    const outerLabelsSection = document.getElementById('outer-labels-quick-section');
+    const innerLabelGenerationSelect = document.getElementById('id_inner_label_generation');
+    const clusterNumberInput = document.getElementById('id_quick_cluster_number');
+    const yearInput = document.getElementById('id_quick_year');
+    
+    function updateFormVisibility() {
+        const labelCategory = labelCategorySelect ? labelCategorySelect.value : 'inner';
+        
+        if (labelCategory === 'outer') {
+            if (numberOfTransectsSection) numberOfTransectsSection.style.display = 'none';
+            if (outerLabelsSection) outerLabelsSection.style.display = 'flex';
+            loadInnerLabelGenerations();
+        } else {
+            if (numberOfTransectsSection) numberOfTransectsSection.style.display = 'flex';
+            if (outerLabelsSection) outerLabelsSection.style.display = 'none';
+        }
+    }
+    
+    function loadInnerLabelGenerations() {
+        if (!innerLabelGenerationSelect || !clusterNumberInput || !yearInput) {
+            return;
+        }
+        
+        const clusterNumber = clusterNumberInput.value.trim();
+        const year = yearInput.value.trim();
+        
+        if (!clusterNumber || !year) {
+            innerLabelGenerationSelect.innerHTML = '<option value="">-- Enter cluster and year first --</option>';
+            return;
+        }
+        
+        // Fetch inner label generations via AJAX
+        const url = '{% url "grower_portal:inner_label_generations_json" %}?cluster=' + encodeURIComponent(clusterNumber) + '&year=' + encodeURIComponent(year);
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                innerLabelGenerationSelect.innerHTML = '<option value="">-- Select inner label generation --</option>';
+                
+                if (data.generations && data.generations.length > 0) {
+                    data.generations.forEach(gen => {
+                        const option = document.createElement('option');
+                        option.value = gen.id;
+                        option.textContent = 'Generated on ' + gen.generated_at + ' - ' + gen.total_labels + ' labels - ' + gen.transect_count + ' transects';
+                        innerLabelGenerationSelect.appendChild(option);
+                    });
+                } else {
+                    const option = document.createElement('option');
+                    option.value = '';
+                    option.textContent = 'No inner label generations found for this cluster/year';
+                    innerLabelGenerationSelect.appendChild(option);
+                }
+            })
+            .catch(error => {
+                console.error('Error loading inner label generations:', error);
+                innerLabelGenerationSelect.innerHTML = '<option value="">Error loading generations</option>';
+            });
+    }
+    
+    if (labelCategorySelect) {
+        labelCategorySelect.addEventListener('change', updateFormVisibility);
+        updateFormVisibility(); // Initial state
+    }
+    
+    if (clusterNumberInput && yearInput) {
+        clusterNumberInput.addEventListener('blur', function() {
+            if (labelCategorySelect && labelCategorySelect.value === 'outer') {
+                loadInnerLabelGenerations();
+            }
+        });
+        yearInput.addEventListener('blur', function() {
+            if (labelCategorySelect && labelCategorySelect.value === 'outer') {
+                loadInnerLabelGenerations();
+            }
+        });
+    }
+    
+    const detailedLabelCategorySelect = document.getElementById('id_label_category');
+    const innerLabelsSection = document.getElementById('inner-labels-section');
+    const outerLabelsMessage = document.getElementById('outer-labels-message');
+    
+    function updateDetailedFormVisibility() {
+        const labelCategory = detailedLabelCategorySelect ? detailedLabelCategorySelect.value : 'inner';
+        
+        if (labelCategory === 'outer') {
+            if (innerLabelsSection) innerLabelsSection.style.display = 'none';
+            if (outerLabelsMessage) outerLabelsMessage.style.display = 'block';
+        } else {
+            if (innerLabelsSection) innerLabelsSection.style.display = 'block';
+            if (outerLabelsMessage) outerLabelsMessage.style.display = 'none';
+        }
+    }
+    
+    if (detailedLabelCategorySelect) {
+        detailedLabelCategorySelect.addEventListener('change', updateDetailedFormVisibility);
+        updateDetailedFormVisibility();
+    }
+});
+</script>
 {% endblock %}
 

@@ -1,6 +1,8 @@
 from docx import Document
 from docx.shared import Inches, Pt
 from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.oxml import OxmlElement
+from docx.oxml.ns import qn
 from io import BytesIO
 import re
 from copy import deepcopy
@@ -9,20 +11,24 @@ from ..models import TransectCode
 from bugbox3.core.models import PublicSiteContent
 from ..constants import (
     SAMPLE_TYPES,
-    LABEL_TEMPLATE_SLUG
+    LABEL_TEMPLATE_SLUG,
+    LABEL_OUTER_TEMPLATE_SLUG,
+    AVALANCHE_ROOM_TEMP_SAMPLES,
+    AVALANCHE_REFRIGERATED_SAMPLES
 )
 
 
 class LabelGenerator:
     """Service for generating label documents"""
     
-    def __init__(self, project_type, cluster_number, year, sample_types, labels_per_type, created_by):
+    def __init__(self, project_type, cluster_number, year, sample_types, labels_per_type, created_by, label_category='inner'):
         self.project_type = project_type
         self.cluster_number = cluster_number
         self.year = year
         self.sample_types = sample_types
         self.labels_per_type = labels_per_type
         self.created_by = created_by
+        self.label_category = label_category
         self.generated_codes = []
     
     def get_sample_type_display(self, sample_type_code):
@@ -77,32 +83,45 @@ class LabelGenerator:
     
     def _load_template(self):
         """Load the template document from PublicSiteContent"""
+        template_slug = LABEL_OUTER_TEMPLATE_SLUG if self.label_category == 'outer' else LABEL_TEMPLATE_SLUG
+        
         try:
-            template_content = PublicSiteContent.objects.get(title=LABEL_TEMPLATE_SLUG)
+            template_content = PublicSiteContent.objects.get(title=template_slug)
             
             if not template_content.file:
                 raise ValueError(
-                    f"Label template '{LABEL_TEMPLATE_SLUG}' found in PublicSiteContent but file is missing. Please upload it in Django Admin"
+                    f"Label template '{template_slug}' found in PublicSiteContent but file is missing. Please upload it in Django Admin"
                 )
             
             with template_content.file.open('rb') as file:
                 file_content = file.read()
                 file_buffer = BytesIO(file_content)
+                
+                file_buffer.seek(0)
+                header = file_buffer.read(8)
+                file_buffer.seek(0)
+                
+                if header[:4] == b'\xd0\xcf\x11\xe0' or header[:2] != b'PK':
+                    raise ValueError(
+                        f"Template file '{template_slug}' is in '.doc' format. "
+                        f"Please convert it to '.docx' format and re-upload. "
+                    )
+                
                 try:
                     return Document(file_buffer)
                 except Exception as e:
-                    error_msg = str(e)
-                    if 'not a Word file' in error_msg or 'content type' in error_msg.lower():
+                    error_msg = str(e).lower()
+                    if 'not a word file' in error_msg or 'content type' in error_msg or 'not a zip file' in error_msg or 'bad zipfile' in error_msg:
                         raise ValueError(
-                            f"Template file '{LABEL_TEMPLATE_SLUG}' could not be loaded. Please save your template as '.docx' "
-                            f"Original error: {error_msg}"
+                            f"Template file '{template_slug}' could not be loaded. The file must be in '.docx' format. "
+                            f"Original error: {str(e)}"
                         ) from e
                     else:
                         raise
         
         except PublicSiteContent.DoesNotExist:
             raise ValueError(
-                f"Label template '{LABEL_TEMPLATE_SLUG}' not found in PublicSiteContent. "
+                f"Label template '{template_slug}' not found in PublicSiteContent. "
             )
         except Exception as e:
             raise ValueError(
@@ -369,8 +388,6 @@ class LabelGenerator:
                                     break
                             
                             if not has_style_in_xml:
-                                from docx.oxml import OxmlElement
-                                from docx.oxml.ns import qn
                                 tbl_style = OxmlElement('w:tblStyle')
                                 tbl_style.set(qn('w:val'), original_style_val)
                                 new_tbl_pr.append(tbl_style)
@@ -400,20 +417,32 @@ class LabelGenerator:
                 continue
             
             col_to_sample_type = {}
-            for i, template_col_idx in enumerate(template_cols_with_label):
-                sample_type_idx = current_sample_type_batch * num_cols_available + i
-                if sample_type_idx < num_sample_types:
-                    if label_index_by_sample_type[sample_type_idx] < len(labels_by_column[sample_type_idx]):
-                        col_to_sample_type[template_col_idx] = sample_type_idx
-            
-            if not col_to_sample_type:
-                current_sample_type_batch += 1
-                col_to_sample_type = {}
+            if num_sample_types <= num_cols_available:
+                for i, template_col_idx in enumerate(template_cols_with_label):
+                    label_col_idx = i % num_sample_types
+                    if label_index_by_sample_type[label_col_idx] < len(labels_by_column[label_col_idx]):
+                        col_to_sample_type[template_col_idx] = label_col_idx
+            else:
                 for i, template_col_idx in enumerate(template_cols_with_label):
                     sample_type_idx = current_sample_type_batch * num_cols_available + i
                     if sample_type_idx < num_sample_types:
                         if label_index_by_sample_type[sample_type_idx] < len(labels_by_column[sample_type_idx]):
                             col_to_sample_type[template_col_idx] = sample_type_idx
+            
+            if not col_to_sample_type:
+                current_sample_type_batch += 1
+                if num_sample_types <= num_cols_available:
+                    for i, template_col_idx in enumerate(template_cols_with_label):
+                        label_col_idx = i % num_sample_types
+                        if label_index_by_sample_type[label_col_idx] < len(labels_by_column[label_col_idx]):
+                            col_to_sample_type[template_col_idx] = label_col_idx
+                else:
+                    col_to_sample_type = {}
+                    for i, template_col_idx in enumerate(template_cols_with_label):
+                        sample_type_idx = current_sample_type_batch * num_cols_available + i
+                        if sample_type_idx < num_sample_types:
+                            if label_index_by_sample_type[sample_type_idx] < len(labels_by_column[sample_type_idx]):
+                                col_to_sample_type[template_col_idx] = sample_type_idx
                 
                 if not col_to_sample_type:
                     break
@@ -544,29 +573,50 @@ class LabelGenerator:
             template_rows = len(table.rows)
             template_cols = len(table.rows[0].cells) if table.rows else 0
             
-            if num_columns > template_cols:
-                continue
-            
-            table_was_filled = False
-            
-            for row_idx in range(template_rows):
-                row = table.rows[row_idx]
+            if num_columns < template_cols:
+                for row_idx in range(template_rows):
+                    row = table.rows[row_idx]
+                    
+                    for template_col_idx in range(template_cols):
+                        if template_col_idx >= len(row.cells):
+                            break
+                        
+                        cell = row.cells[template_col_idx]
+                        label_col_idx = template_col_idx % num_columns
+                        column_labels = labels_by_column[label_col_idx]
+                        
+                        if label_index_by_column[label_col_idx] < len(column_labels):
+                            label_text = column_labels[label_index_by_column[label_col_idx]]
+                            label_index_by_column[label_col_idx] += 1
+                            table_was_filled = True
+                        else:
+                            label_text = ''
+                        
+                        self._replace_cell_text_preserving_format(cell, label_text)
+            else:
+                if num_columns > template_cols:
+                    continue
                 
-                for col_idx in range(num_columns):
-                    if col_idx >= len(row.cells):
-                        break
+                table_was_filled = False
+                
+                for row_idx in range(template_rows):
+                    row = table.rows[row_idx]
                     
-                    cell = row.cells[col_idx]
-                    column_labels = labels_by_column[col_idx]
-                    
-                    if label_index_by_column[col_idx] < len(column_labels):
-                        label_text = column_labels[label_index_by_column[col_idx]]
-                        label_index_by_column[col_idx] += 1
-                        table_was_filled = True
-                    else:
-                        label_text = ''
-                    
-                    self._replace_cell_text_preserving_format(cell, label_text)
+                    for col_idx in range(num_columns):
+                        if col_idx >= len(row.cells):
+                            break
+                        
+                        cell = row.cells[col_idx]
+                        column_labels = labels_by_column[col_idx]
+                        
+                        if label_index_by_column[col_idx] < len(column_labels):
+                            label_text = column_labels[label_index_by_column[col_idx]]
+                            label_index_by_column[col_idx] += 1
+                            table_was_filled = True
+                        else:
+                            label_text = ''
+                        
+                        self._replace_cell_text_preserving_format(cell, label_text)
             
             if table_was_filled:
                 filled_tables.append(table_idx)
@@ -580,14 +630,7 @@ class LabelGenerator:
         return doc
     
     def generate_quick_labels_avalanche(self, num_transects):
-        """Generate all labels for Avalanche project - one complete set per transect
-        
-        For Avalanche:
-        - Each transect gets all sample types
-        - yield_sample and forage get 2 labels each
-        - All other sample types get 1 label each
-        """
-        from ..constants import SAMPLE_TYPES
+        """Generate all labels for Avalanche project. complete set per transect"""
         
         transect_codes = self.generate_unique_transect_codes(num_transects)
         self.save_transect_codes(transect_codes)
@@ -613,6 +656,70 @@ class LabelGenerator:
                     total_labels += 1
             
             labels_by_column.append(column_labels)
+        
+        if doc.tables:
+            if self._template_has_placeholders(doc):
+                doc = self._fill_template_with_placeholders(doc, labels_by_column)
+            else:
+                doc = self._fill_template_labels(doc, labels_by_column)
+        else:
+            doc = self._create_tables_for_labels(doc, labels_by_column)
+        
+        buffer = BytesIO()
+        doc.save(buffer)
+        buffer.seek(0)
+        
+        return buffer, total_labels
+    
+    def generate_outer_labels_avalanche(self, transect_codes):
+        doc = self._load_template()
+        
+        all_labels = []
+        total_labels = 0
+        
+        for transect_code in transect_codes:
+            kit_label = f"Avalanche Sampling Kit - Ecdysis Foundation\n{self.cluster_number} – {self.year}\n{transect_code}\nGrower Name______________\nDate_____________"
+            all_labels.append(kit_label)
+            total_labels += 1
+            
+            room_temp_label = f"Avalanche Samples - Room Temp\n{self.cluster_number} – {self.year}\n{transect_code}\nGrower Name______________\nDate_____________\n\nSample List:\n" + "\n".join(AVALANCHE_ROOM_TEMP_SAMPLES)
+            all_labels.append(room_temp_label)
+            total_labels += 1
+            
+            refrigerated_label = f"Avalanche Samples - REFRIGERATED\n{self.cluster_number} – {self.year}\n{transect_code}\nGrower Name______________\nDate_____________\n\nSample List:\n" + "\n".join(AVALANCHE_REFRIGERATED_SAMPLES)
+            all_labels.append(refrigerated_label)
+            total_labels += 1
+            
+            booklet_label = f"Sampling Booklet\n{self.cluster_number} – {self.year}\n{transect_code}\nGrower Name______________"
+            all_labels.append(booklet_label)
+            total_labels += 1
+        
+        num_cols_available = 1
+        if doc.tables and len(doc.tables) > 0:
+            first_table = doc.tables[0]
+            num_template_cols = len(first_table.rows[0].cells) if first_table.rows else 1
+            
+            template_cols_with_label = []
+            for row in first_table.rows:
+                for col_idx in range(len(row.cells)):
+                    try:
+                        if 'LABEL' in row.cells[col_idx].text.upper():
+                            if col_idx not in template_cols_with_label:
+                                template_cols_with_label.append(col_idx)
+                    except (IndexError, AttributeError):
+                        continue
+                if template_cols_with_label:
+                    break
+            
+            num_cols_available = len(template_cols_with_label) if template_cols_with_label else num_template_cols
+        
+        if num_cols_available > 1:
+            labels_by_column = []
+            for i in range(num_cols_available):
+                column_labels = [all_labels[j] for j in range(i, len(all_labels), num_cols_available)]
+                labels_by_column.append(column_labels)
+        else:
+            labels_by_column = [all_labels]
         
         if doc.tables:
             if self._template_has_placeholders(doc):

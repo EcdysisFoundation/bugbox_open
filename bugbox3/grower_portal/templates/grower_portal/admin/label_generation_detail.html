@@ -46,8 +46,10 @@
                     <h5 class="mb-0">Label Statistics</h5>
                 </div>
                 <div class="card-body">
+                    {% if generation.label_category != 'outer' %}
                     <p><strong>Labels per Sample Type:</strong> {{ generation.labels_per_type }}</p>
                     <p><strong>Sample Types Selected:</strong> {{ generation.sample_types|length }}</p>
+                    {% endif %}
                     <p><strong>Total Labels Generated:</strong> <span class="badge bg-primary">{{ generation.total_labels_generated }}</span></p>
                     <p><strong>Transect Codes Generated:</strong> <span class="badge bg-success">{{ generation.transect_codes_generated|length }}</span></p>
                 </div>
@@ -55,6 +57,7 @@
         </div>
     </div>
 
+    {% if generation.label_category != 'outer' %}
     <div class="row">
         <div class="col-12 mb-4">
             <div class="card">
@@ -71,6 +74,7 @@
             </div>
         </div>
     </div>
+    {% endif %}
 
     {% if generation.description %}
     <div class="row">
