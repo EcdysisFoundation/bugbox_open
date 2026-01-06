@@ -1,10 +1,10 @@
 from django.contrib.gis.db.models import (CASCADE, BigIntegerField, CharField,
                                           DateTimeField, FileField, ForeignKey,
                                           JSONField, Manager, Model,
-                                          MultiPolygonField,
+                                          MultiPolygonField, PositiveIntegerField,
                                           SlugField)
 from django.db.models.fields import BLANK_CHOICE_DASH
-from django.db.models.signals import post_delete
+from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from organizations.models import Organization
 
@@ -16,8 +16,14 @@ class Exports(Model):
     organization = ForeignKey(Organization, related_name='exports', on_delete=CASCADE)
     title = SlugField(max_length=30)
     file = FileField(upload_to='exports')
+    file_size = PositiveIntegerField(null=True, blank=True)
     description = JSONField(default=dict)
     date_added = DateTimeField(auto_now_add=True)
+
+
+@receiver(post_save, sender=Exports)
+def save_exports_file_size(instance, **kwargs):
+    Exports.objects.filter(id=instance.id).update(file_size=instance.file.size)
 
 
 class LookupChoicesManager(Manager):
@@ -85,11 +91,37 @@ def cleanup_orphaned_tags(sender, instance, **kwargs):
                 specimen.tags.remove(instance.entry)
                 specimen.save(update_fields=['tags'])
 
+
 class PublicSiteContent(Model):
+    """
+    Model for public media for the site, where default_acl is set to public-read.
+    """
     title = SlugField(max_length=30, unique=True)
     file = FileField(storage=PublicMediaStorage(), upload_to='site_content')
+    file_size = PositiveIntegerField(null=True, blank=True)
     description = CharField(max_length=500, blank=True)
     date_added = DateTimeField(auto_now_add=True)
+
+
+@receiver(post_save, sender=PublicSiteContent)
+def save_public_file_size(instance, **kwargs):
+    PublicSiteContent.objects.filter(id=instance.id).update(file_size=instance.file.size)
+
+
+class PrivateSiteContent(Model):
+    """
+    Model for media for the site requiring a presigned post to access.
+    """
+    title = SlugField(max_length=30, unique=True)
+    file = FileField(upload_to='private_site_content')
+    file_size = PositiveIntegerField(null=True, blank=True)
+    description = CharField(max_length=500, blank=True)
+    date_added = DateTimeField(auto_now_add=True)
+
+
+@receiver(post_save, sender=PrivateSiteContent)
+def save_private_file_size(instance, **kwargs):
+    PrivateSiteContent.objects.filter(id=instance.id).update(file_size=instance.file.size)
 
 
 class UsCounties(Model):

@@ -78,11 +78,11 @@ class CollectionDownloadView(TemplateView):
             'download_link': get_media_url(download_file.file)
             if download_file else '',
             'download_date_added': download_file.date_added if download_file else '',
-            'file_size': download_file.file.size if download_file else '',
+            'file_size': download_file.file_size if download_file else '',
             'description': download_file.description if download_file else '',
             'all_download_link': get_media_url(all_download_file.file)
             if all_download_file else '',
-            'all_file_size': all_download_file.file.size if all_download_file else '',
+            'all_file_size': all_download_file.file_size if all_download_file else '',
             'all_description': all_download_file.description if all_download_file else '',
             'all_download_date_added': all_download_file.date_added if all_download_file else '',
             'example': example,
