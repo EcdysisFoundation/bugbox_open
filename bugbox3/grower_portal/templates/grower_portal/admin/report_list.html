@@ -52,8 +52,21 @@
                                                 {{ report.application.submission_code }}
                                             </a>
                                         </td>
-                                        <td>{{ report.application.grower.name }}</td>
-                                        <td>{{ report.application.field.farm.name }}</td>
+                                        <td>
+                                            {% if report.application.grower %}
+                                                {{ report.application.grower.name }}
+                                            {% else %}
+                                                {{ report.application.grower_display_name|default:"No linked account" }}
+                                                <span class="badge bg-warning text-dark ms-1">Unlinked</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if report.application.field.farm %}
+                                                {{ report.application.field.farm.name }}
+                                            {% else %}
+                                                <span class="text-muted">N/A</span>
+                                            {% endif %}
+                                        </td>
                                         <td>{{ report.application.field.field_name }}</td>
                                         <td>{{ report.generated_at|user_datetime:request.user_timezone }}</td>
                                         <td>

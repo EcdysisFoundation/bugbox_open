@@ -26,8 +26,20 @@
                 </div>
                 <div class="card-body">
                     <p><strong>Farm Name:</strong> {{ farm.name }}</p>
-                    <p><strong>Grower:</strong> <a href="{% url 'grower_portal:admin_grower_detail' farm.grower.id %}">{{ farm.grower.name }}</a></p>
-                    <p><strong>Grower Email:</strong> {{ farm.grower.email }}</p>
+                    <p><strong>Grower:</strong>
+                        {% if farm.grower %}
+                            <a href="{% url 'grower_portal:admin_grower_detail' farm.grower.id %}">{{ farm.grower.name }}</a>
+                        {% else %}
+                            <span class="text-muted">No linked account</span>
+                        {% endif %}
+                    </p>
+                    <p><strong>Grower Email:</strong>
+                        {% if farm.grower %}
+                            {{ farm.grower.email }}
+                        {% else %}
+                            <span class="text-muted">N/A</span>
+                        {% endif %}
+                    </p>
                     <p><strong>Created Date:</strong> {{ farm.created_at|user_datetime:request.user_timezone }}</p>
                     <p><strong>Last Updated:</strong> {{ farm.updated_at|user_datetime:request.user_timezone }}</p>
                 </div>

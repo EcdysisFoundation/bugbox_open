@@ -59,11 +59,42 @@
                     <h5 class="mb-0">Grower & Farm Information</h5>
                 </div>
                 <div class="card-body">
-                    <p><strong>Grower:</strong> <a href="{% url 'grower_portal:admin_grower_detail' application.grower.id %}">{{ application.grower.name }}</a></p>
-                    <p><strong>Email:</strong> {{ application.grower.email }}</p>
-                    <p><strong>Farm:</strong> <a href="{% url 'grower_portal:admin_farm_detail' application.field.farm.id %}">{{ application.field.farm.name }}</a></p>
+                    <p><strong>Grower:</strong>
+                        {% if application.grower %}
+                            <a href="{% url 'grower_portal:admin_grower_detail' application.grower.id %}">{{ application.grower.name }}</a>
+                        {% else %}
+                            <span class="text-muted">{{ application.grower_display_name|default:"No linked account" }}</span>
+                            <span class="badge bg-warning text-dark ms-2">Unlinked</span>
+                        {% endif %}
+                    </p>
+                    <p><strong>Email:</strong>
+                        {% if application.grower %}
+                            {{ application.grower.email }}
+                        {% else %}
+                            <span class="text-muted">{{ application.grower_display_email|default:"No email" }}</span>
+                        {% endif %}
+                    </p>
+                    {% if application.grower %}
+                        <p><strong>Phone:</strong> {{ application.grower.grower_profile.phone|default:"N/A" }}</p>
+                    {% elif application.grower_phone %}
+                        <p><strong>Phone:</strong> {{ application.grower_phone }}</p>
+                    {% endif %}
+                    {% if application.field.farm %}
+                        <p><strong>Farm:</strong> <a href="{% url 'grower_portal:admin_farm_detail' application.field.farm.id %}">{{ application.field.farm.name }}</a></p>
+                    {% else %}
+                        <p><strong>Farm:</strong> <span class="text-muted">N/A</span></p>
+                    {% endif %}
                     <p><strong>Field:</strong> <a href="{% url 'grower_portal:admin_field_detail' application.field.id %}">{{ application.field.field_name }}</a></p>
                     <p><strong>Field Type:</strong> {{ application.field.get_field_type_display }}</p>
+                    {% if not application.grower %}
+                        <div class="alert alert-info mt-3 mb-0">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Note:</strong> This application is not linked to a grower account. It will not appear in any grower dashboard. 
+                            <a href="{% url 'grower_portal:admin_application_link_grower' application.id %}" class="btn btn-sm btn-primary ms-2">
+                                <i class="fas fa-link"></i> Link to Grower Account
+                            </a>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>

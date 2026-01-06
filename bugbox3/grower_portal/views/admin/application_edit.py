@@ -2,10 +2,11 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib import messages
 from django.db import transaction
+from django.utils import timezone
 import json
 
 from bugbox3.core.permissions import IS_GROWERADMIN
-from ...models import GrowerApplication, ManagementPractices, Field, Farm
+from ...models import GrowerApplication, ManagementPractices, Field, Farm, TransectCode
 from ...forms.grower.forms import (
     ApplicationCreationForm,
     ManagementPracticesForm,
@@ -25,10 +26,16 @@ def admin_application_edit_basic(request, application_id):
         if form.is_valid():
             try:
                 with transaction.atomic():
-                    farm, created = Farm.objects.get_or_create(
-                        grower=application.grower,
-                        name=form.cleaned_data['farm_name']
-                    )
+                    if application.grower:
+                        farm, created = Farm.objects.get_or_create(
+                            grower=application.grower,
+                            name=form.cleaned_data['farm_name']
+                        )
+                    else:
+                        farm, created = Farm.objects.get_or_create(
+                            grower=None,
+                            name=form.cleaned_data['farm_name']
+                        )
                     
                     field = application.field
                     field.farm = farm
@@ -70,7 +77,7 @@ def admin_application_edit_basic(request, application_id):
                 messages.error(request, f'Error updating application: {str(e)}')
     else:
         form = ApplicationCreationForm(initial={
-            'farm_name': application.field.farm.name,
+            'farm_name': application.field.farm.name if application.field.farm else '',
             'field_name': application.field.field_name,
             'field_type': application.field.field_type,
             'date_sampled': application.date_sampled,
@@ -218,13 +225,41 @@ def admin_application_submit(request, application_id):
             messages.error(request, 'Cannot submit: At least one transect code is required.')
             return redirect('grower_portal:admin_application_edit_transects', application_id=application.id)
         
-        application.is_draft = False
-        application.is_submitted = True
-        application.save()
+        # validate transect codes before submission
+        for i in range(1, 5):
+            code = getattr(application, f'transect_code_{i}', '').strip() if getattr(application, f'transect_code_{i}', None) else ''
+            if code:
+                try:
+                    transect_obj = TransectCode.objects.get(transect_code=code, is_active=True)
+                    if transect_obj.is_used and transect_obj.used_in_application != application:
+                        messages.error(
+                            request,
+                            f'Cannot submit: Transect code {i} "{code}" has already been used in application {transect_obj.used_in_application.submission_code if transect_obj.used_in_application else "another application"}.'
+                        )
+                        return redirect('grower_portal:admin_application_edit_transects', application_id=application.id)
+                except TransectCode.DoesNotExist:
+                    messages.error(request, f'Cannot submit: Transect code {i} "{code}" is not valid or inactive.')
+                    return redirect('grower_portal:admin_application_edit_transects', application_id=application.id)
         
+        with transaction.atomic():
+            application.is_draft = False
+            application.is_submitted = True
+            application.save()
+            
+            # mark transect codes as used
+            for i in range(1, 5):
+                code = getattr(application, f'transect_code_{i}', '').strip() if getattr(application, f'transect_code_{i}', None) else ''
+                if code:
+                    TransectCode.objects.filter(transect_code=code).update(
+                        is_used=True,
+                        used_in_application=application,
+                        used_at=timezone.now()
+                    )
+        
+        grower_name = application.grower.name if application.grower and hasattr(application.grower, 'name') else application.grower_display_name
         messages.success(
             request,
-            f'Application {application.submission_code} has been submitted on behalf of {application.grower.name}!'
+            f'Application {application.submission_code} has been submitted on behalf of {grower_name}!'
         )
         return redirect('grower_portal:admin_application_detail', application_id=application.id)
     

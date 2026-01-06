@@ -5,9 +5,14 @@ from django.core.paginator import Paginator
 from django.db.models import Q
 
 from bugbox3.core.permissions import IS_GROWERADMIN
-from ...models import GrowerApplication, ManagementPractices, GrazingEvent
+from ...models import GrowerApplication, ManagementPractices, GrazingEvent, Farm
 from ...forms.admin.forms import ApplicationFilterForm
+from ...forms.admin.application_forms import LinkGrowerForm
 from ...middleware import get_user_timezone
+from django.contrib.auth import get_user_model
+from django.db import transaction
+
+User = get_user_model()
 
 
 @login_required
@@ -23,6 +28,7 @@ def application_list(request):
         search = form.cleaned_data.get('search')
         status = form.cleaned_data.get('status')
         field_type = form.cleaned_data.get('field_type')
+        linked_status = form.cleaned_data.get('linked_status')
         date_from = form.cleaned_data.get('date_from')
         date_to = form.cleaned_data.get('date_to')
         
@@ -35,6 +41,8 @@ def application_list(request):
                 Q(transect_code_4__icontains=search) |
                 Q(grower__name__icontains=search) |
                 Q(grower__email__icontains=search) |
+                Q(grower_name__icontains=search) |
+                Q(grower_email__icontains=search) |
                 Q(field__farm__name__icontains=search) |
                 Q(field__field_name__icontains=search)
             )
@@ -46,6 +54,11 @@ def application_list(request):
         
         if field_type:
             applications_queryset = applications_queryset.filter(field__field_type=field_type)
+        
+        if linked_status == 'linked':
+            applications_queryset = applications_queryset.filter(grower__isnull=False)
+        elif linked_status == 'unlinked':
+            applications_queryset = applications_queryset.filter(grower__isnull=True)
         
         if date_from:
             applications_queryset = applications_queryset.filter(date_sampled__gte=date_from)
@@ -143,4 +156,117 @@ def application_delete(request, application_id):
     }
     
     return render(request, 'grower_portal/admin/application_delete.html', context)
+
+
+@login_required
+@permission_required(IS_GROWERADMIN, raise_exception=True)
+def link_application_to_grower(request, application_id):
+    """Link an unlinked application to a grower account"""
+    application = get_object_or_404(GrowerApplication, id=application_id)
+    
+    if application.grower:
+        messages.warning(request, f'Application {application.submission_code} is already linked to grower {application.grower.email}.')
+        return redirect('grower_portal:admin_application_detail', application_id=application.id)
+    
+    search_results = None
+    
+    if request.method == 'POST':
+        form = LinkGrowerForm(request.POST)
+        
+        if 'search' in request.POST:
+            search_term = request.POST.get('grower_search', '').strip()
+            if search_term:
+                search_results = User.objects.filter(
+                    groups__name='is_grower'
+                ).filter(
+                    Q(name__icontains=search_term) | Q(email__icontains=search_term)
+                ).distinct()[:20]
+                
+                if not search_results:
+                    messages.info(request, f'No growers found matching "{search_term}".')
+                else:
+                    messages.success(request, f'Found {search_results.count()} grower(s) matching "{search_term}".')
+                
+                form = LinkGrowerForm(initial={'grower_search': search_term})
+            else:
+                messages.error(request, 'Please enter a search term.')
+                form = LinkGrowerForm(request.POST)
+        
+        elif 'link' in request.POST:
+            grower_email = request.POST.get('grower_email', '').strip()
+            selected_grower_id = request.POST.get('selected_grower_id', '').strip()
+            
+            if not grower_email and not selected_grower_id:
+                messages.error(request, 'Please either enter a grower email or select a grower from search results.')
+            else:
+                try:
+                    with transaction.atomic():
+                        grower = None
+                        
+                        if grower_email:
+                            try:
+                                grower = User.objects.get(
+                                    email=grower_email,
+                                    groups__name='is_grower'
+                                )
+                            except User.DoesNotExist:
+                                messages.error(request, f'No grower found with email "{grower_email}".')
+                                form = LinkGrowerForm(request.POST)
+                                context = {
+                                    'application': application,
+                                    'form': form,
+                                    'search_results': search_results,
+                                    'user_timezone': get_user_timezone(request)
+                                }
+                                return render(request, 'grower_portal/admin/application_link_grower.html', context)
+                        
+                        elif selected_grower_id:
+                            try:
+                                grower = User.objects.get(
+                                    id=int(selected_grower_id),
+                                    groups__name='is_grower'
+                                )
+                            except (User.DoesNotExist, ValueError):
+                                messages.error(request, 'Selected grower not found or invalid.')
+                                form = LinkGrowerForm(request.POST)
+                                context = {
+                                    'application': application,
+                                    'form': form,
+                                    'search_results': search_results,
+                                    'user_timezone': get_user_timezone(request)
+                                }
+                                return render(request, 'grower_portal/admin/application_link_grower.html', context)
+                        
+                        if grower:
+                            application.grower = grower
+                            application.save()
+                            
+                            if application.field and application.field.farm:
+                                farm = application.field.farm
+                                if not farm.grower:
+                                    farm.grower = grower
+                                    farm.save()
+                            
+                            messages.success(
+                                request,
+                                f'Application {application.submission_code} has been linked to grower {grower.email}.'
+                            )
+                            return redirect('grower_portal:admin_application_detail', application_id=application.id)
+                
+                except Exception as e:
+                    messages.error(request, f'Error linking application: {str(e)}')
+    else:
+        initial_data = {}
+        if application.grower_email and application.grower_email != 'No email':
+            initial_data['grower_email'] = application.grower_email
+        form = LinkGrowerForm(initial=initial_data)
+    
+    context = {
+        'application': application,
+        'form': form,
+        'search_results': search_results,
+        'user_timezone': get_user_timezone(request)
+    }
+    
+    return render(request, 'grower_portal/admin/application_link_grower.html', context)
 

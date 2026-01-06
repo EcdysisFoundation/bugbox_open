@@ -52,7 +52,13 @@
                                     {% for farm in farms %}
                                     <tr>
                                         <td>{{ farm.name }}</td>
-                                        <td>{{ farm.grower.name }}</td>
+                                        <td>
+                                            {% if farm.grower %}
+                                                {{ farm.grower.name }}
+                                            {% else %}
+                                                <span class="text-muted">No linked account</span>
+                                            {% endif %}
+                                        </td>
                                         <td>{{ farm.field_count }}</td>
                                         <td>{{ farm.created_at|user_date_short:request.user_timezone }}</td>
                                         <td>
