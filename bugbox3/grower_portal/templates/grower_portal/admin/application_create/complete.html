@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}Step 5: Review & Submit - Admin{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="fas fa-clipboard-check"></i> Step 5: Review & Submit
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Review your application below.</strong> Choose to save as draft or submit when ready.
+                    </div>
+                    
+                    <h5 class="mb-3">Application Summary</h5>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-5">Submission Code:</dt>
+                                <dd class="col-sm-7"><strong>{{ application.submission_code }}</strong></dd>
+                                
+                                <dt class="col-sm-5">Grower:</dt>
+                                <dd class="col-sm-7">
+                                    {{ grower_display }}
+                                    {% if not has_linked_account %}
+                                        <span class="badge bg-warning text-dark ms-1">No Account</span>
+                                    {% endif %}
+                                </dd>
+                                
+                                <dt class="col-sm-5">Contact:</dt>
+                                <dd class="col-sm-7">{{ grower_email }}</dd>
+                                
+                                <dt class="col-sm-5">Created by:</dt>
+                                <dd class="col-sm-7">{{ admin_email }} (Admin)</dd>
+                            </dl>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-5">Farm:</dt>
+                                <dd class="col-sm-7">{{ application.field.farm.name }}</dd>
+                                
+                                <dt class="col-sm-5">Field:</dt>
+                                <dd class="col-sm-7">{{ application.field.field_name }}</dd>
+                                
+                                <dt class="col-sm-5">Field Type:</dt>
+                                <dd class="col-sm-7">{{ application.field.get_field_type_display }}</dd>
+                                
+                                <dt class="col-sm-5">Date Sampled:</dt>
+                                <dd class="col-sm-7">{{ application.date_sampled|date:"F d, Y" }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <h5 class="mb-3">Transects</h5>
+                    <p>Number of transects: <strong>{{ application.number_of_transects }}</strong></p>
+                    <ul>
+                        {% for code in application.transect_codes %}
+                            <li>{{ code }}</li>
+                        {% endfor %}
+                    </ul>
+                    
+                    <hr>
+                    
+                    {% if not has_linked_account %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Note:</strong> This application is not linked to a grower account. It will not appear in any grower dashboard.
+                        You can link it to a grower account later.
+                    </div>
+                    {% endif %}
+                    
+                    <div class="alert alert-light border">
+                        <h6 class="mb-3"><strong>What would you like to do?</strong></h6>
+                        <ul class="mb-0">
+                            <li><strong>Save as Draft:</strong> Application is saved but not finalized. You can edit and submit it later.</li>
+                            <li><strong>Submit Application:</strong> Application is finalized and marked as complete. 
+                                {% if has_linked_account %}It will be read-only for the grower.{% endif %}</li>
+                        </ul>
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'grower_portal:admin_application_create_step4' application.id %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to Step 4
+                            </a>
+                            <div>
+                                <button type="submit" name="action" value="draft" class="btn btn-warning me-2">
+                                    <i class="fas fa-save"></i> Save as Draft
+                                </button>
+                                <button type="submit" name="action" value="submit" class="btn btn-success">
+                                    <i class="fas fa-check-circle"></i> Submit Application
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

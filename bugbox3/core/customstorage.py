@@ -25,7 +25,7 @@ class PublicMediaStorage(Storage):
                 location=settings.MEDIA_ROOT,
                 base_url=settings.MEDIA_URL
             )
-    
+
     def url(self, name):
         """Get URL for the file"""
         try:
@@ -36,27 +36,27 @@ class PublicMediaStorage(Storage):
                 return self._storage.url(name)
             # Otherwise, try to construct a basic URL
             return f"{settings.MEDIA_URL}{name}"
-    
+
     def _open(self, name, mode='rb'):
         """Open the file"""
         return self._storage._open(name, mode)
-    
+
     def _save(self, name, content):
         """Save the file"""
         return self._storage._save(name, content)
-    
+
     def exists(self, name):
         """Check if file exists"""
         return self._storage.exists(name)
-    
+
     def delete(self, name):
         """Delete the file"""
         return self._storage.delete(name)
-    
+
     def size(self, name):
         """Get file size"""
         return self._storage.size(name)
-    
+
     def path(self, name):
         """Get local file path (only for local storage)"""
         if hasattr(self._storage, 'path'):

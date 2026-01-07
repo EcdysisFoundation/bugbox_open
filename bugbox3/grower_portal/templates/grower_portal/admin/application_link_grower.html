@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load crispy_forms_tags %}
+{% load timezone_filters %}
+
+{% block title %}Link Application to Grower{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Link Application to Grower Account</h1>
+                <a href="{% url 'grower_portal:admin_application_detail' application.id %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Application
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Application Information</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Submission Code:</strong> {{ application.submission_code }}</p>
+                    <p><strong>Grower Name:</strong> {{ application.grower_display_name|default:"Not provided" }}</p>
+                    <p><strong>Grower Email:</strong> {{ application.grower_display_email|default:"Not provided" }}</p>
+                    {% if application.grower_phone %}
+                        <p><strong>Grower Phone:</strong> {{ application.grower_phone }}</p>
+                    {% endif %}
+                    <p><strong>Field:</strong> {{ application.field.field_name }}</p>
+                    <p><strong>Field Type:</strong> {{ application.field.get_field_type_display }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Link to Grower Account</h5>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                <i class="fas fa-{% if message.tags == 'error' %}exclamation-triangle{% elif message.tags == 'success' %}check-circle{% else %}info-circle{% endif %}"></i>
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <strong><i class="fas fa-exclamation-triangle"></i> Please correct the following errors:</strong>
+                            <ul class="mb-0 mt-2">
+                                {% for field, errors in form.errors.items %}
+                                    <li><strong>{{ field|title }}:</strong> 
+                                        {% if errors|length == 1 %}
+                                            {{ errors.0 }}
+                                        {% else %}
+                                            <ul>
+                                                {% for error in errors %}
+                                                    <li>{{ error }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        {% endif %}
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
+                    {% crispy form %}
+
+                    {% if search_results %}
+                        <div class="mt-4">
+                            <h6><i class="fas fa-search"></i> Search Results ({{ search_results|length }}):</h6>
+                            <div class="list-group">
+                                {% for grower in search_results %}
+                                    <div class="list-group-item">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <strong>{{ grower.name }}</strong><br>
+                                                <small class="text-muted">{{ grower.email }}</small>
+                                            </div>
+                                            <form method="post" style="display: inline;">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="selected_grower_id" value="{{ grower.id }}">
+                                                <button type="submit" name="link" class="btn btn-sm btn-primary">
+                                                    <i class="fas fa-link"></i> Link
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

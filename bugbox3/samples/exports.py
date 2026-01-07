@@ -171,7 +171,7 @@ PUBLIC_IMAGES_EXPORT_TITLE = 'public-reviewed-img-exp'
 PUBLIC_ALL_IMAGES_EXPORT_TITLE = 'public-all-img-exp'
 
 
-def get_public_export_headers(classification=constants.FIELD_SPECIMEN_CLASSIFICATION):
+def get_public_export_headers(classification):
     c = classification
     if c not in (constants.FIELD_SPECIMEN_CLASSIFICATION, constants.FIELD_SPECIMEN_AI_CLASSIFICATION):
         return None
@@ -187,7 +187,8 @@ def get_public_export_headers(classification=constants.FIELD_SPECIMEN_CLASSIFICA
                                  constants.FIELD_SITE_COUNTY_REGION,
                                  constants.FIELD_SITE_US_STATE_COUNTY_FIPS]]
     query_fields += ['specimen__' + c + '__' +
-                     v for v in [constants_tax.FIELD_MORPHO_GBIF_CLASS,
+                     v for v in [constants_tax.FIELD_MORPHO_NAME,
+                                 constants_tax.FIELD_MORPHO_GBIF_CLASS,
                                  constants_tax.FIELD_MORPHO_GBIF_ORDER,
                                  constants_tax.FIELD_MORPHO_GBIF_FAMILY,
                                  constants_tax.FIELD_MORPHO_GBIF_GENUS,
@@ -204,7 +205,8 @@ def get_public_export_headers(classification=constants.FIELD_SPECIMEN_CLASSIFICA
     return {
         'query_fields': query_fields,
         'out_headers': out_headers,
-        'rename_lookup': rename_lookup
+        'rename_lookup': rename_lookup,
+        'drop_headers': [constants_tax.FIELD_MORPHO_NAME]
     }
 
 
@@ -217,6 +219,13 @@ def public_reviewed_images_q(org_id, query_fields):
 
 def get_public_media_url(row):
     return settings.MEDIA_URL + row[constants.SPECIMEN_IMAGE_IMAGE_THUMBNAIL_LARGE]
+
+
+def get_immature_status(row, classification_field):
+    morhpo_name = 'specimen__' + classification_field + '__' + constants_tax.FIELD_MORPHO_NAME
+    if 'immature' in row[morhpo_name]:
+        return True
+    return False
 
 
 def get_public_description(df):
@@ -234,14 +243,17 @@ def public_reviewed_img_export(org_id):
     """
     if not isinstance(org_id, int):
         raise TypeError('public_images_export only accepts integers for the org_id')
+    classification_field = constants.FIELD_SPECIMEN_CLASSIFICATION
     compression_method = 'zip'
     filename = get_filename_org_timestamp(PUBLIC_IMAGES_EXPORT_TITLE, org_id, compression_method)
-    headers = get_public_export_headers(constants.FIELD_SPECIMEN_CLASSIFICATION)
+    headers = get_public_export_headers(classification_field)
     data = public_reviewed_images_q(org_id, headers['query_fields'])
     df = pd.DataFrame.from_records(data)
+    df['immature_stage'] = df.apply(get_immature_status, classification_field=classification_field, axis=1)
     df['reviewed'] = 'TRUE'
     df = df.rename(columns=headers['rename_lookup'])
     df['public_url'] = df.apply(get_public_media_url, axis=1)
+    df = df.drop(headers['drop_headers'], axis=1)
     description = get_public_description(df)
 
     csv_buffer = BytesIO()
@@ -252,7 +264,7 @@ def public_reviewed_img_export(org_id):
         encoding='utf-8-sig'
     )
     csv_buffer.seek(0)
-    
+
     csv_filename = filename.replace('.zip', '.csv')
     max_mem_size = 5000 * (2**20)
     with SpooledTemporaryFile(mode='wb', max_size=max_mem_size) as zipfile_obj:
@@ -282,6 +294,8 @@ def public_all_img_export(org_id):
     reviewed_headers = get_public_export_headers(constants.FIELD_SPECIMEN_CLASSIFICATION)
     reviewed_data = public_reviewed_images_q(org_id, reviewed_headers['query_fields'])
     df = pd.DataFrame.from_records(reviewed_data)
+    df['immature_stage'] = df.apply(
+        get_immature_status, classification_field=constants.FIELD_SPECIMEN_CLASSIFICATION, axis=1)
     df['reviewed'] = 'TRUE'
     df = df.rename(columns=reviewed_headers['rename_lookup'])
 
@@ -294,6 +308,8 @@ def public_all_img_export(org_id):
         public_image=True
         ).values(*headers['query_fields'])
     df2 = pd.DataFrame.from_records(data)
+    df2['immature_stage'] = df2.apply(
+        get_immature_status, classification_field=constants.FIELD_SPECIMEN_AI_CLASSIFICATION, axis=1)
     df2['reviewed'] = 'FALSE'
     df2 = df2.rename(columns=headers['rename_lookup'])
 
@@ -301,6 +317,7 @@ def public_all_img_export(org_id):
     df = pd.concat([df, df2])
 
     df['public_url'] = df.apply(get_public_media_url, axis=1)
+    df = df.drop(headers['drop_headers'], axis=1)
     description = get_public_description(df)
 
     csv_buffer = BytesIO()
@@ -311,7 +328,7 @@ def public_all_img_export(org_id):
         encoding='utf-8-sig'
     )
     csv_buffer.seek(0)
-    
+
     csv_filename = filename.replace('.zip', '.csv')
     max_mem_size = 5000 * (2**20)
     with SpooledTemporaryFile(mode='wb', max_size=max_mem_size) as zipfile_obj:

@@ -7,14 +7,19 @@ from ..views.admin import (
     grower_list, grower_detail,
     farm_list, farm_detail,
     field_list, field_detail,
-    application_list, application_detail, application_edit_redirect, application_delete,
+    application_list, application_detail, application_edit_redirect, application_delete, link_application_to_grower,
     admin_application_edit_basic, admin_application_edit_management,
     admin_application_edit_transects, admin_application_submit,
+    admin_application_create_start, admin_application_create_step1,
+    admin_application_create_step2, admin_application_create_step3,
+    admin_application_create_step4, admin_application_complete,
     transect_code_list, transect_code_generate, transect_code_deactivate, transect_code_reactivate,
     csv_upload, csv_import_list, csv_import_detail, csv_import_download, csv_import_download_error_log, csv_import_delete,
     report_list, report_detail,
-    label_management, label_generation_list, label_generation_detail, label_generation_download
+    label_management, label_generation_list, label_generation_detail, label_generation_download,
+    inner_label_generations_json
 )
+from ..views.admin.submittal_management import generate_submittal_form
 
 urlpatterns = [
     path('dashboard/', admin_dashboard, name='admin_dashboard'),
@@ -29,6 +34,12 @@ urlpatterns = [
     path('fields/<int:field_id>/', field_detail, name='admin_field_detail'),
     
     path('applications/', application_list, name='admin_application_list'),
+    path('applications/create/', admin_application_create_start, name='admin_application_create_start'),
+    path('applications/create/<int:application_id>/step1/', admin_application_create_step1, name='admin_application_create_step1'),
+    path('applications/create/<int:application_id>/step2/', admin_application_create_step2, name='admin_application_create_step2'),
+    path('applications/create/<int:application_id>/step3/', admin_application_create_step3, name='admin_application_create_step3'),
+    path('applications/create/<int:application_id>/step4/', admin_application_create_step4, name='admin_application_create_step4'),
+    path('applications/create/<int:application_id>/complete/', admin_application_complete, name='admin_application_complete'),
     path('applications/<int:application_id>/', application_detail, name='admin_application_detail'),
     path('applications/<int:application_id>/edit/', application_edit_redirect, name='admin_application_edit'),
     path('applications/<int:application_id>/edit/basic/', admin_application_edit_basic, name='admin_application_edit_basic'),
@@ -36,6 +47,7 @@ urlpatterns = [
     path('applications/<int:application_id>/edit/transects/', admin_application_edit_transects, name='admin_application_edit_transects'),
     path('applications/<int:application_id>/submit/', admin_application_submit, name='admin_application_submit'),
     path('applications/<int:application_id>/delete/', application_delete, name='admin_application_delete'),
+    path('applications/<int:application_id>/link-grower/', link_application_to_grower, name='admin_application_link_grower'),
     
     path('transect-codes/', transect_code_list, name='admin_transect_code_list'),
     path('transect-codes/generate/', transect_code_generate, name='admin_transect_code_generate'),
@@ -51,9 +63,11 @@ urlpatterns = [
     
     path('label-management/', label_management, name='label_management'),
     path('label-generations/', label_generation_list, name='label_generation_list'),
+    path('label-generations/inner/', inner_label_generations_json, name='inner_label_generations_json'),
     path('label-generations/<int:generation_id>/', label_generation_detail, name='label_generation_detail'),
     path('label-generations/<int:generation_id>/download/', label_generation_download, name='label_generation_download'),
     
+    path('submittal-form-generator/', generate_submittal_form, name='submittal_form_generator'),
     path('reports/', report_list, name='admin_report_list'),
     path('reports/<int:report_id>/', report_detail, name='admin_report_detail'),
 ]

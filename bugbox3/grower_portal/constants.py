@@ -288,3 +288,34 @@ CLUSTER_NUMBER_MAX_LENGTH = 10
 LABEL_FILE_MAX_LENGTH = 255
 LABEL_DESCRIPTION_MAX_LENGTH = 500
 LABEL_TEMPLATE_SLUG = 'labels-template'
+LABEL_OUTER_TEMPLATE_SLUG = 'labels-outer-template'
+
+# Outer label sample lists for Avalanche
+AVALANCHE_ROOM_TEMP_SAMPLES = [
+    "Soil Core 0-60 (5 depths)",
+    "Soil Bulk Density",
+    "Soil Archive",
+    "Plant DNA",
+    "Insect Quad in vial"
+]
+
+AVALANCHE_REFRIGERATED_SAMPLES = [
+    "Soil Core 0-15",
+    "Insect Sweep bag",
+    "Crop samples",
+    "Forage samples"
+]
+
+SUBMITTAL_TEMPLATE_SLUG = 'submittal-soil-template'
+SUBMITTAL_PLANT_TEMPLATE_SLUG = 'submittal-plant-template'
+
+SUBMITTAL_TEST_ID_SOIL = 'BASIC-TOC-TC-TN-SOIL MOISTURE'
+SUBMITTAL_TEST_ID_SH = 'HANEY-PLFA-AG STABILITY-TEXTURE-BeCrop'
+SUBMITTAL_TEST_ID_PLANT = 'CC Routine'
+
+SUBMITTAL_SH_START_DEPTH = 0
+SUBMITTAL_SH_END_DEPTH = 15
+SUBMITTAL_SH_INCHES_START = 0
+SUBMITTAL_SH_INCHES_END = 6
+
+SUBMITTAL_PLANT_TYPE = 'forage mix'

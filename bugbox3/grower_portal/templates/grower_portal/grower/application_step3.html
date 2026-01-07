@@ -17,12 +17,32 @@
 
 {% block content %}
 <div class="container mt-4">
+    {% if is_admin %}
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="alert alert-primary">
+                <strong><i class="fas fa-user-shield"></i> Admin Mode:</strong> Creating application for <strong>{{ grower_display|default:application.grower_display_name }}</strong>
+                {% if not has_linked_account|default:application.has_linked_account %}
+                    <span class="badge bg-warning text-dark ms-2">No Linked Account</span>
+                {% else %}
+                    <span class="badge bg-success ms-2">Linked Account</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
     <div class="row">
         <div class="col-12">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
+                    {% if is_admin %}
+                    <li class="breadcrumb-item"><a href="{% url 'grower_portal:admin_application_list' %}">Applications</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'grower_portal:admin_application_create_step1' application.id %}">{{ application.submission_code }}</a></li>
+                    {% else %}
                     <li class="breadcrumb-item"><a href="{% url 'grower_portal:dashboard' %}">Dashboard</a></li>
                     <li class="breadcrumb-item"><a href="{% url 'grower_portal:application_step1' application.id %}">{{ application.submission_code }}</a></li>
+                    {% endif %}
                     <li class="breadcrumb-item active">Step 3</li>
                 </ol>
             </nav>
@@ -43,9 +63,15 @@
                 {% csrf_token %}
                 
                 <div class="d-flex justify-content-start mb-3">
+                    {% if is_admin %}
+                    <a href="{% url 'grower_portal:admin_application_create_step2' application.id %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Previous
+                    </a>
+                    {% else %}
                     <a href="{% url 'grower_portal:application_step2' application.id %}" class="btn btn-secondary">
                         <i class="fas fa-arrow-left"></i> Previous
                     </a>
+                    {% endif %}
                 </div>
                 
                 <div class="card mb-4">
@@ -120,7 +146,7 @@
     </div>
 </div>
 
-<!-- Google Maps API with callback -->
+<!-- Google Maps API + callback -->
 <script src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}&callback=initMap&v=weekly" async defer></script>
 {% endblock %}
 

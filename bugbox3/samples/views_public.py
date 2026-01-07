@@ -2,7 +2,7 @@ from django.http import Http404
 from django.views.generic import TemplateView
 from rest_framework.reverse import reverse as api_reverse
 
-from ..core.models import Exports
+from ..core.models import Exports, PrivateSiteContent
 from ..libs.ui_helpers import get_img_captioned, get_specimen_location
 from ..libs.utilities import get_json_context, get_media_url
 from ..samples.exports import (PUBLIC_ALL_IMAGES_EXPORT_TITLE,
@@ -73,19 +73,25 @@ class CollectionDownloadView(TemplateView):
                 if example_img.specimen.classification.gbif_species
                 else example_img.specimen.classification.gbif_genus + ' spp.'
             }
+        metaformer_zip = PrivateSiteContent.objects.filter(
+            title__icontains='metaformer-version',
+            file__icontains='.zip').last()
 
         context.update({
             'download_link': get_media_url(download_file.file)
             if download_file else '',
             'download_date_added': download_file.date_added if download_file else '',
-            'file_size': download_file.file.size if download_file else '',
+            'file_size': download_file.file_size if download_file else '',
             'description': download_file.description if download_file else '',
             'all_download_link': get_media_url(all_download_file.file)
             if all_download_file else '',
-            'all_file_size': all_download_file.file.size if all_download_file else '',
+            'all_file_size': all_download_file.file_size if all_download_file else '',
             'all_description': all_download_file.description if all_download_file else '',
             'all_download_date_added': all_download_file.date_added if all_download_file else '',
             'example': example,
-            'collection': PUBLIC_COLLECTIONS[self.kwargs['org_id']]
+            'collection': PUBLIC_COLLECTIONS[self.kwargs['org_id']],
+            'metaformer_zip_link': get_media_url(metaformer_zip.file) if metaformer_zip else '',
+            'metaformer_zip_file_size': metaformer_zip.file_size if metaformer_zip else '',
+            'metaformer_zip_description': metaformer_zip.description if metaformer_zip else ''
         })
         return context

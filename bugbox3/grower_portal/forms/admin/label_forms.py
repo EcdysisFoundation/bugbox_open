@@ -5,6 +5,7 @@ from ...constants import (
     SAMPLE_TYPES,
     LABEL_COUNT_MIN, LABEL_COUNT_MAX, CLUSTER_NUMBER_MAX_LENGTH
 )
+from ...models import LabelGeneration
 
 
 class LabelGenerationForm(forms.Form):
@@ -96,6 +97,13 @@ class QuickLabelGenerationForm(forms.Form):
         label='Project Type'
     )
     
+    label_category = forms.ChoiceField(
+        choices=LABEL_CATEGORY_CHOICES,
+        widget=forms.Select(attrs={'class': 'form-control', 'id': 'id_quick_label_category'}),
+        label='Label Category',
+        initial='inner'
+    )
+    
     cluster_number = forms.CharField(
         max_length=CLUSTER_NUMBER_MAX_LENGTH,
         widget=forms.TextInput(attrs={
@@ -119,6 +127,7 @@ class QuickLabelGenerationForm(forms.Form):
     )
     
     number_of_transects = forms.IntegerField(
+        required=False,
         min_value=1,
         max_value=1000,
         widget=forms.NumberInput(attrs={
@@ -129,4 +138,55 @@ class QuickLabelGenerationForm(forms.Form):
         label='Number of Transects',
         help_text='Total number of transect codes to generate'
     )
+    
+    inner_label_generation = forms.ChoiceField(
+        required=False,
+        widget=forms.Select(attrs={
+            'class': 'form-control',
+            'id': 'id_inner_label_generation'
+        }),
+        label='Select Inner Label Generation',
+        help_text='Choose the inner label generation to use for outer labels'
+    )
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        cluster = self.data.get('cluster_number') if self.data else None
+        year = self.data.get('year') if self.data else None
+        
+        choices = [('', '-- Enter cluster and year to see options --')]
+        
+        if cluster and year:
+            try:
+                year_int = int(year)
+                inner_generations = LabelGeneration.objects.filter(
+                    label_category='inner',
+                    cluster_number=cluster,
+                    year=year_int
+                ).order_by('-generated_at')[:50]
+                
+                for gen in inner_generations:
+                    transect_count = len(gen.transect_codes_generated) if gen.transect_codes_generated else 0
+                    label = f"Generated on {gen.generated_at.strftime('%Y-%m-%d %H:%M')} - {gen.total_labels_generated} labels - {transect_count} transects"
+                    choices.append((str(gen.id), label))
+            except (ValueError, TypeError):
+                pass
+        
+        self.fields['inner_label_generation'].choices = choices
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        label_category = cleaned_data.get('label_category')
+        number_of_transects = cleaned_data.get('number_of_transects')
+        inner_label_generation = cleaned_data.get('inner_label_generation')
+        
+        if label_category == 'outer':
+            if not inner_label_generation:
+                raise ValidationError('Please select an inner label generation for outer labels.')
+        elif label_category == 'inner':
+            if not number_of_transects:
+                raise ValidationError('Number of transects is required for inner labels.')
+        
+        return cleaned_data
 

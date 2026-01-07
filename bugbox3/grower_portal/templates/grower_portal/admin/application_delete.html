@@ -28,8 +28,15 @@
                     
                     <div class="mt-4">
                         <p><strong>Submission Code:</strong> {{ application.submission_code }}</p>
-                        <p><strong>Grower:</strong> {{ application.grower.name }}</p>
-                        <p><strong>Farm:</strong> {{ application.field.farm.name }}</p>
+                        <p><strong>Grower:</strong>
+                            {% if application.grower %}
+                                {{ application.grower.name }}
+                            {% else %}
+                                {{ application.grower_display_name|default:"No linked account" }}
+                                <span class="badge bg-warning text-dark ms-2">Unlinked</span>
+                            {% endif %}
+                        </p>
+                        <p><strong>Farm:</strong> {% if application.field.farm %}{{ application.field.farm.name }}{% else %}<span class="text-muted">N/A</span>{% endif %}</p>
                         <p><strong>Field:</strong> {{ application.field.field_name }}</p>
                         <p><strong>Date Sampled:</strong> {{ application.date_sampled }}</p>
                         <p><strong>Status:</strong> 

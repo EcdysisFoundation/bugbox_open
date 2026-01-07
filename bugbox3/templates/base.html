@@ -58,9 +58,39 @@
         style="height: 32px; vertical-align: middle;" />
   </a>
 
-  <a href="{% url 'about' %}">About</a>
-  <a href="{% url 'samples:collection' 1 %}">Collections</a>
-  <a href="{% url 'samples:demo-experiments' %}">Demo</a>
+  {# Hide About/Collections/Demo for grower portal users #}
+  {% if not request.user.is_authenticated %}
+    <a href="{% url 'about' %}">About</a>
+    <a href="{% url 'samples:collection' 1 %}">Collections</a>
+    <a href="{% url 'samples:demo-experiments' %}">Demo</a>
+  {% else %}
+    {# Check if user has grower portal groups - if they do, don't show these links #}
+    {% for group in request.user.groups.all %}
+      {% if group.name == 'is_groweradmin' or group.name == 'is_grower' %}
+        {# User has grower group - don't show About/Collections/Demo #}
+      {% elif forloop.last %}
+        {# Last group and it's not a grower group - check if we should show links #}
+        {% for g in request.user.groups.all %}
+          {% if g.name != 'is_groweradmin' and g.name != 'is_grower' %}
+            {% if forloop.first %}
+              <a href="{% url 'about' %}">About</a>
+              <a href="{% url 'samples:collection' 1 %}">Collections</a>
+              <a href="{% url 'samples:demo-experiments' %}">Demo</a>
+            {% endif %}
+          {% endif %}
+        {% empty %}
+          <a href="{% url 'about' %}">About</a>
+          <a href="{% url 'samples:collection' 1 %}">Collections</a>
+          <a href="{% url 'samples:demo-experiments' %}">Demo</a>
+        {% endfor %}
+      {% endif %}
+    {% empty %}
+      {# User has no groups, show links #}
+      <a href="{% url 'about' %}">About</a>
+      <a href="{% url 'samples:collection' 1 %}">Collections</a>
+      <a href="{% url 'samples:demo-experiments' %}">Demo</a>
+    {% endfor %}
+  {% endif %}
 
   {% if request.user.is_authenticated %}
     {% if ON_ECDYSIS_SERVER %}
@@ -100,6 +130,7 @@
             <a href="{% url 'grower_portal:admin_field_list' %}">Fields</a>
             <a href="{% url 'grower_portal:admin_transect_code_list' %}">Transect Codes</a>
             <a href="{% url 'grower_portal:label_management' %}">Label Management</a>
+            <a href="{% url 'grower_portal:submittal_form_generator' %}">Submittal Form Generator</a>
             <a href="{% url 'grower_portal:admin_csv_upload' %}">Upload CSV</a>
             <a href="{% url 'grower_portal:admin_csv_import_list' %}">Import History</a>
           </div>

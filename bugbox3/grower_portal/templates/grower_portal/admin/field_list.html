@@ -55,7 +55,13 @@
                                         <td>{{ field.field_name }}</td>
                                         <td>{{ field.farm.name }}</td>
                                         <td>{{ field.get_field_type_display }}</td>
-                                        <td>{{ field.farm.grower.name }}</td>
+                                        <td>
+                                            {% if field.farm.grower %}
+                                                {{ field.farm.grower.name }}
+                                            {% else %}
+                                                <span class="text-muted">No linked account</span>
+                                            {% endif %}
+                                        </td>
                                         <td>{{ field.created_at|user_date_short:request.user_timezone }}</td>
                                         <td>
                                             <a href="{% url 'grower_portal:admin_field_detail' field.id %}" class="btn btn-sm btn-outline-primary">

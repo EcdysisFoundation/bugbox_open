@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}Generate Submittal Form{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Generate Submittal Form</h1>
+    <p class="text-muted">Generate Excel submittal forms for soil sample submissions based on cluster and year</p>
+
+    <div class="row mt-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-file-excel"></i> Submittal Form Generator</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">
+                        Enter a cluster number and year to generate an Excel submittal form. 
+                        The system will find the associated label generation and populate the template 
+                        with transect codes and depth information.
+                    </p>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            {{ form.cluster_number.label_tag }}
+                            {{ form.cluster_number }}
+                            <small class="form-text text-muted">{{ form.cluster_number.help_text }}</small>
+                            {% if form.cluster_number.errors %}
+                                <div class="text-danger">{{ form.cluster_number.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.year.label_tag }}
+                            {{ form.year }}
+                            <small class="form-text text-muted">{{ form.year.help_text }}</small>
+                            {% if form.year.errors %}
+                                <div class="text-danger">{{ form.year.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ form.generate_soil }}
+                                <label class="form-check-label" for="{{ form.generate_soil.id_for_label }}">
+                                    {{ form.generate_soil.label }}
+                                </label>
+                                <small class="form-text text-muted d-block">{{ form.generate_soil.help_text }}</small>
+                            </div>
+                            {% if form.generate_soil.errors %}
+                                <div class="text-danger">{{ form.generate_soil.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ form.generate_plant }}
+                                <label class="form-check-label" for="{{ form.generate_plant.id_for_label }}">
+                                    {{ form.generate_plant.label }}
+                                </label>
+                                <small class="form-text text-muted d-block">{{ form.generate_plant.help_text }}</small>
+                            </div>
+                            {% if form.generate_plant.errors %}
+                                <div class="text-danger">{{ form.generate_plant.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {{ form.non_field_errors }}
+                            </div>
+                        {% endif %}
+
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-download"></i> Generate Submittal Form
+                        </button>
+                        <a href="{% url 'grower_portal:admin_dashboard' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Dashboard
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> How It Works</h5>
+                </div>
+                <div class="card-body">
+                    <ol>
+                        <li>Enter the cluster number (e.g., C1, C2)</li>
+                        <li>Enter the year</li>
+                        <li>Select which submittal forms to generate (Soil and/or Plant)</li>
+                        <li>System finds the latest label generation for that cluster</li>
+                        <li>For Soil: Creates 5 rows per transect (one for each depth: 0-5, 5-10, 10-15, 15-30, 30-60 cm)</li>
+                        <li>For Plant: Creates 1 row per transect with forage type (only for transects with forage labels)</li>
+                        <li>Populates grower names from submitted applications</li>
+                        <li>Downloads Excel file(s) ready for submission</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-link"></i> Related Pages</h5>
+                </div>
+                <div class="card-body">
+                    <a href="{% url 'grower_portal:label_management' %}" class="btn btn-outline-primary w-100 mb-2">
+                        <i class="fas fa-tags"></i> Label Management
+                    </a>
+                    <a href="{% url 'grower_portal:label_generation_list' %}" class="btn btn-outline-secondary w-100">
+                        <i class="fas fa-history"></i> Label History
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
