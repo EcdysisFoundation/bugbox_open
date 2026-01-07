@@ -64,12 +64,23 @@
                     <h5 class="mb-0">Application Details</h5>
                 </div>
                 <div class="card-body">
-                    <p><strong>Grower:</strong> 
-                        <a href="{% url 'grower_portal:admin_grower_detail' report.application.grower.id %}">
-                            {{ report.application.grower.name }}
-                        </a>
+                    <p><strong>Grower:</strong>
+                        {% if report.application.grower %}
+                            <a href="{% url 'grower_portal:admin_grower_detail' report.application.grower.id %}">
+                                {{ report.application.grower.name }}
+                            </a>
+                        {% else %}
+                            {{ report.application.grower_display_name|default:"No linked account" }}
+                            <span class="badge bg-warning text-dark ms-2">Unlinked</span>
+                        {% endif %}
                     </p>
-                    <p><strong>Email:</strong> {{ report.application.grower.email }}</p>
+                    <p><strong>Email:</strong>
+                        {% if report.application.grower %}
+                            {{ report.application.grower.email }}
+                        {% else %}
+                            {{ report.application.grower_display_email|default:"No email" }}
+                        {% endif %}
+                    </p>
                     <p><strong>Farm:</strong> 
                         <a href="{% url 'grower_portal:admin_farm_detail' report.application.field.farm.id %}">
                             {{ report.application.field.farm.name }}

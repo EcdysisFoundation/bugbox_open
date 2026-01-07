@@ -143,7 +143,14 @@
                                     {% for application in recent_applications %}
                                     <tr>
                                         <td>{{ application.submission_code }}</td>
-                                        <td>{{ application.grower.name }}</td>
+                                        <td>
+                                            {% if application.grower %}
+                                                {{ application.grower.name }}
+                                            {% else %}
+                                                {{ application.grower_display_name|default:"No linked account" }}
+                                                <span class="badge bg-warning text-dark ms-1">Unlinked</span>
+                                            {% endif %}
+                                        </td>
                                         <td>{{ application.field.field_name }}</td>
                                         <td>
                                             {% if application.is_draft %}

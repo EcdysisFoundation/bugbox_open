@@ -171,6 +171,15 @@ class ApplicationFilterForm(forms.Form):
         label='Date To',
         widget=forms.DateInput(attrs={'type': 'date'})
     )
+    linked_status = forms.ChoiceField(
+        required=False,
+        label='Link Status',
+        choices=[
+            ('', 'All Applications'),
+            ('linked', 'Linked to Account'),
+            ('unlinked', 'Not Linked')
+        ]
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -179,11 +188,12 @@ class ApplicationFilterForm(forms.Form):
         self.helper.form_class = 'form-inline'
         self.helper.layout = Layout(
             Row(
-                Column('search', css_class='form-group col-md-4 mb-2'),
+                Column('search', css_class='form-group col-md-3 mb-2'),
                 Column('status', css_class='form-group col-md-2 mb-2'),
                 Column('field_type', css_class='form-group col-md-2 mb-2'),
-                Column('date_from', css_class='form-group col-md-2 mb-2'),
-                Column('date_to', css_class='form-group col-md-2 mb-2'),
+                Column('linked_status', css_class='form-group col-md-2 mb-2'),
+                Column('date_from', css_class='form-group col-md-1.5 mb-2'),
+                Column('date_to', css_class='form-group col-md-1.5 mb-2'),
                 css_class='form-row'
             ),
             Submit('filter', 'Apply Filters', css_class='btn btn-primary btn-sm')

@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load crispy_forms_tags %}
+
+{% block title %}Create Application - Grower Portal Admin{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'grower_portal:admin_dashboard' %}">Admin Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'grower_portal:admin_application_list' %}">Applications</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Create Application</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-plus-circle"></i> Create Application for Grower
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-light border">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-info-circle text-primary me-3 mt-1" style="font-size: 1.5rem;"></i>
+                            <div>
+                                <h6 class="mb-2"><strong>Admin Application Creation</strong></h6>
+                                <p class="mb-0 text-muted">
+                                    Create a complete application on behalf of a grower. You can either link to an existing grower account
+                                    or enter grower information manually (for growers without accounts).
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="card mb-3">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-user-check"></i> Option 1: Link to Existing Grower Account
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted small">If the grower already has an account with "Grower" permission, enter their email here.</p>
+                                
+                                <div class="form-group mb-0">
+                                    <label for="{{ form.grower_email.id_for_label }}" class="form-label">
+                                        {{ form.grower_email.label }}
+                                    </label>
+                                    {{ form.grower_email }}
+                                    {% if form.grower_email.help_text %}
+                                        <small class="form-text text-muted">
+                                            <i class="fas fa-lightbulb"></i> {{ form.grower_email.help_text }}
+                                        </small>
+                                    {% endif %}
+                                    {% if form.grower_email.errors %}
+                                        <div class="alert alert-danger mt-2">
+                                            <i class="fas fa-exclamation-triangle"></i>
+                                            {{ form.grower_email.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center my-3">
+                            <strong class="text-muted">— OR —</strong>
+                        </div>
+                        
+                        <div class="card mb-3">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-user-plus"></i> Option 2: Enter Grower Information Manually
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted small">
+                                    For growers without accounts, enter their information here. 
+                                    <strong>This application can be linked to their account later if they create one.</strong>
+                                </p>
+                                
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.grower_name.id_for_label }}" class="form-label">
+                                        {{ form.grower_name.label }} <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.grower_name }}
+                                    {% if form.grower_name.help_text %}
+                                        <small class="form-text text-muted">{{ form.grower_name.help_text }}</small>
+                                    {% endif %}
+                                    {% if form.grower_name.errors %}
+                                        <div class="alert alert-danger mt-2">
+                                            {{ form.grower_name.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="{{ form.grower_email_manual.id_for_label }}" class="form-label">
+                                                {{ form.grower_email_manual.label }}
+                                            </label>
+                                            {{ form.grower_email_manual }}
+                                            {% if form.grower_email_manual.help_text %}
+                                                <small class="form-text text-muted">{{ form.grower_email_manual.help_text }}</small>
+                                            {% endif %}
+                                            {% if form.grower_email_manual.errors %}
+                                                <div class="alert alert-danger mt-2">
+                                                    {{ form.grower_email_manual.errors }}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="{{ form.grower_phone.id_for_label }}" class="form-label">
+                                                {{ form.grower_phone.label }}
+                                            </label>
+                                            {{ form.grower_phone }}
+                                            {% if form.grower_phone.help_text %}
+                                                <small class="form-text text-muted">{{ form.grower_phone.help_text }}</small>
+                                            {% endif %}
+                                            {% if form.grower_phone.errors %}
+                                                <div class="alert alert-danger mt-2">
+                                                    {{ form.grower_phone.errors }}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                {{ form.non_field_errors }}
+                            </div>
+                        {% endif %}
+                        
+                        <hr>
+                        
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'grower_portal:admin_application_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                Start Application <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0"><i class="fas fa-clipboard-check"></i> Application Creation Process</h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">You will complete these 4 steps:</p>
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item d-flex align-items-start px-0 border-0 py-2">
+                            <span class="badge bg-primary rounded-circle me-3" style="width: 24px; height: 24px; padding: 4px;">1</span>
+                            <div>
+                                <strong>Farm & Field Information</strong>
+                                <small class="d-block text-muted">Farm name, field details, crop types, and sampling date</small>
+                            </div>
+                        </div>
+                        <div class="list-group-item d-flex align-items-start px-0 border-0 py-2">
+                            <span class="badge bg-primary rounded-circle me-3" style="width: 24px; height: 24px; padding: 4px;">2</span>
+                            <div>
+                                <strong>Management Practices</strong>
+                                <small class="d-block text-muted">Cover crops, amendments, grazing events (if rangeland)</small>
+                            </div>
+                        </div>
+                        <div class="list-group-item d-flex align-items-start px-0 border-0 py-2">
+                            <span class="badge bg-primary rounded-circle me-3" style="width: 24px; height: 24px; padding: 4px;">3</span>
+                            <div>
+                                <strong>Transect Codes & GPS</strong>
+                                <small class="d-block text-muted">Enter transect codes and map GPS coordinates</small>
+                            </div>
+                        </div>
+                        <div class="list-group-item d-flex align-items-start px-0 border-0 py-2">
+                            <span class="badge bg-primary rounded-circle me-3" style="width: 24px; height: 24px; padding: 4px;">4</span>
+                            <div>
+                                <strong>Field Measurements</strong>
+                                <small class="d-block text-muted">Drop plate, vegetation, soil, compaction, infiltration data</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card shadow-sm border-success mb-3">
+                <div class="card-body">
+                    <h6 class="text-success mb-2">
+                        <i class="fas fa-link"></i> Linking Applications Later
+                    </h6>
+                    <p class="small mb-0 text-muted">
+                        Applications created without a linked account can be associated with a grower account later 
+                        through the Django admin interface once the grower creates their account.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="card shadow-sm border-warning">
+                <div class="card-body">
+                    <h6 class="text-warning mb-2">
+                        <i class="fas fa-exclamation-triangle"></i> Important Notes
+                    </h6>
+                    <ul class="small mb-0 text-muted">
+                        <li>Choose ONE option: existing account OR manual entry</li>
+                        <li>You can save as Draft or mark as Submitted</li>
+                        <li>All data will be tracked with your admin account</li>
+                        <li>Unlinked applications won't appear in grower dashboards</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

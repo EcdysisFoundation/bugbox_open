@@ -27,7 +27,13 @@
                 <div class="card-body">
                     <p><strong>Field Name:</strong> {{ field.field_name }}</p>
                     <p><strong>Farm:</strong> <a href="{% url 'grower_portal:admin_farm_detail' field.farm.id %}">{{ field.farm.name }}</a></p>
-                    <p><strong>Grower:</strong> <a href="{% url 'grower_portal:admin_grower_detail' field.farm.grower.id %}">{{ field.farm.grower.name }}</a></p>
+                    <p><strong>Grower:</strong>
+                        {% if field.farm.grower %}
+                            <a href="{% url 'grower_portal:admin_grower_detail' field.farm.grower.id %}">{{ field.farm.grower.name }}</a>
+                        {% else %}
+                            <span class="text-muted">No linked account</span>
+                        {% endif %}
+                    </p>
                     <p><strong>Field Type:</strong> {{ field.get_field_type_display }}</p>
                     <p><strong>Acres Sampled:</strong> {{ field.acres_sampled|default:"N/A" }}</p>
                     <p><strong>Years Under Management:</strong> {{ field.years_under_management|default:"N/A" }}</p>

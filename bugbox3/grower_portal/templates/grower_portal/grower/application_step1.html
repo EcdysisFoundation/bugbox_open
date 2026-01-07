@@ -15,11 +15,30 @@
 
 {% block content %}
 <div class="container mt-4">
+    {% if is_admin %}
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="alert alert-primary">
+                <strong><i class="fas fa-user-shield"></i> Admin Mode:</strong> Creating application for <strong>{{ grower_display|default:application.grower_display_name }}</strong>
+                {% if not has_linked_account|default:application.has_linked_account %}
+                    <span class="badge bg-warning text-dark ms-2">No Linked Account</span>
+                {% else %}
+                    <span class="badge bg-success ms-2">Linked Account</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
     <div class="row">
         <div class="col-12">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
+                    {% if is_admin %}
+                    <li class="breadcrumb-item"><a href="{% url 'grower_portal:admin_application_list' %}">Applications</a></li>
+                    {% else %}
                     <li class="breadcrumb-item"><a href="{% url 'grower_portal:dashboard' %}">Dashboard</a></li>
+                    {% endif %}
                     <li class="breadcrumb-item active">Application {{ application.submission_code }}</li>
                 </ol>
             </nav>
@@ -29,7 +48,7 @@
     <div class="row">
         <div class="col-12">
             <div class="progress mb-4">
-                <div class="progress-bar progress-width-16-67" role="progressbar">Step 1 of {% if application.field.field_type == 'range' %}6{% else %}5{% endif %}</div>
+                <div class="progress-bar progress-width-16-67" role="progressbar">Step 1 of {% if form.field_type.value == 'range' %}6{% else %}5{% endif %}</div>
             </div>
         </div>
     </div>
@@ -41,16 +60,34 @@
                     <h3 class="mb-0">Step 1: Field Information</h3>
                 </div>
                 <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                <i class="fas fa-{% if message.tags == 'error' %}exclamation-triangle{% elif message.tags == 'success' %}check-circle{% else %}info-circle{% endif %}"></i>
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                    
                     <div class="d-flex justify-content-start mb-3">
+                        {% if is_admin %}
+                        <a href="{% url 'grower_portal:admin_application_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Applications
+                        </a>
+                        {% else %}
                         <a href="{% url 'grower_portal:dashboard' %}" class="btn btn-secondary">
                             <i class="fas fa-arrow-left"></i> Back to Dashboard
                         </a>
+                        {% endif %}
                     </div>
                     
+                    {% if not is_admin %}
                     <div class="alert alert-info">
                         <i class="fas fa-info-circle"></i>
                         <strong>Note:</strong> You can modify these details until you submit the application. Once submitted, changes will not be allowed.
                     </div>
+                    {% endif %}
                     
                     {% crispy form %}
                 </div>
@@ -70,7 +107,7 @@
                         <li class="list-group-item">Step 2: Management Practices</li>
                         <li class="list-group-item">Step 3: Transect Codes</li>
                         <li class="list-group-item">Step 4: Transect Measurements</li>
-                        {% if application.field.field_type == 'range' %}
+                        {% if form.field_type.value == 'range' %}
                         <li class="list-group-item">Step 5: Grazing Events</li>
                         <li class="list-group-item">Step 6: Review & Submit</li>
                         {% else %}

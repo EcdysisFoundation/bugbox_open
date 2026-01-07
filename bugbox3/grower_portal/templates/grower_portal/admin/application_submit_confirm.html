@@ -16,14 +16,21 @@
                     <h4>Submit this application on behalf of the grower?</h4>
                     
                     <div class="alert alert-info mt-3">
-                        <strong>Note:</strong> You are about to submit this draft application on behalf of <strong>{{ application.grower.name }}</strong>.
+                        <strong>Note:</strong> You are about to submit this draft application on behalf of <strong>{% if application.grower %}{{ application.grower.name }}{% else %}{{ application.grower_display_name|default:"unlinked grower" }}{% endif %}</strong>.
                         Once submitted, the application status will change from Draft to Submitted.
                     </div>
                     
                     <div class="mt-4">
                         <p><strong>Submission Code:</strong> {{ application.submission_code }}</p>
-                        <p><strong>Grower:</strong> {{ application.grower.name }} ({{ application.grower.email }})</p>
-                        <p><strong>Farm:</strong> {{ application.field.farm.name }}</p>
+                        <p><strong>Grower:</strong>
+                            {% if application.grower %}
+                                {{ application.grower.name }} ({{ application.grower.email }})
+                            {% else %}
+                                {{ application.grower_display_name|default:"No linked account" }} ({{ application.grower_display_email|default:"No email" }})
+                                <span class="badge bg-warning text-dark ms-2">Unlinked</span>
+                            {% endif %}
+                        </p>
+                        <p><strong>Farm:</strong> {% if application.field.farm %}{{ application.field.farm.name }}{% else %}<span class="text-muted">N/A</span>{% endif %}</p>
                         <p><strong>Field:</strong> {{ application.field.field_name }}</p>
                         <p><strong>Field Type:</strong> {{ application.field.get_field_type_display }}</p>
                         <p><strong>Date Sampled:</strong> {{ application.date_sampled }}</p>
