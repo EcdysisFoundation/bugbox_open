@@ -90,8 +90,8 @@ class CollectionDownloadView(TemplateView):
             'all_download_date_added': all_download_file.date_added if all_download_file else '',
             'example': example,
             'collection': PUBLIC_COLLECTIONS[self.kwargs['org_id']],
-            'metaformer_zip_link': get_media_url(metaformer_zip.file),
-            'metaformer_zip_file_size': metaformer_zip.file_size,
-            'metaformer_zip_description': metaformer_zip.description
+            'metaformer_zip_link': get_media_url(metaformer_zip.file) if metaformer_zip else '',
+            'metaformer_zip_file_size': metaformer_zip.file_size if metaformer_zip else '',
+            'metaformer_zip_description': metaformer_zip.description if metaformer_zip else ''
         })
         return context
