@@ -32,11 +32,13 @@
                         </p>
 
                         <p>
-                              Through this BugBox application, we use artificial intelligence to give preliminary identifications to each insect we collect.
+                              Through this BugBox application, we use artificial intelligence (AI) to give preliminary identifications to each insect we collect.
                               We then review a proportion of identifications and retrain our model to improve it over time.
-                              Much of this is currently behind authentication for staff and collaborators, but we are now making available
-                              to the public over 100,000 identified specimen images through
+                              From this application, we are now making available to the public nearly 120,000 specimen images, identified by our entomologists, through
                               <a href="{% url 'samples:collection' 1 %}">our collection browser</a>.
+                              From our <a href="{% url 'samples:collection-download' 1 %}">research downloads page</a>, the public can additionally download our database of over
+                              600,000 arthropod images identified either by entomologists or our AI model.
+                              From that page, we also have open source released our AI model and source code so other researchers can learn from and help continue our ecological research and development.
                         </p>
                   </div>
             </div>

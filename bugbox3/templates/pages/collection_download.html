@@ -15,7 +15,7 @@
     <div class="row bg-ecdysis mt-3">
         <div class="col">
             <div class="align-items-center bg-ecdysis text-white d-flex justify-content-between">
-                <h2 class="text-light mt-1">Collection Download: {{ collection.org_name }}</h2>
+                <h2 class="text-light mt-1">Research Downloads: {{ collection.org_name }}</h2>
                 <a href="{% url 'samples:collection' org_id %}" class="btn btn-light">
                     Collection Browser
                 </a>
@@ -24,9 +24,10 @@
     </div>
 
     <div class="row mt-2 p-4 justify-content-center">
-        <div class="col-6">
+        <div class="col-md-8">
+            <h2>Collection Download</h2>
             <p>
-                Here we provide table downloads of the {{ collection.org_name }} arthropod collection
+                Here we provide the {{ collection.org_name }} arthropod collection
                 which includes the {{ collection.collection }} (<i>indicated by archival columns</i>).
                 Images are provided as publically accessible links.
             </p><p>
@@ -38,10 +39,36 @@
                 You can learn more about the {{ collection.org_name }} Collection and how specimens are collected and utilized at our
                 <a href="{{ collection.homepage }}" target="_blank"><i class="bi bi-box-arrow-up-right"> homepage</i></a>.
             </p>
-        </div>
-        <div class="col-4">
 
-            <p><a href="{{ download_link }}" class="btn btn-warning">
+            <h2>AI Model</h2>
+                <p>
+                    Using our reviewed images, we train a Pytorch model called MetaFormer, which we use to provide identifications for all our images. The model development process is described in the following peer review publiation.
+
+                    <ul>
+                        <li>
+                            Welch, K. Wilson, M. Lundgren, J (2025). Evaluation of BugBox, a software platform for AI-assisted bioinventories of arthropods. Journal of Animal Ecology.
+                            <a href="https://doi.org/10.1111/1365-2656.70178" target="_blank">https://doi.org/10.1111/1365-2656.70178</a>
+                        </li>
+                    </ul>
+
+                </p>
+            <p>
+                The source code for training and inference is published open access at these links
+                <ul>
+                    <li>
+                        <a href="https://github.com/EcdysisFoundation/metaformer_ecdysis" target="_blank">https://github.com/EcdysisFoundation/metaformer_ecdysis</a>
+                    </li>
+                    <li>
+                        <a href="https://github.com/EcdysisFoundation/inference-fastapi">https://github.com/EcdysisFoundation/inference-fastapi</a>
+                    </li>
+                </ul>
+
+            </p>
+
+        </div>
+        <div class="col-md-4">
+            <hr/>
+            <p><a href="{{ download_link }}" class="btn btn-success">
                 Reviewed Specimens <i class="bi bi-download"> {{ file_size|filesizeformat }}</i>
             </a></p>
             {% if description %}
@@ -54,7 +81,7 @@
             {% endif %}
             <hr/>
 
-            <p><a href="{{ all_download_link }}" class="btn btn-danger">
+            <p><a href="{{ all_download_link }}" class="btn btn-warning">
                 All Specimens <i class="bi bi-download"> {{ all_file_size|filesizeformat }}</i>
             </a></p>
             {% if description %}
@@ -68,12 +95,24 @@
                 </p>
             {% endif %}
 
+            <hr/>
+            <p>
+                <a href="{{ metaformer_zip_link }}" class="btn btn-danger">
+                    MetaFormer Model <i class="bi bi-download"> {{ metaformer_zip_file_size|filesizeformat }}</i>
+                </a>
+            </p>
+            <p>
+                The MetaFormer Model is a Pytorch model trained from our images. {{ metaformer_zip_description }} Expertise
+                in artifical intelligence and using Pytroch models is required to use it.
+
+            </p>
+
         </div>
     </div>
     <hr/>
     <div class="row">
         <div class="col">
-            Ecdysis Foundation holds the copyright on this dataset and is making it available here through
+            Ecdysis Foundation holds the copyright on this dataset and model. We are making it available here through
             the Creative Commons Attribution Noncommercial license (CC BY-NC).
             For liscensing details, please see <a href="https://creativecommons.org/licenses/by-nc/4.0/">https://creativecommons.org/licenses/by-nc/4.0/</a>.
         </div>
@@ -91,10 +130,10 @@
         </div>
     </div>
         <div class="row mt-2 justify-content-center">
-            <div class="col-4">
+            <div class="col-md-4">
                 {{ example.img_captioned|safe }}
             </div>
-            <div class="col-4">
+            <div class="col-md-4">
                 <ul class="list-group list-group-flush">
                     <li class="list-group-item"><b>Order:</b> {{ example.details.specimen.classification.gbif_order }}</li>
                     <li class="list-group-item"><b>Family:</b> {{ example.details.specimen.classification.gbif_family }}</li>
