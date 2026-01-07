@@ -39,8 +39,12 @@ class StitcherView(PermissionRequiredMixin, TemplateView):
         stitcher_url = STITCHER_JS_URL_ZEROTIER if \
             str(self.request.user) in ZEROTIER_USERS else STITCHER_JS_URL
         stats = get_stitcher_stats()
-        ls_projects_choices = [(v[0], f'{v[0]} ({v[1]})')
-                               for v in stats[constants.STITCHER_STATS_LS_PROJECTS]]
+        if constants.STITCHER_STATS_LS_PROJECTS in stats.keys():
+            ls_projects_choices = [(v[0], f'{v[0]} ({v[1]})')
+                                   for v in stats[constants.STITCHER_STATS_LS_PROJECTS]]
+        else:
+            ls_projects_choices = [(None, None)]
+
         context.update({
             'json_context': get_json_context({
                 'STITCHER_URL': stitcher_url,
