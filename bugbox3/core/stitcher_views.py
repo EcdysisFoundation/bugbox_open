@@ -227,9 +227,10 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                     label_img_name = f'{self.data[constants.STITCHER_UPLOAD_DIR_NAME]}_label.jpg'
                     instance.label_image.save(label_img_name, ContentFile(label_response.content), save=False)
                     # Save label image to Sample image field
-                    sample_label_img_name = f'{self.data[constants.STITCHER_UPLOAD_DIR_NAME]}_label.jpg'
-                    this_sample.image.save(sample_label_img_name, ContentFile(label_response.content), save=False)
-                    this_sample.save()
+                    if not this_sample.image:
+                        sample_label_img_name = f'{self.data[constants.STITCHER_UPLOAD_DIR_NAME]}_label.jpg'
+                        this_sample.image.save(sample_label_img_name, ContentFile(label_response.content), save=False)
+                        this_sample.save()
                 instance.save()
                 messages.success(
                     self.request, f'Succesfully initiated "Save to sample" for {self.guid}')
