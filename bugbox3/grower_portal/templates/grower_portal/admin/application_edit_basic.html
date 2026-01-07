@@ -12,7 +12,7 @@
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
                     <h1>Edit Application: {{ application.submission_code }}</h1>
-                    <p class="text-muted">Grower: {{ application.grower.name }}</p>
+                    <p class="text-muted">Grower: {% if application.grower %}{{ application.grower.name }}{% else %}{{ application.grower_display_name|default:"No linked account" }}{% endif %}</p>
                 </div>
                 <a href="{% url 'grower_portal:admin_application_detail' application.id %}" class="btn btn-outline-secondary">
                     <i class="fas fa-arrow-left"></i> Cancel
@@ -29,7 +29,7 @@
                 </div>
                 <div class="card-body">
                     <div class="alert alert-info">
-                        <i class="fas fa-info-circle"></i> <strong>Admin Edit Mode:</strong> You are editing on behalf of {{ application.grower.name }}
+                        <i class="fas fa-info-circle"></i> <strong>Admin Edit Mode:</strong> You are editing on behalf of {% if application.grower %}{{ application.grower.name }}{% else %}{{ application.grower_display_name|default:"unlinked grower" }}{% endif %}
                     </div>
 
                     {% crispy form %}
