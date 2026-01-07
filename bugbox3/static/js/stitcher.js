@@ -55,7 +55,7 @@ function getApproved(approved) {
         return 'Approved'
     }
     if (!approved) {
-            return 'Disapproved'
+            return 'Retake or delete'
         }
     return approved
 }
