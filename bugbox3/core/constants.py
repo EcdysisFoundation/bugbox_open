@@ -137,7 +137,7 @@ STITCHER_LABEL_IMG = 'label_r_001.jpg'
 STITCHER_APPROVED_CHOICES = (
         (None, '---'),
         (True, 'Approved'),
-        (False, 'Dissaprove')
+        (False, 'Retake')
     )
 STITCHER_STATS_LS_PROJECTS = 'label_studio_projects'
 

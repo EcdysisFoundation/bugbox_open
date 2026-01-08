@@ -114,7 +114,7 @@ class ModelFormMixin(ModelForm):
             for field_name in self.required_fields:
                 if field_name in self.errors:
                     del self.errors[field_name]
-            
+
             # Create an unordered list (<ul>) for the error messages
             error_message_list = "<ul>"
             for message in error_messages:
@@ -198,8 +198,8 @@ class LookupChoicesForm(ModelFormMixin):
 class StitcherForm(Form):
     approved = ChoiceField(
         choices=constants.STITCHER_APPROVED_CHOICES,
-        label="Approve/Dissaprove",
-        help_text="Updating the stitching is disabled when approved or dissaproved.",
+        label="Approve/Retake",
+        help_text="Updating the stitching is disabled when set.",
         required=False)
 
     bugbox_sample_id = IntegerField(

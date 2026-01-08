@@ -78,7 +78,7 @@ $(function () {
        })
     }
 
-    if (moveSubmitBtn && sample_table) {
+    if (moveSubmitBtn) {
         moveSubmitBtn.addEventListener('click', function() {
             let data = st.rows('.selected').data();
             let se_id = sample_table.rows('.selected').data();
