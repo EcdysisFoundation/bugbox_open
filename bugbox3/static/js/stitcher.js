@@ -26,6 +26,7 @@ function getUrl(dt_url, data_filters) {
     url_args += `${sep}predictions=${data_filters.predictions}`;
     url_args += `${sep}annotations=${data_filters.annotations}`;
     url_args += `${sep}completed=${data_filters.completed}`;
+    url_args += `${sep}needs_linked=${data_filters.needs_linked}`;
     url_args += `${sep}sample_linked=${data_filters.sample_linked}`;
     url_args += `${sep}nota_sample=${data_filters.nota_sample}`;
 
@@ -105,6 +106,7 @@ $(function () {
     const json_context = JSON.parse(document.getElementById('json_context').textContent)
     let data_filters = {
         ls_project: '',
+        needs_linked: false,
         sample_linked: false,
         nota_sample: false,
         unreviewed: true,
@@ -291,6 +293,18 @@ $(function () {
     $('.completed-check').append($completedCheck)
     $completedCheck.on('change', () => {
         data_filters.completed = $completedCheck.prop("checked");
+        new_datatables_url = getUrl(json_context.STITCHER_URL, data_filters);
+        stitcher_table.ajax.url( new_datatables_url ).load();
+    })
+
+    let needs_linked_check = '';
+    if (data_filters.needs_linked) {
+        needs_linked_check = 'checked';
+    }
+    let $needsLinkedCheck = $(`<input class="form-check-input" type="checkbox" value="" id="needsLinkedCheck" ${needs_linked_check}>`)
+    $('.needs-linked-check').append($needsLinkedCheck)
+    $needsLinkedCheck.on('change', () => {
+        data_filters.needs_linked = $needsLinkedCheck.prop("checked");
         new_datatables_url = getUrl(json_context.STITCHER_URL, data_filters);
         stitcher_table.ajax.url( new_datatables_url ).load();
     })
