@@ -109,8 +109,8 @@ $(function () {
         needs_linked: false,
         sample_linked: false,
         nota_sample: false,
-        unreviewed: true,
-        approved: true,
+        unreviewed: false,
+        approved: false,
         disapproved: false,
         predictions: false,
         annotations: false,
@@ -164,16 +164,16 @@ $(function () {
                 data: 'panorama_path',
                 render: getPanoramaSrc
             },{
-                data: '',
-                render: getSampleUrl
-            },{
                 data: 'approved',
                 render: getApproved
             },{
-                data: 'label_studio_project'
+                data: '',
+                render: getSampleUrl
             },{
                 data: 'predictions_timestamp_coco',
                 render: concatTen
+            },{
+                data: 'label_studio_project'
             },{
                 data: 'annotations_updated_at_segment',
                 render: concatTen
