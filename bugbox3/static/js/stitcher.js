@@ -96,9 +96,11 @@ function concatTen(data) {
     } else { return '' }
 }
 
-function getSent(data) {
-    if (data) {
+function getSent(data, type, row) {
+    if (row.bugbox_croped_saved) {
         return '<i class="bi bi-send-check-fill h4 text-success"></i>'
+    } if (row.nota_sample) {
+        return '<i class="bi bi-ban"></i>'
     } else { return '' }
 }
 
@@ -180,7 +182,7 @@ $(function () {
                 data: 'annotations_updated_at_segment',
                 render: concatTen
             },{
-                data: 'bugbox_croped_saved',
+                data: '',
                 render: getSent
             }
         ]
