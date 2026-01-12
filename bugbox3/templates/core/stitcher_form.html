@@ -25,9 +25,15 @@
     <div class="row">
         <div class="col mb-2">
             <h3>{{ data.upload_dir_name }}</h3>
-            <a href="{{ img_src }}" target="_blank">
-                <img src="{{ img_src }}" width="500">
-            </a>
+            {% if thumbnail_src %}
+                <a href="{{ thumbnail_src }}" target="_blank">
+                    <img src="{{ thumbnail_src }}" width="500">
+                </a>
+            {% else %}
+                <a href="{{ img_src }}" target="_blank">
+                    <img src="{{ img_src }}" width="500">
+                </a>
+            {% endif %}
         </div>
         <div class="col mb-2">
             <ul class="list-group">
@@ -115,8 +121,9 @@
                 </li>
                 {% endif %}
 
-
             </ul>
+
+            <div class="delete-button mt-3"></div>
         </div>
     </div>
 
@@ -144,8 +151,6 @@
         </div>
     </div>
     {% endif %}
-
-    <div class="delete-button"></div>
 
     {% if data.stitching_exception_at %}
     <div class="row mt-3">

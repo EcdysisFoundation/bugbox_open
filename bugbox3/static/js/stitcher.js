@@ -26,6 +26,7 @@ function getUrl(dt_url, data_filters) {
     url_args += `${sep}predictions=${data_filters.predictions}`;
     url_args += `${sep}annotations=${data_filters.annotations}`;
     url_args += `${sep}completed=${data_filters.completed}`;
+    url_args += `${sep}not_completed=${data_filters.not_completed}`;
     url_args += `${sep}needs_linked=${data_filters.needs_linked}`;
     url_args += `${sep}sample_linked=${data_filters.sample_linked}`;
     url_args += `${sep}nota_sample=${data_filters.nota_sample}`;
@@ -95,9 +96,11 @@ function concatTen(data) {
     } else { return '' }
 }
 
-function getSent(data) {
-    if (data) {
+function getSent(data, type, row) {
+    if (row.bugbox_croped_saved) {
         return '<i class="bi bi-send-check-fill h4 text-success"></i>'
+    } if (row.nota_sample) {
+        return '<i class="bi bi-ban"></i>'
     } else { return '' }
 }
 
@@ -114,6 +117,7 @@ $(function () {
         disapproved: false,
         predictions: false,
         annotations: false,
+        not_completed: false,
         completed: false
     }
 
@@ -178,7 +182,7 @@ $(function () {
                 data: 'annotations_updated_at_segment',
                 render: concatTen
             },{
-                data: 'bugbox_croped_saved',
+                data: '',
                 render: getSent
             }
         ]
@@ -293,6 +297,18 @@ $(function () {
     $('.completed-check').append($completedCheck)
     $completedCheck.on('change', () => {
         data_filters.completed = $completedCheck.prop("checked");
+        new_datatables_url = getUrl(json_context.STITCHER_URL, data_filters);
+        stitcher_table.ajax.url( new_datatables_url ).load();
+    })
+
+    let not_completed_check = '';
+    if (data_filters.not_completed) {
+        not_completed_check = 'checked';
+    };
+    let $notCompletedCheck = $(`<input class="form-check-input" type="checkbox" value="" id="notCompletedCheck" ${not_completed_check}>`)
+    $('.not-completed-check').append($notCompletedCheck)
+    $notCompletedCheck.on('change', () => {
+        data_filters.not_completed = $notCompletedCheck.prop("checked");
         new_datatables_url = getUrl(json_context.STITCHER_URL, data_filters);
         stitcher_table.ajax.url( new_datatables_url ).load();
     })
