@@ -1,6 +1,5 @@
 import os
 import requests
-import json
 from django.http import Http404
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.files.base import ContentFile
@@ -46,6 +45,7 @@ class StitcherView(PermissionRequiredMixin, TemplateView):
             ls_projects_choices = [(None, None)]
 
         context.update({
+            'stats': stats,
             'json_context': get_json_context({
                 'STITCHER_URL': stitcher_url,
                 'ls_projects_choices': ls_projects_choices,
@@ -79,11 +79,14 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
             str(self.request.user) in ZEROTIER_USERS else STITCHER_JS_URL
         self.panorama_name = ''
         self.img_src = ''
+        self.thumbnail_src = None
         self.label_src = f'/static/{self.guid}/{constants.STITCHER_LABEL_IMG}'
         self.nota_sample = None
         if constants.STITCHER_PANORAMA_PATH in self.data.keys():
             if self.data[constants.STITCHER_PANORAMA_PATH]:
                 self.img_src = self.data[constants.STITCHER_PANORAMA_PATH].replace('/media/', '/static/')
+                if self.data[constants.STITCHER_PANORAMA_THUMBNAIL_PATH]:
+                    self.thumbnail_src = f'{self.stitcher_js_url}{self.data[constants.STITCHER_PANORAMA_THUMBNAIL_PATH].replace('/media/', '/static/')}'
                 self.panorama_name = os.path.basename(self.data[constants.STITCHER_PANORAMA_PATH])
         if constants.STITCHER_NOTA_SAMPLE in self.data.keys():
             self.nota_sample = self.data[constants.STITCHER_NOTA_SAMPLE]
@@ -148,6 +151,7 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
             'data': self.data,
             'panoarma_name': self.panorama_name,
             'img_src': f'{self.stitcher_js_url}{self.img_src}',
+            'thumbnail_src': self.thumbnail_src,
             'label_src': f'{self.stitcher_js_url}{self.label_src}',
             'potential_samples': potential_samples,
             'nota_sample': self.nota_sample,
