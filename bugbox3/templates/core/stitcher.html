@@ -61,7 +61,7 @@
                     <div class="form-check">
                         <div class="unreviewed-check"></div>
                         <label class="form-check-label" for="unreviewedCheck">
-                            unreviewed
+                            unreviewed ({{ stats.unreviewed_count }})
                         </label>
                     </div>
                 </div>
@@ -77,7 +77,7 @@
                     <div class="form-check">
                         <div class="disapproved-check"></div>
                         <label class="form-check-label" for="disapprovedCheck">
-                            retake
+                            retake ({{ stats.retake_count }})
                         </label>
                     </div>
                 </div>
@@ -87,7 +87,7 @@
                     <div class="form-check">
                         <div class="needs-linked-check"></div>
                         <label class="form-check-label" for="needsLinkedCheck">
-                            needs linked
+                            needs linked ({{ stats.needs_linked_count }})
                         </label>
                     </div>
                 </div>
@@ -129,7 +129,7 @@
                 <div class="form-check">
                     <div class="not-completed-check"></div>
                     <label class="form-check-label" for="notCompletedCheck">
-                        not completed
+                        not completed ({{ stats.not_completed_count }})
                     </label>
                 </div>
             </div>
