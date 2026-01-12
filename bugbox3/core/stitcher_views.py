@@ -45,6 +45,7 @@ class StitcherView(PermissionRequiredMixin, TemplateView):
             ls_projects_choices = [(None, None)]
 
         context.update({
+            'stats': stats,
             'json_context': get_json_context({
                 'STITCHER_URL': stitcher_url,
                 'ls_projects_choices': ls_projects_choices,
