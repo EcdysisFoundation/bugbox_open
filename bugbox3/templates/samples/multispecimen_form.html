@@ -29,7 +29,7 @@
             <form enctype="multipart/form-data" action="{{ form_action_url }}" method="POST">
                 {% csrf_token %}
                 <input type="hidden" name="json_data" value="null" id="id_json_data">
-                <input type="submit" value="Delete Selected Images" id="submit-btn" class="btn btn-danger mt-2 ms-3">
+                <input type="submit" value="Delete Selected Images and their cropped specimen images" id="submit-btn" class="btn btn-danger mt-2 ms-3">
             </form>
         </div>
       </div>

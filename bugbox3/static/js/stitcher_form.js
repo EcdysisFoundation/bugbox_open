@@ -21,6 +21,13 @@ function updateStitching( url ) {
 $(function () {
     const json_context = JSON.parse(document.getElementById('json_context').textContent)
 
+    // something like this to prevent double click, but this causes the button to not actually submit
+    //const cropSaveButton = document.getElementById('sample_id-btn');
+    //cropSaveButton.addEventListener('click', function() {
+    //    this.disabled = true;
+    //});
+
+
     let $confidenceInput = $('<input type="number" step="0.1" id="formConfidence" class="form-control" value="0.6" max="0.9" min="0.1" required="true">')
     $('.confidence-input').append($confidenceInput)
 
