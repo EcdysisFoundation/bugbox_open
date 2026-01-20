@@ -11,7 +11,7 @@ from ...models import LabelGeneration
 from ...forms.admin.label_forms import QuickLabelGenerationForm
 from ...services.label_generator import LabelGenerator
 from ...middleware import get_user_timezone
-from ...constants import SAMPLE_TYPES
+from ...constants import SAMPLE_TYPES, IGNITE_INNER_SAMPLE_TYPES, IGNITE_OUTER_SAMPLE_TYPES
 
 
 @login_required
@@ -30,9 +30,95 @@ def label_management(request):
                 cluster_number = quick_form.cleaned_data['cluster_number']
                 year = quick_form.cleaned_data['year']
                 
-                if project_type == '1000_farms':
-                    messages.info(request, '1000 Farms quick generation to be implemented yet...')
-                    return redirect('grower_portal:label_management')
+                if project_type == 'ignite':
+                    number_of_transects = quick_form.cleaned_data['number_of_transects']
+                    excluded_types = quick_form.cleaned_data.get('excluded_sample_types', [])
+                    
+                    try:
+                        if label_category == 'outer':
+                            inner_label_generation_id = quick_form.cleaned_data['inner_label_generation']
+                            inner_generation = LabelGeneration.objects.get(
+                                id=inner_label_generation_id,
+                                label_category='inner',
+                                cluster_number=cluster_number,
+                                year=year
+                            )
+                            
+                            site_codes = inner_generation.transect_codes_generated or []
+                            
+                            if not site_codes:
+                                messages.error(request, 'Selected inner label generation has no site codes.')
+                                return redirect('grower_portal:label_management')
+                            
+                            # Filter out excluded sample types
+                            sample_types = [st for st in IGNITE_OUTER_SAMPLE_TYPES if st not in excluded_types]
+                            
+                            if not sample_types:
+                                messages.error(request, 'All sample types are excluded. Please include at least one sample type.')
+                                return redirect('grower_portal:label_management')
+                            
+                            generator = LabelGenerator(
+                                project_type='ignite',
+                                cluster_number=cluster_number,
+                                year=year,
+                                sample_types=sample_types,
+                                labels_per_type=1,
+                                created_by=request.user,
+                                label_category='outer'
+                            )
+                            
+                            buffer, total_labels = generator.generate_outer_labels_ignite(site_codes)
+                            all_sample_types = sample_types
+                        else:  # inner
+                            # Filter out excluded sample types
+                            sample_types = [st for st in IGNITE_INNER_SAMPLE_TYPES if st not in excluded_types]
+                            
+                            if not sample_types:
+                                messages.error(request, 'All sample types are excluded. Please include at least one sample type.')
+                                return redirect('grower_portal:label_management')
+                            
+                            generator = LabelGenerator(
+                                project_type='ignite',
+                                cluster_number=cluster_number,
+                                year=year,
+                                sample_types=sample_types,
+                                labels_per_type=4,  # 4 labels per site (T1-T4)
+                                created_by=request.user
+                            )
+                            
+                            buffer, total_labels = generator.generate_quick_labels_ignite(number_of_transects)
+                            all_sample_types = sample_types
+                        
+                        # Save label generation record
+                        label_generation = LabelGeneration.objects.create(
+                            project_type=project_type,
+                            label_category=label_category,
+                            cluster_number=cluster_number,
+                            year=year,
+                            sample_types=all_sample_types,
+                            labels_per_type=4 if label_category == 'inner' else 1,
+                            total_labels_generated=total_labels,
+                            transect_codes_generated=generator.generated_codes if label_category == 'inner' else site_codes,
+                            generated_by=request.user
+                        )
+                        
+                        filename = f"ignite_{label_category}_{cluster_number}_{year}_labels.docx"
+                        buffer.seek(0)  # Reset buffer position before saving
+                        label_generation.label_file.save(filename, ContentFile(buffer.read()))
+                        
+                        # Return the file for download
+                        buffer.seek(0)  # Reset again for download
+                        response = FileResponse(
+                            buffer,
+                            as_attachment=True,
+                            filename=filename,
+                            content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                        )
+                        return response
+                        
+                    except Exception as e:
+                        messages.error(request, f'Error generating Ignite labels: {str(e)}')
+                        return redirect('grower_portal:label_management')
                 
                 try:
                     if label_category == 'outer':
@@ -76,31 +162,39 @@ def label_management(request):
                             transect_codes_generated=transect_codes
                         )
                         
+                        buffer.seek(0)
                         label_generation.label_file.save(filename, ContentFile(buffer.read()), save=True)
                         
-                        messages.success(
-                            request,
-                            f'Successfully generated {total_labels} outer labels for {len(transect_codes)} transects!'
+                        buffer.seek(0)
+                        response = FileResponse(
+                            buffer,
+                            as_attachment=True,
+                            filename=filename,
+                            content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
                         )
-                        
-                        return redirect('grower_portal:label_generation_detail', generation_id=label_generation.id)
+                        return response
                     
                     else:
                         number_of_transects = quick_form.cleaned_data['number_of_transects']
+                        excluded_types = quick_form.cleaned_data.get('excluded_sample_types', [])
+                        
+                        all_sample_types = [code for code, _ in SAMPLE_TYPES if code not in excluded_types]
+                        
+                        if not all_sample_types:
+                            messages.error(request, 'All sample types are excluded. Please include at least one sample type.')
+                            return redirect('grower_portal:label_management')
                         
                         generator = LabelGenerator(
                             project_type=project_type,
                             cluster_number=cluster_number,
                             year=year,
-                            sample_types=[],
+                            sample_types=all_sample_types,
                             labels_per_type=number_of_transects,
                             created_by=request.user,
                             label_category='inner'
                         )
                         
                         buffer, total_labels = generator.generate_quick_labels_avalanche(number_of_transects)
-                        
-                        all_sample_types = [code for code, _ in SAMPLE_TYPES]
                         
                         filename = f"labels_quick_{project_type}_{cluster_number}_{year}.docx"
                         label_generation = LabelGeneration.objects.create(
@@ -116,15 +210,17 @@ def label_management(request):
                             transect_codes_generated=generator.generated_codes
                         )
                         
+                        buffer.seek(0)
                         label_generation.label_file.save(filename, ContentFile(buffer.read()), save=True)
                         
-                        messages.success(
-                            request,
-                            f'Successfully generated {total_labels} labels for {number_of_transects} transects! '
-                            f'Generated {len(generator.generated_codes)} unique transect codes.'
+                        buffer.seek(0)
+                        response = FileResponse(
+                            buffer,
+                            as_attachment=True,
+                            filename=filename,
+                            content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
                         )
-                        
-                        return redirect('grower_portal:label_generation_detail', generation_id=label_generation.id)
+                        return response
                     
                 except LabelGeneration.DoesNotExist:
                     messages.error(request, 'Selected inner label generation not found.')
@@ -205,11 +301,12 @@ def label_generation_download(request, generation_id):
 @permission_required(IS_GROWERADMIN, raise_exception=True)
 @require_http_methods(["GET"])
 def inner_label_generations_json(request):
-    """AJAX endpoint to get inner label generations for a cluster/year"""
+    """endpoint to get inner label generations for a cluster/year/project"""
     cluster_number = request.GET.get('cluster', '').strip()
     year = request.GET.get('year', '').strip()
+    project_type = request.GET.get('project_type', '').strip()
     
-    if not cluster_number or not year:
+    if not cluster_number or not year or not project_type:
         return JsonResponse({'generations': []})
     
     try:
@@ -220,7 +317,8 @@ def inner_label_generations_json(request):
     generations = LabelGeneration.objects.filter(
         label_category='inner',
         cluster_number=cluster_number,
-        year=year_int
+        year=year_int,
+        project_type=project_type
     ).order_by('-generated_at')[:50]
     
     results = []
@@ -230,7 +328,8 @@ def inner_label_generations_json(request):
             'id': gen.id,
             'generated_at': gen.generated_at.strftime('%Y-%m-%d %H:%M'),
             'total_labels': gen.total_labels_generated,
-            'transect_count': transect_count
+            'transect_count': transect_count,
+            'project_type_display': gen.get_project_type_display()
         })
     
     return JsonResponse({'generations': results})

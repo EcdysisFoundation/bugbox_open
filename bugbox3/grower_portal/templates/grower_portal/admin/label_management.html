@@ -71,6 +71,25 @@
                                     <div class="text-danger">{{ quick_form.number_of_transects.errors }}</div>
                                 {% endif %}
                             </div>
+                            <div class="col-md-9 mb-3">
+                                <label class="form-label">{{ quick_form.excluded_sample_types.label }}</label>
+                                <small class="form-text text-muted d-block mb-2">{{ quick_form.excluded_sample_types.help_text }}</small>
+                                <div class="row">
+                                    {% for checkbox in quick_form.excluded_sample_types %}
+                                        <div class="col-md-3 col-sm-4 mb-2">
+                                            <div class="form-check">
+                                                {{ checkbox.tag }}
+                                                <label class="form-check-label" for="{{ checkbox.id_for_label }}">
+                                                    {{ checkbox.choice_label }}
+                                                </label>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                                {% if quick_form.excluded_sample_types.errors %}
+                                    <div class="text-danger">{{ quick_form.excluded_sample_types.errors }}</div>
+                                {% endif %}
+                            </div>
                         </div>
                         
                         <div class="row" id="outer-labels-quick-section" style="display: none;">
@@ -80,6 +99,25 @@
                                 <small class="form-text text-muted">{{ quick_form.inner_label_generation.help_text }}</small>
                                 {% if quick_form.inner_label_generation.errors %}
                                     <div class="text-danger">{{ quick_form.inner_label_generation.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ quick_form.excluded_sample_types.label }}</label>
+                                <small class="form-text text-muted d-block mb-2">{{ quick_form.excluded_sample_types.help_text }}</small>
+                                <div class="row">
+                                    {% for checkbox in quick_form.excluded_sample_types %}
+                                        <div class="col-md-6 col-sm-6 mb-2">
+                                            <div class="form-check">
+                                                {{ checkbox.tag }}
+                                                <label class="form-check-label" for="{{ checkbox.id_for_label }}">
+                                                    {{ checkbox.choice_label }}
+                                                </label>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                                {% if quick_form.excluded_sample_types.errors %}
+                                    <div class="text-danger">{{ quick_form.excluded_sample_types.errors }}</div>
                                 {% endif %}
                             </div>
                         </div>
