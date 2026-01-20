@@ -25,6 +25,12 @@ from .tasks import export_csv_by_location, crop_panorama_segmentation
 from ..core import constants as constants_core
 from ..core.models import LookupChoices
 from ..core.permissions import IS_RESEARCH, REVIEW_SPECIMEN_PAGE
+from ..core.stitcher_api import (
+    get_root_message,
+    get_upload_file,
+    patch_upload_file,
+    ERROR_MSG_KEY)
+
 from ..libs.ui_helpers import (calc_image_height, get_datatables_container,
                                get_datatables_row,
                                get_formsets_display_control_config,
@@ -1390,8 +1396,28 @@ class MultiSpecimenImageView(PermissionRequiredMixin, FormView):
             if not all([isinstance(v, int) for v in json_data['ids']]):
                 raise ValidationError(mark_safe('non-integers provided in form as ids'))
             imgs = MultiSpecimenImage.objects.user_access(self.request.user).filter(
-                id__in=json_data['ids']).exclude(cropped_to_specimen=True).delete()
-            messages.warning(self.request, 'Succesfully deleted images {0}'.format(imgs))
+                id__in=json_data['ids'])
+            uuids = [i.uuid for i in imgs]
+            specimen_ids = SpecimenImage.objects.user_access(self.request.user).filter(
+                multispecimen_image_uuid__in=uuids).values_list('specimen_id', flat=True)
+            len_specimen_ids = len(specimen_ids)
+            Specimen.objects.filter(id__in=specimen_ids).delete()
+            imgs = imgs.delete()
+            # attempt to notify stitcher api of deletes
+            root_message = get_root_message()
+            general_error_message = 'Stitcher API was not notified of this delete, completion status remains true: '
+            if ERROR_MSG_KEY in root_message:
+                messages.error(self.request, f'{general_error_message}{root_message[ERROR_MSG_KEY]}')
+            else:
+                for uuid in uuids:
+                    try:
+                        stitcher_data = get_upload_file(uuid)
+                        stitcher_data[constants_core.STITCHER_BUGBOX_CROPED_SAVED] = None
+                        patch_upload_file(uuid, stitcher_data)
+                    except Exception as e:
+                        messages.error(self.request, f'{general_error_message}{e}')
+            messages.warning(self.request, 'Succesfully deleted {0} multispecimen images and {1} specimens'.format(
+                len(uuids), len_specimen_ids))
         if json_crop_ids:
             if not all([isinstance(v, int) for v in json_crop_ids['ids']]):
                 raise ValidationError(mark_safe('non-integers provided in form as ids'))

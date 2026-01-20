@@ -30,6 +30,7 @@ function getUrl(dt_url, data_filters) {
     url_args += `${sep}needs_linked=${data_filters.needs_linked}`;
     url_args += `${sep}sample_linked=${data_filters.sample_linked}`;
     url_args += `${sep}nota_sample=${data_filters.nota_sample}`;
+    url_args += `${sep}has_duplicate=${data_filters.has_duplicate}`;
 
     return `${dt_url}/uploads${url_args}`
 }
@@ -118,7 +119,8 @@ $(function () {
         predictions: false,
         annotations: false,
         not_completed: false,
-        completed: false
+        completed: false,
+        has_duplicate: false
     }
 
     let $confidenceInput = $('<input type="number" step="0.1" id="formConfidence" class="form-control" value="0.6" max="0.9" min="0.1" required="true">')
@@ -349,5 +351,16 @@ $(function () {
         stitcher_table.ajax.url( new_datatables_url ).load();
     })
 
+    let has_duplicate_check = '';
+    if (data_filters.has_duplicate) {
+        has_duplicate_check = 'checked';
+    };
+    let $hasDuplicateCheck = $(`<input class="form-check-input" type="checkbox" value="" id="hasDuplicateCheck" ${has_duplicate_check}>`)
+    $('.has-duplicate-check').append($hasDuplicateCheck)
+    $hasDuplicateCheck.on('change', () => {
+        data_filters.has_duplicate = $hasDuplicateCheck.prop("checked");
+        new_datatables_url = getUrl(json_context.STITCHER_URL, data_filters);
+        stitcher_table.ajax.url( new_datatables_url ).load();
+    })
 
 })

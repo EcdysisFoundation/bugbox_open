@@ -404,14 +404,11 @@ def crop_panorama_segmentation(img_ids, sample_id, user_id):
     try:
         sample_instance = Sample.objects.get(id=sample_id)
         user_instance = User.objects.get(id=user_id)
-        images = MultiSpecimenImage.objects.filter(id__in=img_ids)
     except Exception as e:
         print(f'Warning: {e}')
         return
-    if not images:
-        return
-
-    for i in images:
+    for v in img_ids:
+        i = MultiSpecimenImage.objects.get(id=v)
         if not i.annotations_segment:
             continue
         try:
