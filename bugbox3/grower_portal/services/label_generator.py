@@ -7,14 +7,15 @@ from io import BytesIO
 import re
 from copy import deepcopy
 
-from ..models import TransectCode
-from bugbox3.core.models import PublicSiteContent
+from ..models import TransectCode, SiteTransect
+from bugbox3.core.models import PrivateSiteContent
 from ..constants import (
     SAMPLE_TYPES,
     LABEL_TEMPLATE_SLUG,
     LABEL_OUTER_TEMPLATE_SLUG,
+    LABEL_IGNITE_TEMPLATE_SLUG,
     AVALANCHE_ROOM_TEMP_SAMPLES,
-    AVALANCHE_REFRIGERATED_SAMPLES
+    AVALANCHE_REFRIGERATED_SAMPLES,
 )
 
 
@@ -36,10 +37,10 @@ class LabelGenerator:
         return choices.get(sample_type_code, sample_type_code)
     
     def generate_unique_transect_codes(self, count):
-        """Generate unique numeric transect codes"""
+        """Generate unique numeric transect codes for Avalanche project"""
         codes = []
         
-        all_codes = TransectCode.objects.all().values_list('transect_code', flat=True)
+        all_codes = TransectCode.objects.all().values_list('code', flat=True)
         
         max_code = 0
         for code in all_codes:
@@ -58,11 +59,42 @@ class LabelGenerator:
         
         return codes
     
-    def save_transect_codes(self, codes):
+    def generate_unique_site_codes(self, count):
+        """Generate Ignite site codes with auto-incrementing logic"""
+        year_prefix = str((self.year % 10) - 1)
+        
+        # Find last site code for this year
+        last_site = TransectCode.objects.filter(
+            project_type='ignite',
+            year=self.year,
+            site_code_numeric__isnull=False
+        ).order_by('-site_code_numeric').first()
+        
+        if last_site:
+            last_num = last_site.site_code_numeric
+            cluster_offset = ((last_num % 1000) - 1) // 30
+            next_cluster_start = int(year_prefix + '000') + ((cluster_offset + 1) * 30) + 1
+        else:
+            # First cluster for this year starts at X001
+            next_cluster_start = int(year_prefix + '001')
+        
+        codes = []
+        for i in range(count):
+            site_num = next_cluster_start + i
+            code = str(site_num)
+            codes.append(code)
+        
+        return codes, next_cluster_start
+    
+    def save_transect_codes(self, codes, project_type='avalanche'):
         """Save generated transect codes to database"""
         transect_code_objects = [
             TransectCode(
-                transect_code=code,
+                code=code,
+                project_type=project_type,
+                cluster_number=self.cluster_number,
+                year=self.year,
+                site_code_numeric=int(code) if project_type == 'ignite' else None,
                 is_active=True,
                 is_used=False,
                 created_by=self.created_by
@@ -78,19 +110,22 @@ class LabelGenerator:
             # Avalanche format: Sample Type / Cluster-Year / Transect Code
             return f"{sample_type_display}\n{self.cluster_number} – {self.year}\n{transect_code}"
         else:
-            # 1000 Farms format: Cluster-Year / Sample Type / Transect Code
+            # ignite (1000 farms) format: Cluster-Year / Sample Type / Transect Code
             return f"{self.cluster_number} – {self.year}\n{sample_type_display}\n{transect_code}"
     
     def _load_template(self):
-        """Load the template document from PublicSiteContent"""
-        template_slug = LABEL_OUTER_TEMPLATE_SLUG if self.label_category == 'outer' else LABEL_TEMPLATE_SLUG
+        """Load the template document from PrivateSiteContent"""
+        if self.project_type == 'ignite':
+            template_slug = LABEL_IGNITE_TEMPLATE_SLUG
+        else:
+            template_slug = LABEL_OUTER_TEMPLATE_SLUG if self.label_category == 'outer' else LABEL_TEMPLATE_SLUG
         
         try:
-            template_content = PublicSiteContent.objects.get(title=template_slug)
+            template_content = PrivateSiteContent.objects.get(title=template_slug)
             
             if not template_content.file:
                 raise ValueError(
-                    f"Label template '{template_slug}' found in PublicSiteContent but file is missing. Please upload it in Django Admin"
+                    f"Label template '{template_slug}' found but file is missing. Please upload it in Django Admin"
                 )
             
             with template_content.file.open('rb') as file:
@@ -119,9 +154,11 @@ class LabelGenerator:
                     else:
                         raise
         
-        except PublicSiteContent.DoesNotExist:
+        except PrivateSiteContent.DoesNotExist:
+            project_label = "Ignite" if self.project_type == 'ignite' else "Avalanche"
             raise ValueError(
-                f"Label template '{template_slug}' not found in PublicSiteContent. "
+                f"Label template '{template_slug}' not found in Private Site Content. "
+                f"Please upload the {project_label} template file in Django Admin."
             )
         except Exception as e:
             raise ValueError(
@@ -235,7 +272,7 @@ class LabelGenerator:
             pass
     
     def _template_has_placeholders(self, doc):
-        """Check if template has LABEL placeholders"""
+        """Check if template has LABEL or {{label}} placeholders"""
         if not doc.tables:
             return False
         
@@ -247,7 +284,11 @@ class LabelGenerator:
                             continue
                         for cell in row.cells:
                             try:
-                                if 'LABEL' in cell.text.upper():
+                                cell_text_upper = cell.text.upper()
+                                # Check for LABEL placeholders
+                                if ('LABEL' in cell_text_upper or 
+                                    '{{LABEL}}' in cell_text_upper or 
+                                    '{LABEL}' in cell_text_upper):
                                     return True
                             except (AttributeError, IndexError):
                                 continue
@@ -256,6 +297,58 @@ class LabelGenerator:
             except (IndexError, AttributeError):
                 continue
         return False
+    
+    def _distribute_labels_to_columns(self, doc, all_labels):
+        """Distribute labels across template columns"""
+        if not doc.tables or not all_labels:
+            return [all_labels]
+        
+        num_columns = 0
+        valid_table_found = False
+        
+        for table_idx, table in enumerate(doc.tables):
+            if not table.rows:
+                continue
+                
+            try:
+                first_row = table.rows[0]
+                cells = list(first_row.cells)  # This will fail if merged cells cause issues
+                
+                print(f"DEBUG: Table {table_idx} - First row has {len(cells)} cells")
+                for idx, cell in enumerate(cells):
+                    cell_text = cell.text
+                    cell_text_upper = cell_text.upper()
+                    print(f"DEBUG: Table {table_idx} Cell {idx} text: '{cell_text}'")
+                    # Check for LABEL, {{label}}, {label}, or label placeholder
+                    if ('LABEL' in cell_text_upper or 
+                        '{{LABEL}}' in cell_text_upper or 
+                        '{LABEL}' in cell_text_upper):
+                        num_columns += 1
+                        print(f"DEBUG: Found LABEL placeholder in table {table_idx} cell {idx}")
+                
+                # If we found LABEL columns in this table, stop looking
+                if num_columns > 0:
+                    valid_table_found = True
+                    print(f"DEBUG: Using table {table_idx} as template (found {num_columns} LABEL columns)")
+                    break
+                    
+            except (IndexError, AttributeError, ValueError) as e:
+                print(f"DEBUG: Skipping table {table_idx} due to error: {e}")
+                continue
+        
+        print(f"DEBUG: Found {num_columns} LABEL columns in template (valid_table_found={valid_table_found})")
+        
+        # If no columns found or only one column, return all labels in single column
+        if num_columns <= 1:
+            return [all_labels]
+        
+        # Distribute labels across columns
+        labels_by_column = [[] for _ in range(num_columns)]
+        for idx, label in enumerate(all_labels):
+            col_idx = idx % num_columns
+            labels_by_column[col_idx].append(label)
+        
+        return labels_by_column
     
     def _fill_template_with_placeholders(self, doc, labels_by_column):
         """Fill template using placeholder replacement"""
@@ -286,7 +379,20 @@ class LabelGenerator:
         if first_table is None:
             return doc
         
-        original_template_table_xml = deepcopy(first_table._tbl)
+        accessible_template_table = None
+        for table in doc.tables:
+            try:
+                if table.rows and len(table.rows) > 0:
+                    _ = list(table.rows[0].cells)  # Test if cells are accessible
+                    accessible_template_table = table
+                    break
+            except (IndexError, AttributeError, ValueError):
+                continue
+        
+        if accessible_template_table is None:
+            accessible_template_table = first_table
+        
+        original_template_table_xml = deepcopy(accessible_template_table._tbl)
         original_table_style = first_table.style if first_table.style else None
         
         original_style_val = None
@@ -301,31 +407,46 @@ class LabelGenerator:
             pass
         
         template_cols_with_label = []
-        if first_table.rows:
+        working_table = None
+        for table in doc.tables:
             try:
-                first_row = first_table.rows[0]
-                num_cells = len(first_row.cells) if hasattr(first_row, 'cells') else 0
-                for col_idx in range(num_cells):
+                if table.rows and len(table.rows) > 0:
+                    _ = list(table.rows[0].cells)
+                    working_table = table
+                    break
+            except (IndexError, AttributeError, ValueError):
+                continue
+        
+        if working_table and working_table.rows:
+            try:
+                first_row = working_table.rows[0]
+                cells = list(first_row.cells)
+                for col_idx, cell in enumerate(cells):
                     try:
-                        cell = first_row.cells[col_idx]
-                        if 'LABEL' in cell.text.upper():
+                        cell_text_upper = cell.text.upper()
+                        # Check for LABEL placeholders
+                        if ('LABEL' in cell_text_upper or 
+                            '{{LABEL}}' in cell_text_upper or 
+                            '{LABEL}' in cell_text_upper):
                             template_cols_with_label.append(col_idx)
                     except (IndexError, AttributeError):
                         continue
-            except (IndexError, AttributeError):
-                for row in first_table.rows:
+            except (IndexError, AttributeError, ValueError):
+                for row in working_table.rows:
                     try:
-                        if len(row.cells) > 0:
-                            for col_idx in range(len(row.cells)):
-                                try:
-                                    cell = row.cells[col_idx]
-                                    if 'LABEL' in cell.text.upper() and col_idx not in template_cols_with_label:
-                                        template_cols_with_label.append(col_idx)
-                                except (IndexError, AttributeError):
-                                    continue
-                            if template_cols_with_label:
-                                break
-                    except (IndexError, AttributeError):
+                        cells = list(row.cells)
+                        for col_idx, cell in enumerate(cells):
+                            try:
+                                cell_text_upper = cell.text.upper()
+                                if ('LABEL' in cell_text_upper or 
+                                    '{{LABEL}}' in cell_text_upper or 
+                                    '{LABEL}' in cell_text_upper) and col_idx not in template_cols_with_label:
+                                    template_cols_with_label.append(col_idx)
+                            except (IndexError, AttributeError):
+                                continue
+                        if template_cols_with_label:
+                            break
+                    except (IndexError, AttributeError, ValueError):
                         continue
         
         if not template_cols_with_label:
@@ -461,11 +582,15 @@ class LabelGenerator:
                     
                     try:
                         cell = row.cells[template_col_idx]
-                        cell_text = cell.text.strip().upper()
+                        cell_text = cell.text.strip()
+                        cell_text_upper = cell_text.upper()
                     except (IndexError, AttributeError):
                         continue
                     
-                    if 'LABEL' in cell_text:
+                    # Check for LABEL label placeholders
+                    if ('LABEL' in cell_text_upper or 
+                        '{{LABEL}}' in cell_text_upper or 
+                        '{LABEL}' in cell_text_upper):
                         sample_type_idx = col_to_sample_type[template_col_idx]
                         
                         if label_index_by_sample_type[sample_type_idx] < len(labels_by_column[sample_type_idx]):
@@ -664,6 +789,215 @@ class LabelGenerator:
                 doc = self._fill_template_labels(doc, labels_by_column)
         else:
             doc = self._create_tables_for_labels(doc, labels_by_column)
+        
+        buffer = BytesIO()
+        doc.save(buffer)
+        buffer.seek(0)
+        
+        return buffer, total_labels
+    
+    def generate_quick_labels_ignite(self, num_sites):
+        """Generate all inner labels for Ignite project"""
+        site_codes, start_num = self.generate_unique_site_codes(num_sites)
+        
+        saved_codes = []
+        for code in site_codes:
+            tc = TransectCode.objects.create(
+                code=code,
+                project_type='ignite',
+                cluster_number=self.cluster_number,
+                year=self.year,
+                site_code_numeric=int(code),
+                created_by=self.created_by,
+                is_active=True
+            )
+            saved_codes.append(code)
+            
+            # Create 4 transects for each site
+            for t_num in range(1, 5):
+                SiteTransect.objects.create(
+                    site_code=tc,
+                    transect_number=t_num,
+                    is_active=True
+                )
+        
+        self.generated_codes = saved_codes
+        
+        # Generate inner labels grouped by site code
+        doc = self._load_template()
+        all_labels = []
+        total_labels = 0
+        
+        for site_code in site_codes:
+            for sample_type_code in self.sample_types:
+                sample_type_display = self.get_sample_type_display(sample_type_code)
+                
+                for t_num in range(1, 5):
+                    label_text = self.create_ignite_inner_label(
+                        sample_type_display, site_code, t_num
+                    )
+                    all_labels.append(label_text)
+                    total_labels += 1
+        
+        labels_by_column = [all_labels]
+        
+        doc = self._fill_ignite_labels_sequential(doc, all_labels)
+        
+        buffer = BytesIO()
+        doc.save(buffer)
+        buffer.seek(0)
+        
+        return buffer, total_labels
+    
+    def _fill_ignite_labels_sequential(self, doc, all_labels):
+        """Fill Ignite labels"""
+        if not doc.tables or not all_labels:
+            return doc
+        
+        template_table = None
+        template_table_idx = None
+        for idx, table in enumerate(doc.tables):
+            try:
+                rows = list(table.rows)
+                if not rows:
+                    continue
+                cells = list(rows[0].cells)
+                has_label = any('LABEL' in cell.text.upper() for cell in cells)
+                if has_label:
+                    template_table = table
+                    template_table_idx = idx
+                    print(f"DEBUG: Found template table at index {idx}")
+                    break
+            except (ValueError, AttributeError):
+                continue
+        
+        if not template_table:
+            print("DEBUG: No template table found!")
+            return doc
+        
+        labels_per_page = 0
+        label_cells_per_row = []
+        
+        try:
+            for row in template_table.rows:
+                cells = list(row.cells)
+                row_label_indices = []
+                for cell_idx, cell in enumerate(cells):
+                    if 'LABEL' in cell.text.upper():
+                        row_label_indices.append(cell_idx)
+                        labels_per_page += 1
+                label_cells_per_row.append(row_label_indices)
+        except (ValueError, AttributeError) as e:
+            print(f"DEBUG: Error counting labels: {e}")
+            return doc
+                
+        pages_needed = (len(all_labels) + labels_per_page - 1) // labels_per_page
+        
+        template_table_xml = deepcopy(template_table._tbl)
+        
+        for page_num in range(1, pages_needed):
+            doc.add_page_break()
+            new_tbl = deepcopy(template_table_xml)
+            doc._body._body.append(new_tbl)
+            print(f"DEBUG: Added page {page_num + 1}")
+        
+        label_idx = 0
+        
+        fillable_tables = []
+        
+        if not label_cells_per_row:
+            print("DEBUG: ERROR - label_cells_per_row is empty!")
+            return doc
+        
+        max_cell_idx = max(max(row_indices) for row_indices in label_cells_per_row if row_indices) if label_cells_per_row else 0
+        
+        for table_num, table in enumerate(doc.tables):
+            try:
+                rows = list(table.rows)
+                if rows and len(rows) >= len(label_cells_per_row):
+                    test_row = rows[0]
+                    test_cells = list(test_row.cells)
+                    if len(test_cells) > max_cell_idx:
+                        fillable_tables.append((table_num, table))
+            except (ValueError, AttributeError, IndexError) as e:
+                print(f"DEBUG: Skipping table {table_num} (error: {e})")
+                continue
+        
+        print(f"DEBUG: Found {len(fillable_tables)} fillable tables")
+        
+        for table_num, table in fillable_tables:
+            if label_idx >= len(all_labels):
+                break
+                
+            try:
+                rows = list(table.rows)
+                for row_idx, row in enumerate(rows):
+                    if label_idx >= len(all_labels):
+                        break
+                    
+                    if row_idx >= len(label_cells_per_row) or row_idx < 0:
+                        continue
+                    
+                    row_label_indices = label_cells_per_row[row_idx]
+                    if not row_label_indices:
+                        continue
+                    
+                    try:
+                        cells = list(row.cells)
+                        for cell_idx in row_label_indices:
+                            if label_idx >= len(all_labels):
+                                break
+                            
+                            if cell_idx < len(cells):
+                                cell = cells[cell_idx]
+                                label_text = all_labels[label_idx]
+                                
+                                if cell.paragraphs:
+                                    cell.paragraphs[0].clear()
+                                    run = cell.paragraphs[0].add_run(label_text)
+                                    run.font.size = Pt(9)
+                                
+                                label_idx += 1
+                            else:
+                                print(f"DEBUG: Warning: cell_idx {cell_idx} >= len(cells) {len(cells)} in table {table_num} row {row_idx}")
+                    except (ValueError, AttributeError, IndexError) as e:
+                        print(f"DEBUG: Error accessing row {row_idx} in table {table_num}: {e}")
+                        continue
+                            
+            except (ValueError, AttributeError, IndexError) as e:
+                print(f"DEBUG: Error filling table {table_num}: {e}")
+                continue
+        
+        print(f"DEBUG: Filled {label_idx} labels")
+        return doc
+    
+    def create_ignite_inner_label(self, sample_type, site_code, transect_num):
+        """Format: Cluster XX – YYYY / Sample Type TX / Site: XXXX"""
+        return f"{self.cluster_number} – {self.year}\n{sample_type} T{transect_num}\nSite: {site_code}"
+    
+    def create_ignite_outer_label(self, sample_type, site_code):
+        """Format: Cluster XX – YYYY / Sample Type / Site: XXXX"""
+        return f"{self.cluster_number} – {self.year}\n{sample_type}\nSite: {site_code}"
+    
+    def generate_outer_labels_ignite(self, site_codes):
+        """Generate outer labels for Ignite"""
+        doc = self._load_template()
+        all_labels = []
+        total_labels = 0
+        
+        for site_code in site_codes:
+            for sample_type_code in self.sample_types:
+                sample_type_display = self.get_sample_type_display(sample_type_code)
+                
+                label_text = self.create_ignite_outer_label(
+                    sample_type_display, site_code
+                )
+                all_labels.append(label_text)
+                total_labels += 1
+        
+        labels_by_column = [all_labels]
+        
+        doc = self._fill_ignite_labels_sequential(doc, all_labels)
         
         buffer = BytesIO()
         doc.save(buffer)

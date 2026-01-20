@@ -3,7 +3,8 @@ from django.core.exceptions import ValidationError
 from ...constants import (
     LABEL_PROJECT_CHOICES, LABEL_CATEGORY_CHOICES,
     SAMPLE_TYPES,
-    LABEL_COUNT_MIN, LABEL_COUNT_MAX, CLUSTER_NUMBER_MAX_LENGTH
+    LABEL_COUNT_MIN, LABEL_COUNT_MAX, CLUSTER_NUMBER_MAX_LENGTH,
+    IGNITE_INNER_SAMPLE_TYPES, IGNITE_OUTER_SAMPLE_TYPES, SAMPLE_TYPES
 )
 from ...models import LabelGeneration
 
@@ -135,8 +136,8 @@ class QuickLabelGenerationForm(forms.Form):
             'placeholder': '40',
             'id': 'id_number_of_transects'
         }),
-        label='Number of Transects',
-        help_text='Total number of transect codes to generate'
+        label='Number of Transects/Sites',
+        help_text='For Avalanche: number of transect codes. For Ignite: number of sites (each site has 4 transects T1-T4)'
     )
     
     inner_label_generation = forms.ChoiceField(
@@ -149,31 +150,59 @@ class QuickLabelGenerationForm(forms.Form):
         help_text='Choose the inner label generation to use for outer labels'
     )
     
+    excluded_sample_types = forms.MultipleChoiceField(
+        required=False,
+        widget=forms.CheckboxSelectMultiple(attrs={
+            'class': 'form-check-input',
+            'id': 'id_excluded_sample_types'
+        }),
+        label='Exclude Sample Types',
+        help_text='Select sample types to exclude from label generation'
+    )
+    
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
         cluster = self.data.get('cluster_number') if self.data else None
         year = self.data.get('year') if self.data else None
+        project_type = self.data.get('project_type') if self.data else None
+        label_category = self.data.get('label_category') if self.data else 'inner'
         
         choices = [('', '-- Enter cluster and year to see options --')]
         
         if cluster and year:
             try:
                 year_int = int(year)
-                inner_generations = LabelGeneration.objects.filter(
-                    label_category='inner',
-                    cluster_number=cluster,
-                    year=year_int
-                ).order_by('-generated_at')[:50]
+                filter_kwargs = {
+                    'label_category': 'inner',
+                    'cluster_number': cluster,
+                    'year': year_int
+                }
+                if project_type:
+                    filter_kwargs['project_type'] = project_type
+                
+                inner_generations = LabelGeneration.objects.filter(**filter_kwargs).order_by('-generated_at')[:50]
                 
                 for gen in inner_generations:
                     transect_count = len(gen.transect_codes_generated) if gen.transect_codes_generated else 0
-                    label = f"Generated on {gen.generated_at.strftime('%Y-%m-%d %H:%M')} - {gen.total_labels_generated} labels - {transect_count} transects"
+                    project_label = dict(LABEL_PROJECT_CHOICES).get(gen.project_type, gen.project_type)
+                    label = f"[{project_label}] Generated on {gen.generated_at.strftime('%Y-%m-%d %H:%M')} - {gen.total_labels_generated} labels - {transect_count} sites/transects"
                     choices.append((str(gen.id), label))
             except (ValueError, TypeError):
                 pass
         
         self.fields['inner_label_generation'].choices = choices
+        
+        if project_type == 'ignite':
+            if label_category == 'outer':
+                available_types = IGNITE_OUTER_SAMPLE_TYPES
+            else:
+                available_types = IGNITE_INNER_SAMPLE_TYPES
+        else:
+            available_types = [code for code, _ in SAMPLE_TYPES]
+        
+        type_choices = [(code, dict(SAMPLE_TYPES).get(code, code)) for code in available_types]
+        self.fields['excluded_sample_types'].choices = type_choices
     
     def clean(self):
         cleaned_data = super().clean()

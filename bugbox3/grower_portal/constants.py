@@ -257,7 +257,7 @@ CSV_IMPORT_SCHEMAS = {
 
 LABEL_PROJECT_CHOICES = [
     ('avalanche', 'Avalanche'),
-    ('1000_farms', '1000 Farms'),
+    ('ignite', 'Ignite'),
 ]
 
 LABEL_CATEGORY_CHOICES = [
@@ -285,10 +285,35 @@ SAMPLE_TYPES = [
 LABEL_COUNT_MIN = 1
 LABEL_COUNT_MAX = 1000
 CLUSTER_NUMBER_MAX_LENGTH = 10
+
+# Ignite inner sample types
+IGNITE_INNER_SAMPLE_TYPES = [
+    'soil_core_0_60cm',
+    'soil_core_0_5cm',
+    'soil_core_5_10cm',
+    'soil_core_10_15cm',
+    'soil_core_15_30cm',
+    'soil_core_30_60cm',
+    'soil_core_0_15cm',
+    'soil_archive',
+    'insect_quads',
+    'insect_sweeps',
+    'plant_dna',
+    'bulk_density'
+]
+
+IGNITE_OUTER_SAMPLE_TYPES = [
+    'soil_core_0_60cm',
+    'soil_core_0_15cm',
+    'soil_archive',
+    'plant_dna',
+    'bulk_density'
+]
 LABEL_FILE_MAX_LENGTH = 255
 LABEL_DESCRIPTION_MAX_LENGTH = 500
-LABEL_TEMPLATE_SLUG = 'labels-template'
-LABEL_OUTER_TEMPLATE_SLUG = 'labels-outer-template'
+LABEL_TEMPLATE_SLUG = 'avalanche-inner-labels'
+LABEL_OUTER_TEMPLATE_SLUG = 'avalanche-outer-labels'
+LABEL_IGNITE_TEMPLATE_SLUG = 'ignite-labels'
 
 # Outer label sample lists for Avalanche
 AVALANCHE_ROOM_TEMP_SAMPLES = [
