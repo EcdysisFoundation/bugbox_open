@@ -3,6 +3,7 @@ import requests
 from django.http import Http404
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.files.base import ContentFile
+from django.db import transaction
 from django.db.utils import IntegrityError
 from django.urls import reverse
 from django.views.generic import FormView, TemplateView
@@ -11,6 +12,7 @@ from organizations.models import OrganizationUser
 
 from bugbox3.samples.models import Sample, MultiSpecimenImage
 from bugbox3.samples.constants import STITCHER_SAMPLE_TYPES
+from bugbox3.samples.tasks import crop_panorama_segmentation
 from bugbox3.libs.utilities import get_json_context, cast_utc_time
 from .permissions import IS_RESEARCH, ZEROTIER_USERS, IS_ADMIN
 from .forms import StitcherForm, StitcherDeleteForm
@@ -240,8 +242,11 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                         this_sample.image.save(sample_label_img_name, ContentFile(label_response.content), save=False)
                         this_sample.save()
                 instance.save()
+                transaction.on_commit(
+                    lambda: crop_panorama_segmentation.delay((instance.id,), this_sample.id, self.request.user.id)
+                )
                 messages.success(
-                    self.request, f'Succesfully initiated "Save to sample" for {self.guid}')
+                    self.request, f'Succesfully initiated "Save to sample and crop" for {self.guid}')
                 self.data[constants.STITCHER_BUGBOX_CROPED_SAVED] = str(instance.id)
                 patch_upload_file(self.guid, self.data)
             except IntegrityError as e:
