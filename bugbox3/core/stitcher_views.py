@@ -27,6 +27,7 @@ from .stitcher_api import (
     STITCHER_JS_URL,
     ERROR_MSG_KEY
 )
+from .shimsy_api import create_rescan_request
 from . import constants
 
 
@@ -194,15 +195,38 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
         if formdata[constants.STITCHER_FORM_IDENT] == constants.STITCHER_FORM_DEFAULT:
             if formdata[constants.STITCHER_APPROVED] == '':
                 formdata[constants.STITCHER_APPROVED] = None
+            
+            # Check if sample is marked as Retake
+            if formdata[constants.STITCHER_APPROVED] is False:
+                upload_dir_name = formdata.get(constants.STITCHER_UPLOAD_DIR_NAME)
+                if upload_dir_name:
+                    # Call Shimsy API - BLOCKS if fails
+                    result = create_rescan_request(upload_dir_name)
+                    if not result['success']:
+                        # Show error and prevent update
+                        messages.error(
+                            self.request,
+                            f'Failed to create rescan request in Shimsy: {result["message"]}'
+                        )
+                        return self.form_invalid(form)
+                    else:
+                        messages.success(
+                            self.request,
+                            f'Successfully created rescan request in Shimsy: {result["message"]}'
+                        )
+            
+            # will only proceed with update if Shimsy API succeeded
             v = patch_upload_file(self.guid, formdata)
             if constants.STITCHER_ERROR in v.keys():
                 messages.error(
                     self.request, f'{v[constants.STITCHER_ERROR]}'
                 )
             else:
-                messages.success(
-                    self.request, f'Succesfully updated {self.guid}'
-                )
+                # Only show success message if we haven't already shown one above
+                if formdata[constants.STITCHER_APPROVED] is not False:
+                    messages.success(
+                        self.request, f'Succesfully updated {self.guid}'
+                    )
         elif formdata[constants.STITCHER_FORM_IDENT] == constants.STITCHER_FORM_CROPSAVE:
             try:
                 this_sample = Sample.objects.user_access(self.request.user).get(
