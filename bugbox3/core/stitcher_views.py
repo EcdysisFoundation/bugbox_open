@@ -227,11 +227,9 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                     self.request, f'{v[constants.STITCHER_ERROR]}'
                 )
             else:
-                # Only show success message if we haven't already shown one above
-                if formdata[constants.STITCHER_APPROVED] is not False:
-                    messages.success(
-                        self.request, f'Succesfully updated {self.guid}'
-                    )
+                messages.success(
+                    self.request, f'Succesfully updated {self.guid}'
+                )
         elif formdata[constants.STITCHER_FORM_IDENT] == constants.STITCHER_FORM_CROPSAVE:
             try:
                 this_sample = Sample.objects.user_access(self.request.user).get(
