@@ -193,9 +193,14 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
     def form_valid(self, form):
         formdata = form.cleaned_data
         if formdata[constants.STITCHER_FORM_IDENT] == constants.STITCHER_FORM_DEFAULT:
+            # coerece STITCHER_APPROVED dropdown strings to null boolean
             if formdata[constants.STITCHER_APPROVED] == '':
                 formdata[constants.STITCHER_APPROVED] = None
-            
+            elif formdata[constants.STITCHER_APPROVED] == 'True':
+                formdata[constants.STITCHER_APPROVED] = True
+            elif formdata[constants.STITCHER_APPROVED] == 'False':
+                formdata[constants.STITCHER_APPROVED] = False
+
             # Check if sample is marked as Retake
             if formdata[constants.STITCHER_APPROVED] is False:
                 upload_dir_name = formdata.get(constants.STITCHER_UPLOAD_DIR_NAME)
@@ -214,7 +219,7 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                             self.request,
                             f'Successfully created rescan request in Shimsy: {result["message"]}'
                         )
-            
+
             # will only proceed with update if Shimsy API succeeded
             v = patch_upload_file(self.guid, formdata)
             if constants.STITCHER_ERROR in v.keys():
