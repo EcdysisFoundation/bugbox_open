@@ -22,6 +22,7 @@ from .stitcher_api import (
     get_upload_file,
     patch_upload_file,
     delete_upload_file,
+    cleanup_matching_retake_records,
     STITCHER_URL,
     STITCHER_JS_URL_ZEROTIER,
     STITCHER_JS_URL,
@@ -222,8 +223,44 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                     self.request, f'{v[constants.STITCHER_ERROR]}'
                 )
             else:
+                # If sample was approved, cleanup matching retake records
+                if formdata[constants.STITCHER_APPROVED] is True:
+                    upload_dir_name = formdata.get(constants.STITCHER_UPLOAD_DIR_NAME)
+                    if upload_dir_name:
+                        cleanup_result = cleanup_matching_retake_records(
+                            upload_dir_name,
+                            self.guid
+                        )
+                        
+                        if cleanup_result['deleted_count'] > 0:
+                            deleted_list = ', '.join(cleanup_result['deleted_samples'][:5])
+                            if len(cleanup_result['deleted_samples']) > 5:
+                                deleted_list += f' and {len(cleanup_result["deleted_samples"]) - 5} more'
+                            
+                            messages.success(
+                                self.request,
+                                f'Successfully updated {self.guid}. '
+                                f'Removed {cleanup_result["deleted_count"]} matching retake record(s): {deleted_list}'
+                            )
+                            
+                            # logss errors
+                            if cleanup_result['errors']:
+                                for error in cleanup_result['errors']:
+                                    messages.warning(
+                                        self.request,
+                                        f'Failed to remove retake record {error["sample"]}: {error["error"]}'
+                                    )
+                        else:
+                            # if no matching retake records has been found
+                            messages.success(
+                                self.request, f'Successfully updated {self.guid}'
+                            )
+                    else:
+                        messages.success(
+                            self.request, f'Successfully updated {self.guid}'
+                        )
                 # Only show success message if we haven't already shown one above
-                if formdata[constants.STITCHER_APPROVED] is not False:
+                elif formdata[constants.STITCHER_APPROVED] is not False:
                     messages.success(
                         self.request, f'Succesfully updated {self.guid}'
                     )
