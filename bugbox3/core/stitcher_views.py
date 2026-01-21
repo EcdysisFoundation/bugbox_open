@@ -209,7 +209,7 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                     # Calling Shimsy API
                     result = create_rescan_request(upload_dir_name)
                     if not result['success']:
-                        # Show warning but don't prevent update - record retake status in Stitcher
+                        # Preserving Retake status in Stitcher (even if Shimsy API fails)
                         messages.warning(
                             self.request,
                             f'Failed to create rescan request in Shimsy: {result["message"]}. '
@@ -264,7 +264,7 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                             self.request, f'Successfully updated {self.guid}'
                         )
                 else:
-                    # Show success message for non-approval updates (multiple messages are supported)
+                    # Show success message for non-approval updates
                     messages.success(
                         self.request, f'Successfully updated {self.guid}'
                     )
