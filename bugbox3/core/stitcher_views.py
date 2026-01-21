@@ -194,29 +194,33 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
     def form_valid(self, form):
         formdata = form.cleaned_data
         if formdata[constants.STITCHER_FORM_IDENT] == constants.STITCHER_FORM_DEFAULT:
+            # coerece STITCHER_APPROVED dropdown strings to null boolean
             if formdata[constants.STITCHER_APPROVED] == '':
                 formdata[constants.STITCHER_APPROVED] = None
-            
+            elif formdata[constants.STITCHER_APPROVED] == 'True':
+                formdata[constants.STITCHER_APPROVED] = True
+            elif formdata[constants.STITCHER_APPROVED] == 'False':
+                formdata[constants.STITCHER_APPROVED] = False
+
             # Check if sample is marked as Retake
             if formdata[constants.STITCHER_APPROVED] is False:
                 upload_dir_name = formdata.get(constants.STITCHER_UPLOAD_DIR_NAME)
                 if upload_dir_name:
-                    # Call Shimsy API - BLOCKS if fails
+                    # Calling Shimsy API
                     result = create_rescan_request(upload_dir_name)
                     if not result['success']:
-                        # Show error and prevent update
-                        messages.error(
+                        # Show warning but don't prevent update - record retake status in Stitcher
+                        messages.warning(
                             self.request,
-                            f'Failed to create rescan request in Shimsy: {result["message"]}'
+                            f'Failed to create rescan request in Shimsy: {result["message"]}. '
+                            f'Retake status has been recorded in Stitcher.'
                         )
-                        return self.form_invalid(form)
                     else:
                         messages.success(
                             self.request,
                             f'Successfully created rescan request in Shimsy: {result["message"]}'
                         )
-            
-            # will only proceed with update if Shimsy API succeeded
+
             v = patch_upload_file(self.guid, formdata)
             if constants.STITCHER_ERROR in v.keys():
                 messages.error(
@@ -243,7 +247,7 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                                 f'Removed {cleanup_result["deleted_count"]} matching retake record(s): {deleted_list}'
                             )
                             
-                            # logss errors
+                            # Log errors
                             if cleanup_result['errors']:
                                 for error in cleanup_result['errors']:
                                     messages.warning(
@@ -251,7 +255,7 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                                         f'Failed to remove retake record {error["sample"]}: {error["error"]}'
                                     )
                         else:
-                            # if no matching retake records has been found
+                            # No matching retake records found
                             messages.success(
                                 self.request, f'Successfully updated {self.guid}'
                             )
@@ -259,10 +263,10 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                         messages.success(
                             self.request, f'Successfully updated {self.guid}'
                         )
-                # Only show success message if we haven't already shown one above
-                elif formdata[constants.STITCHER_APPROVED] is not False:
+                else:
+                    # Show success message for non-approval updates (multiple messages are supported)
                     messages.success(
-                        self.request, f'Succesfully updated {self.guid}'
+                        self.request, f'Successfully updated {self.guid}'
                     )
         elif formdata[constants.STITCHER_FORM_IDENT] == constants.STITCHER_FORM_CROPSAVE:
             try:
