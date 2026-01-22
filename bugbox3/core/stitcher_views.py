@@ -22,6 +22,7 @@ from .stitcher_api import (
     get_upload_file,
     patch_upload_file,
     delete_upload_file,
+    cleanup_matching_retake_records,
     STITCHER_URL,
     STITCHER_JS_URL_ZEROTIER,
     STITCHER_JS_URL,
@@ -208,10 +209,11 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                     # Call Shimsy API - BLOCKS if fails
                     result = create_rescan_request(upload_dir_name)
                     if not result['success']:
-                        # Show error and prevent update
                         messages.error(
                             self.request,
-                            f'Failed to create rescan request in Shimsy: {result["message"]}'
+                            f'Failed to create rescan request in Shimsy: {result["message"]}. '
+                            f'Retake status for this sample in Stitcher has not been saved. '
+                            f'Please make sure Shimsy is up and try again.'
                         )
                         return self.form_invalid(form)
                     else:
@@ -221,15 +223,54 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                         )
 
             # will only proceed with update if Shimsy API succeeded
+
             v = patch_upload_file(self.guid, formdata)
             if constants.STITCHER_ERROR in v.keys():
                 messages.error(
                     self.request, f'{v[constants.STITCHER_ERROR]}'
                 )
             else:
-                messages.success(
-                    self.request, f'Succesfully updated {self.guid}'
-                )
+                # If sample was approved, cleanup matching retake records
+                if formdata[constants.STITCHER_APPROVED] is True:
+                    upload_dir_name = formdata.get(constants.STITCHER_UPLOAD_DIR_NAME)
+                    if upload_dir_name:
+                        cleanup_result = cleanup_matching_retake_records(
+                            upload_dir_name,
+                            self.guid
+                        )
+                        
+                        if cleanup_result['deleted_count'] > 0:
+                            deleted_list = ', '.join(cleanup_result['deleted_samples'][:5])
+                            if len(cleanup_result['deleted_samples']) > 5:
+                                deleted_list += f' and {len(cleanup_result["deleted_samples"]) - 5} more'
+                            
+                            messages.success(
+                                self.request,
+                                f'Successfully updated {self.guid}. '
+                                f'Removed {cleanup_result["deleted_count"]} matching retake record(s): {deleted_list}'
+                            )
+                            
+                            # Log errors
+                            if cleanup_result['errors']:
+                                for error in cleanup_result['errors']:
+                                    messages.warning(
+                                        self.request,
+                                        f'Failed to remove retake record {error["sample"]}: {error["error"]}'
+                                    )
+                        else:
+                            # No matching retake records found
+                            messages.success(
+                                self.request, f'Successfully updated {self.guid}'
+                            )
+                    else:
+                        messages.success(
+                            self.request, f'Successfully updated {self.guid}'
+                        )
+                else:
+                    # Show success message for non-approval updates
+                    messages.success(
+                        self.request, f'Successfully updated {self.guid}'
+                    )
         elif formdata[constants.STITCHER_FORM_IDENT] == constants.STITCHER_FORM_CROPSAVE:
             try:
                 this_sample = Sample.objects.user_access(self.request.user).get(
