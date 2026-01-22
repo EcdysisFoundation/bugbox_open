@@ -163,9 +163,9 @@ def parse_sample_name(sample_name):
     return None
 
 
-def list_retake_records():
+def list_retake_records(upload_dir_name=None):
     """
-    fetches all records from Stitcher that are marked as Retake (approved=False).
+    fetches records from Stitcher that are marked as Retake (approved=False).
     """
     api_list_url = STITCHER_URL + '/list-upload-files/'
     all_data = []
@@ -178,6 +178,9 @@ def list_retake_records():
             'limit': limit,
             'approved': False
         }
+        
+        if upload_dir_name:
+            params['upload_dir_name'] = upload_dir_name
 
         try:
             response = requests.get(api_list_url, params=params, timeout=30)
@@ -208,43 +211,27 @@ def find_matching_retake_records(approved_sample_name, exclude_guid=None):
     if not parsed:
         return []
     
-    base_name, approved_site, approved_type, approved_transect = parsed
+    base_name, _, _, _ = parsed
     
-    retake_records = list_retake_records()
+    retake_records = list_retake_records(upload_dir_name=base_name)
     
-    # Filter retake records to matching records
+    # Filter out the approved record itself
     matching_records = []
     for record in retake_records:
         guid = record.get('guid')
         upload_dir_name = record.get('upload_dir_name')
-        approved = record.get('approved')
         
-        # Skip if not retake
-        if approved is not False:
-            continue
-        
-        # Skip if excluded GUID
+        # Skip the (approved record itself = excluded GUID)
         if exclude_guid and guid == exclude_guid:
             continue
         
         if not upload_dir_name:
             continue
         
-        # Parse the retake record sample name
-        record_parsed = parse_sample_name(upload_dir_name)
-        if not record_parsed:
-            continue
-        
-        _, record_site, record_type, record_transect = record_parsed
-        
-        # Match if has same site, type, and transect
-        if (record_site == approved_site and 
-            record_type == approved_type and 
-            record_transect == approved_transect):
-            matching_records.append({
-                'guid': guid,
-                'upload_dir_name': upload_dir_name
-            })
+        matching_records.append({
+            'guid': guid,
+            'upload_dir_name': upload_dir_name
+        })
     
     return matching_records
 

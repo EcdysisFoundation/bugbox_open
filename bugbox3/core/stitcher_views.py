@@ -206,20 +206,23 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
             if formdata[constants.STITCHER_APPROVED] is False:
                 upload_dir_name = formdata.get(constants.STITCHER_UPLOAD_DIR_NAME)
                 if upload_dir_name:
-                    # Calling Shimsy API
+                    # Call Shimsy API - BLOCKS if fails
                     result = create_rescan_request(upload_dir_name)
                     if not result['success']:
-                        # Preserving Retake status in Stitcher (even if Shimsy API fails)
-                        messages.warning(
+                        messages.error(
                             self.request,
                             f'Failed to create rescan request in Shimsy: {result["message"]}. '
-                            f'Retake status has been recorded in Stitcher.'
+                            f'Retake status for this sample in Stitcher has not been saved. '
+                            f'Please make sure Shimsy is up and try again.'
                         )
+                        return self.form_invalid(form)
                     else:
                         messages.success(
                             self.request,
                             f'Successfully created rescan request in Shimsy: {result["message"]}'
                         )
+
+            # will only proceed with update if Shimsy API succeeded
 
             v = patch_upload_file(self.guid, formdata)
             if constants.STITCHER_ERROR in v.keys():
