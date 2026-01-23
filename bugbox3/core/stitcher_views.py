@@ -1,35 +1,35 @@
 import os
-
 import requests
-from django.contrib import messages
+from django.http import Http404
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.files.base import ContentFile
 from django.db import transaction
 from django.db.utils import IntegrityError
-from django.http import Http404
 from django.urls import reverse
 from django.views.generic import FormView, TemplateView
+from django.contrib import messages
 from organizations.models import OrganizationUser
 
-from bugbox3.libs.utilities import cast_utc_time, get_json_context
+from bugbox3.samples.models import Sample, MultiSpecimenImage
 from bugbox3.samples.constants import STITCHER_SAMPLE_TYPES
-from bugbox3.samples.models import MultiSpecimenImage, Sample
 from bugbox3.samples.tasks import crop_panorama_segmentation
-
-from . import constants
-from .forms import StitcherDeleteForm, StitcherForm
-from .permissions import IS_ADMIN, IS_RESEARCH, ZEROTIER_USERS
+from bugbox3.libs.utilities import get_json_context, cast_utc_time
+from .permissions import IS_RESEARCH, ZEROTIER_USERS, IS_ADMIN
+from .forms import StitcherForm, StitcherDeleteForm
 from .stitcher_api import (
-    ERROR_MSG_KEY,
-    STITCHER_JS_URL,
-    STITCHER_JS_URL_ZEROTIER,
-    STITCHER_URL,
-    delete_upload_file,
     get_root_message,
     get_stitcher_stats,
     get_upload_file,
     patch_upload_file,
+    delete_upload_file,
+    cleanup_matching_retake_records,
+    STITCHER_URL,
+    STITCHER_JS_URL_ZEROTIER,
+    STITCHER_JS_URL,
+    ERROR_MSG_KEY
 )
+from .shimsy_api import create_rescan_request
+from . import constants
 
 
 class StitcherView(PermissionRequiredMixin, TemplateView):
@@ -86,15 +86,17 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
         self.thumbnail_src = None
         self.label_src = f'/static/{self.guid}/{constants.STITCHER_LABEL_IMG}'
         self.nota_sample = None
+        self.omit_from_training = None
         if constants.STITCHER_PANORAMA_PATH in self.data.keys():
             if self.data[constants.STITCHER_PANORAMA_PATH]:
                 self.img_src = self.data[constants.STITCHER_PANORAMA_PATH].replace('/media/', '/static/')
                 if self.data[constants.STITCHER_PANORAMA_THUMBNAIL_PATH]:
-                    self.thumbnail_src = f'{self.stitcher_js_url}{
-                        self.data[constants.STITCHER_PANORAMA_THUMBNAIL_PATH].replace('/media/', '/static/')}'
+                    self.thumbnail_src = f'{self.stitcher_js_url}{self.data[constants.STITCHER_PANORAMA_THUMBNAIL_PATH].replace('/media/', '/static/')}'
                 self.panorama_name = os.path.basename(self.data[constants.STITCHER_PANORAMA_PATH])
         if constants.STITCHER_NOTA_SAMPLE in self.data.keys():
             self.nota_sample = self.data[constants.STITCHER_NOTA_SAMPLE]
+        if constants.STITCHER_OMIT_FROM_TRAINING in self.data.keys():
+            self.omit_from_training = self.data[constants.STITCHER_OMIT_FROM_TRAINING]
 
         return kwargs
 
@@ -146,7 +148,7 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                 if sample_ids:
                     potential_samples = [
                         (i, reverse('samples:sample', kwargs={'sample_id': i})) for i in sample_ids]
-            if (self.data[constants.STITCHER_ANNOTATIONS_SEGMENT]
+            if (self.data[constants.STITCHER_ANNOTATIONS_SEGMENT] \
                     or self.data[constants.STITCHER_ANNOTATIONS_UPDATED_AT_SEGMENT]) \
                     and self.data[constants.STITCHER_APPROVED] \
                     and self.data[constants.STITCHER_BUGBOX_SAMPLE_ID]:
@@ -164,6 +166,8 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
             'form_action_url': reverse(
                 'core:stitcher-form', kwargs={'guid': str(self.guid)}),
             'form_iden_crop_save': constants.STITCHER_FORM_CROPSAVE,
+            'form_iden_default': constants.STITCHER_FORM_DEFAULT,
+            'form_iden_post_cropped': constants.STITCHER_FORM_POST_CROPPED,
             'disable_crop_save': disable_crop_save,
             'json_context': get_json_context({
                 constants.STITCHER_GUID: self.guid,
@@ -190,22 +194,88 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
             initial[constants.STITCHER_BUGBOX_SAMPLE_ID] = data[constants.STITCHER_BUGBOX_SAMPLE_ID]
         if constants.STITCHER_NOTA_SAMPLE in data.keys():
             initial[constants.STITCHER_NOTA_SAMPLE] = data[constants.STITCHER_NOTA_SAMPLE]
+        if constants.STITCHER_OMIT_FROM_TRAINING in data.keys():
+            initial[constants.STITCHER_OMIT_FROM_TRAINING] = data[constants.STITCHER_OMIT_FROM_TRAINING]
         return initial
 
     def form_valid(self, form):
         formdata = form.cleaned_data
         if formdata[constants.STITCHER_FORM_IDENT] == constants.STITCHER_FORM_DEFAULT:
+            # coerece STITCHER_APPROVED dropdown strings to null boolean
             if formdata[constants.STITCHER_APPROVED] == '':
                 formdata[constants.STITCHER_APPROVED] = None
+            elif formdata[constants.STITCHER_APPROVED] == 'True':
+                formdata[constants.STITCHER_APPROVED] = True
+            elif formdata[constants.STITCHER_APPROVED] == 'False':
+                formdata[constants.STITCHER_APPROVED] = False
+
+            # Check if sample is marked as Retake
+            if formdata[constants.STITCHER_APPROVED] is False:
+                upload_dir_name = formdata.get(constants.STITCHER_UPLOAD_DIR_NAME)
+                if upload_dir_name:
+                    # Call Shimsy API - BLOCKS if fails
+                    result = create_rescan_request(upload_dir_name)
+                    if not result['success']:
+                        messages.error(
+                            self.request,
+                            f'Failed to create rescan request in Shimsy: {result["message"]}. '
+                            f'Retake status for this sample in Stitcher has not been saved. '
+                            f'Please make sure Shimsy is up and try again.'
+                        )
+                        form.add_error(constants.STITCHER_APPROVED, "Approved/Retake status was not saved.")
+                        return self.form_invalid(form)
+                    else:
+                        messages.success(
+                            self.request,
+                            f'Successfully created rescan request in Shimsy: {result["message"]}'
+                        )
+
+            # will only proceed with update if Shimsy API succeeded
             v = patch_upload_file(self.guid, formdata)
             if constants.STITCHER_ERROR in v.keys():
                 messages.error(
                     self.request, f'{v[constants.STITCHER_ERROR]}'
                 )
             else:
+                # If sample was approved, cleanup matching retake records
+                if formdata[constants.STITCHER_APPROVED] is True:
+                    upload_dir_name = formdata.get(constants.STITCHER_UPLOAD_DIR_NAME)
+                    if upload_dir_name:
+                        cleanup_result = cleanup_matching_retake_records(
+                            upload_dir_name,
+                            self.guid
+                        )
+
+                        if cleanup_result['deleted_count'] > 0:
+                            deleted_list = ', '.join(cleanup_result['deleted_samples'][:5])
+                            if len(cleanup_result['deleted_samples']) > 5:
+                                deleted_list += f' and {len(cleanup_result["deleted_samples"]) - 5} more'
+
+                            messages.success(
+                                self.request,
+                                f'Successfully updated {self.guid}. '
+                                f'Removed {cleanup_result["deleted_count"]} matching retake record(s): {deleted_list}'
+                            )
+                        # Log errors
+                        if cleanup_result['errors']:
+                            for error in cleanup_result['errors']:
+                                messages.warning(
+                                    self.request,
+                                    f'Failed to remove retake record {error["sample"]}: {error["error"]}'
+                                )
                 messages.success(
-                    self.request, f'Succesfully updated {self.guid}'
+                    self.request, f'Successfully updated {self.guid}'
                 )
+        elif formdata[constants.STITCHER_FORM_IDENT] == constants.STITCHER_FORM_POST_CROPPED:
+            # limit what data is updated in STITCHER_FORM_POST_CROPPED by dict update
+            limited_formdata = {key: item for key, item in self.data.items() if key in formdata.keys()}
+            limited_formdata.update({
+                constants.STITCHER_OMIT_FROM_TRAINING: formdata[constants.STITCHER_OMIT_FROM_TRAINING]
+            })
+            v = patch_upload_file(self.guid, limited_formdata)
+            messages.success(
+                self.request, f'Successfully updated {self.guid}'
+            )
         elif formdata[constants.STITCHER_FORM_IDENT] == constants.STITCHER_FORM_CROPSAVE:
             try:
                 this_sample = Sample.objects.user_access(self.request.user).get(
@@ -304,9 +374,9 @@ class StitcherDeleteView(PermissionRequiredMixin, FormView):
             messages.error(self.request, response[ERROR_MSG_KEY])
         else:
             messages.warning(
-                self.request,
-                f'Succesfully deleted {self.upload_dir_name}'
-            )
+                    self.request,
+                    f'Succesfully deleted {self.upload_dir_name}'
+                )
         return super().form_valid(form)
 
     def get_success_url(self):
