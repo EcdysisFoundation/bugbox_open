@@ -1,6 +1,9 @@
 import json
 import re
+<<<<<<< HEAD
 
+=======
+>>>>>>> 5858d17716ca1cae0b0837cbdf07fa6e4dde2667
 import requests
 
 STITCHER_URL = 'http://host.docker.internal:8090'
