@@ -268,20 +268,9 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                                         self.request,
                                         f'Failed to remove retake record {error["sample"]}: {error["error"]}'
                                     )
-                        else:
-                            # No matching retake records found
-                            messages.success(
-                                self.request, f'Successfully updated {self.guid}'
-                            )
-                    else:
-                        messages.success(
-                            self.request, f'Successfully updated {self.guid}'
-                        )
-                else:
-                    # Show success message for non-approval updates
-                    messages.success(
-                        self.request, f'Successfully updated {self.guid}'
-                    )
+                messages.success(
+                    self.request, f'Successfully updated {self.guid}'
+                )
         elif formdata[constants.STITCHER_FORM_IDENT] == constants.STITCHER_FORM_POST_CROPPED:
             # limit what data is updated in STITCHER_FORM_POST_CROPPED by dict update
             limited_formdata = {key: item for key, item in self.data.items() if key in formdata.keys()}
