@@ -1,32 +1,53 @@
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import HTML, Column, Div, Fieldset, Layout, Row, Submit
 from django import forms
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError
 from django.forms import inlineformset_factory
-from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Fieldset, Row, Column, HTML, Div, Submit, Layout
-from bugbox3.core.forms import ModelFormMixin, Html5DateInput
-from ...models import (
-    GrowerProfile, Field, TransectCode, GrowerApplication,
-    ManagementPractices, GrazingEvent, GrazingEventAnimal,
-    TransectMeasurement, DropPlateReading, VegetationReading, SoilReading,
-    SoilCompactionReading, InfiltrometerReading, InfiltrationRingReading
-)
+
+from bugbox3.core.forms import Html5DateInput, ModelFormMixin
+
 from ...constants import (
-    GENDER_CHOICES, RACE_CHOICES, FIELD_TYPE_CHOICES,
-    TRANSITIONAL_STATUS_CHOICES, INSECTICIDE_FREQUENCY_CHOICES,
-    CROP_TYPE_CHOICES, CROP_SUBTYPE_CHOICES, ORCHARD_CROP_TYPE_CHOICES,
-    COVER_CROP_TERMINATION_CHOICES, ORGANIC_AMENDMENT_CHOICES,
-    GRAZER_TYPES_CHOICES, GROUND_COVER_MANAGEMENT_CHOICES,
-    PHONE_MAX_LENGTH, FARM_NAME_MAX_LENGTH, FIELD_NAME_MAX_LENGTH,
-    CROP_VARIETY_MAX_LENGTH, CROP_VARIETIES_MAX_LENGTH, FORAGE_VARIETIES_MAX_LENGTH,
-    PADDOCK_SIZE_MAX_LENGTH, ROOTSTOCK_SPECIES_MAX_LENGTH,
+    ACRES_SAMPLED_MAX,
+    ACRES_SAMPLED_MIN,
+    AGE_MAX,
+    AGE_MIN,
+    COVER_CROP_TERMINATION_CHOICES,
+    CROP_SUBTYPE_CHOICES,
+    CROP_TYPE_CHOICES,
+    CROP_VARIETIES_MAX_LENGTH,
+    FARM_NAME_MAX_LENGTH,
+    FIELD_NAME_MAX_LENGTH,
+    FIELD_TYPE_CHOICES,
+    FORAGE_VARIETIES_MAX_LENGTH,
+    GENDER_CHOICES,
+    GRAZER_TYPES_CHOICES,
+    GROUND_COVER_MANAGEMENT_CHOICES,
+    MAX_ANIMAL_ENTRIES_PER_GRAZING_EVENT,
+    ORCHARD_CROP_TYPE_CHOICES,
+    ORGANIC_AMENDMENT_CHOICES,
+    PADDOCK_SIZE_MAX_LENGTH,
+    PHONE_MAX_LENGTH,
+    RACE_CHOICES,
+    ROOTSTOCK_SPECIES_MAX_LENGTH,
     TILLAGE_METHODS_MAX_LENGTH,
-    TRANSECT_CODE_MAX_LENGTH, AGE_MIN, AGE_MAX,
-    LATITUDE_MIN, LATITUDE_MAX, LONGITUDE_MIN, LONGITUDE_MAX,
-    ACRES_SAMPLED_MIN, ACRES_SAMPLED_MAX, YEARS_UNDER_MANAGEMENT_MIN, YEARS_UNDER_MANAGEMENT_MAX,
-    CLASS_OF_ANIMAL_EXAMPLES, MAX_ANIMAL_ENTRIES_PER_GRAZING_EVENT,
-    DISTANCES_DROP_PLATE, POSITIONS_3POINT, INFILTROMETER_TIMES,
-    FIELD_CONDITION_CHOICES, VEGETATION_METRIC_CHOICES, SOIL_METRIC_CHOICES
+    TRANSITIONAL_STATUS_CHOICES,
+    YEARS_UNDER_MANAGEMENT_MAX,
+    YEARS_UNDER_MANAGEMENT_MIN,
+)
+from ...models import (
+    DropPlateReading,
+    GrazingEvent,
+    GrazingEventAnimal,
+    GrowerApplication,
+    GrowerProfile,
+    InfiltrationRingReading,
+    InfiltrometerReading,
+    ManagementPractices,
+    SoilCompactionReading,
+    SoilReading,
+    TransectCode,
+    TransectMeasurement,
+    VegetationReading,
 )
 
 User = get_user_model()
@@ -59,7 +80,7 @@ class GrowerProfileCompletionForm(forms.ModelForm):
         required=False,
         label='Race'
     )
-    
+
     class Meta:
         model = GrowerProfile
         fields = ['phone', 'gender', 'age', 'race']
@@ -110,10 +131,12 @@ class ApplicationCreationForm(ModelFormMixin):
     tillage_methods = forms.CharField(
         max_length=TILLAGE_METHODS_MAX_LENGTH,
         required=False,
-        widget=forms.Textarea(attrs={'rows': 3, 'placeholder': 'e.g., disk, shanks, basket weed, broad fork, harrow, etc.'}),
+        widget=forms.Textarea(
+            attrs={
+                'rows': 3,
+                'placeholder': 'e.g., disk, shanks, basket weed, broad fork, harrow, etc.'}),
         label='Tillage Methods',
-        help_text='Tillage = any type of mechanical disturbance of the soil'
-    )
+        help_text='Tillage = any type of mechanical disturbance of the soil')
     forage_varieties = forms.CharField(
         max_length=FORAGE_VARIETIES_MAX_LENGTH,
         required=False,
@@ -149,7 +172,7 @@ class ApplicationCreationForm(ModelFormMixin):
         label='Date Sampled',
         help_text='Date when samples were collected'
     )
-    
+
     # Orchard-specific crop type fields
     orchard_crop_type = forms.ChoiceField(
         choices=[('', 'Select Crop Type')] + ORCHARD_CROP_TYPE_CHOICES,
@@ -163,7 +186,7 @@ class ApplicationCreationForm(ModelFormMixin):
         label='',
         help_text='Specify the type'
     )
-    
+
     # Crop varieties field for orchards
     crop_varieties = forms.CharField(
         max_length=CROP_VARIETIES_MAX_LENGTH,
@@ -172,7 +195,7 @@ class ApplicationCreationForm(ModelFormMixin):
         label='Crop Variety(ies)',
         help_text='Specify the crop variety or varieties grown'
     )
-    
+
     # Field measurement fields
     acres_sampled = forms.DecimalField(
         max_digits=8,
@@ -206,116 +229,100 @@ class ApplicationCreationForm(ModelFormMixin):
         label='Field comments',
         help_text='General comments about the field'
     )
-    
+
     class Meta:
         model = GrowerApplication
         fields = ['date_sampled']
-    
-    required_fields = ['farm_name', 'field_name', 'field_type', 'date_sampled', 'acres_sampled', 'years_under_management']
-    
+
+    required_fields = [
+        'farm_name',
+        'field_name',
+        'field_type',
+        'date_sampled',
+        'acres_sampled',
+        'years_under_management']
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
+
         if self.initial.get('field_type') == 'range':
             self.fields['acres_sampled'].label = 'Acres in paddock sampled'
-    
+
     def get_primary_layout(self):
-        return [
-            Fieldset(
-                'Farm Information',
-                Row(Column('farm_name'))
-            ),
-            Fieldset(
-                'Field Information',
-                Row(Column('field_name')),
-                Row(Column('field_type')),
-                Div(
-                    css_id='field_specific_properties',
-                    css_class='mt-3'
-                ),
-                Div(
-                    HTML('<h6>Crop Information</h6>'),
-                    Row(Column('crop_type')),
-                    Div(
-                        Row(Column('crop_subtype')),
-                        css_id='crop_subtype_container',
-                        css_class='nested-conditional',
-                        style='display:none;'
-                    ),
-                    Div(
-                        Row(Column('crop_subtype_other')),
-                        css_id='crop_subtype_other_container',
-                        css_class='nested-conditional',
-                        style='display:none;'
-                    ),
-                    Div(
-                        Row(Column('small_grain_type')),
-                        css_id='small_grain_container',
-                        css_class='nested-conditional',
-                        style='display:none;'
-                    ),
-                    Row(Column('tillage_methods')),
-                    css_id='crop_type_fields',
-                    css_class='field-specific',
-                    style='display:none;'
-                ),
-                Div(
-                    HTML('<h6>Rangeland Information</h6>'),
-                    Row(Column('forage_varieties')),
-                    Row(
-                        Column('paddock_size', css_class='col-md-6'),
-                        Column('pasture_size', css_class='col-md-6')
-                    ),
-                    css_id='rangeland_fields',
-                    css_class='field-specific',
-                    style='display:none;'
-                ),
-                Div(
-                    Row(Column('rootstock_species')),
-                    Row(Column('orchard_crop_type')),
-                    Div(
-                        Row(Column('orchard_crop_specify')),
-                        css_id='orchard_crop_specify_container',
-                        css_class='nested-conditional',
-                        style='display:none;'
-                    ),
-                    Row(Column('crop_varieties')),
-                    css_id='orchard_specific_fields',
-                    css_class='field-specific',
-                    style='display:none;'
-                )
-            ),
-            Fieldset(
-                'Application Details',
-                Row(Column('date_sampled'))
-            ),
-            Fieldset(
-                'Field Measurements',
-                HTML('<p class="text-muted">Enter measurement information for this field. These values will apply to all transects.</p>'),
-                Row(
-                    Column('acres_sampled', css_class='col-md-6'),
-                    Column('years_under_management', css_class='col-md-6')
-                ),
-                Div(
-                    Row(Column('supports_dairy', css_class='col-md-6')),
-                    Div(
-                        Row(Column('is_confined_dairy', css_class='col-md-6')),
-                        css_id='confined_dairy_field',
-                        style='display:none;'
-                    ),
-                    css_id='dairy_fields',
-                    css_class='non-orchard-only'
-                ),
-                Row(Column('measurement_comments'))
-            ),
-            Submit('submit', 'Next: Field Information', css_class='btn btn-primary btn-lg')
-        ]
-    
+        return [Fieldset('Farm Information',
+                         Row(Column('farm_name'))),
+                Fieldset('Field Information',
+                         Row(Column('field_name')),
+                         Row(Column('field_type')),
+                         Div(css_id='field_specific_properties',
+                             css_class='mt-3'),
+                         Div(HTML('<h6>Crop Information</h6>'),
+                             Row(Column('crop_type')),
+                             Div(Row(Column('crop_subtype')),
+                                 css_id='crop_subtype_container',
+                                 css_class='nested-conditional',
+                                 style='display:none;'),
+                             Div(Row(Column('crop_subtype_other')),
+                                 css_id='crop_subtype_other_container',
+                                 css_class='nested-conditional',
+                                 style='display:none;'),
+                             Div(Row(Column('small_grain_type')),
+                                 css_id='small_grain_container',
+                                 css_class='nested-conditional',
+                                 style='display:none;'),
+                             Row(Column('tillage_methods')),
+                             css_id='crop_type_fields',
+                             css_class='field-specific',
+                             style='display:none;'),
+                         Div(HTML('<h6>Rangeland Information</h6>'),
+                             Row(Column('forage_varieties')),
+                             Row(Column('paddock_size',
+                                        css_class='col-md-6'),
+                                 Column('pasture_size',
+                                 css_class='col-md-6')),
+                             css_id='rangeland_fields',
+                             css_class='field-specific',
+                             style='display:none;'),
+                         Div(Row(Column('rootstock_species')),
+                             Row(Column('orchard_crop_type')),
+                             Div(Row(Column('orchard_crop_specify')),
+                                 css_id='orchard_crop_specify_container',
+                                 css_class='nested-conditional',
+                                 style='display:none;'),
+                             Row(Column('crop_varieties')),
+                             css_id='orchard_specific_fields',
+                             css_class='field-specific',
+                             style='display:none;')),
+                Fieldset('Application Details',
+                         Row(Column('date_sampled'))),
+                Fieldset('Field Measurements',
+                         HTML(
+                             '<p class="text-muted">Enter measurement information '
+                             'for this field. These values will apply to all '
+                             'transects.</p>'
+                         ),
+                         Row(Column('acres_sampled',
+                                    css_class='col-md-6'),
+                             Column('years_under_management',
+                                    css_class='col-md-6')),
+                         Div(Row(Column('supports_dairy',
+                                        css_class='col-md-6')),
+                             Div(Row(Column('is_confined_dairy',
+                                            css_class='col-md-6')),
+                                 css_id='confined_dairy_field',
+                                 style='display:none;'),
+                             css_id='dairy_fields',
+                             css_class='non-orchard-only'),
+                         Row(Column('measurement_comments'))),
+                Submit('submit',
+                       'Next: Field Information',
+                       css_class='btn btn-primary btn-lg')]
+
     def clean(self):
         cleaned_data = super().clean()
-        
+
         field_type = cleaned_data.get('field_type')
-        
+
         if field_type == 'crop':
             crop_type = cleaned_data.get('crop_type', '').strip()
             if not crop_type:
@@ -328,7 +335,7 @@ class ApplicationCreationForm(ModelFormMixin):
             rootstock_species = cleaned_data.get('rootstock_species', '').strip()
             if not rootstock_species:
                 self.add_error('rootstock_species', 'Rootstock species is required for orchards.')
-        
+
         return cleaned_data
 
 
@@ -357,7 +364,7 @@ class ManagementPracticesForm(ModelFormMixin):
         label='Other Amendment Type',
         help_text='Specify other organic amendment type'
     )
-    
+
     grazer_types = forms.ChoiceField(
         choices=[('', 'Select Type')] + GRAZER_TYPES_CHOICES,
         required=False,
@@ -387,7 +394,7 @@ class ManagementPracticesForm(ModelFormMixin):
         label='Broad Fork',
         help_text='Uses broad fork cultivation'
     )
-    
+
     class Meta:
         model = ManagementPractices
         fields = [
@@ -401,75 +408,75 @@ class ManagementPracticesForm(ModelFormMixin):
             'grazer_types', 'grazer_types_other',
             'allows_ground_cover', 'ground_cover_management', 'ground_cover_management_other', 'tills_between_rows'
         ]
-    
+
     required_fields = []
-    
+
     def get_primary_layout(self):
         return [
             Div(
-            Fieldset(
-                'Tillage Practices',
-                Row(Column('uses_tillage')),
-                Div(
-                    Row(Column('tillage_depth')),
-                    css_id='tillage_depth_field',
-                    style='display:none;'
-                )
-            ),
+                Fieldset(
+                    'Tillage Practices',
+                    Row(Column('uses_tillage')),
+                    Div(
+                        Row(Column('tillage_depth')),
+                        css_id='tillage_depth_field',
+                        style='display:none;'
+                    )
+                ),
                 css_id='tillage_practices_section',
                 css_class='non-orchard-only non-rangeland-only'
             ),
             Div(
-            Fieldset(
-                'Cover Crops',
-                Row(Column('uses_cover_crop')),
-                Div(
-                    Row(Column('cover_crop_termination')),
+                Fieldset(
+                    'Cover Crops',
+                    Row(Column('uses_cover_crop')),
+                    Div(
+                        Row(Column('cover_crop_termination')),
                         Div(
                             Row(Column('cover_crop_termination_other')),
                             css_id='cover_crop_termination_other_container',
                             style='display:none;'
                         ),
-                    css_id='cover_crop_fields',
-                    style='display:none;'
-                )
-            ),
-                css_class=''
-            ),
-            Div(
-            Fieldset(
-                'Synthetic Inputs',
-                Row(
-                    Column('uses_synthetic_fertilizers', css_class='col-md-6'),
-                    Column('uses_synthetic_insecticides', css_class='col-md-6')
+                        css_id='cover_crop_fields',
+                        style='display:none;'
+                    )
                 ),
-                Row(
-                    Column('uses_synthetic_herbicides', css_class='col-md-6'),
-                    Column('uses_synthetic_fungicides', css_class='col-md-6')
-                )
-            ),
                 css_class=''
             ),
             Div(
-            Fieldset(
-                'Organic Amendments',
-                Row(Column('uses_organic_amendments')),
-                Div(
-                    Row(Column('organic_amendment_types')),
+                Fieldset(
+                    'Synthetic Inputs',
+                    Row(
+                        Column('uses_synthetic_fertilizers', css_class='col-md-6'),
+                        Column('uses_synthetic_insecticides', css_class='col-md-6')
+                    ),
+                    Row(
+                        Column('uses_synthetic_herbicides', css_class='col-md-6'),
+                        Column('uses_synthetic_fungicides', css_class='col-md-6')
+                    )
+                ),
+                css_class=''
+            ),
+            Div(
+                Fieldset(
+                    'Organic Amendments',
+                    Row(Column('uses_organic_amendments')),
+                    Div(
+                        Row(Column('organic_amendment_types')),
                         Div(
                             Row(Column('organic_amendment_other')),
                             css_id='organic_amendment_other_container',
                             style='display:none;'
                         ),
-                    css_id='organic_amendment_fields',
-                    style='display:none;'
-                )
-            ),
+                        css_id='organic_amendment_fields',
+                        style='display:none;'
+                    )
+                ),
                 css_class=''
             ),
             Div(
-            Fieldset(
-                'Grazing Practices',
+                Fieldset(
+                    'Grazing Practices',
                     Row(Column('grazed_current_year')),
                     Row(Column('grazed_by_livestock_plan')),
                     Div(
@@ -492,11 +499,11 @@ class ManagementPracticesForm(ModelFormMixin):
                         Div(
                             Row(Column('grazer_types_other')),
                             css_id='grazer_types_other_container',
+                            style='display:none;'
+                        ),
+                        css_id='grazing_fields',
                         style='display:none;'
-                    ),
-                    css_id='grazing_fields',
-                    style='display:none;'
-                )
+                    )
                 ),
                 css_class=''
             ),
@@ -527,11 +534,11 @@ class ManagementPracticesForm(ModelFormMixin):
 
 class TransectCodesForm(forms.Form):
     """Form for entering transect codes in Step 3"""
-    
+
     def __init__(self, *args, **kwargs):
         self.field_type = kwargs.pop('field_type', None)
         super().__init__(*args, **kwargs)
-        
+
         self.helper = FormHelper(self)
         self.helper.form_method = 'post'
         self.helper.form_action = '.'
@@ -539,7 +546,7 @@ class TransectCodesForm(forms.Form):
             *self.get_primary_layout(),
         )
         self.use_required_attribute = False
-    
+
     transect_code_1 = forms.CharField(
         max_length=20,
         required=False,
@@ -565,7 +572,7 @@ class TransectCodesForm(forms.Form):
         label='Transect Code 4',
         widget=forms.TextInput(attrs={'placeholder': 'Enter transect code'})
     )
-    
+
     # Hidden coordinate fields
     transect_1_latitude = forms.DecimalField(required=False, widget=forms.HiddenInput())
     transect_1_longitude = forms.DecimalField(required=False, widget=forms.HiddenInput())
@@ -575,10 +582,10 @@ class TransectCodesForm(forms.Form):
     transect_3_longitude = forms.DecimalField(required=False, widget=forms.HiddenInput())
     transect_4_latitude = forms.DecimalField(required=False, widget=forms.HiddenInput())
     transect_4_longitude = forms.DecimalField(required=False, widget=forms.HiddenInput())
-    
+
     def get_primary_layout(self):
         button_text = 'Next: Transect Measurements'
-            
+
         return [
             Fieldset(
                 'Transect Codes',
@@ -602,17 +609,17 @@ class TransectCodesForm(forms.Form):
                 Submit('submit', button_text, css_class='btn btn-primary')
             )
         ]
-    
+
     def clean(self):
         cleaned_data = super().clean()
         transect_codes = []
-        
+
         for i in range(1, 5):
             code = cleaned_data.get(f'transect_code_{i}', '').strip()
             if code:
                 try:
                     transect_obj = TransectCode.objects.get(transect_code=code, is_active=True)
-                    
+
                     if transect_obj.is_used:
                         self.add_error(
                             f'transect_code_{i}',
@@ -620,14 +627,14 @@ class TransectCodesForm(forms.Form):
                         )
                 except TransectCode.DoesNotExist:
                     self.add_error(f'transect_code_{i}', f'Transect code "{code}" is not valid.')
-                
+
                 if code in transect_codes:
                     self.add_error(f'transect_code_{i}', f'Duplicate transect code "{code}".')
                 transect_codes.append(code)
-        
+
         if not transect_codes:
             raise forms.ValidationError('At least one transect code is required.')
-        
+
         return cleaned_data
 
 
@@ -635,16 +642,16 @@ class GrazingEventForm(ModelFormMixin):
     class Meta:
         model = GrazingEvent
         fields = ['start_date']
-    
+
     required_fields = []
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['start_date'].widget = Html5DateInput()
         self.fields['start_date'].label = 'Start Date (estimate is acceptable)'
         self.fields['start_date'].required = False
         self.helper.form_tag = False
-    
+
     def get_primary_layout(self):
         return [
             Row(Column('start_date'))
@@ -653,29 +660,30 @@ class GrazingEventForm(ModelFormMixin):
 
 class GrazingEventAnimalForm(forms.ModelForm):
     """Form for individual animal entries within a grazing event"""
-    
+
     class Meta:
         model = GrazingEventAnimal
-        fields = ['class_of_animal', 'number_of_animals', 'average_weight_lbs', 
+        fields = ['class_of_animal', 'number_of_animals', 'average_weight_lbs',
                   'duration_days', 'rest_period_days']
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['duration_days'].label = 'Grazing days'
         for field in self.fields.values():
             field.required = False
             field.widget.attrs.update({'class': 'form-control form-control-sm'})
-    
+
     def clean(self):
         """Validate that if any field is filled, all required fields must be filled"""
         cleaned_data = super().clean()
-        
-        class_of_animal = cleaned_data.get('class_of_animal', '').strip() if cleaned_data.get('class_of_animal') else ''
+
+        class_of_animal = cleaned_data.get('class_of_animal',
+                                           '').strip() if cleaned_data.get('class_of_animal') else ''
         number_of_animals = cleaned_data.get('number_of_animals')
         average_weight_lbs = cleaned_data.get('average_weight_lbs')
         duration_days = cleaned_data.get('duration_days')
         rest_period_days = cleaned_data.get('rest_period_days')
-        
+
         has_any_value = any([
             class_of_animal,
             number_of_animals not in (None, ''),
@@ -683,23 +691,23 @@ class GrazingEventAnimalForm(forms.ModelForm):
             duration_days not in (None, ''),
             rest_period_days not in (None, '')
         ])
-        
+
         if not has_any_value:
             return cleaned_data
-        
-        required_fields = ['class_of_animal', 'number_of_animals', 'average_weight_lbs', 
-                         'duration_days', 'rest_period_days']
+
+        required_fields = ['class_of_animal', 'number_of_animals', 'average_weight_lbs',
+                           'duration_days', 'rest_period_days']
         missing_fields = []
         for field_name in required_fields:
             value = cleaned_data.get(field_name)
             if value in (None, '', []):
                 missing_fields.append(self.fields[field_name].label or field_name)
-        
+
         if missing_fields:
             raise forms.ValidationError(
                 f'If you fill in any field, all fields must be completed. Missing: {", ".join(missing_fields)}'
             )
-        
+
         return cleaned_data
 
 
@@ -714,11 +722,12 @@ GrazingEventAnimalFormSet = inlineformset_factory(
     validate_max=True
 )
 
+
 class TransectMeasurementGeneralForm(forms.ModelForm):
     class Meta:
         model = TransectMeasurement
         fields = ['general_time', 'temperature_c', 'wind_speed_ms', 'field_condition']
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['general_time'].required = True
@@ -731,7 +740,7 @@ class DropPlateReadingForm(forms.ModelForm):
     class Meta:
         model = DropPlateReading
         fields = ['distance_m', 'value']
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['value'].required = True
@@ -750,7 +759,7 @@ class VegetationReadingForm(forms.ModelForm):
     class Meta:
         model = VegetationReading
         fields = ['metric', 'position_m', 'value']
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['value'].required = True
@@ -769,7 +778,7 @@ class SoilReadingForm(forms.ModelForm):
     class Meta:
         model = SoilReading
         fields = ['metric', 'position_m', 'value']
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['value'].required = True
@@ -788,7 +797,7 @@ class SoilCompactionReadingForm(forms.ModelForm):
     class Meta:
         model = SoilCompactionReading
         fields = ['position_m', 'max_value', 'score', 'hp']
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['max_value'].required = True
@@ -809,7 +818,7 @@ class InfiltrometerReadingForm(forms.ModelForm):
     class Meta:
         model = InfiltrometerReading
         fields = ['time_mark', 'volume_ml']
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['volume_ml'].required = True
@@ -827,9 +836,9 @@ InfiltrometerFormSet = inlineformset_factory(
 class InfiltrationRingReadingForm(forms.ModelForm):
     class Meta:
         model = InfiltrationRingReading
-        fields = ['pour_number', 'start_depth_cm', 'infiltration_time_sec', 
+        fields = ['pour_number', 'start_depth_cm', 'infiltration_time_sec',
                   'depth_after_15min_cm', 'change_in_depth_cm']
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['start_depth_cm'].required = True

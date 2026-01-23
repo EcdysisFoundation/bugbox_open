@@ -1,22 +1,25 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required, permission_required
-from django.contrib import messages
-from django.core.paginator import Paginator
-from django.core.files.storage import default_storage
-from django.core.files.base import ContentFile
-from django.http import HttpResponse, Http404
 import csv
 import io
 import json
+
 import pandas as pd
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required, permission_required
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
+from django.core.paginator import Paginator
+from django.http import Http404, HttpResponse
+from django.shortcuts import get_object_or_404, redirect, render
 
 from bugbox3.core.permissions import IS_GROWERADMIN
-from ...models import CSVImportLog, CSVImportFieldValue, TransectCode
+
+from ...constants import CSV_IMPORT_SCHEMAS
 from ...forms.admin.forms import CSVUploadForm
 from ...middleware import get_user_timezone
-from ...constants import CSV_IMPORT_SCHEMAS
+from ...models import CSVImportFieldValue, CSVImportLog, TransectCode
 
 TRANSECT_CODE_COLUMN_PREFIX = 'Sample ID'
+
 
 def _get_transect_codes(row):
     transect_codes = set()
@@ -25,6 +28,7 @@ def _get_transect_codes(row):
             transect_codes.add(value)
     return list(transect_codes)
 
+
 def _add_to_error_log(error_log, row_number, row, message):
     """Helper function to log errors with consistent formatting."""
     error_log.append({
@@ -32,6 +36,7 @@ def _add_to_error_log(error_log, row_number, row, message):
         "row_data": row,
         "error": message
     })
+
 
 def _validate_transect_code(row_number, row, error_log):
     """
@@ -65,6 +70,7 @@ def _validate_transect_code(row_number, row, error_log):
         return None
 
     return transect_code_object
+
 
 def _process_csv_file(csv_import_log, csv_file):
     csv_file.seek(0)
@@ -109,6 +115,7 @@ def _process_csv_file(csv_import_log, csv_file):
 
     return successful_count + failed_count, successful_count, failed_count, error_log
 
+
 @login_required
 @permission_required(IS_GROWERADMIN, raise_exception=True)
 def csv_upload(request):
@@ -117,7 +124,7 @@ def csv_upload(request):
         if form.is_valid():
             csv_file = form.cleaned_data['csv_file']
             description = form.cleaned_data.get('description', '')
-            
+
             file_path = f'csv_imports/{csv_file.name}'
             csv_file.seek(0)
             saved_path = default_storage.save(file_path, ContentFile(csv_file.read()))
@@ -150,19 +157,22 @@ def csv_upload(request):
             else:
                 messages.error(
                     request,
-                    f'CSV file "{csv_file.name}" contains errors. File has been saved but not processed. Please correct the errors and try again. Import log ID: {csv_import_log.id}'
-                )
-            
+                    f'CSV file "{csv_file.name}" contains errors. '
+                    'File has been saved but not processed. '
+                    'Please correct the errors and try again. '
+                    f'Import log ID: {
+                        csv_import_log.id}')
+
             return redirect('grower_portal:admin_csv_import_detail', import_id=csv_import_log.id)
     else:
         form = CSVUploadForm()
-    
+
     context = {
         'form': form,
         'user_timezone': get_user_timezone(request),
         'csv_import_schemas': CSV_IMPORT_SCHEMAS,
     }
-    
+
     return render(request, 'grower_portal/admin/csv_upload.html', context)
 
 
@@ -170,16 +180,16 @@ def csv_upload(request):
 @permission_required(IS_GROWERADMIN, raise_exception=True)
 def csv_import_list(request):
     imports_queryset = CSVImportLog.objects.select_related('imported_by').order_by('-import_date')
-    
+
     paginator = Paginator(imports_queryset, 20)
     page_number = request.GET.get('page')
     imports = paginator.get_page(page_number)
-    
+
     context = {
         'imports': imports,
         'user_timezone': get_user_timezone(request)
     }
-    
+
     return render(request, 'grower_portal/admin/csv_import_list.html', context)
 
 
@@ -206,7 +216,7 @@ def csv_import_detail(request, import_id):
         'pretty_error_log': pretty_error_log,
         'user_timezone': get_user_timezone(request)
     }
-    
+
     return render(request, 'grower_portal/admin/csv_import_detail.html', context)
 
 

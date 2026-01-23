@@ -1,8 +1,17 @@
-from django.contrib.gis.db.models import (CASCADE, BigIntegerField, CharField,
-                                          DateTimeField, FileField, ForeignKey,
-                                          JSONField, Manager, Model,
-                                          MultiPolygonField, PositiveIntegerField,
-                                          SlugField)
+from django.contrib.gis.db.models import (
+    CASCADE,
+    BigIntegerField,
+    CharField,
+    DateTimeField,
+    FileField,
+    ForeignKey,
+    JSONField,
+    Manager,
+    Model,
+    MultiPolygonField,
+    PositiveIntegerField,
+    SlugField,
+)
 from django.db.models.fields import BLANK_CHOICE_DASH
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver

@@ -1,6 +1,6 @@
 from django.contrib.admin import ModelAdmin, site
 
-from .models import PublicSiteContent, PrivateSiteContent
+from .models import PrivateSiteContent, PublicSiteContent
 
 
 class PublicSiteContentAdmin(ModelAdmin):

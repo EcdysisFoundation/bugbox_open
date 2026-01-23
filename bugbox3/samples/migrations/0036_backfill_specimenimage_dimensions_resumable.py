@@ -1,7 +1,6 @@
 from django.db import migrations
 from django.core.files.storage import default_storage
 from django.core.files.images import get_image_dimensions
-from django.conf import settings
 
 
 def backfill_image_dimensions_resumable(apps, schema_editor):

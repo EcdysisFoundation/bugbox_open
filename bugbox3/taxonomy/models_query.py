@@ -10,7 +10,7 @@ def get_taxon_entries(org_id, col, public_image=False):
     col = 'classification__' + col
     v = Specimen.objects.filter(
         sample__site_visit__site__experiment__organization_id=org_id
-        )
+    )
     if public_image:
         v = v.filter(specimenimage__public_image=True)
     v = v.exclude(acceptance=0).values(col).annotate(count=Count(col)).order_by()

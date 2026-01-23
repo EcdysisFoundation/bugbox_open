@@ -1,5 +1,5 @@
-from django.apps import apps
 from django.core.management.base import BaseCommand
+
 from bugbox3.core.utils import create_default_lookup_choices
 
 

@@ -1,14 +1,14 @@
-from django import forms
-from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError
-from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Submit, Div, Row, Column, Field
 import csv
 import io
 
-from bugbox3.core.forms import ModelFormMixin
-from ...models import TransectCode, CSVImportLog, GrowerApplication, GrowerProfile, Farm, Field
-from ...constants import FIELD_TYPE_CHOICES, CSV_IMPORT_SCHEMAS
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Column, Layout, Row, Submit
+from django import forms
+from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
+
+from ...constants import CSV_IMPORT_SCHEMAS, FIELD_TYPE_CHOICES
+from ...models import Farm
 
 User = get_user_model()
 
@@ -24,7 +24,10 @@ class TransectCodeGenerationForm(forms.Form):
         max_length=20,
         required=False,
         label='Code Prefix (Optional)',
-        help_text='Optional prefix (e.g., "PLOT-A" → PLOT-A-00001). Numeric codes only, 5-digit minimum, auto-scales to 6+ digits.'
+        help_text=(
+            'Optional prefix (e.g., "PLOT-A" → PLOT-A-00001). '
+            'Numeric codes only, 5-digit minimum, auto-scales to 6+ digits.'
+        )
     )
 
     def __init__(self, *args, **kwargs):
@@ -129,7 +132,7 @@ class CSVUploadForm(forms.Form):
 
             except csv.Error as e:
                 raise ValidationError(f'Error reading CSV file: {str(e)}')
-            except UnicodeDecodeError as _e:
+            except UnicodeDecodeError:
                 raise ValidationError(
                     'CSV file encoding error. Please ensure the file is UTF-8 encoded.'
                 )

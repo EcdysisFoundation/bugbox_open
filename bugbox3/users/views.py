@@ -4,8 +4,7 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
-from django.views.generic import (DetailView, FormView, RedirectView,
-                                  TemplateView, UpdateView)
+from django.views.generic import DetailView, FormView, RedirectView, TemplateView, UpdateView
 
 from .forms import EulaForm
 from .models import Eula
@@ -70,7 +69,7 @@ class EulaView(LoginRequiredMixin, FormView):
         Redirect growers to profile completion or dashboard after EULA acceptance.
         """
         user = self.request.user
-        
+
         # Check if user is a member of is_grower group
         if user.groups.filter(name='is_grower').exists():
             try:
@@ -79,10 +78,10 @@ class EulaView(LoginRequiredMixin, FormView):
                     return reverse('grower_portal:dashboard')
                 else:
                     return reverse('grower_portal:profile_complete')
-            except:
+            except BaseException:
                 # If no grower profile exists, redirect to profile completion
                 return reverse('grower_portal:profile_complete')
-        
+
         # For regular users, use default redirect
         return self.success_url
 

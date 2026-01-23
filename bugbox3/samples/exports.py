@@ -7,11 +7,11 @@ from tempfile import SpooledTemporaryFile
 import pandas as pd
 from django.conf import settings
 from django.contrib.auth.decorators import permission_required
-from django.urls import reverse
 from django.core.files import File
 from django.db.models import Case, CharField, F, Func, Value, When
 from django.http import Http404, HttpResponse
 from django.shortcuts import redirect
+from django.urls import reverse
 
 from ..core.models import Exports
 from ..core.permissions import IS_RESEARCH
@@ -61,28 +61,28 @@ def experiment_ai_csv(request, id):
         Case(When(classification=F(constants.FIELD_SPECIMEN_AI_CLASSIFICATION), then=1),
              default=0, output_field=CharField()),
         Case(
-             When(classification=F(constants.FIELD_SPECIMEN_AI_CLASSIFICATION), then=1),
-             When(
-                 **{constants.FIELD_SPECIMEN_OPTIONAL_PRED_ONE + '__isnull': False},
-                 classification__name=Func(
-                     F(constants.FIELD_SPECIMEN_OPTIONAL_PRED_ONE),
-                     Value('class_op'),
-                     function='jsonb_extract_path_text',
-                     output_field=CharField()
-                 ),
-                 then=1
-             ),
-             When(
-                 **{constants.FIELD_SPECIMEN_OPTIONAL_PRED_TWO + '__isnull': False},
-                 classification__name=Func(
-                     F(constants.FIELD_SPECIMEN_OPTIONAL_PRED_TWO),
-                     Value('class_op'),
-                     function='jsonb_extract_path_text',
-                     output_field=CharField()
-                 ),
-                 then=1
-             ),
-             default=0, output_field=CharField())
+            When(classification=F(constants.FIELD_SPECIMEN_AI_CLASSIFICATION), then=1),
+            When(
+                **{constants.FIELD_SPECIMEN_OPTIONAL_PRED_ONE + '__isnull': False},
+                classification__name=Func(
+                    F(constants.FIELD_SPECIMEN_OPTIONAL_PRED_ONE),
+                    Value('class_op'),
+                    function='jsonb_extract_path_text',
+                    output_field=CharField()
+                ),
+                then=1
+            ),
+            When(
+                **{constants.FIELD_SPECIMEN_OPTIONAL_PRED_TWO + '__isnull': False},
+                classification__name=Func(
+                    F(constants.FIELD_SPECIMEN_OPTIONAL_PRED_TWO),
+                    Value('class_op'),
+                    function='jsonb_extract_path_text',
+                    output_field=CharField()
+                ),
+                then=1
+            ),
+            default=0, output_field=CharField())
     )
     timestr = time.strftime("%Y%m%d-%H%M%S")
     response = HttpResponse(content_type='text/csv')
@@ -90,12 +90,15 @@ def experiment_ai_csv(request, id):
         experiment.abbreviation, timestr)
     raw_values = list(specimens)
 
-    specimens_objs = Specimen.objects.user_access(request.user).filter(
+    specimens_objs = Specimen.objects.user_access(
+        request.user).filter(
         sample__site_visit__site__experiment_id__in=all_exp,
-        sample__sample_type__in=sample_types
-    ).exclude(
-        acceptance=constants.ACCEPTANCE_PENDING
-    ).select_related('sample__site_visit__site__experiment', 'sample__site_visit__site', 'sample__site_visit', 'classification')
+        sample__sample_type__in=sample_types).exclude(
+            acceptance=constants.ACCEPTANCE_PENDING).select_related(
+                'sample__site_visit__site__experiment',
+                'sample__site_visit__site',
+                'sample__site_visit',
+        'classification')
 
     if not other_experiments:
         specimens_objs = specimens_objs.filter(sample__site_visit__site__in=sites)
@@ -105,8 +108,13 @@ def experiment_ai_csv(request, id):
     rows = []
     for i, s in enumerate(specimens_objs):
         link = request.build_absolute_uri(reverse('samples:specimen', args=[s.id]))
-        site_name = s.sample.site_visit.site.site_name if s.sample and s.sample.site_visit and s.sample.site_visit.site else ''
-        visit_date = s.sample.site_visit.visit_date.strftime('%Y-%m-%d') if s.sample and s.sample.site_visit and s.sample.site_visit.visit_date else ''
+        site_name = (
+            s.sample.site_visit.site.site_name
+            if s.sample and s.sample.site_visit and s.sample.site_visit.site
+            else ''
+        )
+        visit_date = s.sample.site_visit.visit_date.strftime(
+            '%Y-%m-%d') if s.sample and s.sample.site_visit and s.sample.site_visit.visit_date else ''
         sample_type = s.sample.sample_type
         sample_name = f'{s.sample.name_no}' if s.sample and s.sample.name_no else ''
         row = list(raw_values[i])
@@ -230,11 +238,11 @@ def get_immature_status(row, classification_field):
 
 def get_public_description(df):
     return {
-            'image_count': len(df),
-            'specimen_count': df['specimen_id'].nunique(),
-            'order_count': df[constants_tax.FIELD_MORPHO_GBIF_ORDER].nunique(),
-            'family_count': df[constants_tax.FIELD_MORPHO_GBIF_FAMILY].nunique(),
-        }
+        'image_count': len(df),
+        'specimen_count': df['specimen_id'].nunique(),
+        'order_count': df[constants_tax.FIELD_MORPHO_GBIF_ORDER].nunique(),
+        'family_count': df[constants_tax.FIELD_MORPHO_GBIF_FAMILY].nunique(),
+    }
 
 
 def public_reviewed_img_export(org_id):
@@ -306,7 +314,7 @@ def public_all_img_export(org_id):
         specimen__ai_classification_id__isnull=False,
         specimen__acceptance=0,
         public_image=True
-        ).values(*headers['query_fields'])
+    ).values(*headers['query_fields'])
     df2 = pd.DataFrame.from_records(data)
     df2['immature_stage'] = df2.apply(
         get_immature_status, classification_field=constants.FIELD_SPECIMEN_AI_CLASSIFICATION, axis=1)

@@ -9,13 +9,15 @@ from ..taxonomy import constants as constants_tax
 from ..taxonomy.models_query import get_taxon_entries
 from . import constants
 from .models import Experiment, MultiSpecimenImage, Sample, Site, Specimen
-from .serializers import (CollectionDatatablesSerializer,
-                          ExperimentsDatatablesSerializer,
-                          MultiSpecimenImageDatatablesSerializer,
-                          SamplesDatatablesSerializer,
-                          SitesDatatablesSerializer,
-                          SpecimenDatatablesSerializer,
-                          SpecimensAllDatatablesSerializer)
+from .serializers import (
+    CollectionDatatablesSerializer,
+    ExperimentsDatatablesSerializer,
+    MultiSpecimenImageDatatablesSerializer,
+    SamplesDatatablesSerializer,
+    SitesDatatablesSerializer,
+    SpecimenDatatablesSerializer,
+    SpecimensAllDatatablesSerializer,
+)
 from .views_public import PUBLIC_COLLECTIONS
 
 
@@ -32,7 +34,7 @@ class ExperimentsDatatablesViewSet(PermissionRequiredMixin, DatatablesModelViewS
             organization_id=org_id).order_by(constants.FIELD_NAME)
 
 
-class MultiSpecimenDatatablesViewSet(PermissionRequiredMixin,  DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
+class MultiSpecimenDatatablesViewSet(PermissionRequiredMixin, DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
 
     permission_required = IS_RESEARCH
 
@@ -68,11 +70,11 @@ class SitesDatatablesViewSet(PermissionRequiredMixin, DatatablesModelViewSetMixi
 
     serializer_class = SitesDatatablesSerializer
     search_vector = [
-            constants.FIELD_SITE_SITE_NAME,
-            constants.FIELD_SITE_STATE_REGION,
-            constants.FIELD_SITE_HABITAT_TYPE,
-            constants.FIELD_SITE_TREATMENT
-        ]
+        constants.FIELD_SITE_SITE_NAME,
+        constants.FIELD_SITE_STATE_REGION,
+        constants.FIELD_SITE_HABITAT_TYPE,
+        constants.FIELD_SITE_TREATMENT
+    ]
 
     def get_queryset(self):
         experiment_id = int(self.kwargs['experiment_id'])

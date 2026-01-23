@@ -1,10 +1,17 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from .views import (MophospeciesView, MorphospeciesCreateView,
-                    MorphospeciesDatatablesViewSet, MorphospeciesDetailView,
-                    MorphospeciesPickerViewSet, MorphospeciesUpdateView,
-                    classify_sample, classify_specimen, morphospecies_csv)
+from .views import (
+    MophospeciesView,
+    MorphospeciesCreateView,
+    MorphospeciesDatatablesViewSet,
+    MorphospeciesDetailView,
+    MorphospeciesPickerViewSet,
+    MorphospeciesUpdateView,
+    classify_sample,
+    classify_specimen,
+    morphospecies_csv,
+)
 
 router = DefaultRouter()
 router.register(r'morphospecies-data', MorphospeciesDatatablesViewSet,

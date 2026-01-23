@@ -252,9 +252,9 @@ def get_specimen_context(specimen):
         specimen.sample.site_visit.site.experiment.name
     )
     s = '<a href="{0}" target="_blank">{1}</a>'.format(
-         reverse('samples:sample', kwargs={
-                 'sample_id': specimen.sample.id}),
-         get_sample_discription(specimen.sample)
+        reverse('samples:sample', kwargs={
+            'sample_id': specimen.sample.id}),
+        get_sample_discription(specimen.sample)
     )
     return '{0}<br/>{1}<br/>{2}'.format(
         e, specimen.sample.site_visit.visit_date.strftime("%d-%b-%Y"), s

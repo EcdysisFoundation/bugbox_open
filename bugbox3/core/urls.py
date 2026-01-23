@@ -1,10 +1,15 @@
 from django.urls import path
 
 from ..users.views import EulaReadView, EulaView
-from .views import (LookupChoicesCreateView, LookupChoicesDeleteView,
-                    LookupChoicesUpdateView, LookupChoicesView,
-                    OrgMemberDeleteView, OrgMembersView)
-from .stitcher_views import StitcherUpdateView, StitcherView, StitcherDeleteView
+from .stitcher_views import StitcherDeleteView, StitcherUpdateView, StitcherView
+from .views import (
+    LookupChoicesCreateView,
+    LookupChoicesDeleteView,
+    LookupChoicesUpdateView,
+    LookupChoicesView,
+    OrgMemberDeleteView,
+    OrgMembersView,
+)
 
 app_name = "core"
 urlpatterns = [

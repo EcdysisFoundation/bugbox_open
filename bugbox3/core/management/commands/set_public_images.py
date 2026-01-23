@@ -22,10 +22,10 @@ class Command(BaseCommand):
                    constants.SPECIMEN_IMAGE_IMAGE_THUMBNAIL_LARGE)
 
     s3_client = boto3.client(
-            's3',
-            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-        )
+        's3',
+        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+    )
 
     def add_arguments(self, parser):
         parser.add_argument('--limit', type=int, help='Number of recs to send.')
@@ -75,7 +75,7 @@ class Command(BaseCommand):
             public_image=False,
             specimen__classification__isnull=False).exclude(
                 specimen__acceptance=0
-            )[:limit]
+        )[:limit]
 
         if not specimen_images:
             print('No reviewed images found to make public.')

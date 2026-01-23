@@ -1,27 +1,37 @@
-from django.core.files.storage import default_storage
-from django.http import Http404
-from django.urls import reverse
-from django.shortcuts import get_object_or_404, redirect
 from django.contrib import messages
-from django.views.generic import TemplateView, CreateView, UpdateView, FormView
+from django.core.files.storage import default_storage
 from django.forms import inlineformset_factory
+from django.http import Http404
+from django.shortcuts import redirect
+from django.urls import reverse
+from django.views.generic import CreateView, FormView, TemplateView, UpdateView
+from organizations.models import Organization
 from rest_framework.reverse import reverse as api_reverse
 
+from bugbox3.samples.utils import resolve_entered_by
+
+from ..core.models import LookupChoices
 from ..libs.ui_helpers import (
-    get_datatables_container, get_datatables_row, get_formsets_display_control_config,
-    get_probability, calc_image_height
+    calc_image_height,
+    get_datatables_container,
+    get_datatables_row,
+    get_formsets_display_control_config,
+    get_probability,
 )
 from ..libs.utilities import get_json_context, get_media_url
-from .models import Experiment, Site, SiteVisit, Sample, Specimen, SpecimenImage, SamplePlan
-from .models_query import get_sample_plan_descriptions
-from .forms import ExperimentForm, SiteForm, SiteVisitForm, SamplePlanForm, SampleForm, SpecimenForm, SpecimensWithoutImagesForm
 from ..taxonomy import constants as taxa_const
-from ..taxonomy.models import Morphospecies
-from organizations.models import Organization
-from ..core.models import LookupChoices
-from bugbox3.samples.utils import resolve_entered_by
 from . import constants
-
+from .forms import (
+    ExperimentForm,
+    SampleForm,
+    SamplePlanForm,
+    SiteForm,
+    SiteVisitForm,
+    SpecimenForm,
+    SpecimensWithoutImagesForm,
+)
+from .models import Experiment, Sample, SamplePlan, Site, SiteVisit, Specimen, SpecimenImage
+from .models_query import get_sample_plan_descriptions
 
 DEMO_ORG_NAME = "Bugbox Demo Organization"
 DEMO_ORG_SLUG = "bugbox-demo-organization"
@@ -29,6 +39,7 @@ DEMO_ORG_SLUG = "bugbox-demo-organization"
 
 class DemoAccessMixin:
     """Mixin for demo views. available to all users (authenticated and unauthenticated)."""
+
     def dispatch(self, request, *args, **kwargs):
         return super().dispatch(request, *args, **kwargs)
 
@@ -48,7 +59,7 @@ class DemoExperimentsView(DemoAccessMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         demo_org = get_demo_organization()
-        
+
         experiments_datatables_url = api_reverse(
             'samples:demo-experiment-data-list',
             request=self.request
@@ -80,7 +91,7 @@ class DemoExperimentView(DemoAccessMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         demo_org = get_demo_organization()
-        
+
         try:
             experiment = Experiment.objects.filter(
                 organization=demo_org
@@ -92,7 +103,7 @@ class DemoExperimentView(DemoAccessMixin, TemplateView):
             years = str(experiment.from_year)
         else:
             years = str(experiment.from_year) + ' - ' + str(experiment.to_year)
-        
+
         description = [v['description'] for v in get_sample_plan_descriptions(experiment.id)]
         sites_datatables_url = api_reverse(
             'samples:demo-site-data-list',
@@ -103,43 +114,65 @@ class DemoExperimentView(DemoAccessMixin, TemplateView):
             experiment_id=experiment.id
         ).order_by(constants.FIELD_SITE_SITE_NAME)
 
-        context.update({
-            'experiment': experiment,
-            'experiment_sites': experiment_sites,
-            'other_experiments': Experiment.objects.filter(organization=demo_org).exclude(
-                id=experiment.id).order_by(constants.FIELD_ABBREVIATION),
-            'sample_types': LookupChoices.objects.get_field_choices_w_blank(
-                experiment.organization_id, constants.FIELD_SAMPLE_TYPE),
-            'indices': constants.INDICES_CHOICES,
-            'indices_descriptions': constants.INDICES_DESCRIPTIONS,
-            'default_indices': constants.INDICES_ALWAYS_INCLUDED,
-            'export_types': constants.EXPERIMENT_CSV_EXPORT_CHOICES,
-            'years': years,
-            'sample_plan_descriptions': description,
-            'review_permission': False,
-            'skip_morphospecies': '',
-            'excluded_from_indices': {'exclude_from_export': [], 'immature': [], 'skipped': [], 'total_count': 0},
-            'container_row_header': get_datatables_container(
-                get_datatables_row([
-                    'Site Name',
-                    'State Region',
-                    'County Region',
-                    'Habitat',
-                    'Treatment'
-                ])),
-            'json_context': get_json_context({
-                'sites_datatables_url': sites_datatables_url,
-                'experiment': {'id': experiment.id},
+        context.update(
+            {
+                'experiment': experiment,
+                'experiment_sites': experiment_sites,
+                'other_experiments': Experiment.objects.filter(
+                    organization=demo_org).exclude(
+                    id=experiment.id).order_by(
+                    constants.FIELD_ABBREVIATION),
+                'sample_types': LookupChoices.objects.get_field_choices_w_blank(
+                    experiment.organization_id,
+                    constants.FIELD_SAMPLE_TYPE),
+                'indices': constants.INDICES_CHOICES,
+                'indices_descriptions': constants.INDICES_DESCRIPTIONS,
+                'default_indices': constants.INDICES_ALWAYS_INCLUDED,
+                'export_types': constants.EXPERIMENT_CSV_EXPORT_CHOICES,
+                'years': years,
+                'sample_plan_descriptions': description,
+                'review_permission': False,
+                'skip_morphospecies': '',
+                'excluded_from_indices': {
+                    'exclude_from_export': [],
+                    'immature': [],
+                    'skipped': [],
+                    'total_count': 0},
+                'container_row_header': get_datatables_container(
+                    get_datatables_row(
+                        [
+                            'Site Name',
+                            'State Region',
+                            'County Region',
+                            'Habitat',
+                            'Treatment'])),
+                'json_context': get_json_context(
+                    {
+                        'sites_datatables_url': sites_datatables_url,
+                        'experiment': {
+                            'id': experiment.id},
+                        'last_location_exported_file_status': None,
+                    }),
+                'all_habitats': Site.objects.filter(
+                    experiment_id=experiment.id).exclude(
+                    habitat_type='').order_by('habitat_type').values_list(
+                    'habitat_type',
+                    flat=True).distinct(),
+                'all_countries': Site.objects.filter(
+                    experiment_id=experiment.id).exclude(
+                    country='').order_by('country').values_list(
+                    'country',
+                    flat=True).distinct(),
+                'all_states': Site.objects.filter(
+                    experiment_id=experiment.id).exclude(
+                    state_region='').order_by('state_region').values_list(
+                    'state_region',
+                    flat=True).distinct(),
+                'last_exported_file': None,
+                'last_exported_file_status': None,
+                'last_location_exported_file': None,
                 'last_location_exported_file_status': None,
-            }),
-            'all_habitats': Site.objects.filter(experiment_id=experiment.id).exclude(habitat_type='').order_by('habitat_type').values_list('habitat_type', flat=True).distinct(),
-            'all_countries': Site.objects.filter(experiment_id=experiment.id).exclude(country='').order_by('country').values_list('country', flat=True).distinct(),
-            'all_states': Site.objects.filter(experiment_id=experiment.id).exclude(state_region='').order_by('state_region').values_list('state_region', flat=True).distinct(),
-            'last_exported_file': None,
-            'last_exported_file_status': None,
-            'last_location_exported_file': None,
-            'last_location_exported_file_status': None,
-        })
+            })
         return context
 
 
@@ -149,7 +182,7 @@ class DemoSiteView(DemoAccessMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         demo_org = get_demo_organization()
-        
+
         try:
             site = Site.objects.filter(
                 experiment__organization=demo_org
@@ -158,12 +191,14 @@ class DemoSiteView(DemoAccessMixin, TemplateView):
             raise Http404
 
         form = SiteForm(instance=site, org_id=site.experiment.organization_id)
-        
+
         visits = SiteVisit.objects.filter(site=site).order_by('-visit_date')
         site_visit_count = visits.count() if visits.exists() else 1
 
-        all_samples = Sample.objects.filter(site_visit__site=site).select_related('site_visit').order_by('site_visit__visit_date', 'name_no')
-        
+        all_samples = Sample.objects.filter(
+            site_visit__site=site).select_related('site_visit').order_by(
+            'site_visit__visit_date', 'name_no')
+
         visits_with_samples = []
         for visit in visits:
             visit_samples = [s for s in all_samples if s.site_visit.id == visit.id]
@@ -200,13 +235,20 @@ class DemoSampleView(DemoAccessMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         demo_org = get_demo_organization()
-        
+
         try:
             sample = Sample.objects.filter(
                 site_visit__site__experiment__organization=demo_org
             ).get(id=kwargs['sample_id'])
         except Sample.DoesNotExist:
-            raise Http404(f"Sample {kwargs['sample_id']} not found in demo organization. Available demo samples: {list(Sample.objects.filter(site_visit__site__experiment__organization=demo_org).values_list('id', flat=True))}")
+            raise Http404(
+                f"Sample {
+                    kwargs['sample_id']} not found in demo organization. Available demo samples: {
+                    list(
+                        Sample.objects.filter(
+                            site_visit__site__experiment__organization=demo_org).values_list(
+                            'id',
+                            flat=True))}")
 
         specimens_datatables_url = api_reverse(
             'samples:demo-specimen-data-list',
@@ -231,10 +273,15 @@ class DemoSampleView(DemoAccessMixin, TemplateView):
                     'width': constants.SAMPLE_IMAGE_THUMBSIZE
                 }
 
-        sample_type = LookupChoices.objects.get_field_dict_w_blank(
-            sample.site_visit.site.experiment.organization_id, constants.FIELD_SAMPLE_TYPE).get(
-            sample.sample_type, sample.sample_type) if sample.sample_type in LookupChoices.objects.get_field_dict_w_blank(
-            sample.site_visit.site.experiment.organization_id, constants.FIELD_SAMPLE_TYPE).keys() else sample.sample_type
+        lookup_dict = LookupChoices.objects.get_field_dict_w_blank(
+            sample.site_visit.site.experiment.organization_id,
+            constants.FIELD_SAMPLE_TYPE
+        )
+        sample_type = (
+            lookup_dict.get(sample.sample_type, sample.sample_type)
+            if sample.sample_type in lookup_dict.keys()
+            else sample.sample_type
+        )
 
         has_data = sample.specimen_set.exists() or (sample.image and default_storage.exists(sample.image.name))
         entered_by = resolve_entered_by(sample)
@@ -292,7 +339,7 @@ class DemoSpecimenView(DemoAccessMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         demo_org = get_demo_organization()
-        
+
         try:
             specimen = Specimen.objects.filter(
                 sample__site_visit__site__experiment__organization=demo_org
@@ -304,12 +351,12 @@ class DemoSpecimenView(DemoAccessMixin, TemplateView):
             specimen=specimen,
             public_image=True
         ).order_by('-primary_image', 'date_added')
-        
+
         if s_images:
             if len(s_images) > 1:
                 image_set_large = [
                     {'path': get_media_url(
-                        i.image_thumbnail_large, i.public_image), 'id': i.id} 
+                        i.image_thumbnail_large, i.public_image), 'id': i.id}
                     for i in s_images if i.image_thumbnail_large
                 ]
                 if not image_set_large:
@@ -365,7 +412,7 @@ class DemoSpecimenView(DemoAccessMixin, TemplateView):
             class MockAI:
                 name = None
             ai_classification = MockAI()
-        
+
         context.update({
             'specimen': specimen,
             'selected_classification': selected_classification,
@@ -444,7 +491,7 @@ class DemoSiteCreateView(DemoAccessMixin, CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         demo_org = get_demo_organization()
-        
+
         try:
             experiment = Experiment.objects.filter(
                 organization=demo_org
@@ -504,7 +551,10 @@ class DemoSampleUpdateView(DemoAccessMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['form_action_url'] = reverse('samples:demo-sample-update', kwargs={'sample_id': self.kwargs['sample_id']})
+        context['form_action_url'] = reverse(
+            'samples:demo-sample-update',
+            kwargs={
+                'sample_id': self.kwargs['sample_id']})
         return context
 
     def form_valid(self, form):
@@ -527,7 +577,7 @@ class DemoSpecimenCreateView(DemoAccessMixin, CreateView):
         kwargs = super().get_form_kwargs()
         demo_org = get_demo_organization()
         try:
-            sample = Sample.objects.filter(
+            Sample.objects.filter(
                 site_visit__site__experiment__organization=demo_org
             ).get(id=self.kwargs['sample_id'])
         except Sample.DoesNotExist:
@@ -644,10 +694,8 @@ class DemoSpecimensWithoutImagesFormView(DemoAccessMixin, FormView):
                 if form.cleaned_data[name]:
                     entered_names.append(name)
         if entered_names:
-            messages.info(
-                self.request,
-                f'This is a demo. No data is saved. In a real account, counts for {", ".join(entered_names)} would be created successfully.'
-            )
+            messages.info(self.request, f'This is a demo. No data is saved. In a real account, counts for {
+                ", ".join(entered_names)} would be created successfully.')
         else:
             messages.info(
                 self.request,

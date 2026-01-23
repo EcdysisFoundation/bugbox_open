@@ -6,6 +6,7 @@ from django.contrib.auth.models import Group, Permission
 from django.core.exceptions import ValidationError
 from django.forms import BooleanField, CharField, Form
 from django.utils.translation import gettext_lazy as _
+
 from bugbox3.core.permissions import IS_GROWER_USER
 
 User = get_user_model()
@@ -37,16 +38,16 @@ class UserSignupForm(SignupForm):
     """
     name = CharField(max_length=255, label='Name of User')
     is_grower = BooleanField(required=False, label='Sign up as Grower')
-    
+
     def save(self, request):
         user = super().save(request)
         user.name = self.cleaned_data["name"]
         user.save()
-        
+
         # Add user to is_grower group if checkbox is checked
         if self.cleaned_data.get("is_grower"):
             grower_group, created = Group.objects.get_or_create(name='is_grower')
-            
+
             if not grower_group.permissions.exists():
                 permissions_to_add = []
                 for perm_string in IS_GROWER_USER:
@@ -59,12 +60,12 @@ class UserSignupForm(SignupForm):
                         permissions_to_add.append(perm)
                     except Permission.DoesNotExist:
                         pass
-                
+
                 if permissions_to_add:
                     grower_group.permissions.set(permissions_to_add)
-            
+
             user.groups.add(grower_group)
-        
+
         return user
 
 

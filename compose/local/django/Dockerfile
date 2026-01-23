@@ -58,6 +58,17 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   binutils \
   libproj-dev \
   gdal-bin \
+  # OpenCV dependencies
+  libxcb1 \
+  libxcb-xinerama0 \
+  libx11-xcb1 \
+  libxkbcommon-x11-0 \
+  libxcb-render0 \
+  libxcb-shm0 \
+  libsm6 \
+  libxrender1 \
+  libxext6 \
+  libglib2.0-0 \
   # Add PostgreSQL APT repository key
   && wget -qO - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
   # Add PostgreSQL APT source for latest client

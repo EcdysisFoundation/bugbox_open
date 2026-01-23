@@ -1,15 +1,15 @@
-from bugbox3.core.models import LookupChoices
 from bugbox3.core.constants import (
-    DEFAULT_TAG_CHOICES,
     DEFAULT_SITE_HABITAT_TYPE_CHOICES,
-    DEFAULT_SITE_TREATMENT_CHOICES
+    DEFAULT_SITE_TREATMENT_CHOICES,
+    DEFAULT_TAG_CHOICES,
 )
+from bugbox3.core.models import LookupChoices
 from bugbox3.samples.constants import (
-    SAMPLE_TYPE_CHOICES,
-    FIELD_SPECIMEN_TAGS,
     FIELD_SAMPLE_TYPE,
+    FIELD_SITE_HABITAT_TYPE,
     FIELD_SITE_TREATMENT,
-    FIELD_SITE_HABITAT_TYPE
+    FIELD_SPECIMEN_TAGS,
+    SAMPLE_TYPE_CHOICES,
 )
 
 
@@ -20,7 +20,7 @@ def create_default_lookup_choices(org_id):
     recs = LookupChoices.objects.filter(organization_id=org_id)
     if recs:
         warning_message = f'Org id {org_id} already has {len(recs)} entries in choices. ' \
-                           'Delete those to be able to use this command'
+            'Delete those to be able to use this command'
         return warning_message
 
     # the field_options given as (field, ((entry, display_txt),)

@@ -81,7 +81,7 @@ PHONE_MAX_LENGTH = 20
 FARM_NAME_MAX_LENGTH = 200
 FIELD_NAME_MAX_LENGTH = 200
 CROP_VARIETY_MAX_LENGTH = 200
-CROP_VARIETIES_MAX_LENGTH = 500 
+CROP_VARIETIES_MAX_LENGTH = 500
 MAX_ANIMAL_ENTRIES_PER_GRAZING_EVENT = 10
 FORAGE_VARIETIES_MAX_LENGTH = 500
 PADDOCK_SIZE_MAX_LENGTH = 100
@@ -175,7 +175,12 @@ GROUND_COVER_MANAGEMENT_CHOICES = [
 ]
 
 # Form Help Text Constants
-CLASS_OF_ANIMAL_EXAMPLES = 'Examples: Cow/calf pair, yearling cattle (7-12 months), yearling cattle (12-17 months), replacement heifers (18-24 months), bull, ewe/lamb pair, non-lactating ewe, ram, wether, bison cow, bison bull, etc.'
+CLASS_OF_ANIMAL_EXAMPLES = (
+    'Examples: Cow/calf pair, yearling cattle (7-12 months), '
+    'yearling cattle (12-17 months), replacement heifers (18-24 months), '
+    'bull, ewe/lamb pair, non-lactating ewe, ram, wether, bison cow, '
+    'bison bull, etc.'
+)
 
 # Measurements step constants
 DISTANCES_DROP_PLATE = [i for i in range(0, 49, 2)]  # 0,2,...,48

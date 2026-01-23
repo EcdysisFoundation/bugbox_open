@@ -1,8 +1,10 @@
 from django.contrib.auth import get_user_model
 from django.db.models import Count
-from bugbox3.samples.models import SpecimenImage, MultiSpecimenImage
+
+from bugbox3.samples.models import MultiSpecimenImage, SpecimenImage
 
 User = get_user_model()
+
 
 def get_user_display(user_id):
     try:

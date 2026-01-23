@@ -9,6 +9,7 @@ class PublicMediaStorage(Storage):
     """
     Storage backend for public media files. Uses S3 when configured, or if not, falls back to local file storage.
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Check if S3 is configured
@@ -30,7 +31,7 @@ class PublicMediaStorage(Storage):
         """Get URL for the file"""
         try:
             return self._storage.url(name)
-        except Exception as e:
+        except Exception:
             # If S3 fails and we're using local, return local URL
             if isinstance(self._storage, FileSystemStorage):
                 return self._storage.url(name)

@@ -1,8 +1,10 @@
+from django.contrib.gis.geos import Point
 from django.http import JsonResponse
 from django.views.decorators.http import require_GET
-from django.contrib.gis.geos import Point
+
+from ..core.constants import FIPS_STATE
 from .models import UsCountiesTigerLine
-from ..core.constants import UNITED_STATES, FIPS_STATE
+
 
 @require_GET
 def get_region_by_coordinates(request):

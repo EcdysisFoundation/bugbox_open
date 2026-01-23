@@ -9,4 +9,3 @@ class GrowerPortalConfig(AppConfig):
     def ready(self):
         """Import admin registrations when app is ready"""
         from .models import admin  # NOQA
-

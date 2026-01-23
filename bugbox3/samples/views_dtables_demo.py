@@ -1,39 +1,44 @@
 from django.http import Http404
-from rest_framework.viewsets import ReadOnlyModelViewSet
+from django.urls import reverse
 from rest_framework.permissions import BasePermission
+from rest_framework.viewsets import ReadOnlyModelViewSet
 
+from ..core.models import LookupChoices
 from ..core.views import DatatablesModelViewSetMixin
-from ..samples.models import Experiment, Site, Sample, Specimen
+from ..libs.ui_helpers import (
+    get_classifcation,
+    get_datatables_container,
+    get_datatables_row,
+    get_img_src,
+    get_probability_or_user,
+)
+from ..samples import constants
+from ..samples.models import Experiment, Sample, Site, Specimen
 from ..samples.serializers import (
     ExperimentsDatatablesSerializer,
     SitesDatatablesSerializer,
     SpecimenDatatablesSerializer,
 )
-from ..libs.ui_helpers import (get_classifcation, get_img_src,
-                               get_probability_or_user, classify_specimen_button,
-                               get_datatables_container, get_datatables_row)
-from ..samples import constants
-from ..samples.views_demo import get_demo_organization
-from ..core.models import LookupChoices
 from ..samples.utils import resolve_entered_by
-from django.urls import reverse
+from ..samples.views_demo import get_demo_organization
 
 
 class DemoOnlyPermission(BasePermission):
     """Permission class that allows all users (authenticated and unauthenticated)."""
+
     def has_permission(self, request, view):
         return True
 
 
 class DemoExperimentsDatatablesSerializer(ExperimentsDatatablesSerializer):
-    
+
     def get_experiment_link(self, v):
         url = reverse('samples:demo-experiment', kwargs={'experiment_id': v.id})
         return '<a href="{0}" class="link-secondary">{1}</a>'.format(url, v.name)
 
 
 class DemoExperimentsDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
-    
+
     permission_classes = [DemoOnlyPermission]
     serializer_class = DemoExperimentsDatatablesSerializer
     search_vector = [constants.FIELD_NAME, constants.FIELD_ABBREVIATION]
@@ -46,7 +51,7 @@ class DemoExperimentsDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyMode
 
 
 class DemoSitesDatatablesSerializer(SitesDatatablesSerializer):
-    
+
     def get_data_row(self, value):
         site_url = reverse('samples:demo-site', kwargs={'site_id': value.id})
         columns = [
@@ -58,16 +63,16 @@ class DemoSitesDatatablesSerializer(SitesDatatablesSerializer):
             value.treatment
         ]
         return get_datatables_container(get_datatables_row(columns))
-    
+
     def get_sample_data(self, value):
         demo_org = get_demo_organization()
         samples = Sample.objects.filter(
             site_visit__site_id=value.id,
             site_visit__site__experiment__organization=demo_org
         ).order_by(
-                'site_visit__' + constants.FIELD_SITE_VISIT_DATE,
-                constants.FIELD_SAMPLE_TYPE,
-                constants.FIELD_SAMPLE_NAME_NO)
+            'site_visit__' + constants.FIELD_SITE_VISIT_DATE,
+            constants.FIELD_SAMPLE_TYPE,
+            constants.FIELD_SAMPLE_NAME_NO)
         sample_plans = self.get_sample_plans(value.experiment_id)
         rows = get_datatables_row([
             'Date*',
@@ -102,7 +107,7 @@ class DemoSitesDatatablesSerializer(SitesDatatablesSerializer):
             ])
 
         return get_datatables_container(rows)
-    
+
     def to_representation(self, value):
         result = {
             'data_row': self.get_data_row(value),
@@ -112,7 +117,7 @@ class DemoSitesDatatablesSerializer(SitesDatatablesSerializer):
 
 
 class DemoSitesDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
-    
+
     permission_classes = [DemoOnlyPermission]
     serializer_class = DemoSitesDatatablesSerializer
     search_vector = [constants.FIELD_SITE_SITE_NAME]
@@ -121,21 +126,21 @@ class DemoSitesDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelViewS
         demo_org = get_demo_organization()
         if not demo_org:
             return Site.objects.none()
-        
+
         experiment_id = int(self.kwargs['experiment_id'])
-        
+
         try:
             experiment = Experiment.objects.filter(
                 organization=demo_org
             ).get(id=experiment_id)
         except Experiment.DoesNotExist:
             raise Http404
-        
+
         return Site.objects.filter(experiment=experiment).order_by(constants.FIELD_SITE_SITE_NAME)
 
 
 class DemoSpecimenDatatablesSerializer(SpecimenDatatablesSerializer):
-    
+
     def get_data_row(self, value):
         img_exists = False
         if value.specimenimage_set.first():
@@ -160,7 +165,7 @@ class DemoSpecimenDatatablesSerializer(SpecimenDatatablesSerializer):
 
 
 class DemoSpecimenDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
-    
+
     permission_classes = [DemoOnlyPermission]
     serializer_class = DemoSpecimenDatatablesSerializer
     search_vector = ['classification__name', 'ai_classification__name']
@@ -169,14 +174,14 @@ class DemoSpecimenDatatablesViewSet(DatatablesModelViewSetMixin, ReadOnlyModelVi
         demo_org = get_demo_organization()
         if not demo_org:
             return Specimen.objects.none()
-        
+
         sample_id = int(self.kwargs['sample_id'])
-        
+
         try:
             sample = Sample.objects.filter(
                 site_visit__site__experiment__organization=demo_org
             ).get(id=sample_id)
         except Sample.DoesNotExist:
             raise Http404
-        
+
         return Specimen.objects.filter(sample=sample).order_by('-id')

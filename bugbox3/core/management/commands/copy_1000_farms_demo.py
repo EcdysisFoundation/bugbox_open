@@ -1,15 +1,22 @@
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.db.models import Count
-from django.core.files.base import ContentFile
-from django.core.files.storage import default_storage
 
+from bugbox3.samples import constants
 from bugbox3.samples.models import (
-    Experiment, Site, SiteVisit, Sample, Specimen, SpecimenImage, SamplePlan,
-    MultiSpecimenImage, TimelineEvent
+    Experiment,
+    MultiSpecimenImage,
+    Sample,
+    SamplePlan,
+    Site,
+    SiteVisit,
+    Specimen,
+    SpecimenImage,
+    TimelineEvent,
 )
 from bugbox3.samples.views_demo import get_demo_organization
-from bugbox3.samples import constants
 
 
 class Command(BaseCommand):
@@ -120,11 +127,11 @@ class Command(BaseCommand):
 
             all_samples_list = []
             seen_keys = set()
-            
+
             for sample in list(quadrat_samples_qs) + list(sweep_samples_qs):
                 sample_type_normalized = sample.sample_type.lower().replace(' ', '_')
                 key = (sample_type_normalized, sample.name_no)
-                
+
                 if key not in seen_keys:
                     seen_keys.add(key)
                     all_samples_list.append(sample)
@@ -140,8 +147,8 @@ class Command(BaseCommand):
                         )
                     )
 
-            self.stdout.write(f'\nProcessing samples from site "4189":')
-            
+            self.stdout.write('\nProcessing samples from site "4189":')
+
             source_samples = all_samples_list
 
             expected_samples = [
@@ -179,10 +186,10 @@ class Command(BaseCommand):
                 self.stdout.write(f'  - {s.sample_type} {s.name_no} (from {s.site_visit.site.experiment.name})')
 
             copied_experiment = self.create_demo_experiment(quads_experiment, demo_org)
-            
+
             for exp in [quads_experiment, sweeps_experiment]:
                 self.copy_sample_plans(exp, copied_experiment)
-            
+
             copied_site = self.copy_site(quads_site, copied_experiment)
 
             visit_mapping = {}
@@ -248,7 +255,10 @@ class Command(BaseCommand):
                 'no_sites': 1,
                 'date_per_site': source_experiment.date_per_site if source_experiment else 1,
                 'completed': False,
-                'summary': 'Demo experiment showcasing the Bugbox research workflow with selected samples from the 1000 Farms study.',
+                'summary': (
+                    'Demo experiment showing the Bugbox research workflow '
+                    'selected are from samples from the 1000 Farms.'
+                ),
                 'archived': '',
             }
         )
@@ -301,7 +311,7 @@ class Command(BaseCommand):
     def copy_site_visit(self, source_visit, target_site, sample_with_plan=None):
         if sample_with_plan is None:
             sample_with_plan = source_visit.sample_with_plan
-        
+
         visit, created = SiteVisit.objects.get_or_create(
             site=target_site,
             visit_date=source_visit.visit_date,
@@ -406,7 +416,7 @@ class Command(BaseCommand):
             )
 
             main_image_exists = False
-            
+
             source_main_image = getattr(source_image, 'image', None)
             if source_main_image and source_main_image.name:
                 try:
@@ -422,7 +432,7 @@ class Command(BaseCommand):
                     self.stdout.write(
                         self.style.WARNING(f'  Could not reference main image: {e}')
                     )
-            
+
             for field_name in ['image_thumbnail', 'image_thumbnail_medium', 'image_thumbnail_large']:
                 source_field = getattr(source_image, field_name, None)
                 if source_field and source_field.name:
@@ -445,7 +455,7 @@ class Command(BaseCommand):
                 copied_count += 1
             else:
                 self.stdout.write(
-                    self.style.WARNING(f'  Skipping specimen image - main image file not found')
+                    self.style.WARNING('  Skipping specimen image - main image file not found')
                 )
 
         return copied_count
@@ -453,7 +463,7 @@ class Command(BaseCommand):
     def copy_multi_specimen_images(self, source_sample, target_sample):
         """Copy MultiSpecimenImage objects associated with the sample."""
         source_multi_images = MultiSpecimenImage.objects.filter(sample=source_sample)
-        
+
         for source_multi in source_multi_images:
             multi_image = MultiSpecimenImage(
                 sample=target_sample,
@@ -488,17 +498,25 @@ class Command(BaseCommand):
                             self.style.WARNING(f'  Could not copy multi-image {field_name}: {e}')
                         )
 
-            if multi_image.image or any(getattr(multi_image, f) for f in ['image_thumbnail', 'label_image', 'label_image_thumbnail'] if getattr(multi_image, f)):
+            if multi_image.image or any(
+                getattr(
+                    multi_image,
+                    f) for f in [
+                    'image_thumbnail',
+                    'label_image',
+                    'label_image_thumbnail'] if getattr(
+                    multi_image,
+                    f)):
                 multi_image.save()
             else:
                 self.stdout.write(
-                    self.style.WARNING(f'  Skipping multi-specimen image with no image files')
+                    self.style.WARNING('  Skipping multi-specimen image with no image files')
                 )
 
     def copy_timeline_events(self, source_specimen, target_specimen):
         """Copy TimelineEvent objects associated with the specimen."""
         source_events = TimelineEvent.objects.filter(specimen=source_specimen)
-        
+
         for source_event in source_events:
             TimelineEvent.objects.create(
                 specimen=target_specimen,
@@ -506,4 +524,3 @@ class Command(BaseCommand):
                 body=source_event.body,
                 by_user=None,
             )
-

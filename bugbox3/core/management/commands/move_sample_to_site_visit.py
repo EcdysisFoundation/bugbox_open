@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
+
 from bugbox3.samples.models import Sample, SiteVisit
 
 
@@ -46,7 +47,7 @@ class Command(BaseCommand):
                 samples = Sample.objects.select_related(
                     'site_visit__site'
                 ).filter(site_visit_id=source_site_visit_id)
-                
+
                 if samples.count() == 0:
                     raise CommandError(f"No samples found in site visit {source_site_visit_id}")
                 elif samples.count() == 1:
@@ -54,8 +55,14 @@ class Command(BaseCommand):
                 else:
                     self.stdout.write(f"Found {samples.count()} samples in site visit {source_site_visit_id}:")
                     for s in samples:
-                        self.stdout.write(f"  Sample ID: {s.id}, Name: {s.name_no}, Type: {s.sample_type}, Specimens: {s.specimen_set.count()}")
-                    raise CommandError("Multiple samples found. Please specify --sample-id to choose which one to move")
+                        self.stdout.write(
+                            f"  Sample ID: {
+                                s.id}, Name: {
+                                s.name_no}, Type: {
+                                s.sample_type}, Specimens: {
+                                s.specimen_set.count()}")
+                    raise CommandError(
+                        "Multiple samples found. Please specify --sample-id to choose which one to move")
             else:
                 raise CommandError("Must provide either --sample-id or --source-site-visit-id")
 
@@ -81,7 +88,7 @@ class Command(BaseCommand):
                 self.stdout.write(f"  Site: {sample.site_visit.site.site_name}")
                 self.stdout.write(f"  Site Visit ID: {sample.site_visit.id}")
                 self.stdout.write(f"  Visit Date: {sample.site_visit.visit_date}")
-                self.stdout.write(f"To:")
+                self.stdout.write("To:")
                 self.stdout.write(f"  Site: {target_site_visit.site.site_name}")
                 self.stdout.write(f"  Site Visit ID: {target_site_visit.id}")
                 self.stdout.write(f"  Visit Date: {target_site_visit.visit_date}")
@@ -93,17 +100,19 @@ class Command(BaseCommand):
                 sample.save()
 
                 remaining_samples = Sample.objects.filter(site_visit=old_site_visit).count()
-                
+
                 self.stdout.write(
                     self.style.SUCCESS(
-                        f"Successfully moved sample '{sample.name_no}' (ID: {sample.id}) to site visit {target_site_visit.id}"
-                    )
-                )
-                
+                        f"Successfully moved sample '{
+                            sample.name_no}' (ID: {
+                            sample.id}) to site visit {
+                            target_site_visit.id}"))
+
                 if remaining_samples == 0:
                     self.stdout.write(
                         self.style.WARNING(
-                            f"Old site visit {old_site_visit.id} ({old_site_visit.site.site_name} - {old_site_visit.visit_date}) "
+                            f"Old site visit {old_site_visit.id} "
+                            f"({old_site_visit.site.site_name} - {old_site_visit.visit_date}) "
                             f"now has no samples. You may want to delete it."
                         )
                     )

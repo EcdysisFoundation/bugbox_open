@@ -27,7 +27,6 @@ def migrate_existing_transect_codes(apps, schema_editor):
 
 def reverse_migrate_codes(apps, schema_editor):
     """Reverse migration - not needed"""
-    pass
 
 
 class Migration(migrations.Migration):

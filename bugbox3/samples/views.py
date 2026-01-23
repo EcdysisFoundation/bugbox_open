@@ -14,41 +14,57 @@ from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.views.generic import TemplateView
-from django.views.generic.edit import (CreateView, DeleteView, FormView,
-                                       UpdateView)
+from django.views.generic.edit import CreateView, DeleteView, FormView, UpdateView
 from organizations.models import OrganizationUser
 from rest_framework.reverse import reverse as api_reverse
 
 from bugbox3.samples.utils import resolve_entered_by
 
-from .tasks import export_csv_by_location, crop_panorama_segmentation
 from ..core import constants as constants_core
 from ..core.models import LookupChoices
 from ..core.permissions import IS_RESEARCH, REVIEW_SPECIMEN_PAGE
-from ..core.stitcher_api import (
-    get_root_message,
-    get_upload_file,
-    patch_upload_file,
-    ERROR_MSG_KEY)
-
-from ..libs.ui_helpers import (calc_image_height, get_datatables_container,
-                               get_datatables_row,
-                               get_formsets_display_control_config,
-                               get_probability)
+from ..core.stitcher_api import ERROR_MSG_KEY, get_root_message, get_upload_file, patch_upload_file
+from ..libs.ui_helpers import (
+    calc_image_height,
+    get_datatables_container,
+    get_datatables_row,
+    get_formsets_display_control_config,
+    get_probability,
+)
 from ..libs.utilities import get_json_context, get_media_url
 from ..taxonomy import constants as taxa_const
 from ..taxonomy.models import Morphospecies
-from ..taxonomy.utils import get_skip_morphospecies_ids, get_immature_morphospecies_ids
+from ..taxonomy.utils import get_immature_morphospecies_ids, get_skip_morphospecies_ids
 from . import constants
-from .forms import (ExperimentForm, JSONFieldSpecimensForm, MultiSpecimenForm,
-                    SampleDetailForm, SampleForm, SamplePlanForm, SiteForm,
-                    SiteVisitForm, SpecimenForm, SpecimenImageForm,
-                    SpecimensWithoutImagesForm, SpecimenViewForm)
-from .models import (Experiment, MultiSpecimenImage, Sample, SamplePlan, Site,
-                     SiteVisit, Specimen, SpecimenImage, UserExperimentFile, UserLocationExportFile)
+from .forms import (
+    ExperimentForm,
+    JSONFieldSpecimensForm,
+    MultiSpecimenForm,
+    SampleDetailForm,
+    SampleForm,
+    SamplePlanForm,
+    SiteForm,
+    SiteVisitForm,
+    SpecimenForm,
+    SpecimenImageForm,
+    SpecimensWithoutImagesForm,
+    SpecimenViewForm,
+)
+from .models import (
+    Experiment,
+    MultiSpecimenImage,
+    Sample,
+    SamplePlan,
+    Site,
+    SiteVisit,
+    Specimen,
+    SpecimenImage,
+    UserExperimentFile,
+    UserLocationExportFile,
+)
 from .models_query import get_sample_plan_descriptions, get_user_choices
-from .timeline_events import (audit_specimen_update, audit_specimen_view,
-                              audit_upload_images, timeline_events)
+from .tasks import crop_panorama_segmentation, export_csv_by_location
+from .timeline_events import audit_specimen_update, audit_specimen_view, audit_upload_images, timeline_events
 
 
 class ExperimentsView(PermissionRequiredMixin, TemplateView):
@@ -199,9 +215,27 @@ class ExperimentView(PermissionRequiredMixin, TemplateView):
                      location_export.exported_file_status if location_export else None
                  )
                  }),
-            'all_habitats': Site.objects.filter(experiment_id=experiment.id).exclude(habitat_type='').order_by('habitat_type').values_list('habitat_type', flat=True).distinct(),
-            'all_countries': Site.objects.filter(experiment_id=experiment.id).exclude(country='').order_by('country').values_list('country', flat=True).distinct(),
-            'all_states': Site.objects.filter(experiment_id=experiment.id).exclude(state_region='').order_by('state_region').values_list('state_region', flat=True).distinct(),
+            'all_habitats': (
+                Site.objects.filter(experiment_id=experiment.id)
+                .exclude(habitat_type='')
+                .order_by('habitat_type')
+                .values_list('habitat_type', flat=True)
+                .distinct()
+            ),
+            'all_countries': (
+                Site.objects.filter(experiment_id=experiment.id)
+                .exclude(country='')
+                .order_by('country')
+                .values_list('country', flat=True)
+                .distinct()
+            ),
+            'all_states': (
+                Site.objects.filter(experiment_id=experiment.id)
+                .exclude(state_region='')
+                .order_by('state_region')
+                .values_list('state_region', flat=True)
+                .distinct()
+            ),
         })
 
         user_experiment_file, created = UserExperimentFile.objects.get_or_create(
@@ -230,6 +264,7 @@ class ExperimentView(PermissionRequiredMixin, TemplateView):
         )
 
         return context
+
 
 @permission_required(IS_RESEARCH)
 def export_by_location_csv(request):
@@ -787,7 +822,7 @@ class SampleUpdateView(PermissionRequiredMixin, UpdateView):
         return context
 
     def get_success_url(self):
-        return reverse('samples:sample', kwargs={'sample_id':  self.kwargs['sample_id']})
+        return reverse('samples:sample', kwargs={'sample_id': self.kwargs['sample_id']})
 
 
 def specimen_view_context(specimen):
@@ -835,7 +870,7 @@ def specimen_view_context(specimen):
             single_image = {
                 'path': get_media_url(i, i_public_image),
                 'width': i.width,
-                'height': i.height ,
+                'height': i.height,
             }
             context.update({'single_image': single_image})
     return context
@@ -925,7 +960,7 @@ class SpecimensWithoutImagesFormView(PermissionRequiredMixin, FormView):
         return super().form_valid(form)
 
     def get_success_url(self):
-        return reverse('samples:sample', kwargs={'sample_id':  self.kwargs['id']})
+        return reverse('samples:sample', kwargs={'sample_id': self.kwargs['id']})
 
 
 class SpecimenView(PermissionRequiredMixin, FormView):
@@ -1011,7 +1046,7 @@ class SpecimenView(PermissionRequiredMixin, FormView):
         return super().form_valid(form)
 
     def get_success_url(self):
-        return reverse('samples:specimen', kwargs={'id':  self.kwargs['id']})
+        return reverse('samples:specimen', kwargs={'id': self.kwargs['id']})
 
 
 class SpecimenCreateView(PermissionRequiredMixin, CreateView):

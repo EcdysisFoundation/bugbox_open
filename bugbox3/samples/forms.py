@@ -1,12 +1,22 @@
 import json
 
 from crispy_forms.layout import HTML, Column, Field, Fieldset, Row
-from django.forms import (TextInput, CharField, ChoiceField, DateField, Form, HiddenInput,
-                          IntegerField, JSONField, MultipleChoiceField, Select,
-                          SelectMultiple, Textarea)
+from django.forms import (
+    CharField,
+    ChoiceField,
+    DateField,
+    Form,
+    HiddenInput,
+    IntegerField,
+    JSONField,
+    MultipleChoiceField,
+    Select,
+    SelectMultiple,
+    Textarea,
+    TextInput,
+)
 
-from ..core.forms import (FileField, Html5DateInput, ModelFormMixin,
-                          MultipleFileField, get_submit_layout)
+from ..core.forms import FileField, Html5DateInput, ModelFormMixin, MultipleFileField, get_submit_layout
 from ..core.models import LookupChoices
 from ..libs.ui_helpers import DISABLED_DELETE_CHECK
 from . import constants
@@ -72,7 +82,7 @@ class SamplePlanForm(ModelFormMixin):
         self.helper.form_tag = False
         self.fields[
             constants.FIELD_SAMPLE_PLAN_SAMPLE_TYPE
-            ].choices = lambda: LookupChoices.objects.get_field_choices_w_blank(
+        ].choices = lambda: LookupChoices.objects.get_field_choices_w_blank(
             self.org_id, constants.FIELD_SAMPLE_PLAN_SAMPLE_TYPE)
 
     class Meta:
@@ -113,11 +123,11 @@ class SiteForm(ModelFormMixin):
         self.helper.form_tag = False
         self.fields[
             constants.FIELD_SITE_TREATMENT
-            ].choices = lambda: LookupChoices.objects.get_field_choices_w_blank(
+        ].choices = lambda: LookupChoices.objects.get_field_choices_w_blank(
             self.org_id, constants.FIELD_SITE_TREATMENT)
         self.fields[
             constants.FIELD_SITE_HABITAT_TYPE
-            ].choices = lambda: LookupChoices.objects.get_field_choices_w_blank(
+        ].choices = lambda: LookupChoices.objects.get_field_choices_w_blank(
             self.org_id, constants.FIELD_SITE_HABITAT_TYPE)
 
     class Meta:
@@ -178,7 +188,6 @@ class SiteForm(ModelFormMixin):
     )
 
 
-
 class SiteVisitForm(ModelFormMixin):
     """
     Child form for SiteForm
@@ -226,7 +235,7 @@ class SampleForm(ModelFormMixin):
         self.helper.layout = get_submit_layout(self.helper.layout, kwargs)
         self.fields[
             constants.FIELD_SAMPLE_TYPE
-            ].choices = lambda: LookupChoices.objects.get_field_choices_w_blank(
+        ].choices = lambda: LookupChoices.objects.get_field_choices_w_blank(
             self.org_id, constants.FIELD_SAMPLE_TYPE)
 
     class Meta:
@@ -287,7 +296,7 @@ class SpecimenForm(ModelFormMixin):
         self.helper.layout = get_submit_layout(self.helper.layout, kwargs)
         self.fields[
             constants.FIELD_SPECIMEN_TAGS
-            ].choices = lambda: LookupChoices.objects.get_field_choices(
+        ].choices = lambda: LookupChoices.objects.get_field_choices(
             self.org_id, constants.FIELD_SPECIMEN_TAGS)
         if kwargs['instance'] is None:
             self.fields[constants.FIELD_SPECIMEN_ACCEPTANCE].widget = HiddenInput()

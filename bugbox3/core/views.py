@@ -9,8 +9,7 @@ from django.views.generic.edit import CreateView, DeleteView, UpdateView
 from organizations.models import OrganizationUser
 from rest_framework.response import Response
 
-from ..samples.constants import (FIELD_SAMPLE_TYPE, FIELD_SITE_HABITAT_TYPE,
-                                 FIELD_SITE_TREATMENT, FIELD_SPECIMEN_TAGS)
+from ..samples.constants import FIELD_SAMPLE_TYPE, FIELD_SITE_HABITAT_TYPE, FIELD_SITE_TREATMENT, FIELD_SPECIMEN_TAGS
 from ..taxonomy.constants import FIELD_MORPHO_TAGS_LOOKUP
 from . import constants
 from .forms import LookupChoicesForm

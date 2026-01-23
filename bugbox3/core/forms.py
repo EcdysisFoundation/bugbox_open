@@ -1,15 +1,20 @@
+from crispy_bootstrap5.bootstrap5 import FloatingField
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Button, Column, Field, Layout, Row, Submit
-from crispy_bootstrap5.bootstrap5 import FloatingField
 from django.conf import settings
-from django.forms import (BooleanField,
-                          ClearableFileInput,
-                          CharField,
-                          ChoiceField,
-                          DateInput, FileField,
-                          Form,
-                          HiddenInput,
-                          IntegerField, UUIDField, ValidationError)
+from django.forms import (
+    BooleanField,
+    CharField,
+    ChoiceField,
+    ClearableFileInput,
+    DateInput,
+    FileField,
+    Form,
+    HiddenInput,
+    IntegerField,
+    UUIDField,
+    ValidationError,
+)
 from django.forms.models import ModelForm
 from django.urls import reverse
 from django.utils.safestring import mark_safe
@@ -29,6 +34,7 @@ class MultipleFileField(FileField):
     class FileFieldForm(Form):
         file_field = MultipleFileField()
     """
+
     def __init__(self, *args, **kwargs):
         kwargs.setdefault('widget', MultipleFileInput())
         super().__init__(*args, **kwargs)
@@ -172,14 +178,14 @@ class LookupChoicesForm(ModelFormMixin):
         row = [Field(constants.FIELD_FIELD)]
         if self.instance.id:
             row += Row(
-                    Column(
-                        Field(
-                            constants.FIELD_ENTRY, readonly=True
-                        ), css_class='form-control-width-medium'),
-                    Column(
-                        constants.FIELD_DISPLAY_TXT, css_class='form-control-width-medium'
-                    )
-                ),
+                Column(
+                    Field(
+                        constants.FIELD_ENTRY, readonly=True
+                    ), css_class='form-control-width-medium'),
+                Column(
+                    constants.FIELD_DISPLAY_TXT, css_class='form-control-width-medium'
+                )
+            ),
         else:
             row += [
                 Field(constants.FIELD_FIELD),

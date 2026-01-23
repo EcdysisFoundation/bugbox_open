@@ -89,7 +89,7 @@ class Command(BaseCommand):
                     print(d)
                     return
             created = self.AiTraining.objects.bulk_create(
-                    obs)
+                obs)
             print(
                 'created {0} AiTraining records for model_name {1}'.format(
                     len(created), version

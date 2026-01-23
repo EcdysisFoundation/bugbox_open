@@ -1,5 +1,7 @@
 from django.contrib import admin
-from .models import GBIFImageRecord, FilteredGBIFImageRecord
+
+from .models import FilteredGBIFImageRecord, GBIFImageRecord
+
 
 @admin.register(GBIFImageRecord)
 class GBIFImageRecordAdmin(admin.ModelAdmin):

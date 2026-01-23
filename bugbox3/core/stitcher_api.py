@@ -21,7 +21,7 @@ def list_upload_files():
     limit = 100
 
     while True:
-        print('*'*100)
+        print('*' * 100)
         params = {
             'offset': offset,
             'limit': limit,
