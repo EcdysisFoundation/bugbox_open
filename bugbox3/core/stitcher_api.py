@@ -3,12 +3,14 @@ import re
 import requests
 
 STITCHER_URL = 'http://host.docker.internal:8090'
+# connect from local
+# STITCHER_URL = 'http://10.147.19.124:8090'
 
 # move js_URLs dev differences to local.yml and local-cloud.yml
-STITCHER_JS_URL_ZEROTIER = 'http://10.147.19.124:8090'
+# STITCHER_JS_URL_ZEROTIER = 'http://10.147.19.124:8090'
 
 # for local dev
-# STITCHER_JS_URL_ZEROTIER = 'http://localhost:8090'
+STITCHER_JS_URL_ZEROTIER = 'http://localhost:8090'
 
 STITCHER_JS_URL = 'http://ecdysis01.local:8090'
 
@@ -125,11 +127,11 @@ def parse_sample_name(sample_name):
     """
     if not sample_name:
         return None
-    
+
     # Try to match the base pattern: SITE_TYPE_TRANSECT with optional split suffix
     # Pattern: digits_letters_Tdigits[_split_N | _splitN | _N | _a]
     match = re.match(r'^(\d+)_([a-zA-Z]+)_(T\d+)(?:_split_\d+|_split\d+|\d+|[a-z])?$', sample_name)
-    
+
     if match:
         site = match.group(1)
         sample_type = match.group(2).lower()  # Normalize to lowercase
@@ -137,7 +139,7 @@ def parse_sample_name(sample_name):
         # Build base name without split suffix
         base_name = f"{site}_{sample_type}_{transect}"
         return (base_name, site, sample_type, transect)
-    
+
     # Fallback: try simple split by underscore
     parts = sample_name.split('_')
     if len(parts) >= 3:
@@ -152,14 +154,14 @@ def parse_sample_name(sample_name):
                 base_name = '_'.join(parts[:-1])
         else:
             base_name = '_'.join(parts)
-        
+
         site = parts[0]
         sample_type = parts[1].lower()
         transect = parts[2] if len(parts) > 2 else None
-        
+
         if site and sample_type and transect:
             return (base_name, site, sample_type, transect)
-    
+
     return None
 
 
@@ -178,7 +180,7 @@ def list_retake_records(upload_dir_name=None):
             'limit': limit,
             'approved': False
         }
-        
+
         if upload_dir_name:
             params['upload_dir_name'] = upload_dir_name
 
@@ -210,29 +212,29 @@ def find_matching_retake_records(approved_sample_name, exclude_guid=None):
     parsed = parse_sample_name(approved_sample_name)
     if not parsed:
         return []
-    
+
     base_name, _, _, _ = parsed
-    
+
     retake_records = list_retake_records(upload_dir_name=base_name)
-    
+
     # Filter out the approved record itself
     matching_records = []
     for record in retake_records:
         guid = record.get('guid')
         upload_dir_name = record.get('upload_dir_name')
-        
+
         # Skip the (approved record itself = excluded GUID)
         if exclude_guid and guid == exclude_guid:
             continue
-        
+
         if not upload_dir_name:
             continue
-        
+
         matching_records.append({
             'guid': guid,
             'upload_dir_name': upload_dir_name
         })
-    
+
     return matching_records
 
 
@@ -241,22 +243,22 @@ def cleanup_matching_retake_records(approved_sample_name, approved_guid):
     Find and delete all matching retake records from Stitcher when a sample is approved.
     """
     matching_records = find_matching_retake_records(approved_sample_name, exclude_guid=approved_guid)
-    
+
     if not matching_records:
         return {
             'deleted_count': 0,
             'errors': [],
             'deleted_samples': []
         }
-    
+
     deleted_count = 0
     errors = []
     deleted_samples = []
-    
+
     for record in matching_records:
         guid = record['guid']
         upload_dir_name = record['upload_dir_name']
-        
+
         try:
             result = delete_upload_file(guid)
             if ERROR_MSG_KEY in result:
@@ -274,7 +276,7 @@ def cleanup_matching_retake_records(approved_sample_name, approved_guid):
                 'guid': guid,
                 'error': str(e)
             })
-    
+
     return {
         'deleted_count': deleted_count,
         'errors': errors,

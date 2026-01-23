@@ -260,14 +260,13 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                                 f'Successfully updated {self.guid}. '
                                 f'Removed {cleanup_result["deleted_count"]} matching retake record(s): {deleted_list}'
                             )
-
-                            # Log errors
-                            if cleanup_result['errors']:
-                                for error in cleanup_result['errors']:
-                                    messages.warning(
-                                        self.request,
-                                        f'Failed to remove retake record {error["sample"]}: {error["error"]}'
-                                    )
+                        # Log errors
+                        if cleanup_result['errors']:
+                            for error in cleanup_result['errors']:
+                                messages.warning(
+                                    self.request,
+                                    f'Failed to remove retake record {error["sample"]}: {error["error"]}'
+                                )
                 messages.success(
                     self.request, f'Successfully updated {self.guid}'
                 )
