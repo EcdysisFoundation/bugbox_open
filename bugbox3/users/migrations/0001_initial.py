@@ -3,7 +3,6 @@ import django.contrib.auth.validators
 import django.utils.timezone
 from django.db import migrations, models
 
-import bugbox3.users.models
 
 
 class Migration(migrations.Migration):

@@ -3,11 +3,21 @@ Grower URLs for Grower Portal
 All URLs require is_grower group membership
 """
 from django.urls import path
+
 from ..views.grower import (
-    profile_complete, dashboard, profile_edit,
-    application_create, application_step1, application_step2,
-    application_step3, application_step4, application_step5, application_step6,
-    application_view, application_edit, application_delete
+    application_create,
+    application_delete,
+    application_edit,
+    application_step1,
+    application_step2,
+    application_step3,
+    application_step4,
+    application_step5,
+    application_step6,
+    application_view,
+    dashboard,
+    profile_complete,
+    profile_edit,
 )
 
 urlpatterns = [
@@ -25,5 +35,3 @@ urlpatterns = [
     path('applications/<int:application_id>/step5/', application_step5, name='application_step5'),
     path('applications/<int:application_id>/step6/', application_step6, name='application_step6'),
 ]
-
-

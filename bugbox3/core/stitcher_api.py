@@ -1,4 +1,5 @@
 import json
+
 import requests
 
 STITCHER_URL = 'http://host.docker.internal:8090'
@@ -21,7 +22,7 @@ def list_upload_files():
     limit = 100
 
     while True:
-        print('*'*100)
+        print('*' * 100)
         params = {
             'offset': offset,
             'limit': limit,

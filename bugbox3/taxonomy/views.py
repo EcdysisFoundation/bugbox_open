@@ -12,25 +12,21 @@ from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.views.generic import CreateView, FormView, TemplateView, UpdateView
+from organizations.models import OrganizationUser
 from rest_framework.reverse import reverse as api_reverse
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
-from ..core.permissions import (ADD_MORPHOSPECIES, CHANGE_MORPHOSPECIES,
-                                IS_RESEARCH)
+from ..core.models import LookupChoices
+from ..core.permissions import ADD_MORPHOSPECIES, CHANGE_MORPHOSPECIES, IS_RESEARCH
 from ..core.views import DatatablesModelViewSetMixin
-from ..libs.ui_helpers import (calc_image_height, get_datatables_container,
-                               get_datatables_row)
+from ..libs.ui_helpers import calc_image_height, get_datatables_container, get_datatables_row
 from ..libs.utilities import get_json_context, get_media_url
 from ..samples import constants as samples_constants
-from organizations.models import OrganizationUser
-from ..core.models import LookupChoices
 from ..samples.models import Sample, Specimen, SpecimenImage
 from . import constants
-from .forms import (MorphospeciesCombineForm, MorphospeciesForm,
-                    MorphospeciesUpdateForm)
+from .forms import MorphospeciesCombineForm, MorphospeciesForm, MorphospeciesUpdateForm
 from .models import AiTraining, Morphospecies
-from .serializers import (MorphospeciesDatatablesSerializer,
-                          MorphospeciesPickerSerializer)
+from .serializers import MorphospeciesDatatablesSerializer, MorphospeciesPickerSerializer
 from .tasks import id_image
 
 
@@ -113,7 +109,7 @@ class MophospeciesView(PermissionRequiredMixin, TemplateView):
                     'Canonical Name',
                     'Rank'
                 ])),
-            }
+        }
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -206,19 +202,19 @@ class MorphospeciesDetailView(PermissionRequiredMixin, FormView):
             'recall': [[a.entered_date, a.recall] for a in ai],
             'total': [a.train for a in ai]
         }
-        
+
         reviewed_specimens = Specimen.objects.filter(
             classification=morphospecies
         ).exclude(acceptance=samples_constants.ACCEPTANCE_PENDING)
-        
+
         misidentification_counts = {}
         for specimen in reviewed_specimens:
             # Check top-3: ai_classification, optional_pred_one, optional_pred_two
             top3_morphospecies = []
-            
+
             if specimen.ai_classification and specimen.ai_classification.id != morphospecies.id:
                 top3_morphospecies.append(specimen.ai_classification)
-            
+
             # Secondary prediction
             if specimen.optional_pred_one:
                 pred_one_morpho = None
@@ -236,7 +232,7 @@ class MorphospeciesDetailView(PermissionRequiredMixin, FormView):
                             pass
                 if pred_one_morpho and pred_one_morpho.id != morphospecies.id:
                     top3_morphospecies.append(pred_one_morpho)
-            
+
             # Tertiary prediction
             if specimen.optional_pred_two:
                 pred_two_morpho = None
@@ -254,7 +250,7 @@ class MorphospeciesDetailView(PermissionRequiredMixin, FormView):
                             pass
                 if pred_two_morpho and pred_two_morpho.id != morphospecies.id:
                     top3_morphospecies.append(pred_two_morpho)
-            
+
             # count the occurrences
             for misidentified_morpho in top3_morphospecies:
                 if misidentified_morpho.id not in misidentification_counts:
@@ -263,14 +259,14 @@ class MorphospeciesDetailView(PermissionRequiredMixin, FormView):
                         'count': 0
                     }
                 misidentification_counts[misidentified_morpho.id]['count'] += 1
-        
+
         #  sort by count and geting the top results -descending-
         common_misidentifications = sorted(
             misidentification_counts.values(),
             key=lambda x: x['count'],
             reverse=True
         )
-        
+
         context.update({
             'can_edit': self.request.user.has_perm(CHANGE_MORPHOSPECIES),
             'display_name': display_name,

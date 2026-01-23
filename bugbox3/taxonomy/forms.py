@@ -1,5 +1,4 @@
 from crispy_forms.layout import Column, Field, Row
-from django.core.exceptions import ValidationError
 from django.forms import CharField, Form, IntegerField, MultipleChoiceField, SelectMultiple, Textarea, TextInput
 
 from ..core.forms import ModelFormMixin, get_submit_layout
@@ -41,13 +40,13 @@ class MorphospeciesFormMixin(ModelFormMixin):
         tags = self.cleaned_data.get('tags', [])
         if not tags or not self.org_id:
             return tags
-        
+
         valid_choices = LookupChoices.objects.get_field_choices(
             self.org_id, constants.FIELD_MORPHO_TAGS_LOOKUP)
         valid_tag_values = [choice[0] for choice in valid_choices if choice[0]]
-        
+
         valid_tags = [tag for tag in tags if tag in valid_tag_values]
-        
+
         if len(valid_tags) < len(tags):
             pass
         return valid_tags

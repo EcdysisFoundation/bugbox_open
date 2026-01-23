@@ -45,7 +45,6 @@ def assign_farms_to_fields(apps, schema_editor):
 
 def reverse_assign_farms_to_fields(apps, schema_editor):
     """Reverse migration - not needed"""
-    pass
 
 
 class Migration(migrations.Migration):

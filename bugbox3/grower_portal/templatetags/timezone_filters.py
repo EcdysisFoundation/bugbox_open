@@ -1,7 +1,6 @@
-from django import template
-from django.utils import timezone
-from django.utils.dateformat import format
 import pytz
+from django import template
+from django.utils.dateformat import format
 
 from ..middleware import convert_to_user_timezone
 
@@ -19,7 +18,7 @@ def user_timezone(value, user_tz_string='UTC'):
 def user_date(value, user_tz_string='UTC'):
     if not value:
         return value
-    
+
     try:
         _ = value.tzinfo
         dt = convert_to_user_timezone(value, user_tz_string)
@@ -32,7 +31,7 @@ def user_date(value, user_tz_string='UTC'):
 def user_datetime(value, user_tz_string='UTC'):
     if not value:
         return value
-    
+
     dt = convert_to_user_timezone(value, user_tz_string)
     return format(dt, 'F d, Y g:i A')
 
@@ -41,7 +40,7 @@ def user_datetime(value, user_tz_string='UTC'):
 def user_time(value, user_tz_string='UTC'):
     if not value:
         return value
-    
+
     dt = convert_to_user_timezone(value, user_tz_string)
     return format(dt, 'g:i A')
 
@@ -50,7 +49,7 @@ def user_time(value, user_tz_string='UTC'):
 def user_date_short(value, user_tz_string='UTC'):
     if not value:
         return value
-    
+
     try:
         _ = value.tzinfo
         dt = convert_to_user_timezone(value, user_tz_string)

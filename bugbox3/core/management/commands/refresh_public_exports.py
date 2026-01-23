@@ -1,7 +1,6 @@
 from django.core.management.base import BaseCommand
 
-from ....samples.exports import (public_all_img_export,
-                                 public_reviewed_img_export)
+from ....samples.exports import public_all_img_export, public_reviewed_img_export
 from ....samples.views_public import PUBLIC_DATA_ORGS
 
 

@@ -1,28 +1,26 @@
 
 from .grower import (
-    GrowerProfile,
+    CSVImportFieldValue,
+    CSVImportLog,
+    DropPlateReading,
     Farm,
     Field,
-    ManagementPractices,
-    TransectCode,
-    SiteTransect,
-    GrowerApplication,
     GrazingEvent,
     GrazingEventAnimal,
-    CSVImportLog,
-    CSVImportFieldValue,
+    GrowerApplication,
+    GrowerProfile,
     GrowerReport,
-    LabelGeneration,
-    TransectMeasurement,
-    DropPlateReading,
-    VegetationReading,
-    SoilReading,
-    SoilCompactionReading,
-    InfiltrometerReading,
     InfiltrationRingReading,
+    InfiltrometerReading,
+    LabelGeneration,
+    ManagementPractices,
+    SiteTransect,
+    SoilCompactionReading,
+    SoilReading,
+    TransectCode,
+    TransectMeasurement,
+    VegetationReading,
 )
-
-from . import admin
 
 __all__ = [
     'GrowerProfile',
@@ -46,5 +44,3 @@ __all__ = [
     'InfiltrometerReading',
     'InfiltrationRingReading',
 ]
-
-

@@ -1,5 +1,4 @@
-from ..samples.constants import (FIELD_SAMPLE_TYPE, FIELD_SITE_HABITAT_TYPE,
-                                 FIELD_SITE_TREATMENT, FIELD_SPECIMEN_TAGS)
+from ..samples.constants import FIELD_SAMPLE_TYPE, FIELD_SITE_HABITAT_TYPE, FIELD_SITE_TREATMENT, FIELD_SPECIMEN_TAGS
 from ..taxonomy.constants import FIELD_MORPHO_TAGS_LOOKUP
 
 # LookupChoices
@@ -84,7 +83,7 @@ FIPS_STATE = {
 
 
 STATE_CHOICES = {
-    US_STATE_CHOICES: [[v, v] for _ , v in FIPS_STATE.items()],
+    US_STATE_CHOICES: [[v, v] for _, v in FIPS_STATE.items()],
     CANADA_STATE_CHOICES: (('Manitoba', 'Manitoba'), ('Saskatchewan', 'Saskatchewan'))
 }
 
@@ -136,10 +135,10 @@ STITCHER_FORM_REQUIRED_KEYS = [
 ]
 STITCHER_LABEL_IMG = 'label_r_001.jpg'
 STITCHER_APPROVED_CHOICES = (
-        (None, '---'),
-        (True, 'Approved'),
-        (False, 'Retake')
-    )
+    (None, '---'),
+    (True, 'Approved'),
+    (False, 'Retake')
+)
 STITCHER_STATS_LS_PROJECTS = 'label_studio_projects'
 
 # Default LookupChoices

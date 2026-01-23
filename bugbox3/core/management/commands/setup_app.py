@@ -1,10 +1,10 @@
 from django.core.management.base import BaseCommand
-from organizations.utils import create_organization
 from organizations.models import Organization
+from organizations.utils import create_organization
 
 from bugbox3.core.permissions_utils import create_app_groups
-from bugbox3.users.models import User
 from bugbox3.core.utils import create_default_lookup_choices
+from bugbox3.users.models import User
 
 
 class Command(BaseCommand):

@@ -1,15 +1,15 @@
-import cv2
-import numpy as np
 from contextlib import closing
 from io import BytesIO
 from pathlib import Path
-from PIL import Image
 from uuid import uuid4
 
+import cv2
+import numpy as np
 from django.conf import settings
 from django.core.files import File
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
+from PIL import Image
 
 from bugbox3.samples.models import Specimen, SpecimenImage
 
@@ -99,7 +99,8 @@ def create_segmentation(
     label, segmentation, image_height, image_width
 ):
     """
-    FROM: https://github.com/HumanSignal/label-studio-sdk/blob/master/src/label_studio_sdk/converter/imports/coco.py#L78C5-L78C24
+    FROM: https://github.com/HumanSignal/label-studio-sdk/blob/master/
+    src/label_studio_sdk/converter/imports/coco.py#L78C5-L78C24
     Convert COCO segmentation annotation to Label Studio polygon format.
 
     COCO segmentation format: flat array of [x1,y1,x2,y2,...] coordinates

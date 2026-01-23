@@ -2,31 +2,49 @@ import uuid
 from io import BytesIO
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.gis.db.models import PointField
 from django.contrib.gis.geos import Point
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator
 from django.db import transaction
-from django.db.models import (CASCADE, SET_NULL, IntegerField, BooleanField, CharField,
-                              DateField, DateTimeField, DecimalField,
-                              FileField, ForeignKey, ImageField, JSONField,
-                              Manager, Model, PositiveIntegerField,
-                              PositiveSmallIntegerField, SlugField, TextField,
-                              UUIDField, Index)
+from django.db.models import (
+    CASCADE,
+    SET_NULL,
+    BooleanField,
+    CharField,
+    DateField,
+    DateTimeField,
+    DecimalField,
+    FileField,
+    ForeignKey,
+    ImageField,
+    Index,
+    IntegerField,
+    JSONField,
+    Manager,
+    Model,
+    PositiveIntegerField,
+    PositiveSmallIntegerField,
+    SlugField,
+    TextField,
+    UUIDField,
+)
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from organizations.models import Organization
-from django.contrib.auth import get_user_model
 
 from bugbox3.core import constants as geo_constants
 from bugbox3.core.models import UsCountiesTigerLine
+
 from ..libs.utilities import resized_thumbnail, save_specimen_img_thumbs
 from ..taxonomy.models import Morphospecies
 from ..taxonomy.tasks import id_image
 from . import constants
 
 User = get_user_model()
+
 
 class UserLocationExportFile(Model):
     user = ForeignKey(User, on_delete=CASCADE)
@@ -41,7 +59,10 @@ class UserLocationExportFile(Model):
     )
 
     def __str__(self):
-        return f"Location Export by {self.user} for {self.experiment} on {self.created_at.strftime('%Y-%m-%d %H:%M:%S')}"
+        return f"Location Export by {
+            self.user} for {
+            self.experiment} on {
+            self.created_at.strftime('%Y-%m-%d %H:%M:%S')}"
 
 
 class ExperimentManager(Manager):

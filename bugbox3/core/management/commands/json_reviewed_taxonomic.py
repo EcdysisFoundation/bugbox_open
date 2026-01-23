@@ -38,9 +38,9 @@ class Command(BaseCommand):
             specimen__classification_id__isnull=False,
             specimen__sample__site_visit__site__experiment__organization_id=constants.ECDYSIS_ORGANIZATION_ID).exclude(
                 specimen__classification__name__icontains='eggs'
-            ).exclude(
+        ).exclude(
                 specimen__classification__name__icontains='mummified'
-            ).values(*fields))
+        ).values(*fields))
 
         immature_ids = self.Morphospecies.objects.filter(name__icontains='immatures').values_list('id', flat=True)
         for i in q:

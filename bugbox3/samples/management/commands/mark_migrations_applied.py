@@ -13,7 +13,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         migrations = options['migrations']
-        
+
         with connection.cursor() as cursor:
             for migration_name in migrations:
                 cursor.execute(
@@ -21,7 +21,7 @@ class Command(BaseCommand):
                     [migration_name]
                 )
                 exists = cursor.fetchone()[0] > 0
-                
+
                 if exists:
                     self.stdout.write(
                         self.style.WARNING(f'Migration {migration_name} is already marked as applied.')
@@ -34,4 +34,3 @@ class Command(BaseCommand):
                     self.stdout.write(
                         self.style.SUCCESS(f'Marked migration {migration_name} as applied.')
                     )
-

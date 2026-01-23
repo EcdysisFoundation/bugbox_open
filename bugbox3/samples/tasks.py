@@ -4,29 +4,30 @@ from tempfile import NamedTemporaryFile
 
 from celery import shared_task
 from celery.exceptions import SoftTimeLimitExceeded
-from config import celery_app
-
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
+from django.db.models import Q
+from django.db.models.functions import Lower
 
-from bugbox3.core.stitcher_utils import (
-    crop_img_to_annotations,
-    crop_img_with_segmentation
+from bugbox3.core.stitcher_utils import crop_img_to_annotations, crop_img_with_segmentation
+from bugbox3.samples.models import (
+    Experiment,
+    MultiSpecimenImage,
+    Sample,
+    Site,
+    SiteVisit,
+    Specimen,
+    SpecimenImage,
+    UserExperimentFile,
+    UserLocationExportFile,
 )
+from config import celery_app
+
 from ..taxonomy.models import Morphospecies
-from ..taxonomy.utils import (get_immature_morphospecies_ids,
-                              get_skip_morphospecies_ids)
+from ..taxonomy.utils import get_immature_morphospecies_ids, get_skip_morphospecies_ids
 from . import constants
 from .calculations import get_indices
-from bugbox3.samples.models import (
-    Experiment, Sample, Site, SiteVisit,
-    UserExperimentFile, UserLocationExportFile,
-    Specimen, SpecimenImage,
-    MultiSpecimenImage
-)
-from django.db.models.functions import Lower
-from django.db.models import Q
 
 User = get_user_model()
 
@@ -50,9 +51,9 @@ def export_csv(
     if not all([v.isnumeric() for v in sites]):
         None  # Handle invalid input
     sites = (
-                [int(v) for v in sites]
-                if sites
-                else Site.objects.filter(experiment_id=experiment.id).values_list('id', flat=True))
+        [int(v) for v in sites]
+        if sites
+        else Site.objects.filter(experiment_id=experiment.id).values_list('id', flat=True))
 
     if not all([v.isnumeric() for v in other_experiments]):
         None  # Handle invalid input
@@ -203,7 +204,17 @@ def export_csv(
 
 
 @shared_task(soft_time_limit=3600, hard_time_limit=3900)
-def export_csv_by_location(user_id, experiment_id, habitats, countries, states, indices, sample_types, include_immatures_skipped, level, export_type):
+def export_csv_by_location(
+        user_id,
+        experiment_id,
+        habitats,
+        countries,
+        states,
+        indices,
+        sample_types,
+        include_immatures_skipped,
+        level,
+        export_type):
     user = User.objects.get(pk=user_id)
     experiment = Experiment.objects.user_access(user).get(id=experiment_id)
     habitats = [h.strip().lower() for h in habitats]
@@ -286,7 +297,12 @@ def export_csv_by_location(user_id, experiment_id, habitats, countries, states, 
             if export_type == constants.EXP_CSV_TYPE_AI:
                 morphospecies_id = specimen.ai_classification_id
             elif export_type == constants.EXP_CSV_TYPE_REVIEWED:
-                morphospecies_id = (None if specimen.acceptance == constants.ACCEPTANCE_PENDING and specimen.ai_classification else specimen.classification_id)
+                morphospecies_id = (
+                    None
+                    if specimen.acceptance == constants.ACCEPTANCE_PENDING
+                    and specimen.ai_classification
+                    else specimen.classification_id
+                )
             else:
                 morphospecies_id = specimen.classification_id or specimen.ai_classification_id
 

@@ -38,7 +38,7 @@ class Command(BaseCommand):
             specimen__sample__site_visit__site__experiment__organization_id__in=org_ids,
             specimen__sample__site_visit__site__experiment__organization__name__in=org_names,
             downloaded_image=False,
-            )
+        )
 
         # inventory specimen_images to see which have already been downloaded.
         for s in specimen_images:

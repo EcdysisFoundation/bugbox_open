@@ -5,8 +5,7 @@ from rest_framework.reverse import reverse as api_reverse
 from ..core.models import Exports, PrivateSiteContent
 from ..libs.ui_helpers import get_img_captioned, get_specimen_location
 from ..libs.utilities import get_json_context, get_media_url
-from ..samples.exports import (PUBLIC_ALL_IMAGES_EXPORT_TITLE,
-                               PUBLIC_IMAGES_EXPORT_TITLE)
+from ..samples.exports import PUBLIC_ALL_IMAGES_EXPORT_TITLE, PUBLIC_IMAGES_EXPORT_TITLE
 from ..samples.models import SpecimenImage
 from ..taxonomy import constants as constants_tax
 from ..taxonomy.models_query import get_taxon_entries
@@ -33,9 +32,9 @@ class CollectionView(TemplateView):
             'org_name': PUBLIC_COLLECTIONS[self.kwargs['org_id']]['org_name'],
             'org_id': self.kwargs['org_id'],
             'family_choices': get_taxon_entries(
-                    kwargs['org_id'],
-                    constants_tax.FIELD_MORPHO_GBIF_FAMILY,
-                    public_image=True),
+                kwargs['org_id'],
+                constants_tax.FIELD_MORPHO_GBIF_FAMILY,
+                public_image=True),
             'json_context': get_json_context({
                 'collection': PUBLIC_COLLECTIONS[self.kwargs['org_id']]['collection'],
                 'datatables_url': api_reverse('samples:collection-data-list',

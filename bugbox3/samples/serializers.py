@@ -1,20 +1,27 @@
-from django.core.files.storage import default_storage
 from django.conf import settings
+from django.core.files.storage import default_storage
 from django.urls import reverse
 from rest_framework.serializers import ModelSerializer
 
+from bugbox3.samples.utils import resolve_entered_by
+
 from ..core.models import LookupChoices
-from ..libs.ui_helpers import (classify_specimen_button, get_ai_classification,
-                               get_canonical_name, get_classifcation,
-                               get_datatables_container, get_datatables_row,
-                               get_img_captioned, get_img_src,
-                               get_probability_or_user, get_specimen_context,
-                               get_specimen_location)
+from ..libs.ui_helpers import (
+    classify_specimen_button,
+    get_ai_classification,
+    get_canonical_name,
+    get_classifcation,
+    get_datatables_container,
+    get_datatables_row,
+    get_img_captioned,
+    get_img_src,
+    get_probability_or_user,
+    get_specimen_context,
+    get_specimen_location,
+)
 from ..libs.utilities import get_media_url
 from . import constants
-from .models import (Experiment, MultiSpecimenImage, Sample, SamplePlan, Site,
-                     Specimen)
-from bugbox3.samples.utils import resolve_entered_by
+from .models import Experiment, MultiSpecimenImage, Sample, SamplePlan, Site, Specimen
 
 
 class ExperimentsDatatablesSerializer(ModelSerializer):
@@ -295,7 +302,11 @@ class SpecimensAllDatatablesSerializer(ModelSerializer):
         specimen_image = value.specimenimage_set.first()
         if specimen_image:
             img_thumbnail = get_img_src(specimen_image.image_thumbnail, public=specimen_image.public_image)
-            modal_thumb_img = specimen_image.image_thumbnail_large if specimen_image.image_thumbnail_large else specimen_image.image
+            modal_thumb_img = (
+                specimen_image.image_thumbnail_large
+                if specimen_image.image_thumbnail_large
+                else specimen_image.image
+            )
             # dont use get_img_src() here due to modal .js reasons
             if default_storage.exists(modal_thumb_img.name):
                 if specimen_image.image_thumbnail_large:
@@ -351,9 +362,9 @@ class CollectionDatatablesSerializer(ModelSerializer):
         specimen_image = value.specimenimage_set.first()
         if specimen_image:
             image = get_img_captioned(
-                    specimen_image.image_thumbnail_medium,
-                    value.classification.gbif_canonical_name,
-                    public=specimen_image.public_image)
+                specimen_image.image_thumbnail_medium,
+                value.classification.gbif_canonical_name,
+                public=specimen_image.public_image)
             if specimen_image.image_thumbnail_large:
                 # dont use get_img_src() here due to modal .js reasons
                 if default_storage.exists(specimen_image.image_thumbnail_large.name):

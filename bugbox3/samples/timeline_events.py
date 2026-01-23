@@ -1,6 +1,6 @@
+from ..libs.utilities import uniform_time_display
 from . import constants
 from .models import TimelineEvent
-from ..libs.utilities import uniform_time_display
 
 # EVENT CONSTANTS
 EVENT_TITLE_REVIEW = 'Reviewed'
@@ -61,11 +61,11 @@ def audit_specimen_update(form, user, specimen):
         changed.remove(constants.FIELD_SPECIMEN_ACCEPTANCE)
     if changed:
         TimelineEvent.objects.create(
-                specimen_id=specimen.id,
-                event_title=get_event_title(changed),
-                by_user=user,
-                body=get_event_body(changed, form.initial, form.instance)
-            )
+            specimen_id=specimen.id,
+            event_title=get_event_title(changed),
+            by_user=user,
+            body=get_event_body(changed, form.initial, form.instance)
+        )
 
 
 def audit_specimen_view(initial, user, specimen):
@@ -82,11 +82,11 @@ def audit_specimen_view(initial, user, specimen):
 
 def audit_upload_images(user, specimen, created_images):
     TimelineEvent.objects.create(
-            specimen_id=specimen.id,
-            event_title=EVENT_TITLE_UPLOADED_IMAGES,
-            by_user=user,
-            body='Uploaded {0} images'.format(created_images)
-        )
+        specimen_id=specimen.id,
+        event_title=EVENT_TITLE_UPLOADED_IMAGES,
+        by_user=user,
+        body='Uploaded {0} images'.format(created_images)
+    )
 
 
 def get_created_entry(username, date):
@@ -102,7 +102,7 @@ def timeline_events(specimen):
     user = specimen.created_by_user.username if specimen.created_by_user else EVENT_UNKNOWN_USER
     events = [get_created_entry(user, specimen.date_added)]
     events += list(TimelineEvent.objects.filter(
-                    specimen_id=specimen.id).values(*EVENT_VALUES))
+        specimen_id=specimen.id).values(*EVENT_VALUES))
     for e in events:
         e[constants.FIELD_TIMELINE_EVENT_DATE_TIME] = uniform_time_display(e[constants.FIELD_TIMELINE_EVENT_DATE_TIME])
     return events

@@ -1,16 +1,15 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required, permission_required
-from django.contrib import messages
-from django.db import IntegrityError, transaction
 import json
 
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required, permission_required
+from django.db import IntegrityError, transaction
+from django.shortcuts import get_object_or_404, redirect, render
+
 from bugbox3.core.permissions import IS_GROWER
-from ...models import (
-    Farm, Field, GrowerApplication,
-    ManagementPractices, GrazingEvent, TransectMeasurement
-)
+
 from ...forms.grower.forms import ApplicationCreationForm
 from ...middleware import get_user_timezone
+from ...models import Farm, Field, GrazingEvent, GrowerApplication, ManagementPractices, TransectMeasurement
 
 
 @login_required
@@ -25,12 +24,12 @@ def application_create(request):
                         grower=request.user,
                         name=form.cleaned_data['farm_name']
                     )
-                    
+
                     existing_field = Field.objects.filter(
                         farm=farm,
                         field_name=form.cleaned_data['field_name']
                     ).first()
-                    
+
                     if existing_field:
                         if existing_field.field_type == form.cleaned_data['field_type']:
                             field = existing_field
@@ -68,33 +67,36 @@ def application_create(request):
                         if form.cleaned_data.get('crop_varieties'):
                             field.crop_varieties = form.cleaned_data.get('crop_varieties', '')
                         field.save()
-                    
+
                     application = GrowerApplication.objects.create(
                         field=field,
                         grower=request.user,
                         date_sampled=form.cleaned_data['date_sampled']
-                        )
-                    
+                    )
+
                     messages.success(request, f'Application {application.submission_code} created successfully!')
                     return redirect('grower_portal:application_step2', application_id=application.id)
-                    
+
             except IntegrityError as e:
                 if 'field_id_date_sampled' in str(e):
                     messages.error(
                         request,
-                        f'An application already exists for field "{form.cleaned_data["field_name"]}" on {form.cleaned_data["date_sampled"].strftime("%B %d, %Y")}. '
+                        f'An application already exists for field '
+                        f'"{form.cleaned_data["field_name"]}" on '
+                        f'{form.cleaned_data["date_sampled"].strftime("%B %d, %Y")}. '
                         f'Please choose a different date or edit the existing application from your dashboard.'
                     )
                 else:
                     messages.error(
                         request,
-                        'An error occurred while creating the application. Please try again or contact support if the issue persists.'
-                    )
+                        'An error occurred while creating the application. '
+                        'Please try again or contact support if the issue '
+                        'persists.')
             except ValueError:
                 pass
     else:
         form = ApplicationCreationForm()
-    
+
     return render(request, 'grower_portal/grower/application_create.html', {
         'form': form,
         'user_timezone': get_user_timezone(request)
@@ -110,19 +112,18 @@ def application_view(request, application_id):
         id=application_id,
         grower=request.user
     )
-    
+
     try:
         management_practices = ManagementPractices.objects.get(application=application)
     except ManagementPractices.DoesNotExist:
         management_practices = None
-    
-    grazing_events = GrazingEvent.objects.filter(application=application).prefetch_related('animals').order_by('event_number') if application.field.field_type == 'range' else []
-    
-    field = application.field
-    
+
+    grazing_events = GrazingEvent.objects.filter(application=application).prefetch_related(
+        'animals').order_by('event_number') if application.field.field_type == 'range' else []
+
     transect_data = []
     for i, code in enumerate(application.transect_codes):
-        location = getattr(application, f'transect_{i+1}_location', None)
+        location = getattr(application, f'transect_{i + 1}_location', None)
         if location:
             transect_data.append({
                 'index': i,
@@ -130,7 +131,7 @@ def application_view(request, application_id):
                 'latitude': float(location.y),
                 'longitude': float(location.x)
             })
-    
+
     transect_measurements = TransectMeasurement.objects.filter(
         application=application
     ).prefetch_related(
@@ -141,7 +142,7 @@ def application_view(request, application_id):
         'infiltrometer',
         'infiltration_ring'
     ).order_by('transect_index')
-    
+
     return render(request, 'grower_portal/grower/application_view.html', {
         'application': application,
         'management_practices': management_practices,
@@ -160,11 +161,11 @@ def application_edit(request, application_id):
         id=application_id,
         grower=request.user
     )
-    
+
     if not application.is_draft:
         messages.error(request, 'You cannot edit a submitted application.')
         return redirect('grower_portal:application_view', application_id=application.id)
-    
+
     return redirect('grower_portal:application_step1', application_id=application.id)
 
 
@@ -177,19 +178,18 @@ def application_delete(request, application_id):
         id=application_id,
         grower=request.user
     )
-    
+
     if not application.is_draft:
         messages.error(request, 'You cannot delete a submitted application.')
         return redirect('grower_portal:application_view', application_id=application.id)
-    
+
     if request.method == 'POST':
         submission_code = application.submission_code
         application.delete()
         messages.success(request, f'Application {submission_code} has been deleted.')
         return redirect('grower_portal:dashboard')
-    
+
     return render(request, 'grower_portal/grower/application_delete.html', {
         'application': application,
         'user_timezone': get_user_timezone(request)
     })
-

@@ -1,18 +1,19 @@
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.models import Group, Permission
+from django.shortcuts import redirect, render
 
-from bugbox3.core.permissions import IS_GROWER_USER, IS_GROWER
-from ...models import GrowerProfile, GrowerApplication
+from bugbox3.core.permissions import IS_GROWER, IS_GROWER_USER
+
 from ...forms.grower.forms import GrowerProfileCompletionForm
 from ...middleware import get_user_timezone
+from ...models import GrowerApplication, GrowerProfile
 
 
 def grant_full_grower_permissions(user):
     """Add user to is_grower group with IS_GROWER permissions"""
     grower_group, created = Group.objects.get_or_create(name='is_grower')
-    
+
     permissions_to_add = []
     for perm_string in IS_GROWER:
         app_label, codename = perm_string.split('.')
@@ -24,10 +25,10 @@ def grant_full_grower_permissions(user):
             permissions_to_add.append(perm)
         except Permission.DoesNotExist:
             pass
-    
+
     if permissions_to_add:
         grower_group.permissions.set(permissions_to_add)
-    
+
     if not user.groups.filter(name='is_grower').exists():
         user.groups.add(grower_group)
 
@@ -45,7 +46,7 @@ def profile_complete(request):
 
     if request.method == 'POST':
         action = request.POST.get('action', 'complete')
-        
+
         if action == 'skip':
             grower_profile, created = GrowerProfile.objects.get_or_create(
                 user=request.user,
@@ -54,12 +55,12 @@ def profile_complete(request):
             if not created:
                 grower_profile.profile_completed = True
                 grower_profile.save()
-            
+
             grant_full_grower_permissions(request.user)
-            
+
             messages.info(request, 'Profile completion skipped. You can complete it later from your dashboard.')
             return redirect('grower_portal:dashboard')
-        
+
         else:
             form = GrowerProfileCompletionForm(request.POST)
             if form.is_valid():
@@ -70,11 +71,11 @@ def profile_complete(request):
                 if not created:
                     for field, value in form.cleaned_data.items():
                         setattr(grower_profile, field, value)
-                
+
                 grower_profile.profile_completed = True
                 grower_profile.save()
                 grant_full_grower_permissions(request.user)
-                
+
                 messages.success(request, 'Your grower profile has been completed successfully!')
                 return redirect('grower_portal:dashboard')
     else:
@@ -94,12 +95,12 @@ def dashboard(request):
         grower_profile = request.user.grower_profile
     except GrowerProfile.DoesNotExist:
         return redirect('grower_portal:profile_complete')
-    
+
     if not grower_profile.profile_completed:
         return redirect('grower_portal:profile_complete')
-    
+
     applications = GrowerApplication.objects.filter(grower=request.user).order_by('-date_sampled')
-    
+
     return render(request, 'grower_portal/grower/dashboard.html', {
         'grower_profile': grower_profile,
         'applications': applications,
@@ -115,7 +116,7 @@ def profile_edit(request):
         grower_profile = request.user.grower_profile
     except GrowerProfile.DoesNotExist:
         return redirect('grower_portal:profile_complete')
-    
+
     if request.method == 'POST':
         form = GrowerProfileCompletionForm(request.POST, instance=grower_profile)
         if form.is_valid():
@@ -130,4 +131,3 @@ def profile_edit(request):
         'is_edit': True,
         'user_timezone': get_user_timezone(request)
     })
-

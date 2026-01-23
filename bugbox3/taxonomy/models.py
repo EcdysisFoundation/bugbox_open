@@ -2,9 +2,20 @@ from io import BytesIO
 
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
-from django.db.models import (CASCADE, SET_NULL, BooleanField, CharField,
-                              DateField, DateTimeField, FloatField, ForeignKey,
-                              ImageField, IntegerField, Model, BigIntegerField)
+from django.db.models import (
+    CASCADE,
+    SET_NULL,
+    BigIntegerField,
+    BooleanField,
+    CharField,
+    DateField,
+    DateTimeField,
+    FloatField,
+    ForeignKey,
+    ImageField,
+    IntegerField,
+    Model,
+)
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 
@@ -37,6 +48,7 @@ class Morphospecies(Model):
     update_thumbs = BooleanField(null=True)
     exclude_from_export = BooleanField(default=False)
     tags = ArrayField(CharField(max_length=1000, blank=True), default=list)
+
     class Meta:
         app_label = 'taxonomy'
 
@@ -87,6 +99,7 @@ class AiTraining(Model):
     val = IntegerField(null=False)
     entered_date = DateField(auto_now_add=True)
 
+
 class GBIFImageRecord(Model):
     gbif_taxon_key = IntegerField()
     scientific_name = CharField(max_length=255)
@@ -102,6 +115,7 @@ class GBIFImageRecord(Model):
 
     class Meta:
         app_label = 'taxonomy'
+
     def __str__(self):
         return f"{self.scientific_name} ({self.gbif_taxon_key})"
 
@@ -121,5 +135,6 @@ class FilteredGBIFImageRecord(Model):
 
     class Meta:
         app_label = 'taxonomy'
+
     def __str__(self):
         return f"{self.canonical_name} ({self.gbif_taxon_key})"

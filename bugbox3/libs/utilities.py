@@ -6,21 +6,20 @@ from pathlib import Path
 import boto3
 from django.conf import settings
 from django.core.files import File
+from django.core.files.images import get_image_dimensions
 from django.core.files.storage import default_storage
 from django.core.serializers.json import DjangoJSONEncoder
-from django.core.files.images import get_image_dimensions
 from PIL import Image
 
 from bugbox3.samples import constants
 
-
 if 's3storage' in default_storage.__class__.__name__.lower():
     S3_CLIENT = boto3.client(
-            's3',
-            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-            region_name=settings.AWS_REGION,
-        )
+        's3',
+        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+        region_name=settings.AWS_REGION,
+    )
 else:
     S3_CLIENT = None
 
@@ -100,7 +99,7 @@ def resized_thumbnail(image, width, height, buffer, thumbname='thumbnail', large
                 # Spilt the filename on “.” to get the file extension only
                 img_suffix = Path(image.file.name).name.split(".")[-1]
                 new_filename = '{0}_{1}.{2}'.format(
-                    str(img_filename[:-len(img_suffix)-1]), str(thumbname), str(img_suffix))
+                    str(img_filename[:-len(img_suffix) - 1]), str(thumbname), str(img_suffix))
                 # Use the file extension to determine the file type from the image_types dictionary
                 img_format = IMAGE_TYPES[img_suffix.lower()]
                 # Save the resized image into the buffer, noting the correct file type
@@ -137,18 +136,18 @@ def crop_img_to_grid(image, grid):
         with Image.open(image) as img:
             if grid == constants.IMAGE_GRID_CHOICE_4_BY_3:
                 grid_params = [
-                    [0, 0, width * (1/4), height * (1/3)],
-                    [width * (1/4), 0, width * (2/4), height * (1/3)],
-                    [width * (2/4), 0, width * (3/4), height * (1/3)],
-                    [width * (3/4), 0, width * (4/4), height * (1/3)],
-                    [0, height * (1/3), width * (1/4), height * (2/3)],
-                    [width * (1/4), height * (1/3), width * (2/4), height * (2/3)],
-                    [width * (2/4), height * (1/3), width * (3/4), height * (2/3)],
-                    [width * (3/4), height * (1/3), width * (4/4), height * (2/3)],
-                    [0, height * (2/3), width * (1/4), height * (3/3)],
-                    [width * (1/4), height * (2/3), width * (2/4), height * (3/3)],
-                    [width * (2/4), height * (2/3), width * (3/4), height * (3/3)],
-                    [width * (3/4), height * (2/3), width * (4/4), height * (3/3)],
+                    [0, 0, width * (1 / 4), height * (1 / 3)],
+                    [width * (1 / 4), 0, width * (2 / 4), height * (1 / 3)],
+                    [width * (2 / 4), 0, width * (3 / 4), height * (1 / 3)],
+                    [width * (3 / 4), 0, width * (4 / 4), height * (1 / 3)],
+                    [0, height * (1 / 3), width * (1 / 4), height * (2 / 3)],
+                    [width * (1 / 4), height * (1 / 3), width * (2 / 4), height * (2 / 3)],
+                    [width * (2 / 4), height * (1 / 3), width * (3 / 4), height * (2 / 3)],
+                    [width * (3 / 4), height * (1 / 3), width * (4 / 4), height * (2 / 3)],
+                    [0, height * (2 / 3), width * (1 / 4), height * (3 / 3)],
+                    [width * (1 / 4), height * (2 / 3), width * (2 / 4), height * (3 / 3)],
+                    [width * (2 / 4), height * (2 / 3), width * (3 / 4), height * (3 / 3)],
+                    [width * (3 / 4), height * (2 / 3), width * (4 / 4), height * (3 / 3)],
                 ]
             else:
                 # no other supported grid_params
@@ -157,7 +156,7 @@ def crop_img_to_grid(image, grid):
             result = []
             for i, params in enumerate(grid_params):
                 new_filename = '{0}{1}.{2}'.format(
-                    str(img_filename[:-len(img_suffix)-1]),
+                    str(img_filename[:-len(img_suffix) - 1]),
                     grid_id_format(i),
                     str(img_suffix))
 
