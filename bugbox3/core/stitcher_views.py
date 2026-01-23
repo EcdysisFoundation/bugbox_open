@@ -222,6 +222,7 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                             f'Retake status for this sample in Stitcher has not been saved. '
                             f'Please make sure Shimsy is up and try again.'
                         )
+                        form.add_error(constants.STITCHER_APPROVED, "Approved/Retake status was not saved.")
                         return self.form_invalid(form)
                     else:
                         messages.success(
