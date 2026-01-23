@@ -86,6 +86,7 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
         self.thumbnail_src = None
         self.label_src = f'/static/{self.guid}/{constants.STITCHER_LABEL_IMG}'
         self.nota_sample = None
+        self.omit_from_training = None
         if constants.STITCHER_PANORAMA_PATH in self.data.keys():
             if self.data[constants.STITCHER_PANORAMA_PATH]:
                 self.img_src = self.data[constants.STITCHER_PANORAMA_PATH].replace('/media/', '/static/')
@@ -94,6 +95,8 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                 self.panorama_name = os.path.basename(self.data[constants.STITCHER_PANORAMA_PATH])
         if constants.STITCHER_NOTA_SAMPLE in self.data.keys():
             self.nota_sample = self.data[constants.STITCHER_NOTA_SAMPLE]
+        if constants.STITCHER_OMIT_FROM_TRAINING in self.data.keys():
+            self.omit_from_training = self.data[constants.STITCHER_OMIT_FROM_TRAINING]
 
         return kwargs
 
@@ -163,6 +166,8 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
             'form_action_url': reverse(
                 'core:stitcher-form', kwargs={'guid': str(self.guid)}),
             'form_iden_crop_save': constants.STITCHER_FORM_CROPSAVE,
+            'form_iden_default': constants.STITCHER_FORM_DEFAULT,
+            'form_iden_post_cropped': constants.STITCHER_FORM_POST_CROPPED,
             'disable_crop_save': disable_crop_save,
             'json_context': get_json_context({
                 constants.STITCHER_GUID: self.guid,
@@ -189,6 +194,8 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
             initial[constants.STITCHER_BUGBOX_SAMPLE_ID] = data[constants.STITCHER_BUGBOX_SAMPLE_ID]
         if constants.STITCHER_NOTA_SAMPLE in data.keys():
             initial[constants.STITCHER_NOTA_SAMPLE] = data[constants.STITCHER_NOTA_SAMPLE]
+        if constants.STITCHER_OMIT_FROM_TRAINING in data.keys():
+            initial[constants.STITCHER_OMIT_FROM_TRAINING] = data[constants.STITCHER_OMIT_FROM_TRAINING]
         return initial
 
     def form_valid(self, form):
@@ -215,6 +222,7 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                             f'Retake status for this sample in Stitcher has not been saved. '
                             f'Please make sure Shimsy is up and try again.'
                         )
+                        form.add_error(constants.STITCHER_APPROVED, "Approved/Retake status was not saved.")
                         return self.form_invalid(form)
                     else:
                         messages.success(
@@ -223,7 +231,6 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                         )
 
             # will only proceed with update if Shimsy API succeeded
-
             v = patch_upload_file(self.guid, formdata)
             if constants.STITCHER_ERROR in v.keys():
                 messages.error(
@@ -238,39 +245,37 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                             upload_dir_name,
                             self.guid
                         )
-                        
+
                         if cleanup_result['deleted_count'] > 0:
                             deleted_list = ', '.join(cleanup_result['deleted_samples'][:5])
                             if len(cleanup_result['deleted_samples']) > 5:
                                 deleted_list += f' and {len(cleanup_result["deleted_samples"]) - 5} more'
-                            
+
                             messages.success(
                                 self.request,
                                 f'Successfully updated {self.guid}. '
                                 f'Removed {cleanup_result["deleted_count"]} matching retake record(s): {deleted_list}'
                             )
-                            
-                            # Log errors
-                            if cleanup_result['errors']:
-                                for error in cleanup_result['errors']:
-                                    messages.warning(
-                                        self.request,
-                                        f'Failed to remove retake record {error["sample"]}: {error["error"]}'
-                                    )
-                        else:
-                            # No matching retake records found
-                            messages.success(
-                                self.request, f'Successfully updated {self.guid}'
-                            )
-                    else:
-                        messages.success(
-                            self.request, f'Successfully updated {self.guid}'
-                        )
-                else:
-                    # Show success message for non-approval updates
-                    messages.success(
-                        self.request, f'Successfully updated {self.guid}'
-                    )
+                        # Log errors
+                        if cleanup_result['errors']:
+                            for error in cleanup_result['errors']:
+                                messages.warning(
+                                    self.request,
+                                    f'Failed to remove retake record {error["sample"]}: {error["error"]}'
+                                )
+                messages.success(
+                    self.request, f'Successfully updated {self.guid}'
+                )
+        elif formdata[constants.STITCHER_FORM_IDENT] == constants.STITCHER_FORM_POST_CROPPED:
+            # limit what data is updated in STITCHER_FORM_POST_CROPPED by dict update
+            limited_formdata = {key: item for key, item in self.data.items() if key in formdata.keys()}
+            limited_formdata.update({
+                constants.STITCHER_OMIT_FROM_TRAINING: formdata[constants.STITCHER_OMIT_FROM_TRAINING]
+            })
+            v = patch_upload_file(self.guid, limited_formdata)
+            messages.success(
+                self.request, f'Successfully updated {self.guid}'
+            )
         elif formdata[constants.STITCHER_FORM_IDENT] == constants.STITCHER_FORM_CROPSAVE:
             try:
                 this_sample = Sample.objects.user_access(self.request.user).get(
