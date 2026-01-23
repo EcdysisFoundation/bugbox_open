@@ -215,6 +215,10 @@ class StitcherForm(Form):
 
     bugbox_croped_saved = CharField(required=False)
 
+    omit_from_training = BooleanField(
+        label="Omit from model training",
+        required=False)
+
     form_ident = CharField(widget=HiddenInput(), initial="defaultValue")
 
     def __init__(self, *args, **kwargs):
@@ -225,6 +229,7 @@ class StitcherForm(Form):
             FloatingField(constants.STITCHER_UPLOAD_DIR_NAME, required=True),
             FloatingField(constants.STITCHER_APPROVED),
             constants.STITCHER_NOTA_SAMPLE,
+            constants.STITCHER_OMIT_FROM_TRAINING,
             constants.STITCHER_FORM_IDENT,
             Button('cancel', 'Back / Cancel', css_class='btn-secondary',
                    onclick="window.location.href = '{}';".format(reverse('core:stitcher'))),
