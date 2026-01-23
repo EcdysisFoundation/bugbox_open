@@ -154,7 +154,6 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                     and self.data[constants.STITCHER_BUGBOX_SAMPLE_ID]:
                 disable_crop_save = False
         first_potential_sample = potential_samples[0][0] if potential_samples else None
-        print(self.data['omit_from_training'])
         context.update({
             'data': self.data,
             'panoarma_name': self.panorama_name,
@@ -201,10 +200,6 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
 
     def form_valid(self, form):
         formdata = form.cleaned_data
-        print('formdata')
-        print(formdata)
-        print(self.data['upload_dir_name'])
-
         if formdata[constants.STITCHER_FORM_IDENT] == constants.STITCHER_FORM_DEFAULT:
             # coerece STITCHER_APPROVED dropdown strings to null boolean
             if formdata[constants.STITCHER_APPROVED] == '':
