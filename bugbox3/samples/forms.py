@@ -343,13 +343,13 @@ class SpecimenForm(ModelFormMixin):
             row_2 += [
                 Column(
                     Field(constants.FIELD_SPECIMEN_ACCEPTANCE, readonly=True),
-                    Field(constants.FIELD_SPECIMEN_OBJECT_DET_TRAIN, readonly=True)
+                    Field(constants.FIELD_SPECIMEN_OMIT_FROM_TRAINING, readonly=True)
                 )]
         else:
             row_2 += [
                 Column(
                     Field(constants.FIELD_SPECIMEN_ACCEPTANCE),
-                    Field(constants.FIELD_SPECIMEN_OBJECT_DET_TRAIN)
+                    Field(constants.FIELD_SPECIMEN_OMIT_FROM_TRAINING)
                 )]
         v = [
             Field(constants.FIELD_SPECIMEN_CLASSIFICATION),

@@ -119,14 +119,27 @@
 
                     </form>
                 </li>
-                <!--
-                 else
-                <input
-                            value="Save to sample"
-                            id="sample_id-btn"
-                            type="hidden"
-                             disabled>
-                -->
+                {% else %}
+                    <li class="list-group-item">
+                        <form enctype="multipart/form-data" action="{{ form_action_url }}" method="POST">
+                            {% csrf_token %}
+                            <input type="hidden" name="form_ident" value="{{ form_iden_post_cropped }}" >
+
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="omit_from_training" id="omit_from_training"
+                                {% if data.omit_from_training %}checked{% endif %}
+                                >
+                                <label class="form-check-label" for="omit_from_training">
+                                    Omit from model training
+                                </label>
+                            </div>
+
+                            <input type="submit"
+                                value="Save"
+                                id="sample_id-btn" class="btn btn-primary mt-2">
+
+                        </form>
+                    </li>
                 {% endif %}
 
             </ul>

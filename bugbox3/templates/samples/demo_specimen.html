@@ -246,8 +246,8 @@
                               <li class="list-group-item"><b>Archival preservation:</b> {{ specimen.archival_preservation }}</li>
                               <li class="list-group-item"><b>Archival stored:</b> {{ specimen.archival_stored }}</li>
                           {% endif %}
-                          {% if specimen.object_det_train %}
-                            <li class="list-group-item">* Selected for object detection model training</li>
+                          {% if specimen.omit_from_training %}
+                            <li class="list-group-item">* Omitted from model training</li>
                           {% endif %}
                       </ul>
                     </div>

@@ -355,6 +355,7 @@ class Specimen(Model):
     archival_preservation = CharField(max_length=100, blank=True)
     archival_stored = CharField(max_length=100, blank=True)
     object_det_train = BooleanField(default=False)
+    omit_from_training = BooleanField(default=False)
 
     objects = SpecimenManager()
 

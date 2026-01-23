@@ -46,6 +46,9 @@ LOCALE_PATHS = [str(BASE_DIR / "locale")]
 # Torchserve is down
 AI_INFERENCE_URL = 'http://10.147.19.124:8070/'
 
+# SHIMSY_API_URL
+SHIMSY_API_URL = env('SHIMSY_API_URL', default='http://192.168.2.59:8000')
+
 # GOOGLE MAPS
 # ------------------------------------------------------------------------------
 GOOGLE_MAPS_API_KEY = env("GOOGLE_MAPS_API_KEY", default="")

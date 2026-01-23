@@ -140,12 +140,6 @@ When running management commands on Ecdysis01, be the command is..
 
 Several management commands and tasks are specific to Ecdysis01. Some of these are scheduled through the Celery Beat schedule. Details about some specific commands are below.
 
-### Object Detection Training.
-
-We can annotate images for object detection through Label Studio, see https://github.com/EcdysisFoundation/label-studio which is hosted at http://ecdysis01.local:8080/
-
-Command `send_label_studio` selects images with criteria to set `Specimen.object_det_train` to True for select criteria, then sends selected images to Label Studio. After they are annotated, export the JSON-MIN format. With it moved to Ecdysis01, example `scp obj_det_export.json ecdysis@ecdysis01.local:/srv/bugbox3/local_files/obj_det_export.json`, and then run `import_obj_det_results`. This stores the annotations in our database. Then to export all annotations, use `create_obj_det_train_selects` to create a json file formatted for use with  https://github.com/EcdysisFoundation/ultralytics .
-
 
 ## Storages, Site-content, and Static
 
