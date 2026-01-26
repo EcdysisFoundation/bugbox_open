@@ -39,12 +39,7 @@ from .label_management import (
     label_management,
 )
 from .reports import report_detail, report_list
-from .transect_codes import (
-    transect_code_deactivate,
-    transect_code_generate,
-    transect_code_list,
-    transect_code_reactivate,
-)
+from .sample_codes import sample_code_deactivate, sample_code_generate, sample_code_list, sample_code_reactivate
 
 __all__ = [
     'admin_dashboard',
@@ -69,10 +64,10 @@ __all__ = [
     'admin_application_create_step3',
     'admin_application_create_step4',
     'admin_application_complete',
-    'transect_code_list',
-    'transect_code_generate',
-    'transect_code_deactivate',
-    'transect_code_reactivate',
+    'sample_code_list',
+    'sample_code_generate',
+    'sample_code_deactivate',
+    'sample_code_reactivate',
     'csv_upload',
     'csv_import_list',
     'csv_import_detail',

@@ -1,4 +1,5 @@
 import os
+
 import requests
 from django.conf import settings
 
@@ -15,9 +16,9 @@ def create_rescan_request(sample_name):
     shimsy_url = getattr(settings, 'SHIMSY_API_URL', None)
     if not shimsy_url:
         shimsy_url = os.environ.get('SHIMSY_API_URL', 'http://192.168.2.59:8000')
-    
+
     api_url = f'{shimsy_url}/api/rescan-request/'
-    
+
     try:
         payload = {'sample_name': sample_name}
         response = requests.post(
@@ -26,7 +27,7 @@ def create_rescan_request(sample_name):
             headers={'Content-Type': 'application/json'},
             timeout=10
         )
-        
+
         if response.status_code == 200:
             data = response.json()
             if data.get('status') == 'success':

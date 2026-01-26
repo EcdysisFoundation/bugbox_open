@@ -8,13 +8,13 @@ from bugbox3.core.permissions import IS_GROWERADMIN
 
 from ...forms.admin.forms import TransectCodeFilterForm, TransectCodeGenerationForm
 from ...middleware import get_user_timezone
-from ...models import TransectCode
+from ...models import SampleCode
 
 
 @login_required
 @permission_required(IS_GROWERADMIN, raise_exception=True)
-def transect_code_list(request):
-    codes_queryset = TransectCode.objects.select_related(
+def sample_code_list(request):
+    codes_queryset = SampleCode.objects.select_related(
         'created_by', 'used_in_application'
     ).order_by('-created_at')
 
@@ -26,7 +26,7 @@ def transect_code_list(request):
         usage = form.cleaned_data.get('usage')
 
         if search:
-            codes_queryset = codes_queryset.filter(transect_code__icontains=search)
+            codes_queryset = codes_queryset.filter(code__icontains=search)
 
         if status == 'active':
             codes_queryset = codes_queryset.filter(is_active=True)
@@ -48,16 +48,16 @@ def transect_code_list(request):
         'user_timezone': get_user_timezone(request)
     }
 
-    return render(request, 'grower_portal/admin/transect_code_list.html', context)
+    return render(request, 'grower_portal/admin/sample_code_list.html', context)
 
 
 def _get_next_numeric_code():
-    last_code = TransectCode.objects.select_for_update().order_by('-id').first()
+    last_code = SampleCode.objects.select_for_update().order_by('-id').first()
 
     if not last_code:
         return 0
 
-    code_str = last_code.transect_code
+    code_str = last_code.code
     if '-' in code_str:
         code_str = code_str.split('-')[-1]
 
@@ -82,7 +82,7 @@ def _format_numeric_code(number):
 
 @login_required
 @permission_required(IS_GROWERADMIN, raise_exception=True)
-def transect_code_generate(request):
+def sample_code_generate(request):
     generated_codes = []
 
     if request.method == 'POST':
@@ -104,8 +104,8 @@ def transect_code_generate(request):
                         else:
                             full_code = numeric_code
 
-                        TransectCode.objects.create(
-                            transect_code=full_code,
+                        SampleCode.objects.create(
+                            code=full_code,
                             is_active=True,
                             created_by=request.user
                         )
@@ -113,7 +113,7 @@ def transect_code_generate(request):
 
                 messages.success(
                     request,
-                    f'Successfully generated {len(generated_codes)} transect code(s).'
+                    f'Successfully generated {len(generated_codes)} sample code(s).'
                 )
 
             except Exception as e:
@@ -128,46 +128,46 @@ def transect_code_generate(request):
         'user_timezone': get_user_timezone(request)
     }
 
-    return render(request, 'grower_portal/admin/transect_code_generate.html', context)
+    return render(request, 'grower_portal/admin/sample_code_generate.html', context)
 
 
 @login_required
 @permission_required(IS_GROWERADMIN, raise_exception=True)
-def transect_code_deactivate(request, code_id):
-    code = get_object_or_404(TransectCode, id=code_id)
+def sample_code_deactivate(request, code_id):
+    code = get_object_or_404(SampleCode, id=code_id)
 
     if request.method == 'POST':
         if code.is_used:
-            messages.error(request, f'Cannot deactivate code {code.transect_code} - it is already in use.')
+            messages.error(request, f'Cannot deactivate code {code.code} - it is already in use.')
         else:
             code.is_active = False
             code.save()
-            messages.success(request, f'Transect code {code.transect_code} has been deactivated.')
+            messages.success(request, f'Sample code {code.code} has been deactivated.')
 
-        return redirect('grower_portal:admin_transect_code_list')
+        return redirect('grower_portal:admin_sample_code_list')
 
     context = {
         'code': code,
         'user_timezone': get_user_timezone(request)
     }
 
-    return render(request, 'grower_portal/admin/transect_code_deactivate.html', context)
+    return render(request, 'grower_portal/admin/sample_code_deactivate.html', context)
 
 
 @login_required
 @permission_required(IS_GROWERADMIN, raise_exception=True)
-def transect_code_reactivate(request, code_id):
-    code = get_object_or_404(TransectCode, id=code_id)
+def sample_code_reactivate(request, code_id):
+    code = get_object_or_404(SampleCode, id=code_id)
 
     if request.method == 'POST':
         code.is_active = True
         code.save()
-        messages.success(request, f'Transect code {code.transect_code} has been reactivated.')
-        return redirect('grower_portal:admin_transect_code_list')
+        messages.success(request, f'Sample code {code.code} has been reactivated.')
+        return redirect('grower_portal:admin_sample_code_list')
 
     context = {
         'code': code,
         'user_timezone': get_user_timezone(request)
     }
 
-    return render(request, 'grower_portal/admin/transect_code_reactivate.html', context)
+    return render(request, 'grower_portal/admin/sample_code_reactivate.html', context)

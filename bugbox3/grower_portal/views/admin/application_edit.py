@@ -11,7 +11,7 @@ from bugbox3.core.permissions import IS_GROWERADMIN
 from ...constants import DEFAULT_FIELD_LATITUDE, DEFAULT_FIELD_LONGITUDE
 from ...forms.grower.forms import ApplicationCreationForm, ManagementPracticesForm, TransectCodesForm
 from ...middleware import get_user_timezone
-from ...models import Farm, GrowerApplication, ManagementPractices, TransectCode
+from ...models import Farm, GrowerApplication, ManagementPractices, SampleCode
 
 
 @login_required
@@ -236,7 +236,7 @@ def admin_application_submit(request, application_id):
                 None) else ''
             if code:
                 try:
-                    transect_obj = TransectCode.objects.get(transect_code=code, is_active=True)
+                    transect_obj = SampleCode.objects.get(code=code, is_active=True)
                     if transect_obj.is_used and transect_obj.used_in_application != application:
                         submission_code = (
                             transect_obj.used_in_application.submission_code
@@ -252,7 +252,7 @@ def admin_application_submit(request, application_id):
                         return redirect(
                             'grower_portal:admin_application_edit_transects',
                             application_id=application.id)
-                except TransectCode.DoesNotExist:
+                except SampleCode.DoesNotExist:
                     messages.error(request, f'Cannot submit: Transect code {i} "{code}" is not valid or inactive.')
                     return redirect('grower_portal:admin_application_edit_transects', application_id=application.id)
 
@@ -271,7 +271,7 @@ def admin_application_submit(request, application_id):
                     f'transect_code_{i}',
                     None) else ''
                 if code:
-                    TransectCode.objects.filter(transect_code=code).update(
+                    SampleCode.objects.filter(code=code).update(
                         is_used=True,
                         used_in_application=application,
                         used_at=timezone.now()

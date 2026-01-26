@@ -19,25 +19,19 @@ from bugbox3.samples.tasks import crop_panorama_segmentation
 from . import constants
 from .forms import StitcherDeleteForm, StitcherForm
 from .permissions import IS_ADMIN, IS_RESEARCH, ZEROTIER_USERS
+from .shimsy_api import create_rescan_request
 from .stitcher_api import (
     ERROR_MSG_KEY,
     STITCHER_JS_URL,
     STITCHER_JS_URL_ZEROTIER,
     STITCHER_URL,
+    cleanup_matching_retake_records,
     delete_upload_file,
     get_root_message,
     get_stitcher_stats,
     get_upload_file,
     patch_upload_file,
-    delete_upload_file,
-    cleanup_matching_retake_records,
-    STITCHER_URL,
-    STITCHER_JS_URL_ZEROTIER,
-    STITCHER_JS_URL,
-    ERROR_MSG_KEY
 )
-from .shimsy_api import create_rescan_request
-from . import constants
 
 
 class StitcherView(PermissionRequiredMixin, TemplateView):
@@ -99,8 +93,11 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
             if self.data[constants.STITCHER_PANORAMA_PATH]:
                 self.img_src = self.data[constants.STITCHER_PANORAMA_PATH].replace('/media/', '/static/')
                 if self.data[constants.STITCHER_PANORAMA_THUMBNAIL_PATH]:
-                    self.thumbnail_src = f'{self.stitcher_js_url}{
-                        self.data[constants.STITCHER_PANORAMA_THUMBNAIL_PATH].replace('/media/', '/static/')}'
+                    thumbnail_path = (
+                        self.data[constants.STITCHER_PANORAMA_THUMBNAIL_PATH]
+                        .replace('/media/', '/static/')
+                    )
+                    self.thumbnail_src = f'{self.stitcher_js_url}{thumbnail_path}'
                 self.panorama_name = os.path.basename(self.data[constants.STITCHER_PANORAMA_PATH])
         if constants.STITCHER_NOTA_SAMPLE in self.data.keys():
             self.nota_sample = self.data[constants.STITCHER_NOTA_SAMPLE]
@@ -157,10 +154,10 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                 if sample_ids:
                     potential_samples = [
                         (i, reverse('samples:sample', kwargs={'sample_id': i})) for i in sample_ids]
-            if (self.data[constants.STITCHER_ANNOTATIONS_SEGMENT]
-                    or self.data[constants.STITCHER_ANNOTATIONS_UPDATED_AT_SEGMENT]) \
-                    and self.data[constants.STITCHER_APPROVED] \
-                    and self.data[constants.STITCHER_BUGBOX_SAMPLE_ID]:
+            if ((self.data[constants.STITCHER_ANNOTATIONS_SEGMENT]
+                    or self.data[constants.STITCHER_ANNOTATIONS_UPDATED_AT_SEGMENT])
+                    and self.data[constants.STITCHER_APPROVED]
+                    and self.data[constants.STITCHER_BUGBOX_SAMPLE_ID]):
                 disable_crop_save = False
         first_potential_sample = potential_samples[0][0] if potential_samples else None
         context.update({
@@ -383,9 +380,9 @@ class StitcherDeleteView(PermissionRequiredMixin, FormView):
             messages.error(self.request, response[ERROR_MSG_KEY])
         else:
             messages.warning(
-                self.request,
-                f'Succesfully deleted {self.upload_dir_name}'
-            )
+                    self.request,
+                    f'Succesfully deleted {self.upload_dir_name}'
+                )
         return super().form_valid(form)
 
     def get_success_url(self):

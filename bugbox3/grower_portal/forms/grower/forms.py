@@ -43,9 +43,9 @@ from ...models import (
     InfiltrationRingReading,
     InfiltrometerReading,
     ManagementPractices,
+    SampleCode,
     SoilCompactionReading,
     SoilReading,
-    TransectCode,
     TransectMeasurement,
     VegetationReading,
 )
@@ -56,7 +56,6 @@ User = get_user_model()
 class GrowerProfileCompletionForm(forms.ModelForm):
     """
     Form for completing grower profile information during initial signup.
-    This form is shown only once after grower registration.
     """
     phone = forms.CharField(
         max_length=PHONE_MAX_LENGTH,
@@ -618,14 +617,14 @@ class TransectCodesForm(forms.Form):
             code = cleaned_data.get(f'transect_code_{i}', '').strip()
             if code:
                 try:
-                    transect_obj = TransectCode.objects.get(transect_code=code, is_active=True)
+                    transect_obj = SampleCode.objects.get(code=code, is_active=True)
 
                     if transect_obj.is_used:
                         self.add_error(
                             f'transect_code_{i}',
                             f'Transect code "{code}" has already been used in a submitted application.'
                         )
-                except TransectCode.DoesNotExist:
+                except SampleCode.DoesNotExist:
                     self.add_error(f'transect_code_{i}', f'Transect code "{code}" is not valid.')
 
                 if code in transect_codes:

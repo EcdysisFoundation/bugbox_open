@@ -39,10 +39,10 @@ from ..views.admin import (
     link_application_to_grower,
     report_detail,
     report_list,
-    transect_code_deactivate,
-    transect_code_generate,
-    transect_code_list,
-    transect_code_reactivate,
+    sample_code_deactivate,
+    sample_code_generate,
+    sample_code_list,
+    sample_code_reactivate,
 )
 from ..views.admin.submittal_management import generate_submittal_form
 
@@ -130,17 +130,17 @@ urlpatterns = [
         name='admin_application_link_grower'
     ),
 
-    path('transect-codes/', transect_code_list, name='admin_transect_code_list'),
-    path('transect-codes/generate/', transect_code_generate, name='admin_transect_code_generate'),
+    path('sample-codes/', sample_code_list, name='admin_sample_code_list'),
+    path('sample-codes/generate/', sample_code_generate, name='admin_sample_code_generate'),
     path(
-        'transect-codes/<int:code_id>/deactivate/',
-        transect_code_deactivate,
-        name='admin_transect_code_deactivate'
+        'sample-codes/<int:code_id>/deactivate/',
+        sample_code_deactivate,
+        name='admin_sample_code_deactivate'
     ),
     path(
-        'transect-codes/<int:code_id>/reactivate/',
-        transect_code_reactivate,
-        name='admin_transect_code_reactivate'
+        'sample-codes/<int:code_id>/reactivate/',
+        sample_code_reactivate,
+        name='admin_sample_code_reactivate'
     ),
 
     path('csv-upload/', csv_upload, name='admin_csv_upload'),

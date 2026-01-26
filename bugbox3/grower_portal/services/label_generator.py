@@ -18,7 +18,7 @@ from ..constants import (
     LABEL_TEMPLATE_SLUG,
     SAMPLE_TYPES,
 )
-from ..models import SiteTransect, TransectCode
+from ..models import SampleCode, SiteTransect
 
 
 class LabelGenerator:
@@ -46,11 +46,10 @@ class LabelGenerator:
         choices = dict(SAMPLE_TYPES)
         return choices.get(sample_type_code, sample_type_code)
 
-    def generate_unique_transect_codes(self, count):
-        """Generate unique numeric transect codes for Avalanche project"""
+    def generate_unique_sample_codes(self, count):
         codes = []
 
-        all_codes = TransectCode.objects.all().values_list('code', flat=True)
+        all_codes = SampleCode.objects.all().values_list('code', flat=True)
 
         max_code = 0
         for code in all_codes:
@@ -74,7 +73,7 @@ class LabelGenerator:
         year_prefix = str((self.year % 10) - 1)
 
         # Find last site code for this year
-        last_site = TransectCode.objects.filter(
+        last_site = SampleCode.objects.filter(
             project_type='ignite',
             year=self.year,
             site_code_numeric__isnull=False
@@ -96,10 +95,9 @@ class LabelGenerator:
 
         return codes, next_cluster_start
 
-    def save_transect_codes(self, codes, project_type='avalanche'):
-        """Save generated transect codes to database"""
-        transect_code_objects = [
-            TransectCode(
+    def save_sample_codes(self, codes, project_type='avalanche'):
+        sample_code_objects = [
+            SampleCode(
                 code=code,
                 project_type=project_type,
                 cluster_number=self.cluster_number,
@@ -111,7 +109,7 @@ class LabelGenerator:
             )
             for code in codes
         ]
-        TransectCode.objects.bulk_create(transect_code_objects)
+        SampleCode.objects.bulk_create(sample_code_objects)
         self.generated_codes = codes
 
     def create_label_text(self, sample_type_display, transect_code):
@@ -790,8 +788,8 @@ class LabelGenerator:
     def generate_quick_labels_avalanche(self, num_transects):
         """Generate all labels for Avalanche project. complete set per transect"""
 
-        transect_codes = self.generate_unique_transect_codes(num_transects)
-        self.save_transect_codes(transect_codes)
+        transect_codes = self.generate_unique_sample_codes(num_transects)
+        self.save_sample_codes(transect_codes)
 
         all_sample_types = [code for code, _ in SAMPLE_TYPES]
 
@@ -835,7 +833,7 @@ class LabelGenerator:
 
         saved_codes = []
         for code in site_codes:
-            tc = TransectCode.objects.create(
+            tc = SampleCode.objects.create(
                 code=code,
                 project_type='ignite',
                 cluster_number=self.cluster_number,
@@ -1157,8 +1155,8 @@ class LabelGenerator:
         """Generate Word document with labels organized by sample type in columns using template"""
         total_labels = len(self.sample_types) * self.labels_per_type
 
-        transect_codes = self.generate_unique_transect_codes(total_labels)
-        self.save_transect_codes(transect_codes)
+        transect_codes = self.generate_unique_sample_codes(total_labels)
+        self.save_sample_codes(transect_codes)
 
         doc = self._load_template()
 
