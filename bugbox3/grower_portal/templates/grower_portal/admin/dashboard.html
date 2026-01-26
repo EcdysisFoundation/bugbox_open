@@ -89,7 +89,7 @@
                             <a href="{% url 'grower_portal:admin_grower_list' %}">Search Growers</a> | 
                             <a href="{% url 'grower_portal:admin_farm_list' %}">Search Farms</a> | 
                             <a href="{% url 'grower_portal:admin_field_list' %}">Search Fields</a> |
-                            <a href="{% url 'grower_portal:admin_transect_code_list' %}">Search Transect Codes</a>
+                            <a href="{% url 'grower_portal:admin_sample_code_list' %}">Search Sample Codes</a>
                         </small>
                     </div>
                 </div>
@@ -104,8 +104,8 @@
                     <h5 class="mb-0">Quick Actions</h5>
                 </div>
                 <div class="card-body">
-                    <a href="{% url 'grower_portal:admin_transect_code_generate' %}" class="btn btn-primary w-100 mb-2">
-                        <i class="fas fa-code"></i> Generate Transect Codes
+                    <a href="{% url 'grower_portal:admin_sample_code_generate' %}" class="btn btn-primary w-100 mb-2">
+                        <i class="fas fa-code"></i> Generate Sample Codes
                     </a>
                     <a href="{% url 'grower_portal:admin_csv_upload' %}" class="btn btn-success w-100 mb-2">
                         <i class="fas fa-upload"></i> Upload CSV

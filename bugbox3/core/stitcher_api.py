@@ -1,9 +1,6 @@
 import json
 import re
-<<<<<<< HEAD
 
-=======
->>>>>>> 5858d17716ca1cae0b0837cbdf07fa6e4dde2667
 import requests
 
 STITCHER_URL = 'http://host.docker.internal:8090'
@@ -25,7 +22,7 @@ def list_upload_files():
     limit = 100
 
     while True:
-        print('*'*100)
+        print('*' * 100)
         params = {
             'offset': offset,
             'limit': limit,
@@ -129,24 +126,18 @@ def parse_sample_name(sample_name):
     if not sample_name:
         return None
 
-    # Try to match the base pattern: SITE_TYPE_TRANSECT with optional split suffix
-    # Pattern: digits_letters_Tdigits[_split_N | _splitN | _N | _a]
     match = re.match(r'^(\d+)_([a-zA-Z]+)_(T\d+)(?:_split_\d+|_split\d+|\d+|[a-z])?$', sample_name)
 
     if match:
         site = match.group(1)
-        sample_type = match.group(2).lower()  # Normalize to lowercase
+        sample_type = match.group(2).lower()
         transect = match.group(3)
-        # Build base name without split suffix
         base_name = f"{site}_{sample_type}_{transect}"
         return (base_name, site, sample_type, transect)
 
-    # Fallback: try simple split by underscore
     parts = sample_name.split('_')
     if len(parts) >= 3:
-        # Remove split suffix from end if present
         if len(parts) > 3:
-            # Check if last part looks like a split indicator
             last_part = parts[-1]
             if re.match(r'^(split\s*\d+|\d+|[a-z])$', last_part, re.IGNORECASE):
                 parts = parts[:-1]

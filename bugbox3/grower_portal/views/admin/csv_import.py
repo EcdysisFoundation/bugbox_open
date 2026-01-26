@@ -16,7 +16,7 @@ from bugbox3.core.permissions import IS_GROWERADMIN
 from ...constants import CSV_IMPORT_SCHEMAS
 from ...forms.admin.forms import CSVUploadForm
 from ...middleware import get_user_timezone
-from ...models import CSVImportFieldValue, CSVImportLog, TransectCode
+from ...models import CSVImportFieldValue, CSVImportLog, SampleCode
 
 TRANSECT_CODE_COLUMN_PREFIX = 'Sample ID'
 
@@ -38,11 +38,7 @@ def _add_to_error_log(error_log, row_number, row, message):
     })
 
 
-def _validate_transect_code(row_number, row, error_log):
-    """
-    Validate row's transect code and return the TransectCode object if valid.
-    Returns the TransectCode object if valid, otherwise None.
-    """
+def _validate_sample_code(row_number, row, error_log):
     transect_codes = _get_transect_codes(row)
 
     if not transect_codes:
@@ -56,20 +52,20 @@ def _validate_transect_code(row_number, row, error_log):
     transect_code = transect_codes[0]
 
     try:
-        transect_code_object = TransectCode.objects.get(transect_code=transect_code)
-    except TransectCode.DoesNotExist:
+        sample_code_object = SampleCode.objects.get(code=transect_code)
+    except SampleCode.DoesNotExist:
         _add_to_error_log(error_log, row_number, row, f'Transect code does not exist: {transect_code}')
         return None
 
-    if not transect_code_object.is_active:
+    if not sample_code_object.is_active:
         _add_to_error_log(error_log, row_number, row, f'Transect code is inactive: {transect_code}')
         return None
 
-    if not transect_code_object.used_in_application:
+    if not sample_code_object.used_in_application:
         _add_to_error_log(error_log, row_number, row, f'Transect code is not used in an application: {transect_code}')
         return None
 
-    return transect_code_object
+    return sample_code_object
 
 
 def _process_csv_file(csv_import_log, csv_file):
@@ -87,18 +83,18 @@ def _process_csv_file(csv_import_log, csv_file):
     for i, row in enumerate(csv_reader):
         try:
 
-            transect_code_object = _validate_transect_code(
+            sample_code_object = _validate_sample_code(
                 i, row, error_log
             )
 
-            if not transect_code_object:
+            if not sample_code_object:
                 failed_count += 1
                 continue
 
             for field_name, field_value in row.items():
                 validated_field_values.append(CSVImportFieldValue(
                     import_log=csv_import_log,
-                    transect_code=transect_code_object,
+                    sample_code=sample_code_object,
                     field_name=field_name,
                     field_value=field_value,
                     row_number=i

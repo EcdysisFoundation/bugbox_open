@@ -3,15 +3,15 @@
 {% load i18n %}
 {% load crispy_forms_tags %}
 
-{% block title %}Generate Transect Codes{% endblock %}
+{% block title %}Generate Sample Codes{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
     <div class="row">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1>Generate Transect Codes</h1>
-                <a href="{% url 'grower_portal:admin_transect_code_list' %}" class="btn btn-outline-secondary">
+                <h1>Generate Sample Codes</h1>
+                <a href="{% url 'grower_portal:admin_sample_code_list' %}" class="btn btn-outline-secondary">
                     <i class="fas fa-arrow-left"></i> Back to List
                 </a>
             </div>
@@ -44,7 +44,7 @@
                     {% if generated_codes %}
                     <div class="mt-4">
                         <div class="alert alert-success">
-                            <strong>Success!</strong> Generated {{ generated_codes|length }} transect code(s).
+                            <strong>Success!</strong> Generated {{ generated_codes|length }} sample code(s).
                         </div>
                         
                         <div class="card">
@@ -65,10 +65,10 @@
                         </div>
                         
                         <div class="mt-3 text-center">
-                            <a href="{% url 'grower_portal:admin_transect_code_list' %}" class="btn btn-primary">
-                                View All Transect Codes
+                            <a href="{% url 'grower_portal:admin_sample_code_list' %}" class="btn btn-primary">
+                                View All Sample Codes
                             </a>
-                            <a href="{% url 'grower_portal:admin_transect_code_generate' %}" class="btn btn-outline-primary">
+                            <a href="{% url 'grower_portal:admin_sample_code_generate' %}" class="btn btn-outline-primary">
                                 Generate More Codes
                             </a>
                         </div>
@@ -80,4 +80,3 @@
     </div>
 </div>
 {% endblock %}
-

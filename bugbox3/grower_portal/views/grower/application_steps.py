@@ -38,9 +38,9 @@ from ...models import (
     InfiltrationRingReading,
     InfiltrometerReading,
     ManagementPractices,
+    SampleCode,
     SoilCompactionReading,
     SoilReading,
-    TransectCode,
     TransectMeasurement,
     VegetationReading,
 )
@@ -646,7 +646,7 @@ def application_step6(request, application_id):
             for i in range(1, 5):
                 code = getattr(application, f'transect_code_{i}', '').strip()
                 if code:
-                    TransectCode.objects.filter(transect_code=code).update(
+                    SampleCode.objects.filter(code=code).update(
                         is_used=True,
                         used_in_application=application,
                         used_at=timezone.now()
