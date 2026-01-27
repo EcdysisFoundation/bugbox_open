@@ -13,6 +13,20 @@
 
 {% block content %}
 <div class="container">
+
+    {% if data.stitching_exception_at %}
+        <div class="row mt-3">
+            <div class="col">
+                <div class="alert alert-warning" role="alert">
+                <h5>Warning: @ {{ data.stitching_exception_at }} a stitching error occured</h5>
+                <p>
+                    {{ data.stitching_exception }}
+                </p>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
     <div class="row mb-2">
         <div class="col-1">
                 <label for="formConfidence" class="form-label">Confidence</label>
@@ -169,19 +183,6 @@
                     <b>Stitcher confidence:</b> {{ data.panorama_confidence }}
                 </li>
             </ul>
-        </div>
-    </div>
-    {% endif %}
-
-    {% if data.stitching_exception_at %}
-    <div class="row mt-3">
-        <div class="col">
-            <div class="alert alert-warning" role="alert">
-            <h5>Warning: @ {{ data.stitching_exception_at }} a stitching error occured</h5>
-            <p>
-                {{ data.stitching_exception }}
-            </p>
-            </div>
         </div>
     </div>
     {% endif %}
