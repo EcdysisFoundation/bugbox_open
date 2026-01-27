@@ -325,7 +325,7 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                 if vs[1].lower() in STITCHER_SAMPLE_TYPES.keys():
                     sample_type = STITCHER_SAMPLE_TYPES[vs[1].lower()]
                     samples_w_type = samples.filter(sample_type=sample_type)
-                if len(vs) >= 3:
+                if len(vs) >= 3 and samples_w_type:
                     samples_w_transect = samples_w_type.filter(name_no__icontains=vs[2])
                     if strict:
                         sample_ids = samples_w_transect.values_list('id', flat=True)
