@@ -103,7 +103,6 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
             self.nota_sample = self.data[constants.STITCHER_NOTA_SAMPLE]
         if constants.STITCHER_OMIT_FROM_TRAINING in self.data.keys():
             self.omit_from_training = self.data[constants.STITCHER_OMIT_FROM_TRAINING]
-
         return kwargs
 
     def get_context_data(self, **kwargs):
@@ -116,49 +115,15 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
         disable_stitching = True
         disable_crop_save = True
         disable_delete = False
-        dir_name = None
         potential_samples = []
-
         for v in constants.STITCHER_TIMEFIELDS:
             if v in self.data.keys():
                 if self.data[v]:
                     self.data[v] = cast_utc_time(self.data[v])
-        # check for required files
         if all([v in self.data.keys() for v in constants.STITCHER_FORM_REQUIRED_KEYS]):
-
             disable_stitching = False if self.data[constants.STITCHER_APPROVED] is None else True
             disable_delete = True if self.data[constants.STITCHER_APPROVED] else False
-            # find samples in bugbox
-            dir_name = self.data[constants.STITCHER_UPLOAD_DIR_NAME]
-            vs = dir_name.split('_')
-            if vs:
-                samples_w_type = None
-                samples_w_transect = None
-                sample_ids = None
-                samples = Sample.objects.user_access(self.request.user).filter(
-                    site_visit__site__experiment__organization_id__in=orgs,
-                    site_visit__site__site_name__icontains=vs[0]
-                )
-                if len(vs) >= 2:
-                    if vs[1].lower() in STITCHER_SAMPLE_TYPES.keys():
-                        sample_type = STITCHER_SAMPLE_TYPES[vs[1].lower()]
-                        samples_w_type = samples.filter(sample_type=sample_type)
-                    if len(vs) >= 3 and samples_w_type:
-                        samples_w_transect = samples_w_type.filter(name_no__icontains=vs[2])
-                if samples_w_transect:
-                    sample_ids = samples_w_transect.values_list('id', flat=True)
-                elif samples_w_type:
-                    sample_ids = samples_w_type.values_list('id', flat=True)
-                else:
-                    sample_ids = samples.values_list('id', flat=True)
-                if sample_ids:
-                    potential_samples = [
-                        (i, reverse('samples:sample', kwargs={'sample_id': i})) for i in sample_ids]
-            if ((self.data[constants.STITCHER_ANNOTATIONS_SEGMENT]
-                    or self.data[constants.STITCHER_ANNOTATIONS_UPDATED_AT_SEGMENT])
-                    and self.data[constants.STITCHER_APPROVED]
-                    and self.data[constants.STITCHER_BUGBOX_SAMPLE_ID]):
-                disable_crop_save = False
+            potential_samples = self.get_potential_samples(self.data)
         first_potential_sample = potential_samples[0][0] if potential_samples else None
         context.update({
             'data': self.data,
@@ -197,7 +162,12 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
         if constants.STITCHER_UPLOAD_DIR_NAME in data.keys():
             initial[constants.STITCHER_UPLOAD_DIR_NAME] = data[constants.STITCHER_UPLOAD_DIR_NAME]
         if constants.STITCHER_BUGBOX_SAMPLE_ID in data.keys():
-            initial[constants.STITCHER_BUGBOX_SAMPLE_ID] = data[constants.STITCHER_BUGBOX_SAMPLE_ID]
+            if not data[constants.STITCHER_BUGBOX_SAMPLE_ID] and not data[constants.STITCHER_NOTA_SAMPLE]:
+                potential_samples = self.get_potential_samples(data, strict=True)
+                if len(potential_samples) == 1:
+                    initial[constants.STITCHER_BUGBOX_SAMPLE_ID] = potential_samples[0][0]
+            else:
+                initial[constants.STITCHER_BUGBOX_SAMPLE_ID] = data[constants.STITCHER_BUGBOX_SAMPLE_ID]
         if constants.STITCHER_NOTA_SAMPLE in data.keys():
             initial[constants.STITCHER_NOTA_SAMPLE] = data[constants.STITCHER_NOTA_SAMPLE]
         if constants.STITCHER_OMIT_FROM_TRAINING in data.keys():
@@ -338,6 +308,37 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
 
     def get_success_url(self):
         return reverse('core:stitcher-form', kwargs={constants.STITCHER_GUID: self.guid})
+
+    def get_potential_samples(self, data, strict=False):
+        dir_name = data[constants.STITCHER_UPLOAD_DIR_NAME]
+        vs = dir_name.split('_')
+        if strict and len(vs) < 3:
+            return []
+        if vs:
+            samples_w_type = None
+            samples_w_transect = None
+            sample_ids = []
+            samples = Sample.objects.user_access(self.request.user).filter(
+                site_visit__site__site_name__icontains=vs[0]
+            )
+            if len(vs) >= 2:
+                if vs[1].lower() in STITCHER_SAMPLE_TYPES.keys():
+                    sample_type = STITCHER_SAMPLE_TYPES[vs[1].lower()]
+                    samples_w_type = samples.filter(sample_type=sample_type)
+                if len(vs) >= 3:
+                    samples_w_transect = samples_w_type.filter(name_no__icontains=vs[2])
+                    if strict:
+                        sample_ids = samples_w_transect.values_list('id', flat=True)
+                        return [(i, reverse('samples:sample', kwargs={'sample_id': i})) for i in sample_ids]
+            if samples_w_transect:
+                sample_ids = samples_w_transect.values_list('id', flat=True)
+            elif samples_w_type:
+                sample_ids = samples_w_type.values_list('id', flat=True)
+            else:
+                sample_ids = samples.values_list('id', flat=True)
+            return [(i, reverse('samples:sample', kwargs={'sample_id': i})) for i in sample_ids]
+        else:
+            return []
 
 
 class StitcherDeleteView(PermissionRequiredMixin, FormView):
