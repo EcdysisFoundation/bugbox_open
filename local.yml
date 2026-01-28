@@ -3,11 +3,12 @@ volumes:
   bugbox3_local_postgres_data_backups: {}
 
 services:
-  django: &django
+  django:
     build:
       context: .
       dockerfile: ./compose/local/django/Dockerfile
     container_name: bugbox3_local_django
+    image: bugbox3_local_django
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
@@ -40,15 +41,20 @@ services:
       -p 5434
 
   redis:
-    image: docker.io/redis:7.2
+    image: docker.io/redis:6
     container_name: bugbox3_local_redis
     command: --port 6380
     ports:
       - "6380:6380"
 
   celeryworker:
-    <<: *django
     container_name: bugbox3_local_celeryworker
+    image: bugbox3_local_django
+    volumes:
+      - .:/app:z
+    env_file:
+      - ./.envs/.local/.django
+      - ./.envs/.local/.postgres
     depends_on:
       - redis
       - postgres
@@ -56,8 +62,13 @@ services:
     command: /start-celeryworker
 
   celerybeat:
-    <<: *django
     container_name: bugbox3_local_celerybeat
+    image: bugbox3_local_django
+    volumes:
+      - .:/app:z
+    env_file:
+      - ./.envs/.local/.django
+      - ./.envs/.local/.postgres
     depends_on:
       - redis
       - postgres
@@ -65,8 +76,13 @@ services:
     command: /start-celerybeat
 
   flower:
-    <<: *django
     container_name: bugbox3_local_flower
+    image: bugbox3_local_django
+    volumes:
+      - .:/app:z
+    env_file:
+      - ./.envs/.local/.django
+      - ./.envs/.local/.postgres
     depends_on:
       - redis
     ports:
