@@ -41,7 +41,7 @@ services:
       -p 5434
 
   redis:
-    image: docker.io/redis:6
+    image: docker.io/redis:7.2
     container_name: bugbox3_local_redis
     command: --port 6380
     ports:
