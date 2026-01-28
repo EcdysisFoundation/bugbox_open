@@ -117,7 +117,7 @@
                         <div class="col-md-6">
                             <p><strong>Name:</strong> {{ user.name }}</p>
                             <p><strong>Email:</strong> {{ user.email }}</p>
-                            <p><strong>Phone:</strong> {{ grower_profile.phone|default:"Not provided" }}</p>
+                            <p><strong>Phone:</strong> {% if grower_profile.phone and grower_profile.phone != "nan" %}{{ grower_profile.phone }}{% else %}Not provided{% endif %}</p>
                         </div>
                         <div class="col-md-6">
                             <p><strong>Gender:</strong> {{ grower_profile.get_gender_display }}</p>

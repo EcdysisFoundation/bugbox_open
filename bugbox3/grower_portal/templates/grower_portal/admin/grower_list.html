@@ -54,7 +54,7 @@
                                     <tr>
                                         <td>{{ grower_profile.user.name }}</td>
                                         <td>{{ grower_profile.user.email }}</td>
-                                        <td>{{ grower_profile.phone|default:"N/A" }}</td>
+                                        <td>{% if grower_profile.phone and grower_profile.phone != "nan" %}{{ grower_profile.phone }}{% else %}N/A{% endif %}</td>
                                         <td>
                                             {% if grower_profile.profile_completed %}
                                                 <span class="badge bg-success">Yes</span>

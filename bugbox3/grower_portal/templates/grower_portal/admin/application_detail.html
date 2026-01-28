@@ -75,7 +75,7 @@
                         {% endif %}
                     </p>
                     {% if application.grower %}
-                        <p><strong>Phone:</strong> {{ application.grower.grower_profile.phone|default:"N/A" }}</p>
+                        <p><strong>Phone:</strong> {% if application.grower.grower_profile.phone and application.grower.grower_profile.phone != "nan" %}{{ application.grower.grower_profile.phone }}{% else %}N/A{% endif %}</p>
                     {% elif application.grower_phone %}
                         <p><strong>Phone:</strong> {{ application.grower_phone }}</p>
                     {% endif %}
