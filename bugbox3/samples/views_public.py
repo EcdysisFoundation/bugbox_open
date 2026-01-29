@@ -38,7 +38,7 @@ class CollectionView(TemplateView):
             'json_context': get_json_context({
                 'collection': PUBLIC_COLLECTIONS[self.kwargs['org_id']]['collection'],
                 'datatables_url': api_reverse('samples:collection-data-list',
-                                              request=self.request, kwargs=kwargs),
+                                              kwargs=kwargs),
             })
         })
         return context

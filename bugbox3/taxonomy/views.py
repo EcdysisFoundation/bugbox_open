@@ -114,7 +114,7 @@ class MophospeciesView(PermissionRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         datatables_url = api_reverse('taxonomy:morphospecies-data-list',
-                                     request=self.request, kwargs=kwargs)
+                                     kwargs=kwargs)
         context.update(self.get_morphospecies_datatable(datatables_url))
         context.update({
             'can_add': self.request.user.has_perm(ADD_MORPHOSPECIES),
@@ -284,8 +284,7 @@ class MorphospeciesDetailView(PermissionRequiredMixin, FormView):
             'common_misidentifications': common_misidentifications,
             'json_context': get_json_context({
                 'ai_accuracy_over_time': ai_accuracy_over_time,
-                'datatables_url': api_reverse('taxonomy:morphospecies-picker-list',
-                                              request=self.request, kwargs=kwargs),
+                'datatables_url': api_reverse('taxonomy:morphospecies-picker-list', kwargs=kwargs),
                 'first_picker_choices': constants.GBIF_RANK_CHOICES_WO_BLANK_LIST,
                 'first_picker_text': 'any rank',
             })
