@@ -2,6 +2,7 @@ import json
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
+from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -466,12 +467,21 @@ def admin_application_complete(request, application_id):
                         messages.error(request, f'Cannot submit: Transect code {i} "{code}" is not valid or inactive.')
                         return redirect('grower_portal:admin_application_complete', application_id=application.id)
 
+            if not application.date_sampled:
+                messages.error(
+                    request,
+                    'Cannot submit: Date sampled is required. Please complete step 1 and set the date when samples were collected.'
+                )
+                return redirect('grower_portal:admin_application_create_step1', application_id=application.id)
             with transaction.atomic():
                 application.is_draft = False
                 application.is_submitted = True
                 application.submitted_at = timezone.now()
-                application.save()
-
+                try:
+                    application.save()
+                except ValidationError as e:
+                    messages.error(request, e.messages[0] if e.messages else str(e))
+                    return redirect('grower_portal:admin_application_complete', application_id=application.id)
                 for i in range(1, 5):
                     code = getattr(
                         application,

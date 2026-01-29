@@ -79,13 +79,18 @@
                     {% elif application.grower_phone %}
                         <p><strong>Phone:</strong> {{ application.grower_phone }}</p>
                     {% endif %}
-                    {% if application.field.farm %}
-                        <p><strong>Farm:</strong> <a href="{% url 'grower_portal:admin_farm_detail' application.field.farm.id %}">{{ application.field.farm.name }}</a></p>
+                    {% if application.field %}
+                        {% if application.field.farm %}
+                            <p><strong>Farm:</strong> <a href="{% url 'grower_portal:admin_farm_detail' application.field.farm.id %}">{{ application.field.farm.name }}</a></p>
+                        {% else %}
+                            <p><strong>Farm:</strong> <span class="text-muted">N/A</span></p>
+                        {% endif %}
+                        <p><strong>Field:</strong> <a href="{% url 'grower_portal:admin_field_detail' application.field.id %}">{{ application.field.field_name }}</a></p>
+                        <p><strong>Field Type:</strong> {{ application.field.get_field_type_display }}</p>
                     {% else %}
                         <p><strong>Farm:</strong> <span class="text-muted">N/A</span></p>
+                        <p><strong>Field:</strong> <span class="text-muted">No field linked</span></p>
                     {% endif %}
-                    <p><strong>Field:</strong> <a href="{% url 'grower_portal:admin_field_detail' application.field.id %}">{{ application.field.field_name }}</a></p>
-                    <p><strong>Field Type:</strong> {{ application.field.get_field_type_display }}</p>
                     {% if not application.grower %}
                         <div class="alert alert-info mt-3 mb-0">
                             <i class="fas fa-info-circle"></i>

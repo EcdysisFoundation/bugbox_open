@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pandas as pd
 from django.contrib.auth import get_user_model
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
 from bugbox3.grower_portal.constants import PHONE_MAX_LENGTH
@@ -23,7 +23,7 @@ class Command(BaseCommand):
         parser.add_argument(
             'file_path',
             type=str,
-            help='Path to the CSV/Excel file (Grower_Archive)'
+            help='Path to the Grower_Archive file'
         )
         parser.add_argument(
             '--sheet',
@@ -40,6 +40,24 @@ class Command(BaseCommand):
         file_path = Path(options['file_path'])
         sheet_name = options['sheet']
         dry_run = options['dry_run']
+
+        self.stdout.write(
+            'Which year were these codes/samples sampled? '
+            '(This will associate the codes with that year.)'
+        )
+        try:
+            year_str = input().strip()
+            mapping_year = int(year_str)
+        except (ValueError, EOFError) as e:
+            raise CommandError(
+                'A valid year (e.g. 2026) is required. '
+                'Re-run the command and enter the sampling year when prompted.'
+            ) from e
+        if mapping_year < 2015 or mapping_year > 2026:
+            raise CommandError(
+                f'Year {mapping_year} is out of range. Command is set a year between 2015 and 2026.'
+            )
+        self._mapping_year = mapping_year
 
         if not file_path.exists():
             self.stdout.write(self.style.ERROR(f'File not found: {file_path}'))
@@ -75,6 +93,7 @@ class Command(BaseCommand):
                 'Country': self._get_exact_column(df.columns, 'Country'),
                 'County': self._get_exact_column(df.columns, 'County'),
                 'City': self._get_exact_column(df.columns, 'City'),
+                'Cl': self._get_exact_column(df.columns, 'Cl'),
                 'Site Code': self._get_exact_column(df.columns, 'Site Code'),
                 'Alt Site Code': self._get_exact_column(df.columns, 'Alt Site Code'),
             }
@@ -119,6 +138,13 @@ class Command(BaseCommand):
                     country = str(row.get(COL['Country'], '') or '').strip() if COL['Country'] else ''
                     county = str(row.get(COL['County'], '') or '').strip() if COL['County'] else ''
                     city = str(row.get(COL['City'], '') or '').strip() if COL['City'] else ''
+
+                    cluster_raw = (
+                        row.get(COL['Cl'], '') if COL['Cl'] else ''
+                    )
+                    if cluster_raw is None or (isinstance(cluster_raw, float) and cluster_raw != cluster_raw):
+                        cluster_raw = ''
+                    cluster_str = str(cluster_raw).strip() if cluster_raw else ''
 
                     site_codes_str = (
                         str(row.get(COL['Site Code'], '') or '').strip() if COL['Site Code'] else ''
@@ -231,6 +257,7 @@ class Command(BaseCommand):
                                         sample_code = SampleCode.objects.create(
                                             code=code,
                                             project_type='ignite',
+                                            cluster_number=cluster_str,
                                             site_code_numeric=site_code_numeric,
                                             created_by=user
                                         )
@@ -252,10 +279,14 @@ class Command(BaseCommand):
                                 else:
                                     mapping, mapping_created = GrowerSampleCodeMapping.objects.get_or_create(
                                         grower=user,
-                                        sample_code=sample_code
+                                        sample_code=sample_code,
+                                        defaults={'year_sampled': self._mapping_year},
                                     )
                                     if mapping_created:
                                         stats['mappings_created'] += 1
+                                    elif mapping.year_sampled != self._mapping_year:
+                                        mapping.year_sampled = self._mapping_year
+                                        mapping.save(update_fields=['year_sampled'])
 
                         if alt_site_codes_str:
                             alt_site_codes = self._parse_codes(alt_site_codes_str)
@@ -291,6 +322,7 @@ class Command(BaseCommand):
                                         sample_code = SampleCode.objects.create(
                                             code=code,
                                             project_type='avalanche',
+                                            cluster_number=cluster_str,
                                             created_by=user
                                         )
                                         stats['sample_codes_created'] += 1
@@ -315,10 +347,14 @@ class Command(BaseCommand):
                                 else:
                                     mapping, mapping_created = GrowerSampleCodeMapping.objects.get_or_create(
                                         grower=user,
-                                        sample_code=sample_code
+                                        sample_code=sample_code,
+                                        defaults={'year_sampled': self._mapping_year},
                                     )
                                     if mapping_created:
                                         stats['mappings_created'] += 1
+                                    elif mapping.year_sampled != self._mapping_year:
+                                        mapping.year_sampled = self._mapping_year
+                                        mapping.save(update_fields=['year_sampled'])
 
                 except Exception as e:
                     stats['errors'].append(f'Row {idx + 2}: {str(e)}')

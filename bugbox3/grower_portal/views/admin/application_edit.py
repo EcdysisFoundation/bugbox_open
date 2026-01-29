@@ -2,6 +2,7 @@ import json
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -11,7 +12,7 @@ from bugbox3.core.permissions import IS_GROWERADMIN
 from ...constants import DEFAULT_FIELD_LATITUDE, DEFAULT_FIELD_LONGITUDE
 from ...forms.grower.forms import ApplicationCreationForm, ManagementPracticesForm, TransectCodesForm
 from ...middleware import get_user_timezone
-from ...models import Farm, GrowerApplication, ManagementPractices, SampleCode
+from ...models import Farm, Field, GrowerApplication, ManagementPractices, SampleCode
 
 
 @login_required
@@ -35,37 +36,66 @@ def admin_application_edit_basic(request, application_id):
                             name=form.cleaned_data['farm_name']
                         )
 
-                    field = application.field
-                    field.farm = farm
-                    field.field_name = form.cleaned_data['field_name']
-                    field.field_type = form.cleaned_data['field_type']
-                    field.acres_sampled = form.cleaned_data.get('acres_sampled')
-                    field.years_under_management = form.cleaned_data.get('years_under_management')
-                    field.supports_dairy = form.cleaned_data.get('supports_dairy', False)
-                    field.is_confined_dairy = form.cleaned_data.get('is_confined_dairy', False)
-                    field.measurement_comments = form.cleaned_data.get('measurement_comments', '')
+                    cd = form.cleaned_data
+                    if application.field is None:
+                        field = Field(
+                            farm=farm,
+                            field_name=cd['field_name'],
+                            field_type=cd['field_type'],
+                            acres_sampled=cd.get('acres_sampled'),
+                            years_under_management=cd.get('years_under_management'),
+                            supports_dairy=cd.get('supports_dairy', False),
+                            is_confined_dairy=cd.get('is_confined_dairy', False),
+                            measurement_comments=cd.get('measurement_comments', ''),
+                            crop_type=cd.get('crop_type', ''),
+                            crop_subtype=cd.get('crop_subtype', ''),
+                            crop_subtype_other=cd.get('crop_subtype_other', ''),
+                            small_grain_type=cd.get('small_grain_type', ''),
+                            tillage_methods=cd.get('tillage_methods', ''),
+                            orchard_crop_specify=cd.get('orchard_crop_specify', ''),
+                            forage_varieties=cd.get('forage_varieties', ''),
+                            paddock_size=cd.get('paddock_size', ''),
+                            pasture_size=cd.get('pasture_size', ''),
+                            rootstock_species=cd.get('rootstock_species', ''),
+                            crop_varieties=cd.get('crop_varieties', ''),
+                            transitional_status=cd.get('transitional_status', ''),
+                        )
+                        if cd.get('orchard_crop_type'):
+                            field.crop_type = cd.get('orchard_crop_type', '')
+                        field.save()
+                        application.field = field
+                    else:
+                        field = application.field
+                        field.farm = farm
+                        field.field_name = cd['field_name']
+                        field.field_type = cd['field_type']
+                        field.acres_sampled = cd.get('acres_sampled')
+                        field.years_under_management = cd.get('years_under_management')
+                        field.supports_dairy = cd.get('supports_dairy', False)
+                        field.is_confined_dairy = cd.get('is_confined_dairy', False)
+                        field.measurement_comments = cd.get('measurement_comments', '')
 
-                    field.crop_type = form.cleaned_data.get('crop_type', '')
-                    field.crop_subtype = form.cleaned_data.get('crop_subtype', '')
-                    field.crop_subtype_other = form.cleaned_data.get('crop_subtype_other', '')
-                    field.small_grain_type = form.cleaned_data.get('small_grain_type', '')
-                    field.tillage_methods = form.cleaned_data.get('tillage_methods', '')
+                        field.crop_type = cd.get('crop_type', '')
+                        field.crop_subtype = cd.get('crop_subtype', '')
+                        field.crop_subtype_other = cd.get('crop_subtype_other', '')
+                        field.small_grain_type = cd.get('small_grain_type', '')
+                        field.tillage_methods = cd.get('tillage_methods', '')
 
-                    if form.cleaned_data.get('orchard_crop_type'):
-                        field.crop_type = form.cleaned_data.get('orchard_crop_type', '')
-                    field.orchard_crop_specify = form.cleaned_data.get('orchard_crop_specify', '')
+                        if cd.get('orchard_crop_type'):
+                            field.crop_type = cd.get('orchard_crop_type', '')
+                        field.orchard_crop_specify = cd.get('orchard_crop_specify', '')
 
-                    field.forage_varieties = form.cleaned_data.get('forage_varieties', '')
-                    field.paddock_size = form.cleaned_data.get('paddock_size', '')
-                    field.pasture_size = form.cleaned_data.get('pasture_size', '')
+                        field.forage_varieties = cd.get('forage_varieties', '')
+                        field.paddock_size = cd.get('paddock_size', '')
+                        field.pasture_size = cd.get('pasture_size', '')
 
-                    field.rootstock_species = form.cleaned_data.get('rootstock_species', '')
-                    field.crop_varieties = form.cleaned_data.get('crop_varieties', '')
-                    field.transitional_status = form.cleaned_data.get('transitional_status', '')
+                        field.rootstock_species = cd.get('rootstock_species', '')
+                        field.crop_varieties = cd.get('crop_varieties', '')
+                        field.transitional_status = cd.get('transitional_status', '')
 
-                    field.save()
+                        field.save()
 
-                    application.date_sampled = form.cleaned_data['date_sampled']
+                    application.date_sampled = cd['date_sampled']
                     application.save()
 
                     messages.success(
@@ -76,30 +106,58 @@ def admin_application_edit_basic(request, application_id):
             except Exception as e:
                 messages.error(request, f'Error updating application: {str(e)}')
     else:
-        form = ApplicationCreationForm(initial={
-            'farm_name': application.field.farm.name if application.field.farm else '',
-            'field_name': application.field.field_name,
-            'field_type': application.field.field_type,
-            'date_sampled': application.date_sampled,
-            'acres_sampled': application.field.acres_sampled,
-            'years_under_management': application.field.years_under_management,
-            'supports_dairy': application.field.supports_dairy,
-            'is_confined_dairy': application.field.is_confined_dairy,
-            'measurement_comments': application.field.measurement_comments,
-            'crop_type': application.field.crop_type,
-            'crop_subtype': application.field.crop_subtype,
-            'crop_subtype_other': application.field.crop_subtype_other,
-            'small_grain_type': application.field.small_grain_type,
-            'tillage_methods': application.field.tillage_methods,
-            'forage_varieties': application.field.forage_varieties,
-            'paddock_size': application.field.paddock_size,
-            'pasture_size': application.field.pasture_size,
-            'rootstock_species': application.field.rootstock_species,
-            'crop_varieties': application.field.crop_varieties,
-            'transitional_status': application.field.transitional_status,
-            'orchard_crop_type': application.field.crop_type,
-            'orchard_crop_specify': application.field.orchard_crop_specify,
-        })
+        if application.field:
+            f = application.field
+            initial = {
+                'farm_name': f.farm.name if f.farm else '',
+                'field_name': f.field_name,
+                'field_type': f.field_type,
+                'date_sampled': application.date_sampled,
+                'acres_sampled': f.acres_sampled,
+                'years_under_management': f.years_under_management,
+                'supports_dairy': f.supports_dairy,
+                'is_confined_dairy': f.is_confined_dairy,
+                'measurement_comments': f.measurement_comments,
+                'crop_type': f.crop_type,
+                'crop_subtype': f.crop_subtype,
+                'crop_subtype_other': f.crop_subtype_other,
+                'small_grain_type': f.small_grain_type,
+                'tillage_methods': f.tillage_methods,
+                'forage_varieties': f.forage_varieties,
+                'paddock_size': f.paddock_size,
+                'pasture_size': f.pasture_size,
+                'rootstock_species': f.rootstock_species,
+                'crop_varieties': f.crop_varieties,
+                'transitional_status': f.transitional_status,
+                'orchard_crop_type': f.crop_type,
+                'orchard_crop_specify': f.orchard_crop_specify,
+            }
+        else:
+            initial = {
+                'farm_name': '',
+                'field_name': '',
+                'field_type': '',
+                'date_sampled': application.date_sampled,
+                'acres_sampled': None,
+                'years_under_management': None,
+                'supports_dairy': False,
+                'is_confined_dairy': False,
+                'measurement_comments': '',
+                'crop_type': '',
+                'crop_subtype': '',
+                'crop_subtype_other': '',
+                'small_grain_type': '',
+                'tillage_methods': '',
+                'forage_varieties': '',
+                'paddock_size': '',
+                'pasture_size': '',
+                'rootstock_species': '',
+                'crop_varieties': '',
+                'transitional_status': '',
+                'orchard_crop_type': '',
+                'orchard_crop_specify': '',
+            }
+        form = ApplicationCreationForm(initial=initial)
 
     context = {
         'application': application,
@@ -256,11 +314,20 @@ def admin_application_submit(request, application_id):
                     messages.error(request, f'Cannot submit: Transect code {i} "{code}" is not valid or inactive.')
                     return redirect('grower_portal:admin_application_edit_transects', application_id=application.id)
 
+        if not application.date_sampled:
+            messages.error(
+                request,
+                'Cannot submit: Date sampled is required. Please edit the application and set the date when samples were collected.'
+            )
+            return redirect('grower_portal:admin_application_edit_basic', application_id=application.id)
         with transaction.atomic():
             application.is_draft = False
             application.is_submitted = True
-            application.save()
-
+            try:
+                application.save()
+            except ValidationError as e:
+                messages.error(request, e.messages[0] if e.messages else str(e))
+                return redirect('grower_portal:admin_application_submit', application_id=application.id)
             # mark transect codes as used
             for i in range(1, 5):
                 code = getattr(
