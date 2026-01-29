@@ -1,0 +1,5 @@
+-r base.txt
+
+gunicorn==23.0.0
+awscli==1.40.36
+label-studio-sdk==2.0.16

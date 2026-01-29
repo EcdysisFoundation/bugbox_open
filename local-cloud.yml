@@ -1,12 +1,14 @@
 volumes:
   production_redis_data: {}
+  static_volume:
 
 services:
-  django: &django
+  django:
     build:
       context: .
-      dockerfile: ./compose/local/django/Dockerfile
-    container_name: bugbox3_local_django
+      dockerfile: ./compose/production/django/Dockerfile
+    container_name: bugbox3_production_django
+    image: bugbox3_production_django
     extra_hosts:
       - "host.docker.internal:host-gateway"
     deploy:
@@ -16,18 +18,19 @@ services:
     depends_on:
       - redis
     volumes:
-      - .:/app:z
+      - static_volume:/app/staticfiles
     env_file:
       - ./.envs/.local/.django
       - ./.envs/.local/.postgrescloud
       - ./.envs/.local/.secrets
-    ports:
-      - '8002:8002'
+      - ./.envs/.local/.localproduction
+    expose:
+      - "8000"
     command: /start
 
   redis:
     image: docker.io/redis:7.2
-    container_name: bugbox3_local_redis
+    container_name: bugbox3_production_redis
     deploy:
       resources:
         limits:
@@ -39,58 +42,70 @@ services:
       - production_redis_data:/data
 
   celeryworker:
-    <<: *django
-    container_name: bugbox3_local_celeryworker
+    container_name: bugbox3_production_celeryworker
+    image: bugbox3_production_django
     deploy:
       resources:
         limits:
           memory: 9g
     depends_on:
       - redis
+    volumes:
+      - static_volume:/app/staticfiles
+    env_file:
+      - ./.envs/.local/.django
+      - ./.envs/.local/.postgrescloud
+      - ./.envs/.local/.secrets
+      - ./.envs/.local/.localproduction
     ports: []
     command: /start-celeryworker
 
   celerybeat:
-    <<: *django
-    container_name: bugbox3_local_celerybeat
+    container_name: bugbox3_production_celerybeat
+    image: bugbox3_production_django
     deploy:
       resources:
         limits:
           memory: 9g
     depends_on:
       - redis
+    volumes:
+      - static_volume:/app/staticfiles
+    env_file:
+      - ./.envs/.local/.django
+      - ./.envs/.local/.postgrescloud
+      - ./.envs/.local/.secrets
+      - ./.envs/.local/.localproduction
     ports: []
     command: /start-celerybeat
 
   flower:
-    <<: *django
-    container_name: bugbox3_local_flower
+    container_name: bugbox3_production_flower
+    image: bugbox3_production_django
     deploy:
       resources:
         limits:
           memory: 9g
     depends_on:
       - redis
+    volumes:
+      - static_volume:/app/staticfiles
+    env_file:
+      - ./.envs/.local/.django
+      - ./.envs/.local/.postgrescloud
+      - ./.envs/.local/.secrets
+      - ./.envs/.local/.localproduction
     ports:
       - '5556:5556'
     command: /start-flower
 
-  node:
-    build:
-      context: .
-      dockerfile: ./compose/local/node/Dockerfile
-    image: mikaylaelectra/ecdysis_node
-    container_name: bugbox3_local_node
-    deploy:
-      resources:
-        limits:
-          memory: 9g
+  nginx:
+    build: ./compose/production/nginx
+    volumes:
+      - static_volume:/app/staticfiles
+    env_file:
+      - ./.envs/.local/.localproduction
+    ports:
+      - 3000:80
     depends_on:
       - django
-    volumes:
-      - .:/app:z
-      # https://jdlm.info/articles/2019/09/06/lessons-building-node-app-docker.html
-      - /app/node_modules
-    command: npm run dev
-    ports:
-      - '3000:3000'
