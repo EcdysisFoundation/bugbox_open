@@ -643,7 +643,8 @@ def application_step6(request, application_id):
             if not application.date_sampled:
                 messages.error(
                     request,
-                    'Date sampled is required before submitting. Please complete step 1 and set the date when samples were collected.'
+                    'Date sampled is required before submitting. Please complete step 1 '
+                    'and set the date when samples were collected.'
                 )
                 return redirect('grower_portal:application_step1', application_id=application.id)
             application.is_submitted = True

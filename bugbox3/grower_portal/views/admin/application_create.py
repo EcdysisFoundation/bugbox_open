@@ -470,7 +470,8 @@ def admin_application_complete(request, application_id):
             if not application.date_sampled:
                 messages.error(
                     request,
-                    'Cannot submit: Date sampled is required. Please complete step 1 and set the date when samples were collected.'
+                    'Cannot submit: Date sampled is required. Please complete step 1 '
+                    'and set the date when samples were collected.'
                 )
                 return redirect('grower_portal:admin_application_create_step1', application_id=application.id)
             with transaction.atomic():

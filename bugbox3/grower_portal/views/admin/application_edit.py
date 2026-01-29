@@ -317,7 +317,8 @@ def admin_application_submit(request, application_id):
         if not application.date_sampled:
             messages.error(
                 request,
-                'Cannot submit: Date sampled is required. Please edit the application and set the date when samples were collected.'
+                'Cannot submit: Date sampled is required. Please edit the application '
+                'and set the date when samples were collected.'
             )
             return redirect('grower_portal:admin_application_edit_basic', application_id=application.id)
         with transaction.atomic():
