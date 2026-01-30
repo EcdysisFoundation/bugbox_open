@@ -14,9 +14,6 @@ To run commands to manage.py, use this syntax, to the appropriate .yml file
 
     docker compose -f local.yml run --rm django python manage.py MY_COMMAND
 
-Or to run on Heroku, using the Heroku cli to run on Production
-
-    heroku run python manage.py MY_COMMAND -a bugbox
 
 ### Flake 8
 
@@ -55,7 +52,6 @@ using the returned CONTAINER_ID, move the backup file from local_files to the co
 
     docker cp ./local_files/BACKUP_FILENAME CONTAINER_ID:/backups
 
-
 Use the `restore` bash script to restore the db using the backup.
 
     docker compose -f local.yml exec postgres restore BACKUP_FILENAME
@@ -71,42 +67,40 @@ bring all services up
 
 ## Deployment
 
-This application is deployed to Heroku for most user access scenarios at bugbox.ecdysis.bio. It is also deployed on Ecdysis01 for machine learning and inference processes. On Ecdysis01, it also uses the same Heroku database server and AWS S3 storage (see local-cloud.yml). As a result, it is important to use caution in deployment to not create conflicts when there is a potential for two different versions of the app to be running simultanously against the database and storage system. When the deployment includes database migrations the following steps should be followed. Consider other scenarios for their potential to create conflicts.
+This application is deployed to Heroku for most user access scenarios at bugbox.ecdysis.bio. It is also deployed as a production version on a local server (Ecdysis01) for machine learning and inference processes. Locally, it also uses the same Heroku database server and AWS S3 storage (see local-cloud.yml). As a result, it is important to use caution in deployment to not create conflicts when there is a potential for two different versions of the app to be running simultanously against the database and storage system. When the deployment includes database migrations the following steps should be followed. Consider other scenarios for their potential to create conflicts.
 
 1. On Ecdsyis01, bring down the app
 2. On Heroku, deploy the new version, ensure migrations run succesfully
 3. Ecdysis01, pull new version from github
 4. Ecdysis01, bring app back up. No migrations should run because they already ran on Heroku.
 
-#### Deployment to Ecdysis01 server
+#### Deployment to local production server
 
-local-cloud.yml is the .yml to use. This will establish a local Django app, and Node dev container. The database and filesystem is the production system on Heroku and AWS S3. This is not for development purposes. This is to have a Django instance running on Ecdsyis01 to manage image identifications and other needs to communicate from Ecdysis01 and Heroku database and AWS S3 storage.
+local-cloud.yml is the .yml to use. This will establish a local Django app with Node built in the same docker container. The database and filesystem is the production system on Heroku and AWS S3. This is not for development purposes. This is to have a Django instance running locally to manage image identifications and other needs to communicate with the Heroku database and AWS S3 storage. This instance uses Gunicorn and Nginx with static files served locally, and media files on the cloud. For any repo change, the container will need to be rebuilt, not just restarted, to copy all the app files to the container image.
 
-If specific non-custom image needs built, specificy it individually (referring to non-custom images when on Ecdysis01)
+build the two docker images, django and nginx. Celery containers share the django image.
 
-    docker compose -f local-cloud.yml build SERVICE_NAME
+    docker compose -f local-cloud.yml build
 
-The Django container image is shared with Celery containers, so if any python library changes, build all of them, on local dev environment.
+Bring up the containers
 
-    docker compose -f local.yml build django celeryworker celerybeat flower
-
-Bring up containers with images prebuilt
-
-    docker compose -f local-cloud.yml up --no-build -d
+    docker compose -f local-cloud.yml up -d
 
 Open the logs, ctrl-c to escape
 
     docker compose -f local-cloud.yml logs --tail=1000 --follow
 
-### Special power outage start up info on Ecdysis01.
+When running management commands on local production, the command is..
 
-If there is a power outage, or the Ecdysis01 server otherwise is restarted, the app has to be restarted there, starting with the Torchserve first, so that bugbox app doesnt generate a bunch of errors when it first comes up and finds that it cannot connect to Torchserve. See section below on starting Torchserve, waiting till it is full accessible to the bring up bugbox. Clear the docker network first with `docker compose -f local-cloud.yml down` then bring the containers back with `--no-build -d` as explained above, afer Torchserve fully starts.
+    docker compose -f local-cloud.yml run --rm django python manage.py MY_COMMAND
 
+## FastAPI Inference
 
-## FastAPI
+API_INFERENCE_URL is defined in settings. This relates to inference run against a locally served FastAPI hosed models, see repo https://github.com/EcdysisFoundation/inference-fastapi
 
-API_INFERENCE_URL is defined in settings. This relates to inference run against FastAPI hosed models, see repo https://github.com/EcdysisFoundation/inference-fastapi
+## FastAPI Stitcher
 
+Bugbox3.core.stitcher_api connects to a localy served FastAPI app that creates panoramas from insect sample scans. See repo https://github.com/EcdysisFoundation/stitcher
 
 ## Organizations, Users, Permissions
 
@@ -132,19 +126,11 @@ When creating new Organizations, these new Organizations will need their LookupC
 Certain features of the app assume the first created organization is the apps primary organization. Example `bugbox3.taxonomy.constants.PRIMARY_ORGANIZATION_ID` == 1 is defined to assume the taxonomy app Morphospecies model contents is determined by the primary organization.
 
 
-## Ecdysis01 management commands
-
-When running management commands on Ecdysis01, be the command is..
-
-    docker compose -f local-cloud.yml run --rm django python manage.py MY_COMMAND
-
-Several management commands and tasks are specific to Ecdysis01. Some of these are scheduled through the Celery Beat schedule. Details about some specific commands are below.
-
-
 ## Storages, Site-content, and Static
 
 local.yml uses local storage and a local database
-local-cloud.yml uses cloud storage and the cloud database. This should typically not be used for development.
+
+local-cloud.yml uses cloud storage and the cloud database for production
 
 For site static media content such as a homepage image, or a downloadable document, use core.models.PublicSiteContent to upload new media content through the Django Admin. A slugfield provides a uniqe identifier. This media is uploaded to the S3 media bucket with a public acl, instead of being set to private by default as regular media files are set. Using the slug field, a queryset can be used to insert the url to the media into the view. Note on development machines, if the local database does not have the entry, the queryset will return none, while if the entry is present, it will use the S3 url for the file.
 
