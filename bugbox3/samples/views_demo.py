@@ -61,9 +61,7 @@ class DemoExperimentsView(DemoAccessMixin, TemplateView):
         demo_org = get_demo_organization()
 
         experiments_datatables_url = api_reverse(
-            'samples:demo-experiment-data-list',
-            request=self.request
-        )
+            'samples:demo-experiment-data-list')
 
         context.update({
             'json_context': get_json_context({
@@ -107,7 +105,6 @@ class DemoExperimentView(DemoAccessMixin, TemplateView):
         description = [v['description'] for v in get_sample_plan_descriptions(experiment.id)]
         sites_datatables_url = api_reverse(
             'samples:demo-site-data-list',
-            request=self.request,
             kwargs={'experiment_id': experiment.id}
         )
         experiment_sites = Site.objects.filter(
@@ -252,7 +249,6 @@ class DemoSampleView(DemoAccessMixin, TemplateView):
 
         specimens_datatables_url = api_reverse(
             'samples:demo-specimen-data-list',
-            request=self.request,
             kwargs={'sample_id': sample.id}
         )
 
@@ -598,8 +594,7 @@ class DemoSpecimenCreateView(DemoAccessMixin, CreateView):
         context.update({
             'form_action_url': reverse('samples:demo-specimen-create', kwargs={'sample_id': sample.id}),
             'json_context': get_json_context({
-                'datatables_url': api_reverse('taxonomy:morphospecies-picker-list',
-                                              request=self.request, kwargs=kwargs),
+                'datatables_url': api_reverse('taxonomy:morphospecies-picker-list', kwargs=kwargs),
                 'first_picker_choices': taxa_const.GBIF_RANK_CHOICES_WO_BLANK_LIST,
                 'first_picker_text': 'any rank',
                 'ACCEPTANCE_VALUE_LOOKUP': constants.ACCEPTANCE_VALUE_LOOKUP,

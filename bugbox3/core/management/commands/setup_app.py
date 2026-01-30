@@ -20,12 +20,14 @@ class Command(BaseCommand):
         print(v)
 
         if username:
+            user = User.objects.get(username=username)
             if not Organization.objects.filter(name=org_name).exists():
-                user = User.objects.get(username=username)
                 v = create_organization(user, org_name, org_user_defaults={'is_admin': True})
                 print(f'Created organization {org_name} the owner is {v.owner.organization_user.user}')
             else:
                 print(f'The organization with name {org_name} already exists.')
+            org = Organization.objects.get(name=org_name)
+            org.add_user(user, is_admin=True)
 
         if Organization.objects.filter(name=org_name).exists():
             primary_org = Organization.objects.get(name=org_name)

@@ -38,7 +38,7 @@ class Command(BaseCommand):
         clear_existing = options['clear_existing']
         skip_images = options['skip_images']
 
-        source_org_id = constants.ECDYSIS_ORGANIZATION_ID
+        source_org_id = constants.PRIMARY_ORGANIZATION_ID
         demo_org = get_demo_organization()
 
         with transaction.atomic():

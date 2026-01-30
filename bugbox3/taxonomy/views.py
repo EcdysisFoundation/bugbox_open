@@ -114,7 +114,7 @@ class MophospeciesView(PermissionRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         datatables_url = api_reverse('taxonomy:morphospecies-data-list',
-                                     request=self.request, kwargs=kwargs)
+                                     kwargs=kwargs)
         context.update(self.get_morphospecies_datatable(datatables_url))
         context.update({
             'can_add': self.request.user.has_perm(ADD_MORPHOSPECIES),
@@ -141,7 +141,7 @@ class MorphospeciesDetailView(PermissionRequiredMixin, FormView):
         image_count = SpecimenImage.objects.filter(
             specimen__classification=morphospecies,
             specimen__sample__site_visit__site__experiment__organization_id=samples_constants.
-            ECDYSIS_ORGANIZATION_ID).aggregate(
+            PRIMARY_ORGANIZATION_ID).aggregate(
             reviewed=Count(
                 'pk', distinct=True, filter=~Q(
                     specimen__acceptance=samples_constants.ACCEPTANCE_PENDING)), pending=Count(
@@ -152,7 +152,7 @@ class MorphospeciesDetailView(PermissionRequiredMixin, FormView):
             s_images = SpecimenImage.objects.filter(
                 specimen__classification=morphospecies,
                 specimen__sample__site_visit__site__experiment__organization_id=samples_constants.
-                ECDYSIS_ORGANIZATION_ID).order_by(
+                PRIMARY_ORGANIZATION_ID).order_by(
                 archive, samples_constants.SPECIMEN_IMAGE_PRIMARY)[:2]
             max_width = samples_constants.SPECIMEN_IMAGE_THUMBSIZE_MEDIUM
             for s in s_images:
@@ -284,8 +284,7 @@ class MorphospeciesDetailView(PermissionRequiredMixin, FormView):
             'common_misidentifications': common_misidentifications,
             'json_context': get_json_context({
                 'ai_accuracy_over_time': ai_accuracy_over_time,
-                'datatables_url': api_reverse('taxonomy:morphospecies-picker-list',
-                                              request=self.request, kwargs=kwargs),
+                'datatables_url': api_reverse('taxonomy:morphospecies-picker-list', kwargs=kwargs),
                 'first_picker_choices': constants.GBIF_RANK_CHOICES_WO_BLANK_LIST,
                 'first_picker_text': 'any rank',
             })

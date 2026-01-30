@@ -170,6 +170,11 @@ class LookupChoicesUpdateView(PermissionRequiredMixin, UpdateView):
         })
         return context
 
+    def form_valid(self, form):
+        if self.object and self.object.pk:
+            form.instance.organization_id = self.object.organization_id
+        return super().form_valid(form)
+
     def get_success_url(self):
         return reverse('core:lookup-choices', kwargs={'org_id': self.object.organization_id})
 

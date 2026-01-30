@@ -1,6 +1,6 @@
 from django.db.models.fields import BLANK_CHOICE_DASH
 
-ECDYSIS_ORGANIZATION_ID = 1
+PRIMARY_ORGANIZATION_ID = 1
 
 # Fields
 
