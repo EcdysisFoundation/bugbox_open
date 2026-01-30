@@ -412,14 +412,27 @@ class Command(BaseCommand):
         emails = [email.strip() for email in emails if email.strip()]
         return emails
 
+    def _normalize_code(self, code):
+        """convert excel code to string and normalize to int."""
+        code = (code or '').strip()
+        if not code:
+            return code
+        try:
+            val = float(code)
+            if val == int(val):
+                return str(int(val))
+        except (ValueError, TypeError):
+            pass
+        return code
+
     def _parse_codes(self, codes_str):
-        """Parse codes from a string"""
+        """(normalizes 4015.0 -> 4015)"""
         if not codes_str or str(codes_str).lower() in ['nan', 'none', '']:
             return []
 
         codes = re.split(r'[,;\s]+', str(codes_str))
-        codes = [code.strip() for code in codes if code.strip()]
-        return codes
+        codes = [self._normalize_code(code) for code in codes if code.strip()]
+        return [c for c in codes if c]
 
     def _parse_phone_number(self, phone_str, grower_name=None):
         """Parse phone number from different formats."""
