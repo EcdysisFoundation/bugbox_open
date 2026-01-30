@@ -7,5 +7,4 @@ class GrowerPortalConfig(AppConfig):
     verbose_name = 'Grower Portal'
 
     def ready(self):
-        """Import admin registrations when app is ready"""
-        from .models import admin  # NOQA
+        pass

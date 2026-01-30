@@ -2,6 +2,7 @@ import json
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
+from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -639,10 +640,20 @@ def application_step6(request, application_id):
         action = request.POST.get('action')
 
         if action == 'submit':
+            if not application.date_sampled:
+                messages.error(
+                    request,
+                    'Date sampled is required before submitting. Please complete step 1 '
+                    'and set the date when samples were collected.'
+                )
+                return redirect('grower_portal:application_step1', application_id=application.id)
             application.is_submitted = True
             application.is_draft = False
-            application.save()
-
+            try:
+                application.save()
+            except ValidationError as e:
+                messages.error(request, e.messages[0] if e.messages else str(e))
+                return redirect('grower_portal:application_step6', application_id=application.id)
             for i in range(1, 5):
                 code = getattr(application, f'transect_code_{i}', '').strip()
                 if code:

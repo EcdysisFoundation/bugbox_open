@@ -8,7 +8,7 @@ from bugbox3.core.permissions import IS_GROWERADMIN
 
 from ...forms.admin.forms import GrowerFilterForm
 from ...middleware import get_user_timezone
-from ...models import Farm, Field, GrowerApplication, GrowerProfile
+from ...models import Farm, Field, GrowerApplication, GrowerProfile, GrowerSampleCodeMapping
 
 User = get_user_model()
 
@@ -64,12 +64,17 @@ def grower_detail(request, grower_id):
         'field', 'field__farm'
     ).order_by('-date_sampled')
 
+    sample_code_mappings = GrowerSampleCodeMapping.objects.filter(
+        grower=user
+    ).select_related('sample_code').order_by('-created_at')
+
     context = {
         'grower': user,
         'grower_profile': grower_profile,
         'farms': farms,
         'fields': fields,
         'applications': applications,
+        'sample_code_mappings': sample_code_mappings,
         'user_timezone': get_user_timezone(request)
     }
 

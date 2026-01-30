@@ -29,7 +29,7 @@
                     <p><strong>Email:</strong> {{ grower.email }}</p>
                     <p><strong>Username:</strong> {{ grower.username }}</p>
                     {% if grower_profile %}
-                        <p><strong>Phone:</strong> {{ grower_profile.phone|default:"Not provided" }}</p>
+                        <p><strong>Phone:</strong> {% if grower_profile.phone and grower_profile.phone != "nan" %}{{ grower_profile.phone }}{% else %}Not provided{% endif %}</p>
                         <p><strong>Gender:</strong> {{ grower_profile.get_gender_display|default:"Not provided" }}</p>
                         <p><strong>Age:</strong> {{ grower_profile.age|default:"Not provided" }}</p>
                         <p><strong>Race:</strong> {{ grower_profile.get_race_display|default:"Not provided" }}</p>
@@ -51,12 +51,74 @@
         <div class="col-md-6 mb-4">
             <div class="card">
                 <div class="card-header">
+                    <h5 class="mb-0">Location Information</h5>
+                </div>
+                <div class="card-body">
+                    {% if grower_profile %}
+                        <p><strong>State/Province:</strong> {{ grower_profile.state|default:"Not provided" }}</p>
+                        <p><strong>City:</strong> {{ grower_profile.city|default:"Not provided" }}</p>
+                        <p><strong>County:</strong> {{ grower_profile.county|default:"Not provided" }}</p>
+                        <p><strong>Country:</strong> {{ grower_profile.country|default:"Not provided" }}</p>
+                    {% else %}
+                        <p class="text-muted">No location information available</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
                     <h5 class="mb-0">Summary</h5>
                 </div>
                 <div class="card-body">
                     <p><strong>Total Farms:</strong> {{ farms.count }}</p>
                     <p><strong>Total Fields:</strong> {{ fields.count }}</p>
                     <p><strong>Total Applications:</strong> {{ applications.count }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Associated Sample Codes ({{ sample_code_mappings.count }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if sample_code_mappings %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Code</th>
+                                        <th>Project Type</th>
+                                        <th>Created Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for mapping in sample_code_mappings %}
+                                    <tr>
+                                        <td>{{ mapping.sample_code.code }}</td>
+                                        <td>
+                                            {% if mapping.sample_code.project_type == 'ignite' %}
+                                                <span class="badge bg-info">Ignite</span>
+                                            {% elif mapping.sample_code.project_type == 'avalanche' %}
+                                                <span class="badge bg-primary">Avalanche</span>
+                                            {% else %}
+                                                {{ mapping.sample_code.get_project_type_display }}
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ mapping.created_at|user_datetime:request.user_timezone }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center py-3">No sample codes associated</p>
+                    {% endif %}
                 </div>
             </div>
         </div>
