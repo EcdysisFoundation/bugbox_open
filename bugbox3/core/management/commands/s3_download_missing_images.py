@@ -14,15 +14,16 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-        if settings.ON_ECDYSIS_SERVER != 'YES':
+        if settings.ON_ECDYSIS_SERVER != 'YES' or not settings.LOCAL_MOUNTED_MEDIA:
             print('Currently this cmd is only supported on Ecdysis01')
             return
 
         file = 'local_files/missing_images.csv'
-        local_storage = 'bugbox3/media/'
+        local_storage = settings.LOCAL_MOUNTED_MEDIA
 
         with open(file, newline='') as csvfile:
             reader = csv.DictReader(csvfile)
+
             for row in reader:
                 img = row['image_thumbnail_large']
                 print('Downloading: ' + img)

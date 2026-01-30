@@ -47,8 +47,10 @@ CELERY_RESULT_BACKEND = CELERY_BROKER_URL
 
 # set this to YES in env variable on ECDYSIS01
 ON_ECDYSIS_SERVER = env("ON_ECDYSIS_SERVER", default='NO')
+# mounted as volume in local-cloud.yml
+LOCAL_MOUNTED_MEDIA = '/mounted_local_media/'
 
-# Use cloud (S3) storage on Ecdysis01 or cloud instances
+# Use cloud (S3) storage on Ecdysis01 for media, but not static
 aws_s3_domain_media = f"{AWS_STORAGE_BUCKET_NAME_MEDIA}.s3.amazonaws.com"
 STORAGES = {
     "default": {
@@ -67,10 +69,6 @@ MEDIA_URL = f"https://{aws_s3_domain_media}/"
 # serve static locally
 STATIC_URL = "/static/"
 
-# Collectfasta
-# ------------------------------------------------------------------------------
-# https://github.com/jasongi/collectfasta#installation
-# Enable collectfasta only in cloud mode
 
 LOGGING = {
     "version": 1,

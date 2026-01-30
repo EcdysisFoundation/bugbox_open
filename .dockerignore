@@ -10,3 +10,7 @@
 venv
 .git
 .envs/
+*.log
+*.tmp
+.DS_Store
+*.pyc
