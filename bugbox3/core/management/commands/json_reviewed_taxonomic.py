@@ -36,7 +36,7 @@ class Command(BaseCommand):
 
         q = list(self.SpecimenImage.objects.filter(
             specimen__classification_id__isnull=False,
-            specimen__sample__site_visit__site__experiment__organization_id=constants.ECDYSIS_ORGANIZATION_ID).exclude(
+            specimen__sample__site_visit__site__experiment__organization_id=constants.PRIMARY_ORGANIZATION_ID).exclude(
                 specimen__classification__name__icontains='eggs'
         ).exclude(
                 specimen__classification__name__icontains='mummified'

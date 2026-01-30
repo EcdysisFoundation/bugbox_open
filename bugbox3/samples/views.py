@@ -90,7 +90,7 @@ class ExperimentsView(PermissionRequiredMixin, TemplateView):
         if self.kwargs['org_id'] == 0:
             self.kwargs['org_id'] = org_choices[0][0]
         experiments_datatables_url = api_reverse('samples:experiment-data-list',
-                                                 request=self.request, kwargs=self.kwargs)
+                                                 kwargs=self.kwargs)
         context.update({
             'json_context': get_json_context({
                 'experiments_datatables_url': experiments_datatables_url,
@@ -172,7 +172,7 @@ class ExperimentView(PermissionRequiredMixin, TemplateView):
         description = [v['description'] for v in get_sample_plan_descriptions(
             experiment.id)]
         sites_datatables_url = api_reverse(
-            'samples:site-data-list', request=self.request, kwargs=kwargs)
+            'samples:site-data-list', kwargs=kwargs)
         experiment_sites = Site.objects.user_access(self.request.user).filter(
             experiment_id=experiment.id).order_by(
                 constants.FIELD_SITE_SITE_NAME)
@@ -652,14 +652,13 @@ class SampleView(PermissionRequiredMixin, FormView):
             raise Http404
 
         specimen_datatables_url = api_reverse(
-            'samples:specimen-data-list', request=self.request, kwargs=self.kwargs)
+            'samples:specimen-data-list', kwargs=self.kwargs)
         samples_datatables_url = api_reverse(
             'samples:sample-data-list',
-            request=self.request,
             kwargs={'experiment_id': sample.site_visit.site.experiment_id}
         )
         experiment_choices = [(
-            api_reverse('samples:sample-data-list', request=self.request, kwargs={'experiment_id': i['id']}),
+            api_reverse('samples:sample-data-list', kwargs={'experiment_id': i['id']}),
             i['name']) for i in Experiment.objects.user_access(
                 self.request.user).order_by(constants.FIELD_NAME).values('id', constants.FIELD_NAME)]
         img_thumbnail = None
@@ -1078,7 +1077,7 @@ class SpecimenCreateView(PermissionRequiredMixin, CreateView):
         context.update({
             'json_context': get_json_context({
                 'datatables_url': api_reverse('taxonomy:morphospecies-picker-list',
-                                              request=self.request, kwargs=kwargs),
+                                              kwargs=kwargs),
                 'first_picker_choices': taxa_const.GBIF_RANK_CHOICES_WO_BLANK_LIST,
                 'first_picker_text': 'any rank',
                 'ACCEPTANCE_VALUE_LOOKUP': constants.ACCEPTANCE_VALUE_LOOKUP,
@@ -1138,7 +1137,7 @@ class SpecimenUpdateView(PermissionRequiredMixin, UpdateView):
             'review_permission': self.request.user.has_perm(REVIEW_SPECIMEN_PAGE),
             'json_context': get_json_context({
                 'datatables_url': api_reverse('taxonomy:morphospecies-picker-list',
-                                              request=self.request, kwargs=kwargs),
+                                              kwargs=kwargs),
                 'first_picker_choices': taxa_const.GBIF_RANK_CHOICES_WO_BLANK_LIST,
                 'first_picker_text': 'any rank',
                 'ACCEPTANCE_VALUE_LOOKUP': constants.ACCEPTANCE_VALUE_LOOKUP,
@@ -1267,7 +1266,7 @@ class SpecimensView(PermissionRequiredMixin, FormView):
             ))) for o in org_choices
         ]
         datatables_url = api_reverse('samples:specimen-all-data-list',
-                                     request=self.request, kwargs=self.kwargs)
+                                     kwargs=self.kwargs)
         recent_years = sorted(
             [i for i in range(datetime.date.today().year - 10, datetime.date.today().year + 1)], reverse=True)
         context.update({
@@ -1287,7 +1286,7 @@ class SpecimensView(PermissionRequiredMixin, FormView):
             'json_context': get_json_context({
                 'datatables_url': datatables_url,
                 'datatables_url_2': api_reverse('taxonomy:morphospecies-picker-list',
-                                                request=self.request, kwargs=kwargs),
+                                                kwargs=kwargs),
                 'second_picker_choices': taxa_const.GBIF_RANK_CHOICES_WO_BLANK_LIST,
                 'second_picker_text': 'any rank',
                 'acceptance_choices': constants.ACCEPTANCE_CHOICES,
@@ -1394,8 +1393,7 @@ class MultiSpecimenImageView(PermissionRequiredMixin, FormView):
         except Sample.DoesNotExist:
             raise Http404
         datatables_url = api_reverse(
-            'samples:multispecimen-data-list', request=self.request, kwargs=self.kwargs
-        )
+            'samples:multispecimen-data-list', kwargs=self.kwargs)
         # crop_disabled unless ON_ECDYSIS_SERVER due to high memory usage
         crop_disabled = False if settings.ON_ECDYSIS_SERVER == 'YES' else True
         if sample.completed:
