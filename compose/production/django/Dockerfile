@@ -3,11 +3,9 @@ FROM docker.io/node:22-bookworm-slim AS client-builder
 ARG APP_HOME=/app
 WORKDIR ${APP_HOME}
 
-COPY ./package.json ${APP_HOME}
+COPY . ${APP_HOME}
 
 RUN npm install && npm cache clean --force
-# this after install is copying over the files egh?
-COPY . ${APP_HOME}
 
 RUN npm run buildlocal
 
