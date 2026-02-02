@@ -20,7 +20,7 @@ def image_prediction(image_bytes):
         response = requests.post(
             settings.AI_INFERENCE_URL + 'metaformer-predict',
             files=files,
-            timeout=25  # timeout to avoid hanging requests
+            timeout=60  # timeout to avoid hanging requests
         )
         response.raise_for_status()
         response = response.json()
