@@ -14,3 +14,8 @@ venv
 *.tmp
 .DS_Store
 *.pyc
+.out
+*.dump
+*.csv
+*.xlsx
+*.xlx
