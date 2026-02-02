@@ -2,6 +2,7 @@ import json
 import re
 
 import requests
+from requests.exceptions import Timeout
 
 STITCHER_URL = 'http://host.docker.internal:8090'
 
@@ -31,7 +32,7 @@ def list_upload_files():
         print(params)
 
         try:
-            response = requests.get(api_list_url, params=params)
+            response = requests.get(api_list_url, params=params, timeout=25)
         except Exception as e:
             print(e)
             break
@@ -53,12 +54,16 @@ def list_upload_files():
 def get_upload_file(guid):
     api_list_url = STITCHER_URL + '/list-upload/'
     try:
-        response = requests.get(api_list_url, params={'guid': guid})
+        response = requests.get(api_list_url, params={'guid': guid}, timeout=25)
         if response.status_code == 200:
             data = response.json()
             return data
         else:
             return {ERROR_MSG_KEY: response.status_code}
+    except Timeout as e:
+        print(e)
+        e_message = f'Request timeout, the application is busy, please check back {e}'
+        return {ERROR_MSG_KEY: e_message}
     except Exception as e:
         print(e)
         return {ERROR_MSG_KEY: e}
@@ -67,12 +72,16 @@ def get_upload_file(guid):
 def patch_upload_file(guid, data):
     api_url = STITCHER_URL + f'/update-record/{guid}'
     try:
-        response = requests.patch(api_url, data=json.dumps(data))
+        response = requests.patch(api_url, data=json.dumps(data), timeout=25)
         if response.status_code == 200:
             data = response.json()
             return data
         else:
             return {ERROR_MSG_KEY: response.status_code}
+    except Timeout as e:
+        print(e)
+        e_message = f'Request timeout, the application is busy, please check back {e}'
+        return {ERROR_MSG_KEY: e_message}
     except Exception as e:
         print(e)
         return {ERROR_MSG_KEY: e}
@@ -81,7 +90,7 @@ def patch_upload_file(guid, data):
 def delete_upload_file(guid):
     api_url = STITCHER_URL + f'/delete/{guid}'
     try:
-        response = requests.delete(api_url)
+        response = requests.delete(api_url, timeout=25)
         if response.status_code in [200, 204]:
             return {'message': f'success code {response.status_code}'}
         else:
@@ -94,7 +103,7 @@ def delete_upload_file(guid):
 def get_root_message():
     api_url = STITCHER_URL
     try:
-        response = requests.get(api_url)
+        response = requests.get(api_url, timeout=25)
         if response.status_code == 200:
             data = response.json()
             return data
@@ -108,7 +117,7 @@ def get_root_message():
 def get_stitcher_stats():
     api_url = STITCHER_URL + '/stats/'
     try:
-        response = requests.get(api_url)
+        response = requests.get(api_url, timeout=25)
         if response.status_code == 200:
             data = response.json()
             return data
@@ -177,7 +186,7 @@ def list_retake_records(upload_dir_name=None):
             params['upload_dir_name'] = upload_dir_name
 
         try:
-            response = requests.get(api_list_url, params=params, timeout=30)
+            response = requests.get(api_list_url, params=params, timeout=25)
         except Exception as e:
             print(f"Error fetching retake records: {e}")
             break

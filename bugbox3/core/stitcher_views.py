@@ -125,6 +125,11 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
             disable_delete = True if self.data[constants.STITCHER_APPROVED] else False
             potential_samples = self.get_potential_samples(self.data)
         first_potential_sample = potential_samples[0][0] if potential_samples else None
+        if ((self.data[constants.STITCHER_ANNOTATIONS_SEGMENT]
+                or self.data[constants.STITCHER_ANNOTATIONS_UPDATED_AT_SEGMENT])
+                and self.data[constants.STITCHER_APPROVED]
+                and self.data[constants.STITCHER_BUGBOX_SAMPLE_ID]):
+            disable_crop_save = False
         context.update({
             'data': self.data,
             'panoarma_name': self.panorama_name,
@@ -260,13 +265,13 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                 raise Http404
             try:
                 label_url = f'{self.stitcher_url}{self.label_src}'
-                label_response = requests.get(label_url, stream=True)
+                label_response = requests.get(label_url, stream=True, timeout=25)
                 label_response.raise_for_status()
             except Exception:
                 label_response = None
             try:
                 img_url = f'{self.stitcher_url}{self.img_src}'
-                response = requests.get(img_url, stream=True)
+                response = requests.get(img_url, stream=True, timeout=25)
                 response.raise_for_status()
                 predictions_timestamp = cast_utc_time(self.data[constants.STITCHER_PREDICTIONS_TIMESTAMP_COCO])
                 auat = self.data[constants.STITCHER_ANNOTATIONS_UPDATED_AT_SEGMENT]
