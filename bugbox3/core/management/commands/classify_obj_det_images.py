@@ -14,7 +14,7 @@ class Command(BaseCommand):
         if settings.AI_INFERENCE_URL:
 
             # get the current model version
-            response = requests.get(settings.AI_INFERENCE_URL + 'yolo')
+            response = requests.get(settings.AI_INFERENCE_URL + 'yolo', timeout=25)
             print(response)
             try:
                 response.raise_for_status()
