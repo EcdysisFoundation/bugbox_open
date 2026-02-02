@@ -184,6 +184,11 @@ STATICFILES_FINDERS = [
 # https://docs.djangoproject.com/en/dev/ref/settings/#media-root
 MEDIA_ROOT = str(APPS_DIR / "media")
 
+# set this to YES in env variable on ECDYSIS01
+ON_ECDYSIS_SERVER = env("ON_ECDYSIS_SERVER", default='NO')
+
+# mounted as volumn in local-cloud.yml
+LOCAL_MOUNTED_MEDIA = ''
 
 # TEMPLATES
 # ------------------------------------------------------------------------------

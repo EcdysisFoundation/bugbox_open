@@ -84,49 +84,10 @@ CELERY_BROKER_URL = env("CELERY_BROKER_URL")
 # https://docs.celeryq.dev/en/stable/userguide/configuration.html#std:setting-result_backend
 CELERY_RESULT_BACKEND = CELERY_BROKER_URL
 
-# set this to YES in env variable on ECDYSIS01
-ON_ECDYSIS_SERVER = env("ON_ECDYSIS_SERVER", default='NO')
-
 # django-webpack-loader
 # ------------------------------------------------------------------------------
 WEBPACK_LOADER["DEFAULT"]["CACHE"] = not DEBUG  # noqa: F405
 
 
-###########################
-# USE CLOUD STORAGE IF THESE SETTINGS ENABLED
-if ON_ECDYSIS_SERVER.upper() == "YES":
-    # Use cloud (S3) storage on Ecdysis01 or cloud instances
-    aws_s3_domain_media = f"{AWS_STORAGE_BUCKET_NAME_MEDIA}.s3.amazonaws.com"
-    aws_s3_domain_static = f"{AWS_STORAGE_BUCKET_NAME_STATIC}.s3.amazonaws.com"
-    # STATIC & MEDIA
-    STORAGES = {
-        "default": {
-            "BACKEND": "storages.backends.s3.S3Storage",
-            "OPTIONS": {
-                "file_overwrite": False,
-                "bucket_name": AWS_STORAGE_BUCKET_NAME_MEDIA
-            },
-        },
-        "staticfiles": {
-            "BACKEND": "storages.backends.s3.S3Storage",
-            "OPTIONS": {
-                "default_acl": "public-read",
-                "bucket_name": AWS_STORAGE_BUCKET_NAME_STATIC
-            },
-        },
-    }
-
-    MEDIA_URL = f"https://{aws_s3_domain_media}/"
-    STATIC_URL = f"https://{aws_s3_domain_static}/"
-
-    # Collectfasta
-    # ------------------------------------------------------------------------------
-    # https://github.com/jasongi/collectfasta#installation
-    # Enable collectfasta only in cloud mode
-    COLLECTFASTA_STRATEGY = "collectfasta.strategies.boto3.Boto3Strategy"
-    INSTALLED_APPS = ["collectfasta", *INSTALLED_APPS]
-
-else:
-    # Use local file storage in dev mode
-    MEDIA_URL = "/media/"
-    STATIC_URL = "/static/"
+MEDIA_URL = "/media/"
+STATIC_URL = "/static/"

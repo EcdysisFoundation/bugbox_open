@@ -18,7 +18,7 @@ class Command(BaseCommand):
     # indicates which orgs to download data from
     downaload_data_orgs = [(1, 'Ecdysis Foundation'), ]
 
-    local_storage = 'bugbox3/media/'
+    local_storage = settings.LOCAL_MOUNTED_MEDIA
 
     image_files = (constants.SPECIMEN_IMAGE_IMAGE,
                    constants.SPECIMEN_IMAGE_IMAGE_THUMBNAIL,
@@ -27,7 +27,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-        if settings.ON_ECDYSIS_SERVER != 'YES':
+        if settings.ON_ECDYSIS_SERVER != 'YES' or not self.local_storage:
             print('Currently this cmd is only supported on Ecdysis01')
             return
 

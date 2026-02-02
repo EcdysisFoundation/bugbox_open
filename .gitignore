@@ -286,6 +286,8 @@ db_backups/
 *.csv
 *.json
 *.dump
+*.xlsx
+*.xlx
 
 Notes/
 *.geany
