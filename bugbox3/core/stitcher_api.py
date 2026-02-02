@@ -2,6 +2,7 @@ import json
 import re
 
 import requests
+from requests.exceptions import Timeout
 
 STITCHER_URL = 'http://host.docker.internal:8090'
 
@@ -59,6 +60,10 @@ def get_upload_file(guid):
             return data
         else:
             return {ERROR_MSG_KEY: response.status_code}
+    except Timeout as e:
+        print(e)
+        e_message = f'Request timeout, the application is busy, please check back {e}'
+        return {ERROR_MSG_KEY: e_message}
     except Exception as e:
         print(e)
         return {ERROR_MSG_KEY: e}
@@ -73,6 +78,10 @@ def patch_upload_file(guid, data):
             return data
         else:
             return {ERROR_MSG_KEY: response.status_code}
+    except Timeout as e:
+        print(e)
+        e_message = f'Request timeout, the application is busy, please check back {e}'
+        return {ERROR_MSG_KEY: e_message}
     except Exception as e:
         print(e)
         return {ERROR_MSG_KEY: e}
