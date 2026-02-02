@@ -125,6 +125,11 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
             disable_delete = True if self.data[constants.STITCHER_APPROVED] else False
             potential_samples = self.get_potential_samples(self.data)
         first_potential_sample = potential_samples[0][0] if potential_samples else None
+        if ((self.data[constants.STITCHER_ANNOTATIONS_SEGMENT]
+                or self.data[constants.STITCHER_ANNOTATIONS_UPDATED_AT_SEGMENT])
+                and self.data[constants.STITCHER_APPROVED]
+                and self.data[constants.STITCHER_BUGBOX_SAMPLE_ID]):
+            disable_crop_save = False
         context.update({
             'data': self.data,
             'panoarma_name': self.panorama_name,
