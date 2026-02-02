@@ -17,7 +17,11 @@ ALLOWED_HOSTS = [
     "216.106.203.179", "172.16.16.147",
     ".localhost", ".local", "172.30.0.8", "django", "192.168.16.8", "[::1]"
 ]
-CSRF_TRUSTED_ORIGINS = ["http://localhost:3000"]
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+    "http://ecdysis01.local:3000",
+    "http://10.147.19.124:3000"
+]
 
 # CACHES
 # ------------------------------------------------------------------------------
