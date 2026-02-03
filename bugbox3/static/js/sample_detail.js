@@ -58,8 +58,10 @@ $(function () {
         ]
     });
 
-    $('#specimens-table tbody').on( 'click', 'tr', function () {
-        $(this).toggleClass('selected');
+    $('#specimens-table tbody').on( 'click', 'tr', function (event) {
+        if ($(event.target).closest('td.select-checkbox').length) {
+            $(this).toggleClass('selected');
+        }
     } );
 
     if (submitBtn) {
