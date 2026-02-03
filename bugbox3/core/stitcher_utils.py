@@ -193,7 +193,12 @@ def crop_img_with_segmentation(
         # high memory usage, do on local server
         print('Warning: function disabled when not ON_ECDYSIS_SERVER')
         return
-
+    # clean annotations
+    annotations_segment = [
+        v for v in annotations_segment if v['closed']
+    ]
+    if not annotations_segment:
+        return True
     width = annotations_segment[0]['original_width']
     height = annotations_segment[0]['original_height']
     conv = [convert_ls_polygonlabels(
