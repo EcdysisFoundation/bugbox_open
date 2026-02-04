@@ -155,13 +155,14 @@ def get_polygon_bounding_box(x, y):
     """
 
     assert len(x) == len(y)
-    x1, y1, x2, y2 = min(x), min(y), max(x), max(y)
+    x1, y1, x2, y2 = int(min(x)), int(min(y)), int(max(x)), int(max(y))
     return [x1, y1, x2 - x1, y2 - y1]
 
 
 def convert_ls_polygonlabels(
         points, width, height):
     """
+    Convert label studio points to coco formatted polygon, and its bounding box.
     From https://github.com/HumanSignal/label-studio-sdk/blob/master/src/label_studio_sdk/converter/converter.py#L836
     """
     points_abs = [
@@ -178,17 +179,21 @@ def convert_ls_polygonlabels(
     }
 
 
-def convert_coco_bbox_opencv(box):
-    x, y, w, h = box
-    x_start = int(x)
-    y_start = int(y)
-    x_end = int(x + w)
-    y_end = int(y + h)
+def convert_coco_bbox_opencv(x, y, w, h):
+    x_start = x
+    y_start = y
+    x_end = x + w
+    y_end = y + h
     return y_start, y_end, x_start, x_end
 
 
 def crop_img_with_segmentation(
-        image, annotations_segment, sample_instance, user_instance, uuid):
+        image, annotations_segment, sample_instance, user_instance, uuid, polys_first=False):
+    """
+    Crop images using their segmentation points, use polys_first=True to apply poly masks
+    to entire image before cropping. Default of False better handles overlapping polygons
+    by applying the polygon mask to each cropped image.
+    """
     if settings.ON_ECDYSIS_SERVER != 'YES':
         # high memory usage, do on local server
         print('Warning: function disabled when not ON_ECDYSIS_SERVER')
@@ -209,10 +214,6 @@ def crop_img_with_segmentation(
     bboxs = [v['bbox'] for v in conv]
     img_basename = Path(image.file.name).name.split(".")[:-1]
 
-    mask = np.zeros((height, width), dtype=np.uint8)
-    polys = [np.array(poly, dtype=np.int32).reshape(-1, 2) for poly in points]
-    cv2.fillPoly(mask, polys, 255)  # all polygons in one call
-
     with closing(image.open()) as img:
         file_bytes = img.read()
         np_arr = np.frombuffer(file_bytes, np.uint8)
@@ -221,13 +222,28 @@ def crop_img_with_segmentation(
     if np_arr.shape[2] == 3:
         np_arr = cv2.cvtColor(np_arr, cv2.COLOR_BGR2BGRA)
 
-    np_arr[:, :, 3] = mask  # alpha = 255 inside polygon, 0 outside
+    if polys_first:
+        mask = np.zeros((height, width), dtype=np.uint8)
+        polys = [np.array(poly, dtype=np.int32).reshape(-1, 2) for poly in points]
+        cv2.fillPoly(mask, polys, 255)  # all polygons in one call
+        np_arr[:, :, 3] = mask  # alpha = 255 inside polygon, 0 outside
 
     completed = 0
     # crop and save
     for i, box in enumerate(bboxs):
-        y_start, y_end, x_start, x_end = convert_coco_bbox_opencv(box)
+        x_min, y_min, w, h = box
+        if w < 50 or h < 50:
+            # skip very small annotations
+            continue
+        y_start, y_end, x_start, x_end = convert_coco_bbox_opencv(x_min, y_min, w, h)
         cropped_img = np_arr[y_start:y_end, x_start:x_end]
+
+        if not polys_first:
+            i_mask = np.zeros((h, w), dtype=np.uint8)
+            np_poly = np.array(points[i], dtype=np.int32).reshape(-1, 2)
+            pts_local = np_poly - np.array([[x_min, y_min]])
+            cv2.fillPoly(i_mask, (pts_local, ), 255)
+            cropped_img[:, :, 3] = i_mask
 
         success, buffer = cv2.imencode(".png", cropped_img)
         if success:
