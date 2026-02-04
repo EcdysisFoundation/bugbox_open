@@ -234,6 +234,7 @@ def crop_img_with_segmentation(
         x_min, y_min, w, h = box
         if w < 50 or h < 50:
             # skip very small annotations
+            completed += 1
             continue
         y_start, y_end, x_start, x_end = convert_coco_bbox_opencv(x_min, y_min, w, h)
         cropped_img = np_arr[y_start:y_end, x_start:x_end]
