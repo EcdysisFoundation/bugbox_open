@@ -161,7 +161,9 @@ def run_update_classifications():
 @shared_task
 def run_s3_media_download():
     if settings.ON_ECDYSIS_SERVER == 'YES':
-        call_command('s3_download_images')
+        None
+        # temporarily disabled, permissions issue on host
+        # call_command('s3_download_images')
 
 
 # only run on Ecdysis01
