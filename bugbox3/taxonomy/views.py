@@ -276,11 +276,17 @@ class MorphospeciesDetailView(PermissionRequiredMixin, FormView):
             'image_count': image_count,
             'img_thumbnail': img_thumbnail,
             'img': img,
-            'specimen_count': Specimen.objects.filter(classification=morphospecies).aggregate(
+            'specimen_count': Specimen.objects.filter(
+                classification=morphospecies,
+                sample__site_visit__site__experiment__organization_id=samples_constants.PRIMARY_ORGANIZATION_ID,
+            ).aggregate(
                 reviewed=Count(
                     'pk', distinct=True,
-                    filter=~Q(acceptance=samples_constants.ACCEPTANCE_PENDING)), pending=Count(
-                        'pk', distinct=True, filter=Q(acceptance=samples_constants.ACCEPTANCE_PENDING))),
+                    filter=~Q(acceptance=samples_constants.ACCEPTANCE_PENDING)),
+                pending=Count(
+                    'pk', distinct=True,
+                    filter=Q(acceptance=samples_constants.ACCEPTANCE_PENDING)),
+            ),
             'common_misidentifications': common_misidentifications,
             'json_context': get_json_context({
                 'ai_accuracy_over_time': ai_accuracy_over_time,
