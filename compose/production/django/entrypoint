@@ -23,7 +23,7 @@ import time
 
 import psycopg
 
-suggest_unrecoverable_after = 30
+suggest_unrecoverable_after = 90
 start = time.time()
 
 while True:

@@ -142,6 +142,8 @@ STITCHER_APPROVED_CHOICES = (
     (False, 'Retake')
 )
 STITCHER_STATS_LS_PROJECTS = 'label_studio_projects'
+STITCHER_UPLOADFILE_KEY = 'uploadfile'
+STITCHER_TASK_KEY = 'task'
 
 # Default LookupChoices
 DEFAULT_TAGS = (

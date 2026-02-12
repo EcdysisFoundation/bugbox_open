@@ -24,6 +24,7 @@ from .stitcher_api import (
     ERROR_MSG_KEY,
     STITCHER_JS_URL,
     STITCHER_JS_URL_ZEROTIER,
+    STITCHER_FLOWER_URL,
     STITCHER_URL,
     cleanup_matching_retake_records,
     delete_upload_file,
@@ -52,6 +53,7 @@ class StitcherView(PermissionRequiredMixin, TemplateView):
 
         context.update({
             'stats': stats,
+            'STITCHER_FLOWER_URL': STITCHER_FLOWER_URL,
             'json_context': get_json_context({
                 'STITCHER_URL': stitcher_url,
                 'ls_projects_choices': ls_projects_choices,
@@ -79,7 +81,11 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
             raise Http404
         guid = self.kwargs[constants.STITCHER_GUID]
         self.guid = guid
-        self.data = get_upload_file(guid)
+        upload_file_response = get_upload_file(guid)
+        self.data = upload_file_response[constants.STITCHER_UPLOADFILE_KEY] \
+            if constants.STITCHER_UPLOADFILE_KEY in upload_file_response.keys() else upload_file_response
+        self.task_response = upload_file_response[constants.STITCHER_TASK_KEY] \
+            if constants.STITCHER_TASK_KEY in upload_file_response.keys() else None
         self.stitcher_url = STITCHER_URL
         self.stitcher_js_url = STITCHER_JS_URL_ZEROTIER if \
             str(self.request.user) in ZEROTIER_USERS else STITCHER_JS_URL
@@ -116,22 +122,25 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
         disable_crop_save = True
         disable_delete = False
         potential_samples = []
-        for v in constants.STITCHER_TIMEFIELDS:
-            if v in self.data.keys():
-                if self.data[v]:
-                    self.data[v] = cast_utc_time(self.data[v])
-        if all([v in self.data.keys() for v in constants.STITCHER_FORM_REQUIRED_KEYS]):
-            disable_stitching = False if self.data[constants.STITCHER_APPROVED] is None else True
-            disable_delete = True if self.data[constants.STITCHER_APPROVED] else False
-            potential_samples = self.get_potential_samples(self.data)
-        first_potential_sample = potential_samples[0][0] if potential_samples else None
-        if ((self.data[constants.STITCHER_ANNOTATIONS_SEGMENT]
-                or self.data[constants.STITCHER_ANNOTATIONS_UPDATED_AT_SEGMENT])
-                and self.data[constants.STITCHER_APPROVED]
-                and self.data[constants.STITCHER_BUGBOX_SAMPLE_ID]):
-            disable_crop_save = False
+        first_potential_sample = None
+        if ERROR_MSG_KEY not in self.data.keys():
+            for v in constants.STITCHER_TIMEFIELDS:
+                if v in self.data.keys():
+                    if self.data[v]:
+                        self.data[v] = cast_utc_time(self.data[v])
+            if all([v in self.data.keys() for v in constants.STITCHER_FORM_REQUIRED_KEYS]):
+                disable_stitching = False if self.data[constants.STITCHER_APPROVED] is None else True
+                disable_delete = True if self.data[constants.STITCHER_APPROVED] else False
+                potential_samples = self.get_potential_samples(self.data)
+            first_potential_sample = potential_samples[0][0] if potential_samples else None
+            if ((self.data[constants.STITCHER_ANNOTATIONS_SEGMENT]
+                    or self.data[constants.STITCHER_ANNOTATIONS_UPDATED_AT_SEGMENT])
+                    and self.data[constants.STITCHER_APPROVED]
+                    and self.data[constants.STITCHER_BUGBOX_SAMPLE_ID]):
+                disable_crop_save = False
         context.update({
             'data': self.data,
+            'task_response': self.task_response,
             'panoarma_name': self.panorama_name,
             'img_src': f'{self.stitcher_js_url}{self.img_src}',
             'thumbnail_src': self.thumbnail_src,
@@ -162,21 +171,18 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
     def get_initial(self):
         initial = super().get_initial()
         data = get_upload_file(self.kwargs[constants.STITCHER_GUID])
-        if constants.STITCHER_APPROVED in data.keys():
-            initial[constants.STITCHER_APPROVED] = data[constants.STITCHER_APPROVED]
-        if constants.STITCHER_UPLOAD_DIR_NAME in data.keys():
-            initial[constants.STITCHER_UPLOAD_DIR_NAME] = data[constants.STITCHER_UPLOAD_DIR_NAME]
-        if constants.STITCHER_BUGBOX_SAMPLE_ID in data.keys():
-            if not data[constants.STITCHER_BUGBOX_SAMPLE_ID] and not data[constants.STITCHER_NOTA_SAMPLE]:
-                potential_samples = self.get_potential_samples(data, strict=True)
+        if constants.STITCHER_UPLOADFILE_KEY in data.keys():
+            uploadfile_data = data[constants.STITCHER_UPLOADFILE_KEY]
+            initial[constants.STITCHER_APPROVED] = uploadfile_data[constants.STITCHER_APPROVED]
+            initial[constants.STITCHER_UPLOAD_DIR_NAME] = uploadfile_data[constants.STITCHER_UPLOAD_DIR_NAME]
+            if not uploadfile_data[constants.STITCHER_BUGBOX_SAMPLE_ID] and not uploadfile_data[constants.STITCHER_NOTA_SAMPLE]:
+                potential_samples = self.get_potential_samples(uploadfile_data, strict=True)
                 if len(potential_samples) == 1:
                     initial[constants.STITCHER_BUGBOX_SAMPLE_ID] = potential_samples[0][0]
             else:
-                initial[constants.STITCHER_BUGBOX_SAMPLE_ID] = data[constants.STITCHER_BUGBOX_SAMPLE_ID]
-        if constants.STITCHER_NOTA_SAMPLE in data.keys():
-            initial[constants.STITCHER_NOTA_SAMPLE] = data[constants.STITCHER_NOTA_SAMPLE]
-        if constants.STITCHER_OMIT_FROM_TRAINING in data.keys():
-            initial[constants.STITCHER_OMIT_FROM_TRAINING] = data[constants.STITCHER_OMIT_FROM_TRAINING]
+                initial[constants.STITCHER_BUGBOX_SAMPLE_ID] = uploadfile_data[constants.STITCHER_BUGBOX_SAMPLE_ID]
+            initial[constants.STITCHER_NOTA_SAMPLE] = uploadfile_data[constants.STITCHER_NOTA_SAMPLE]
+            initial[constants.STITCHER_OMIT_FROM_TRAINING] = uploadfile_data[constants.STITCHER_OMIT_FROM_TRAINING]
         return initial
 
     def form_valid(self, form):
@@ -372,9 +378,9 @@ class StitcherDeleteView(PermissionRequiredMixin, FormView):
         initial = super().get_initial()
         guid = self.kwargs[constants.STITCHER_GUID]
         data = get_upload_file(guid)
-        if constants.STITCHER_UPLOAD_DIR_NAME not in data.keys():
+        if constants.STITCHER_UPLOADFILE_KEY not in data.keys():
             raise Http404
-        self.upload_dir_name = data[constants.STITCHER_UPLOAD_DIR_NAME]
+        self.upload_dir_name = data[constants.STITCHER_UPLOADFILE_KEY][constants.STITCHER_UPLOAD_DIR_NAME]
         initial[constants.STITCHER_UPLOAD_DIR_NAME] = self.upload_dir_name
         initial[constants.STITCHER_GUID] = guid
         return initial

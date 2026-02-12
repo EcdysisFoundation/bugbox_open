@@ -166,10 +166,8 @@ $(function () {
             },{
                 data: 'guid',
                 render: getFormButton
-            },{
-                data: 'panorama_path',
-                render: getPanoramaSrc
-            },{
+            },
+            {
                 data: 'approved',
                 render: getApproved
             },{
