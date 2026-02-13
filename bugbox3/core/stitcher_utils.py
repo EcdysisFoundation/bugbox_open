@@ -200,6 +200,9 @@ def crop_img_with_segmentation(
         return
     # clean annotations
     annotations_segment = [
+        v for v in annotations_segment if 'closed' in v.keys()
+    ]
+    annotations_segment = [
         v for v in annotations_segment if v['closed']
     ]
     if not annotations_segment:
