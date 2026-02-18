@@ -14,13 +14,14 @@
 {% block content %}
 <div class="container">
 
-    {% if data.stitching_exception_at %}
+    {% if task_response.exception %}
         <div class="row mt-3">
             <div class="col">
                 <div class="alert alert-warning" role="alert">
-                <h5>Warning: @ {{ data.stitching_exception_at }} a stitching error occured</h5>
+                <h5>Warning: @ {{ task_response.starting_timestamp }} a stitching error occured</h5>
                 <p>
-                    {{ data.stitching_exception }}
+                    {{ task_response.exception }}
+                    {{ task_response.panorama_path}}
                 </p>
                 </div>
             </div>

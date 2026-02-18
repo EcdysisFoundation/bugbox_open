@@ -1445,7 +1445,7 @@ class MultiSpecimenImageView(PermissionRequiredMixin, FormView):
                 for uuid in uuids:
                     try:
                         stitcher_data = get_upload_file(uuid)
-                        stitcher_data[constants_core.STITCHER_BUGBOX_CROPED_SAVED] = None
+                        stitcher_data[constants_core.STITCHER_UPLOADFILE_KEY][constants_core.STITCHER_BUGBOX_CROPED_SAVED] = None
                         patch_upload_file(uuid, stitcher_data)
                     except Exception as e:
                         messages.error(self.request, f'{general_error_message}{e}')
