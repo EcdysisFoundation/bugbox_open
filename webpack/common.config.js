@@ -18,6 +18,7 @@ module.exports = {
     sample_detail: path.resolve(__dirname, '../bugbox3/static/js/sample_detail'),
     apexcharts_config: path.resolve(__dirname, '../bugbox3/static/js/apexcharts_config'),
     gbif_api: path.resolve(__dirname, '../bugbox3/static/js/gbif_api'),
+    morphospecies_form_update: path.resolve(__dirname, '../bugbox3/static/js/morphospecies_form_update'),
     specimens_all: path.resolve(__dirname, '../bugbox3/static/js/specimens_all'),
     timeline: path.resolve(__dirname, '../bugbox3/static/js/timeline'),
     collections: path.resolve(__dirname, '../bugbox3/static/js/collections'),

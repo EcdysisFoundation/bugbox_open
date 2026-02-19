@@ -9,6 +9,7 @@
 
 {% block customheadtagcontent %}
 {% render_bundle 'gbif_api' 'js' attrs='defer' %}
+{% render_bundle 'morphospecies_form_update' 'js' attrs='defer' %}
 {{ gbif_api|safe }}
 {{ json_context|safe }}
 {% endblock customheadtagcontent %}
