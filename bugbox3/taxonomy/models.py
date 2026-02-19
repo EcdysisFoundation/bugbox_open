@@ -14,13 +14,29 @@ from django.db.models import (
     ForeignKey,
     ImageField,
     IntegerField,
+    ManyToManyField,
     Model,
+    TextField,
 )
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 
 from ..libs.utilities import resized_thumbnail
 from . import constants
+
+
+class FunctionalGroup(Model):
+    """Functional group for morphospecies classification."""
+    code = CharField(max_length=64, unique=True)
+    display_name = CharField(max_length=128)
+    description = TextField(blank=True)
+    category = CharField(max_length=32)
+
+    class Meta:
+        app_label = 'taxonomy'
+
+    def __str__(self):
+        return self.display_name
 
 
 class Morphospecies(Model):
@@ -48,6 +64,7 @@ class Morphospecies(Model):
     update_thumbs = BooleanField(null=True)
     exclude_from_export = BooleanField(default=False)
     tags = ArrayField(CharField(max_length=1000, blank=True), default=list)
+    functional_groups = ManyToManyField(FunctionalGroup, blank=True)
 
     class Meta:
         app_label = 'taxonomy'

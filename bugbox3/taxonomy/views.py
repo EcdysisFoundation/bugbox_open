@@ -25,7 +25,17 @@ from ..samples import constants as samples_constants
 from ..samples.models import Sample, Specimen, SpecimenImage
 from . import constants
 from .forms import MorphospeciesCombineForm, MorphospeciesForm, MorphospeciesUpdateForm
-from .models import AiTraining, Morphospecies
+from .constants import (
+    CAT_LIFE_STAGE_ADULT,
+    CAT_LIFE_STAGE_YOUNG,
+    CAT_OTHER,
+    CAT_PHYTOPHAGOUS,
+    CAT_ZOOPHAGOUS,
+    OTHER_ORDER,
+    PHYTOPHAGOUS_ORDER,
+    ZOOPHAGOUS_ORDER,
+)
+from .models import AiTraining, FunctionalGroup, Morphospecies
 from .serializers import MorphospeciesDatatablesSerializer, MorphospeciesPickerSerializer
 from .tasks import id_image
 
@@ -372,6 +382,21 @@ class MorphospeciesUpdateView(PermissionRequiredMixin, UpdateView):
         org_user = OrganizationUser.objects.filter(user=self.request.user).first()
         if org_user:
             kwargs['org_id'] = org_user.organization_id
+        fg_queryset = FunctionalGroup.objects.exclude(
+            category__in=[CAT_LIFE_STAGE_YOUNG, CAT_LIFE_STAGE_ADULT]
+        )
+        phyto = list(fg_queryset.filter(category=CAT_PHYTOPHAGOUS))
+        kwargs['functional_groups_phytophagous'] = sorted(
+            phyto, key=lambda x: PHYTOPHAGOUS_ORDER.index(x.code) if x.code in PHYTOPHAGOUS_ORDER else 999
+        )
+        zoo = list(fg_queryset.filter(category=CAT_ZOOPHAGOUS))
+        kwargs['functional_groups_zoophagous'] = sorted(
+            zoo, key=lambda x: ZOOPHAGOUS_ORDER.index(x.code) if x.code in ZOOPHAGOUS_ORDER else 999
+        )
+        other = list(fg_queryset.filter(category=CAT_OTHER))
+        kwargs['functional_groups_other'] = sorted(
+            other, key=lambda x: OTHER_ORDER.index(x.code) if x.code in OTHER_ORDER else 999
+        )
         return kwargs
 
     def get_context_data(self, **kwargs):
