@@ -6,9 +6,9 @@ from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.files.base import ContentFile
 from django.db import transaction
 from django.db.utils import IntegrityError
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from django.urls import reverse
-from django.views.generic import FormView, TemplateView
+from django.views.generic import FormView, TemplateView, View
 from organizations.models import OrganizationUser
 
 from bugbox3.libs.utilities import cast_utc_time, get_json_context
@@ -161,7 +161,12 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                 'disable_delete': disable_delete,
                 'stitcher_delete_url': reverse(
                     'core:stitcher-delete', kwargs={constants.STITCHER_GUID: str(self.guid)}),
-                'first_potential_sample': first_potential_sample
+                'first_potential_sample': first_potential_sample,
+                'panorama_confidence': self.data.get(constants.STITCHER_PANORAMA_CONFIDENCE),
+                'panorama_timestamp': self.data.get(constants.STITCHER_PANORAMA_TIMESTAMP),
+                'panorama_path': self.data.get(constants.STITCHER_PANORAMA_PATH),
+                'panorama_status_url': reverse(
+                    'core:stitcher-panorama-status', kwargs={constants.STITCHER_GUID: str(self.guid)})
             })
         })
         if ERROR_MSG_KEY in self.data.keys():
@@ -406,3 +411,19 @@ class StitcherDeleteView(PermissionRequiredMixin, FormView):
 
     def get_success_url(self):
         return reverse('core:stitcher')
+
+
+class StitcherPanoramaStatusView(PermissionRequiredMixin, View):
+    """Returns JSON with current panorama_timestamp and panorama_path for a guid (for polling after update stitching)"""
+    permission_required = IS_ADMIN
+
+    def get(self, request, *args, **kwargs):
+        guid = self.kwargs[constants.STITCHER_GUID]
+        data = get_upload_file(guid)
+        if ERROR_MSG_KEY in data:
+            return JsonResponse({ERROR_MSG_KEY: str(data[ERROR_MSG_KEY])}, status=400)
+        uploadfile = data.get(constants.STITCHER_UPLOADFILE_KEY, data)
+        return JsonResponse({
+            'panorama_timestamp': uploadfile.get(constants.STITCHER_PANORAMA_TIMESTAMP),
+            'panorama_path': uploadfile.get(constants.STITCHER_PANORAMA_PATH),
+        })
