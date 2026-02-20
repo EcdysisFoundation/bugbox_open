@@ -298,13 +298,20 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                     uploaded_by_user=self.request.user)
                 img_name = f'{self.data[constants.STITCHER_UPLOAD_DIR_NAME]}.jpg'
                 instance.image.save(img_name, ContentFile(response.content), save=False)
+                if self.thumbnail_src:
+                    thumbnail_url = f'{self.stitcher_url}{self.thumbnail_src}'
+                    thumb_response = requests.get(thumbnail_url, stream=True, timeout=25)
+                    thumb_response.raise_for_status()
+                    thumb_name = f'{self.data[constants.STITCHER_UPLOAD_DIR_NAME]}_thumbnail.jpg'
+                    instance.image_thumbnail.save(thumb_name, ContentFile(thumb_response), save=False)
                 if label_response:
                     label_img_name = f'{self.data[constants.STITCHER_UPLOAD_DIR_NAME]}_label.jpg'
                     instance.label_image.save(label_img_name, ContentFile(label_response.content), save=False)
                     # Save label image to Sample image field
                     if not this_sample.image:
                         sample_label_img_name = f'{self.data[constants.STITCHER_UPLOAD_DIR_NAME]}_label.jpg'
-                        this_sample.image.save(sample_label_img_name, ContentFile(label_response.content), save=False)
+                        this_sample.image.save(
+                            sample_label_img_name, ContentFile(label_response.content), save=False)
                         this_sample.save()
                 instance.save()
                 transaction.on_commit(
