@@ -3,31 +3,22 @@ import io
 import json
 
 import pandas as pd
+from bugbox3.grower_portal.constants import AVALANCHE_SAMPLE_CODE_COLUMN, IGNITE_SAMPLE_CODE_COLUMN, IGNITE_SITE_TRANSECT_COLUMN
+from bugbox3.grower_portal.models.csv_import import CSVImportRow
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from django.core.paginator import Paginator
+from django.db import transaction
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from bugbox3.core.permissions import IS_GROWERADMIN
 
-from ...constants import CSV_IMPORT_SCHEMAS
 from ...forms.admin.forms import CSVUploadForm
 from ...middleware import get_user_timezone
-from ...models import CSVImportFieldValue, CSVImportLog, SampleCode
-
-TRANSECT_CODE_COLUMN_PREFIX = 'Sample ID'
-
-
-def _get_transect_codes(row):
-    transect_codes = set()
-    for name, value in row.items():
-        if name.startswith(TRANSECT_CODE_COLUMN_PREFIX) and value.strip():
-            transect_codes.add(value)
-    return list(transect_codes)
-
+from ...models import CSVImportFieldValue, CSVImportLog, SampleCode, SiteTransect
 
 def _add_to_error_log(error_log, row_number, row, message):
     """Helper function to log errors with consistent formatting."""
@@ -38,37 +29,42 @@ def _add_to_error_log(error_log, row_number, row, message):
     })
 
 
-def _validate_sample_code(row_number, row, error_log):
-    transect_codes = _get_transect_codes(row)
+def _validate_sample_code(row_number, row, error_log, project_type):
+    sample_code_column = AVALANCHE_SAMPLE_CODE_COLUMN if project_type == 'avalanche' else IGNITE_SAMPLE_CODE_COLUMN
+    sample_code = row[sample_code_column]
 
-    if not transect_codes:
-        _add_to_error_log(error_log, row_number, row, 'Row is missing transect code')
+    if not sample_code:
+        _add_to_error_log(error_log, row_number, row, f'Row is missing sample code in column: {sample_code_column}')
         return None
-
-    if len(transect_codes) > 1:
-        _add_to_error_log(error_log, row_number, row, f'Row has multiple transect codes: {transect_codes}')
-        return None
-
-    transect_code = transect_codes[0]
 
     try:
-        sample_code_object = SampleCode.objects.get(code=transect_code)
+        sample_code_object = SampleCode.objects.get(code=sample_code)
     except SampleCode.DoesNotExist:
-        _add_to_error_log(error_log, row_number, row, f'Transect code does not exist: {transect_code}')
+        _add_to_error_log(error_log, row_number, row, f'Sample code does not exist: {sample_code}')
         return None
 
-    if not sample_code_object.is_active:
-        _add_to_error_log(error_log, row_number, row, f'Transect code is inactive: {transect_code}')
-        return None
-
-    if not sample_code_object.used_in_application:
-        _add_to_error_log(error_log, row_number, row, f'Transect code is not used in an application: {transect_code}')
+    if not sample_code_object.project_type == project_type:
+        _add_to_error_log(error_log, row_number, row, f'Sample code project type mismatch: {sample_code}')
         return None
 
     return sample_code_object
 
+def _validate_site_transect(row_number, row, error_log, sample_code_object):
+    transect_number = row[IGNITE_SITE_TRANSECT_COLUMN]
 
-def _process_csv_file(csv_import_log, csv_file):
+    if not transect_number:
+        _add_to_error_log(error_log, row_number, row, f'Row is missing transect number in column: {IGNITE_SITE_TRANSECT_COLUMN}')
+        return None
+
+    try:
+        site_transect_object = SiteTransect.objects.get(site_code=sample_code_object, transect_number=transect_number)
+    except SiteTransect.DoesNotExist:
+        _add_to_error_log(error_log, row_number, row, f'Site transect number {transect_number} does not exist on sample code {sample_code_object.code}')
+        return None
+
+    return site_transect_object
+
+def _process_csv_file(csv_import_log, csv_file, project_type, result_type):
     csv_file.seek(0)
     content = csv_file.read()
     if isinstance(content, bytes):
@@ -78,26 +74,48 @@ def _process_csv_file(csv_import_log, csv_file):
     successful_count = 0
     failed_count = 0
     error_log = []
-    validated_field_values = []
+    import_rows = []
+    import_field_values = []
 
     for i, row in enumerate(csv_reader):
         try:
 
             sample_code_object = _validate_sample_code(
-                i, row, error_log
+                i, row, error_log, project_type
             )
 
             if not sample_code_object:
                 failed_count += 1
                 continue
 
-            for field_name, field_value in row.items():
-                validated_field_values.append(CSVImportFieldValue(
-                    import_log=csv_import_log,
-                    sample_code=sample_code_object,
+            site_transect_object = None
+            if project_type == 'ignite':
+                site_transect_object = _validate_site_transect(
+                    i, row, error_log, sample_code_object
+                )
+
+                if not site_transect_object:
+                    failed_count += 1
+                    continue
+
+            cleaned_row = {k.strip(): v for k, v in row.items()}
+
+            depth = f"{cleaned_row.get('Beginning Depth', '')}-{cleaned_row.get('Ending Depth', '')}" if result_type == 'basic' else None
+
+            import_row = CSVImportRow(
+                import_log=csv_import_log,
+                sample_code=sample_code_object,
+                site_transect=site_transect_object,
+                depth=depth,
+                row_number=i
+            )
+            import_rows.append(import_row)
+
+            for field_name, field_value in cleaned_row.items():
+                import_field_values.append(CSVImportFieldValue(
                     field_name=field_name,
                     field_value=field_value,
-                    row_number=i
+                    row = import_row
                 ))
             successful_count += 1
         except Exception as e:
@@ -105,9 +123,11 @@ def _process_csv_file(csv_import_log, csv_file):
             _add_to_error_log(error_log, i, row, f'Unexpected error: {e}')
             continue
 
-    # Only save validated field values if there are no errors
+    # Only save validated rows and field values if there are no errors
     if not error_log:
-        CSVImportFieldValue.objects.bulk_create(validated_field_values)
+        with transaction.atomic():
+            CSVImportRow.objects.bulk_create(import_rows)
+            CSVImportFieldValue.objects.bulk_create(import_field_values)
 
     return successful_count + failed_count, successful_count, failed_count, error_log
 
@@ -120,6 +140,8 @@ def csv_upload(request):
         if form.is_valid():
             csv_file = form.cleaned_data['csv_file']
             description = form.cleaned_data.get('description', '')
+            project_type = form.cleaned_data['project_type']
+            result_type = form.cleaned_data['result_type']
 
             file_path = f'csv_imports/{csv_file.name}'
             csv_file.seek(0)
@@ -134,9 +156,11 @@ def csv_upload(request):
                 total_records=0,
                 successful_records=0,
                 failed_records=0,
+                project_type=project_type,
+                result_type=result_type,
             )
 
-            total, successful, failed, error_log = _process_csv_file(csv_import_log, csv_file)
+            total, successful, failed, error_log = _process_csv_file(csv_import_log, csv_file, project_type, result_type)
 
             csv_import_log.status = 'completed' if not error_log else 'failed'
             csv_import_log.total_records = total
@@ -166,7 +190,6 @@ def csv_upload(request):
     context = {
         'form': form,
         'user_timezone': get_user_timezone(request),
-        'csv_import_schemas': CSV_IMPORT_SCHEMAS,
     }
 
     return render(request, 'grower_portal/admin/csv_upload.html', context)
@@ -268,7 +291,8 @@ def csv_import_delete(request, import_id):
     except Exception as e:
         raise RuntimeError(f"Error deleting import log file: {e}")
 
-    CSVImportFieldValue.objects.filter(import_log=import_log).delete()
+    CSVImportFieldValue.objects.filter(row__import_log=import_log).delete()
+    CSVImportRow.objects.filter(import_log=import_log).delete()
     import_log.delete()
 
     messages.success(request, f'Import log {import_log_filename} (ID: {import_log_id}) has been deleted.')

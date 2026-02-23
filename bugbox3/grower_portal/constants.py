@@ -208,57 +208,11 @@ SOIL_METRIC_CHOICES = [
     ('temp_c', 'Soil Temperature (°C)'),
 ]
 
-# CSV Import Schema Configuration
-CSV_IMPORT_SCHEMAS = {
-    'haney': {
-        'name': 'Haney',
-        'required_headers': [
-            'Cust ID',
-            'Name',
-            'Company',
-            'Address 1',
-            'Address 2',
-            'City',
-            'ST',
-            'Zip',
-            'Date Recd',
-            'Date Rept',
-            'Lab No',
-            'Grower',
-            'Field ID',
-        ],
-    },
-    'plfa': {
-        'name': 'PLFA',
-        'required_headers': [
-            'Sample Type',
-            'Lab ID',
-            'Test ID',
-            'Date Received',
-            'Date Reported',
-            'Customer ID',
-            'Name',
-            'Company',
-            'Grower',
-            'Field ID',
-        ],
-    },
-    'basic': {
-        'name': 'Basic',
-        'required_headers': [
-            'Sample Type',
-            'Lab No',
-            'Test ID',
-            'Date Recd',
-            'Date Rept',
-            'Cust ID',
-            'Name',
-            'Company',
-            'Grower',
-            'Field ID',
-        ],
-    },
-}
+RESULT_TYPE_CHOICES = [
+    ('haney', 'Haney'),
+    ('plfa', 'PLFA'),
+    ('basic', 'Basic'),
+]
 
 LABEL_PROJECT_CHOICES = [
     ('avalanche', 'Avalanche'),
@@ -349,3 +303,7 @@ SUBMITTAL_SH_INCHES_START = 0
 SUBMITTAL_SH_INCHES_END = 6
 
 SUBMITTAL_PLANT_TYPE = 'forage mix'
+
+AVALANCHE_SAMPLE_CODE_COLUMN = 'Sample ID 1'
+IGNITE_SAMPLE_CODE_COLUMN = 'Field ID'
+IGNITE_SITE_TRANSECT_COLUMN = 'Sample ID 1'

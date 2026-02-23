@@ -7,7 +7,7 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 
-from ...constants import CSV_IMPORT_SCHEMAS, FIELD_TYPE_CHOICES
+from ...constants import AVALANCHE_SAMPLE_CODE_COLUMN, FIELD_TYPE_CHOICES, IGNITE_SAMPLE_CODE_COLUMN, IGNITE_SITE_TRANSECT_COLUMN, LABEL_PROJECT_CHOICES, RESULT_TYPE_CHOICES
 from ...models import Farm
 
 User = get_user_model()
@@ -56,6 +56,8 @@ class CSVUploadForm(forms.Form):
         help_text='Select a CSV file to upload (max 10MB)',
         widget=forms.FileInput(attrs={'accept': '.csv'})
     )
+    project_type = forms.ChoiceField(choices=LABEL_PROJECT_CHOICES, label='Project Type')
+    result_type = forms.ChoiceField(choices=RESULT_TYPE_CHOICES, label='Result Type')
     description = forms.CharField(
         required=False,
         widget=forms.Textarea(attrs={'rows': 4}),
@@ -71,33 +73,17 @@ class CSVUploadForm(forms.Form):
         self.helper.form_enctype = 'multipart/form-data'
         self.helper.layout = Layout(
             'csv_file',
+            'project_type',
+            'result_type',
             'description',
             Submit('submit', 'Upload CSV', css_class='btn btn-primary')
         )
 
-    def _classify_and_get_missing_headers(self, headers):
-        """
-        Classify the CSV file into haney, plfa, or basic based on the headers, and return missing headers.
-        """
-        headers = set(headers)
-
-        # Calculate how much the csv headers overlap with each schema's required headers
-        candidates = {}
-        for schema_key, schema_config in CSV_IMPORT_SCHEMAS.items():
-            required_headers = set(schema_config['required_headers'])
-            overlap_count = len(headers & required_headers)
-            candidates[schema_key] = overlap_count
-
-        # Get the schema with the highest overlap
-        best_schema_key = max(candidates, key=candidates.get)
-        schema_config = CSV_IMPORT_SCHEMAS[best_schema_key]
-        required = set(schema_config['required_headers'])
-        missing = required - headers
-
-        return schema_config['name'], missing
-
     def clean_csv_file(self):
         csv_file = self.cleaned_data.get('csv_file')
+        project_type = self.data.get('project_type')
+        result_type = self.data.get('result_type')
+
         if csv_file:
             if not csv_file.name.endswith('.csv'):
                 raise ValidationError('File must be a CSV file (.csv extension)')
@@ -119,16 +105,25 @@ class CSVUploadForm(forms.Form):
                         'CSV file appears to be empty or has no headers'
                     )
 
-                # Check for required fields
-                headers_stripped = [h.strip() if h else '' for h in headers]
-                schema, missing_headers = self._classify_and_get_missing_headers(headers_stripped)
+                if any(not header for header in headers):
+                    raise ValidationError('CSV file has empty header values')
+                
+                if project_type == 'avalanche':
+                    if AVALANCHE_SAMPLE_CODE_COLUMN not in headers:
+                        raise ValidationError(f'Sample Code column {AVALANCHE_SAMPLE_CODE_COLUMN} is required for Avalanche project type')
+                elif project_type == 'ignite':
+                    if IGNITE_SAMPLE_CODE_COLUMN not in headers:
+                        raise ValidationError(f'Sample Code column {IGNITE_SAMPLE_CODE_COLUMN} is required for Ignite project type')
+                    if IGNITE_SITE_TRANSECT_COLUMN not in headers:
+                        raise ValidationError(f'Site Transect column {IGNITE_SITE_TRANSECT_COLUMN} is required for Ignite project type')
 
-                if missing_headers:
-                    missing_list = ', '.join(missing_headers)
-                    raise ValidationError(
-                        f'{schema} CSV file is missing required columns: {missing_list}. '
-                        f'Please ensure all required columns are present in the header row.'
-                    )
+                # Check for depth headers for Basic tests
+                cleaned_headers = [header.strip() for header in headers]
+                if result_type == 'basic':
+                    if 'Beginning Depth' not in cleaned_headers:
+                        raise ValidationError('Beginning Depth header is required for Basic tests')
+                    if 'Ending Depth' not in cleaned_headers:
+                        raise ValidationError('Ending Depth header is required for Basic tests')
 
             except csv.Error as e:
                 raise ValidationError(f'Error reading CSV file: {str(e)}')

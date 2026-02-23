@@ -7,9 +7,12 @@ from ..constants import (
     CSV_IMPORT_STATUS_CHOICES,
     FIELD_NAME_MAX_LENGTH,
     FILE_PATH_MAX_LENGTH,
+    LABEL_PROJECT_CHOICES,
+    RESULT_TYPE_CHOICES,
     STATUS_MAX_LENGTH,
 )
 from .sample_codes import SampleCode
+from .sample_codes import SiteTransect
 
 User = get_user_model()
 
@@ -31,6 +34,8 @@ class CSVImportLog(models.Model):
         default='pending'
     )
     error_log = models.JSONField(default=list, blank=True)
+    project_type = models.CharField(max_length=20, choices=LABEL_PROJECT_CHOICES, default='avalanche')
+    result_type = models.CharField(max_length=20, choices=RESULT_TYPE_CHOICES, default='basic')
 
     class Meta:
         verbose_name = _('CSV Import Log')
@@ -40,15 +45,18 @@ class CSVImportLog(models.Model):
     def __str__(self):
         return f"CSV Import: {self.filename} - {self.status}"
 
-
-class CSVImportFieldValue(models.Model):
-    """Track CSV imports field values"""
-
-    field_name = models.CharField(max_length=FIELD_NAME_MAX_LENGTH)
-    field_value = models.CharField(max_length=255)
+class CSVImportRow(models.Model):
+    """Track CSV imports field rows"""
     row_number = models.IntegerField(null=True, blank=True)
+    depth = models.CharField(max_length=255, null=True)
     sample_code = models.ForeignKey(
         SampleCode,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+    site_transect = models.ForeignKey(
+        SiteTransect,
         on_delete=models.SET_NULL,
         null=True,
         blank=True
@@ -61,6 +69,22 @@ class CSVImportFieldValue(models.Model):
     )
 
     class Meta:
+        verbose_name = _('CSV Import Row ')
+        verbose_name_plural = _('CSV Import Row')
+        ordering = ['import_log', 'sample_code', 'site_transect', 'depth']
+
+class CSVImportFieldValue(models.Model):
+    """Track CSV imports field values"""
+    field_name = models.CharField(max_length=FIELD_NAME_MAX_LENGTH)
+    field_value = models.CharField(max_length=255)
+    row = models.ForeignKey(
+        CSVImportRow,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+
+    class Meta:
         verbose_name = _('CSV Import Field Value')
         verbose_name_plural = _('CSV Import Field Value')
-        ordering = ['import_log', 'sample_code', 'field_name']
+        ordering = ['row', 'field_name', 'field_value']

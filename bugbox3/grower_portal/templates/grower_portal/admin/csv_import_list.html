@@ -39,8 +39,8 @@
                                         <th>Imported By</th>
                                         <th>Import Date</th>
                                         <th>Total Records</th>
-                                        <th>Successful</th>
-                                        <th>Failed</th>
+                                        <th>Project Type</th>
+                                        <th>Result Type</th>
                                         <th>Status</th>
                                         <th>Actions</th>
                                     </tr>
@@ -50,10 +50,10 @@
                                     <tr>
                                         <td>{{ import.filename }}</td>
                                         <td>{{ import.imported_by.name }}</td>
-                                        <td>{{ import.import_date|user_datetime:request.user_timezone }}</td>
+                                        <td>{{ import.import_date|user_timezone:request.user_timezone|date:"Y-m-d g:i A" }}</td>
                                         <td>{{ import.total_records }}</td>
-                                        <td><span class="badge bg-success">{{ import.successful_records }}</span></td>
-                                        <td><span class="badge bg-danger">{{ import.failed_records }}</span></td>
+                                        <td>{{ import.get_project_type_display }}</td>
+                                        <td>{{ import.get_result_type_display }}</td>
                                         <td>
                                             {% if import.status == 'pending' %}
                                                 <span class="badge bg-warning text-dark">Pending</span>
@@ -62,7 +62,7 @@
                                             {% elif import.status == 'completed' %}
                                                 <span class="badge bg-success">Completed</span>
                                             {% elif import.status == 'failed' %}
-                                                <span class="badge bg-danger">Failed</span>
+                                                <span class="badge bg-danger">{{ import.failed_records }} Failed</span>
                                             {% endif %}
                                         </td>
                                         <td>
