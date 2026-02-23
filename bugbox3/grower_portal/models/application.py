@@ -59,6 +59,8 @@ class GrowerApplication(models.Model):
     )
     grower = models.ForeignKey(
         User,
+        related_name="grower_applications",
+        verbose_name="Grower",
         on_delete=models.CASCADE,
         null=True,
         blank=True,

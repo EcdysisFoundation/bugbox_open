@@ -1,7 +1,12 @@
 from django.urls import path
 
 from ..users.views import EulaReadView, EulaView
-from .stitcher_views import StitcherDeleteView, StitcherUpdateView, StitcherView
+from .stitcher_views import (
+    StitcherDeleteView,
+    StitcherPanoramaStatusView,
+    StitcherUpdateView,
+    StitcherView,
+)
 from .views import (
     LookupChoicesCreateView,
     LookupChoicesDeleteView,
@@ -34,6 +39,11 @@ urlpatterns = [
     path('org-members/<int:org_id>', OrgMembersView.as_view(), name='org-members'),
     path('member-delete/<int:id>/<int:org_id>', OrgMemberDeleteView.as_view(), name='member-delete'),
     path('stitcher', StitcherView.as_view(), name='stitcher'),
+    path(
+        'stitcher-form/<uuid:guid>/panorama-status/',
+        StitcherPanoramaStatusView.as_view(),
+        name='stitcher-panorama-status',
+    ),
     path('stitcher-form/<uuid:guid>', StitcherUpdateView.as_view(), name='stitcher-form'),
     path(
         'stitcher-delete/<uuid:guid>', StitcherDeleteView.as_view(), name='stitcher-delete')
