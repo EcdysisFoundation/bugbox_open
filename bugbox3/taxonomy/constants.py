@@ -22,6 +22,7 @@ FIELD_MORPHO_IMAGE = 'image'
 FIELD_MORPHO_EXCLUDE = 'exclude_from_export'
 FIELD_MORPHO_TAGS = 'tags'
 FIELD_MORPHO_TAGS_LOOKUP = 'morpho_tags'
+FIELD_MORPHO_FUNCTIONAL_GROUPS = 'functional_groups'
 
 MORPHPOSPECIES_THUMBSIZE = 350
 
@@ -98,6 +99,188 @@ FORM_MORPHO_HELP_TEXT = {
     FIELD_MORPHO_GBIF_CANONICAL_NAME: 'Populate by selecting a GBIF taxon.'
 }
 
+# Functional groups (category codes)
+CAT_LIFE_STAGE_YOUNG = 'life_stage_young'
+CAT_LIFE_STAGE_ADULT = 'life_stage_adult'
+CAT_PHYTOPHAGOUS = 'phytophagous'
+CAT_ZOOPHAGOUS = 'zoophagous'
+CAT_OTHER = 'other'
+
+# tuple of(code, display_name, description, category)
+FUNCTIONAL_GROUP_DEFINITIONS = (
+    (
+        'young_terrestrial',
+        'Young Terrestrial',
+        'The immature stages live primarily out of the water',
+        CAT_LIFE_STAGE_YOUNG,
+    ),
+    (
+        'young_aquatic',
+        'Young Aquatic',
+        'The immature stages live primarily in or on the water',
+        CAT_LIFE_STAGE_YOUNG,
+    ),
+    (
+        'adult_terrestrial',
+        'Adult Terrestrial',
+        'The adult stage (imago) lives primarily out of the water',
+        CAT_LIFE_STAGE_ADULT,
+    ),
+    (
+        'adult_aquatic',
+        'Adult Aquatic',
+        'The adult stage (imago) lives primarily in or on the water',
+        CAT_LIFE_STAGE_ADULT,
+    ),
+    (
+        'phytophagous',
+        'Phytophagous',
+        'The species consumes plants (choose all applicable subtypes from the options below)',
+        CAT_PHYTOPHAGOUS,
+    ),
+    (
+        'phyllophagous',
+        'Phyllophagous',
+        'The species consumes the leaves of plants',
+        CAT_PHYTOPHAGOUS,
+    ),
+    (
+        'saproxylic',
+        'Saproxylic',
+        'The species consumes living wood',
+        CAT_PHYTOPHAGOUS,
+    ),
+    (
+        'sap_sucking',
+        'Sap-sucking',
+        'The species consumes liquids from the xylem or phloem of plants',
+        CAT_PHYTOPHAGOUS,
+    ),
+    (
+        'stem_feeding',
+        'Stem-feeding',
+        'The species consumes stem tissues of plants',
+        CAT_PHYTOPHAGOUS,
+    ),
+    (
+        'flower_feeding',
+        'Flower-feeding',
+        'The species consumes flowers or flower parts',
+        CAT_PHYTOPHAGOUS,
+    ),
+    (
+        'fruit_seed_feeding',
+        'Fruit/seed-feeding',
+        'The species consumes fruit and/or seeds',
+        CAT_PHYTOPHAGOUS,
+    ),
+    (
+        'gall_inducing',
+        'Gall-inducing',
+        'The species causes plant tissues to develop a gall, which it lives in and feeds on',
+        CAT_PHYTOPHAGOUS,
+    ),
+    (
+        'leaf_miners',
+        'Leaf miners',
+        "The species' larva lives within leaf tissue and consumes it from within",
+        CAT_PHYTOPHAGOUS,
+    ),
+    (
+        'root_feeding',
+        'Root-feeding',
+        'The species consumes plant roots',
+        CAT_PHYTOPHAGOUS,
+    ),
+    (
+        'algae_moss_feeding',
+        'Algae/moss-feeding',
+        'The species consumes algae or moss',
+        CAT_PHYTOPHAGOUS,
+    ),
+    (
+        'zoophagous',
+        'Zoophagous',
+        'The species consumes other animals (choose all applicable subtypes from the options below)',
+        CAT_ZOOPHAGOUS,
+    ),
+    (
+        'predator',
+        'Predator',
+        'The species kills and consumes animal prey',
+        CAT_ZOOPHAGOUS,
+    ),
+    (
+        'micropredator',
+        'Micropredator',
+        'The species is free-living (i.e., not parasitic), but feeds on body fluids or body parts of animals without killing them',
+        CAT_ZOOPHAGOUS,
+    ),
+    (
+        'parasite',
+        'Parasite',
+        "The species lives on or inside a host animal's body and feeds on it, but does not kill it",
+        CAT_ZOOPHAGOUS,
+    ),
+    (
+        'parasitoid',
+        'Parasitoid',
+        'The species lives on or inside a host animal and consumes it, ultimately killing it',
+        CAT_ZOOPHAGOUS,
+    ),
+    (
+        'necrophagous',
+        'Necrophagous',
+        'The species consumes dead animals that it did not kill',
+        CAT_ZOOPHAGOUS,
+    ),
+    (
+        'mycetophagous',
+        'Mycetophagous',
+        'The species consumes fungi',
+        CAT_OTHER,
+    ),
+    (
+        'detritophagous',
+        'Detritophagous',
+        'The species consumes dead/decaying organic matter',
+        CAT_OTHER,
+    ),
+    (
+        'coprophagous',
+        'Coprophagous',
+        'The species consumes dung',
+        CAT_OTHER,
+    ),
+    (
+        'pollinator',
+        'Pollinator',
+        'The species transfers pollen between flowers',
+        CAT_OTHER,
+    ),
+)
+
+PHYTOPHAGOUS_ORDER = [
+    'phytophagous', 'phyllophagous', 'saproxylic', 'sap_sucking', 'stem_feeding',
+    'flower_feeding', 'fruit_seed_feeding', 'gall_inducing', 'leaf_miners',
+    'root_feeding', 'algae_moss_feeding',
+]
+ZOOPHAGOUS_ORDER = [
+    'zoophagous', 'predator', 'micropredator', 'parasite', 'parasitoid', 'necrophagous',
+]
+OTHER_ORDER = ['mycetophagous', 'detritophagous', 'coprophagous', 'pollinator']
+
+YOUNG_HABITAT_CHOICES = (
+    ('', '---------'),
+    ('young_terrestrial', 'Young Terrestrial'),
+    ('young_aquatic', 'Young Aquatic'),
+)
+
+ADULT_HABITAT_CHOICES = (
+    ('', '---------'),
+    ('adult_terrestrial', 'Adult Terrestrial'),
+    ('adult_aquatic', 'Adult Aquatic'),
+)
 
 # Choices
 

@@ -26,9 +26,9 @@ class Command(BaseCommand):
                 print(f'Created organization {org_name} the owner is {v.owner.organization_user.user}')
             else:
                 print(f'The organization with name {org_name} already exists.')
-            org = Organization.objects.get(name=org_name)
-            org.add_user(user, is_admin=True)
-
+        else:
+            print('Username required, exiting...')
+            return
         if Organization.objects.filter(name=org_name).exists():
             primary_org = Organization.objects.get(name=org_name)
             v = create_default_lookup_choices(primary_org.id)
