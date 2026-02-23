@@ -291,6 +291,7 @@ def csv_import_delete(request, import_id):
     except Exception as e:
         raise RuntimeError(f"Error deleting import log file: {e}")
 
+    CSVImportFieldValue.objects.filter(row__import_log=import_log).delete()
     CSVImportRow.objects.filter(import_log=import_log).delete()
     import_log.delete()
 
