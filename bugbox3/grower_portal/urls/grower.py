@@ -15,15 +15,23 @@ from ..views.grower import (
     application_step5,
     application_step6,
     application_view,
+    basic_results_ajax,
     dashboard,
+    depth_options_ajax,
+    factor_detail,
     profile_complete,
     profile_edit,
+    results,
 )
 
 urlpatterns = [
     path('profile/complete/', profile_complete, name='profile_complete'),
     path('profile/edit/', profile_edit, name='profile_edit'),
     path('dashboard/', dashboard, name='dashboard'),
+    path('results/', results, name='results'),
+    path('results/basic/', basic_results_ajax, name='basic_results_ajax'),
+    path('results/depth-options/', depth_options_ajax, name='depth_options_ajax'),
+    path('results/factor/', factor_detail, name='factor_detail'),
     path('applications/create/', application_create, name='application_create'),
     path('applications/<int:application_id>/', application_view, name='application_view'),
     path('applications/<int:application_id>/edit/', application_edit, name='application_edit'),

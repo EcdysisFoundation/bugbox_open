@@ -1,3 +1,4 @@
+from datetime import date
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Column, Div, Fieldset, Layout, Row, Submit
 from django import forms
@@ -22,12 +23,14 @@ from ...constants import (
     GENDER_CHOICES,
     GRAZER_TYPES_CHOICES,
     GROUND_COVER_MANAGEMENT_CHOICES,
+    LABEL_PROJECT_CHOICES,
     MAX_ANIMAL_ENTRIES_PER_GRAZING_EVENT,
     ORCHARD_CROP_TYPE_CHOICES,
     ORGANIC_AMENDMENT_CHOICES,
     PADDOCK_SIZE_MAX_LENGTH,
     PHONE_MAX_LENGTH,
     RACE_CHOICES,
+    RESULT_TYPE_CHOICES,
     ROOTSTOCK_SPECIES_MAX_LENGTH,
     TILLAGE_METHODS_MAX_LENGTH,
     TRANSITIONAL_STATUS_CHOICES,
@@ -88,6 +91,50 @@ class GrowerProfileCompletionForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         for field in self.fields.values():
             field.widget.attrs.update({'class': 'form-control'})
+
+
+class ResultsFilterForm(forms.Form):
+    """
+    Form for filtering grower results by year, project type, and result type.
+    """
+    year = forms.IntegerField(
+        required=False,
+        label='Year',
+        widget=forms.Select(choices=[])
+    )
+    project_type = forms.ChoiceField(
+        choices=LABEL_PROJECT_CHOICES,
+        required=False,
+        label='Project Type'
+    )
+    result_type = forms.ChoiceField(
+        choices=[('', 'All')] + RESULT_TYPE_CHOICES,
+        required=False,
+        label='Result Type'
+    )
+
+    def __init__(self, *args, available_years=None, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        years = sorted(available_years or [], reverse=True) or [date.today().year]
+        self.fields['year'].widget.choices = [(y, str(y)) for y in years]
+
+        for field in self.fields.values():
+            if hasattr(field.widget, 'attrs'):
+                field.widget.attrs.update({'class': 'form-select'})
+
+        self.helper = FormHelper()
+        self.helper.form_method = 'get'
+        self.helper.form_class = 'row g-3'
+        self.helper.form_id = 'resultsFilterForm'
+
+        self.helper.layout = Layout(
+            Row(
+                Column('year', css_class='col-md-4'),
+                Column('project_type', css_class='col-md-4'),
+                Column('result_type', css_class='col-md-4'),
+            ),
+        )
 
 
 class ApplicationCreationForm(ModelFormMixin):
