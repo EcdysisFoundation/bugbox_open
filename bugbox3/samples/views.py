@@ -23,7 +23,7 @@ from bugbox3.samples.utils import resolve_entered_by
 from ..core import constants as constants_core
 from ..core.models import LookupChoices
 from ..core.permissions import IS_RESEARCH, REVIEW_SPECIMEN_PAGE
-from ..core.stitcher_api import ERROR_MSG_KEY, get_root_message, get_upload_file, patch_upload_file
+from ..core.stitcher_api import ERROR_MSG_KEY, get_root_message, get_only_upload_file, patch_upload_file
 from ..libs.ui_helpers import (
     calc_image_height,
     get_datatables_container,
@@ -1444,8 +1444,8 @@ class MultiSpecimenImageView(PermissionRequiredMixin, FormView):
             else:
                 for uuid in uuids:
                     try:
-                        stitcher_data = get_upload_file(uuid)
-                        stitcher_data[constants_core.STITCHER_UPLOADFILE_KEY][constants_core.STITCHER_BUGBOX_CROPED_SAVED] = None
+                        stitcher_data = get_only_upload_file(uuid)
+                        stitcher_data[constants_core.STITCHER_BUGBOX_CROPED_SAVED] = None
                         patch_upload_file(uuid, stitcher_data)
                     except Exception as e:
                         messages.error(self.request, f'{general_error_message}{e}')

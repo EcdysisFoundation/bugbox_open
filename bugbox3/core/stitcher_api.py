@@ -76,6 +76,24 @@ def get_upload_file(guid):
         return {ERROR_MSG_KEY: e}
 
 
+def get_only_upload_file(guid):
+    api_list_url = STITCHER_URL + '/list-upload/'
+    try:
+        response = requests.get(api_list_url, params={'guid': guid}, timeout=25)
+        if response.status_code == 200:
+            data = response.json()
+            return data
+        else:
+            return {ERROR_MSG_KEY: response.status_code}
+    except Timeout as e:
+        print(e)
+        e_message = f'Request timeout, the application is busy, please check back {e}'
+        return {ERROR_MSG_KEY: e_message}
+    except Exception as e:
+        print(e)
+        return {ERROR_MSG_KEY: e}
+
+
 def patch_upload_file(guid, data):
     api_url = STITCHER_URL + f'/update-record/{guid}'
     try:
