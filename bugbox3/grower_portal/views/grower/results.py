@@ -5,8 +5,10 @@ from datetime import date
 from django.contrib.auth.decorators import login_required, permission_required
 from django.http import JsonResponse
 from django.shortcuts import render
+from django.urls import reverse
 
 from bugbox3.core.permissions import IS_GROWER_USER
+from bugbox3.libs.utilities import get_json_context
 
 from ...constants import LABEL_PROJECT_CHOICES, RESULT_TYPE_CHOICES, RESULT_TYPE_FACTOR_MAPPING
 from ...forms.grower.forms import ResultsFilterForm
@@ -312,9 +314,16 @@ def results(request):
         'project_type_display': dict(LABEL_PROJECT_CHOICES).get(project_type, project_type),
         'result_type_filter': result_type_filter,
         'depth': depth,
-        'years_to_project_types_json': json.dumps(years_to_project_types),
-        'project_type_labels_json': json.dumps(dict(LABEL_PROJECT_CHOICES)),
         'user_timezone': get_user_timezone(request),
+        'json_context': get_json_context({
+            'factor_detail_url': reverse('grower_portal:factor_detail'),
+            'basic_results_url': reverse('grower_portal:basic_results_ajax'),
+            'year': year,
+            'project_type': project_type,
+            'result_type_filter': result_type_filter,
+            'years_to_project_types': years_to_project_types,
+            'project_type_labels': dict(LABEL_PROJECT_CHOICES),
+        }),
     })
 
 
