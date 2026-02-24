@@ -58,6 +58,9 @@
                 <li class="list-group-item">
                     <b>Created at:</b> {{ data.created_at }}
                 </li>
+                <li class="list-group-item">
+                    <b>Confidence setting:</b> {{ data.panorama_confidence }}
+                </li>
                 {% if data.sent_label_studio %}
                     <li class="list-group-item list-group-item-info">
                         Sent to Label Studio{% if data.label_studio_project %}: {{ data.label_studio_project }}
