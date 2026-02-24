@@ -102,9 +102,10 @@ def get_img_src(img_field, resize_width=None, styles='', public=False):
         return '<i class="bi bi-question-diamond"></i>'
 
     def img_src(path, width, height, styles):
-        # pass height as blank str if only need width
         if height:
             height = f'height="{height}"'
+        else:
+            height = ''
         return f'<img src="{path}" width="{width}" {height} class="{styles}">'
 
     if img_field and not resize_width:
@@ -120,7 +121,7 @@ def get_img_src(img_field, resize_width=None, styles='', public=False):
         return img_src(
             get_media_url(img_field, public),
             int(resize_width),
-            '',
+            None,
             str(styles)
         )
     else:
