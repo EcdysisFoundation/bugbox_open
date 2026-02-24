@@ -99,11 +99,8 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
             if self.data[constants.STITCHER_PANORAMA_PATH]:
                 self.img_src = self.data[constants.STITCHER_PANORAMA_PATH].replace('/media/', '/static/')
                 if self.data[constants.STITCHER_PANORAMA_THUMBNAIL_PATH]:
-                    thumbnail_path = (
-                        self.data[constants.STITCHER_PANORAMA_THUMBNAIL_PATH]
-                        .replace('/media/', '/static/')
-                    )
-                    self.thumbnail_src = f'{self.stitcher_js_url}{thumbnail_path}'
+                    self.thumbnail_src = self.data[constants.STITCHER_PANORAMA_THUMBNAIL_PATH].replace(
+                        '/media/', '/static/')
                 self.panorama_name = os.path.basename(self.data[constants.STITCHER_PANORAMA_PATH])
         if constants.STITCHER_NOTA_SAMPLE in self.data.keys():
             self.nota_sample = self.data[constants.STITCHER_NOTA_SAMPLE]
@@ -143,7 +140,7 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
             'task_response': self.task_response,
             'panoarma_name': self.panorama_name,
             'img_src': f'{self.stitcher_js_url}{self.img_src}',
-            'thumbnail_src': self.thumbnail_src,
+            'thumbnail_src': f'{self.stitcher_js_url}{self.thumbnail_src}',
             'label_src': f'{self.stitcher_js_url}{self.label_src}',
             'potential_samples': potential_samples,
             'nota_sample': self.nota_sample,
