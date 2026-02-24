@@ -300,7 +300,7 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                     thumb_response = requests.get(thumbnail_url, stream=True, timeout=25)
                     thumb_response.raise_for_status()
                     thumb_name = f'{self.data[constants.STITCHER_UPLOAD_DIR_NAME]}_thumbnail.jpg'
-                    instance.image_thumbnail.save(thumb_name, ContentFile(thumb_response), save=False)
+                    instance.image_thumbnail.save(thumb_name, ContentFile(thumb_response.content), save=False)
                 if label_response:
                     label_img_name = f'{self.data[constants.STITCHER_UPLOAD_DIR_NAME]}_label.jpg'
                     instance.label_image.save(label_img_name, ContentFile(label_response.content), save=False)
