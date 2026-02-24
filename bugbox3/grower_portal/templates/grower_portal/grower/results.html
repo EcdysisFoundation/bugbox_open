@@ -1,0 +1,300 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+{% load timezone_filters %}
+{% load crispy_forms_tags %}
+
+{% block title %}Grower Results{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1>My Results</h1>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-filter"></i> Filter Results</h5>
+                </div>
+                <div class="card-body">
+                    {% crispy form %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card-body">
+                <p>Currently displaying results for <strong>{{ year }}</strong> for project type <strong>{{ project_type_display }}</strong>.</p>
+                <p>Results values are aggregated. Numeric values display the average, and non-numeric values display the most common value.</p>
+                <p>Click on any factor to see detailed values and information.</p>
+                <div class="form-check mt-2">
+                    <input class="form-check-input" type="checkbox" id="showIndividualValues">
+                    <label class="form-check-label" for="showIndividualValues">
+                        Show individual transect values
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results by Type (collapsible accordion) -->
+    <div class="accordion" id="resultsAccordion">
+        {% for result_section in result_type_results %}
+        <div class="accordion-item mb-3 border rounded" data-result-type="{{ result_section.result_type }}">
+            <h2 class="accordion-header" id="heading-{{ result_section.result_type }}">
+                <button class="accordion-button {% if not forloop.first %}collapsed{% endif %} fw-semibold fs-5"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#collapse-{{ result_section.result_type }}"
+                        aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}"
+                        aria-controls="collapse-{{ result_section.result_type }}">
+                    <i class="fas fa-flask me-2"></i> {{ result_section.display }} Results
+                </button>
+            </h2>
+            <div id="collapse-{{ result_section.result_type }}"
+                 class="accordion-collapse collapse {% if forloop.first %}show{% endif %}"
+                 aria-labelledby="heading-{{ result_section.result_type }}">
+                <div class="accordion-body">
+                    {% if result_section.result_type == "basic" %}
+                    <div class="mb-3 d-flex align-items-end gap-3">
+                        <div>
+                            <label for="depthSelect" class="form-label fw-semibold mb-1">Depth</label>
+                            <select id="depthSelect" class="form-select" style="width: auto;">
+                                <option value="">All Depths</option>
+                                {% for value, label in depth_options %}
+                                <option value="{{ value }}"{% if depth == value %} selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div id="basic-results-tables" data-depth="{{ depth }}">
+                        {% include "grower_portal/grower/_basic_results_tables.html" with organized_results=result_section.organized_results %}
+                    </div>
+                {% else %}
+                    {% if result_section.organized_results %}
+                        <div class="row">
+                            {% for table_name, table_data in result_section.organized_results.items %}
+                            <div class="col-md-6 col-lg-4 mb-4">
+                                <div class="card h-100">
+                                    <div class="card-header">
+                                        <h5 class="mb-0"><i class="fas fa-table"></i> {{ table_name }}</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-hover table-sm">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Factor</th>
+                                                        <th>Value</th>
+                                                        <th>Units</th>
+                                                        <th></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for factor in table_data %}
+                                                    <tr style="cursor: pointer;"
+                                                        data-factor-name="{{ factor.factor_name }}"
+                                                        data-result-type="{{ result_section.result_type }}">
+                                                        <td>
+                                                            {{ factor.factor_name }}
+                                                            {% if factor.summary %}
+                                                            <i class="bi bi-info-circle text-muted ms-1"
+                                                               style="cursor: help; font-size: 0.8em;"
+                                                               data-bs-toggle="tooltip"
+                                                               data-bs-placement="right"
+                                                               data-bs-title="{{ factor.summary }}"></i>
+                                                            {% endif %}
+                                                        </td>
+                                                        <td>
+                                                            {% if factor.has_value %}
+                                                                {% if factor.is_numeric %}
+                                                                    {{ factor.value|floatformat:"2" }}
+                                                                {% else %}
+                                                                    {{ factor.value }}
+                                                                {% endif %}
+                                                            {% else %}
+                                                                —
+                                                            {% endif %}
+                                                        </td>
+                                                        <td>{% if factor.units %}{{ factor.units }}{% else %}—{% endif %}</td>
+                                                        <td class="text-end text-muted">›</td>
+                                                    </tr>
+                                                    {% for iv in factor.individual_values %}
+                                                    <tr class="individual-values-row" style="display:none; background:var(--bs-tertiary-bg,#f8f9fa);">
+                                                        <td class="ps-4 text-muted small">{{ iv.label }}</td>
+                                                        <td class="small">
+                                                            {% if iv.value %}{% if iv.is_numeric %}{{ iv.value|floatformat:"2" }}{% else %}{{ iv.value }}{% endif %}{% else %}—{% endif %}
+                                                        </td>
+                                                        <td class="text-muted small">{% if factor.units %}{{ factor.units }}{% endif %}</td>
+                                                        <td></td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-0">No {{ result_section.display }} results available for the selected filters.</p>
+                    {% endif %}
+                {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el) {
+        new bootstrap.Tooltip(el);
+    });
+
+    const factorDetailBase = '{% url "grower_portal:factor_detail" %}';
+    const basicResultsUrl = '{% url "grower_portal:basic_results_ajax" %}';
+    const yearSelect = document.getElementById('id_year');
+    const filterForm = document.getElementById('resultsFilterForm');
+
+    // Individual transect values toggle
+    const showIndividualCheckbox = document.getElementById('showIndividualValues');
+
+    function applyIndividualValuesVisibility(scope) {
+        const show = showIndividualCheckbox && showIndividualCheckbox.checked;
+        (scope || document).querySelectorAll('.individual-values-row').forEach(function(row) {
+            row.style.display = show ? '' : 'none';
+        });
+    }
+
+    if (showIndividualCheckbox) {
+        showIndividualCheckbox.addEventListener('change', function() {
+            applyIndividualValuesVisibility();
+        });
+    }
+
+    // Result type accordion filtering
+    const resultTypeSelect = document.getElementById('id_result_type');
+
+    function filterAccordions(value) {
+        document.querySelectorAll('.accordion-item[data-result-type]').forEach(function(item) {
+            item.style.display = (!value || item.dataset.resultType === value) ? '' : 'none';
+        });
+    }
+
+    filterAccordions('{{ result_type_filter }}');
+
+    if (resultTypeSelect) {
+        resultTypeSelect.addEventListener('change', function() {
+            filterAccordions(this.value);
+        });
+    }
+
+    // Project type dropdown — only show options available for the selected year
+    const yearsToProjectTypes = {{ years_to_project_types_json|safe }};
+    const projectTypeLabels = {{ project_type_labels_json|safe }};
+    const projectTypeSelect = document.getElementById('id_project_type');
+
+    function updateProjectTypeOptions(selectedYear) {
+        if (!projectTypeSelect) return;
+        const available = yearsToProjectTypes[String(selectedYear)] || [];
+        const currentValue = projectTypeSelect.value;
+
+        projectTypeSelect.innerHTML = '';
+        const choices = available.length ? available : Object.keys(projectTypeLabels);
+        choices.forEach(function(value) {
+            const opt = document.createElement('option');
+            opt.value = value;
+            opt.textContent = projectTypeLabels[value] || value;
+            projectTypeSelect.appendChild(opt);
+        });
+
+        projectTypeSelect.value = available.includes(currentValue) ? currentValue : (choices[0] || '');
+    }
+
+    updateProjectTypeOptions('{{ year }}');
+
+    if (yearSelect) {
+        yearSelect.addEventListener('change', function() {
+            updateProjectTypeOptions(this.value);
+            if (filterForm) filterForm.requestSubmit();
+        });
+    }
+
+    if (projectTypeSelect) {
+        projectTypeSelect.addEventListener('change', function() {
+            if (filterForm) filterForm.requestSubmit();
+        });
+    }
+
+    // Event delegation for factor row clicks (works for dynamically-swapped Basic rows too)
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('[data-bs-toggle="tooltip"]')) return;
+        const row = e.target.closest('tr[data-factor-name]');
+        if (!row) return;
+
+        const resultType = row.dataset.resultType;
+        let depth = '';
+        if (resultType === 'basic') {
+            const basicContainer = document.getElementById('basic-results-tables');
+            depth = basicContainer ? (basicContainer.dataset.depth || '') : '';
+        }
+
+        const params = new URLSearchParams({
+            year: '{{ year }}',
+            project_type: '{{ project_type }}',
+            result_type: resultType,
+            depth: depth,
+            factor_name: row.dataset.factorName,
+        });
+        window.location.href = factorDetailBase + '?' + params.toString();
+    });
+
+    // AJAX depth filtering — swap only the Basic tables, no page reload
+    const depthSelect = document.getElementById('depthSelect');
+    const basicContainer = document.getElementById('basic-results-tables');
+
+    if (depthSelect && basicContainer) {
+        depthSelect.addEventListener('change', function() {
+            const params = new URLSearchParams({
+                year: '{{ year }}',
+                project_type: '{{ project_type }}',
+                depth: depthSelect.value,
+            });
+            fetch(`${basicResultsUrl}?${params}`)
+                .then(r => r.text())
+                .then(html => {
+                    basicContainer.innerHTML = html;
+                    basicContainer.dataset.depth = depthSelect.value;
+                    applyIndividualValuesVisibility(basicContainer);
+                    basicContainer.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el) {
+                        new bootstrap.Tooltip(el);
+                    });
+                });
+        });
+    }
+
+    // Carry the current depth into full-page filter submissions (year/project_type changes)
+    if (filterForm && depthSelect) {
+        filterForm.addEventListener('submit', function() {
+            const hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.name = 'depth';
+            hidden.value = depthSelect.value;
+            filterForm.appendChild(hidden);
+        });
+    }
+});
+
+</script>
+{% endblock %}

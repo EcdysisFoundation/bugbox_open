@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+{% block title %}{{ factor_name }} – Factor Detail{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <a href="{% url 'grower_portal:results' %}?year={{ year }}&project_type={{ project_type }}&result_type={{ result_type }}&depth={{ depth }}"
+       class="btn btn-sm btn-outline-secondary mb-4">
+        ← Back to Results
+    </a>
+
+    <!-- Header card: name + aggregate value -->
+    <div class="card mb-4" style="background-color: #f8f9fa; border: none;">
+        <div class="card-body p-4">
+            <p class="text-muted mb-2">
+                {{ result_type_display }} &middot; {{ project_type_display }} &middot; {{ year }}{% if depth %} &middot; {{ depth }}{% endif %}
+            </p>
+            <h1 class="mb-4">{{ factor_name }}</h1>
+
+            {% if aggregate_value is not None %}
+                <div class="mb-2">
+                    {% if aggregate_is_numeric %}
+                        <span style="font-size: 3rem; font-weight: 700; line-height: 1;">
+                            {{ aggregate_value|floatformat:"2" }}
+                        </span>
+                        <span class="text-muted ms-2" style="font-size: 1.1rem;">({{ aggregate_label }}){% if units %} &middot; {{ units }}{% endif %}</span>
+                    {% else %}
+                        <span style="font-size: 2rem; font-weight: 700; line-height: 1;">
+                            {{ aggregate_value }}
+                        </span>
+                        <span class="text-muted ms-2" style="font-size: 1.1rem;">({{ aggregate_label }})</span>
+                    {% endif %}
+                </div>
+                <p class="text-muted mt-1 mb-0" style="font-size: 0.85rem;">
+                    Based on {{ rows|length }} measurement{{ rows|length|pluralize }}
+                </p>
+            {% else %}
+                <p class="text-muted">No data available for the current filters.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Description card -->
+    <div class="card mb-4" style="background-color: #f0f2f5; border: none;">
+        <div class="card-body p-4">
+            <h5 class="fw-bold mb-3">Description</h5>
+            {% if description %}
+                <p class="mb-0 text-muted">{{ description }}</p>
+            {% elif summary %}
+                <p class="mb-0 text-muted">{{ summary }}</p>
+            {% else %}
+                <p class="mb-0 text-muted">No description available for this metric.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Individual measurements table -->
+    <div class="card" style="border: none;">
+        <div class="card-body p-4">
+            <h5 class="fw-bold mb-3">Individual Measurements</h5>
+            <div class="table-responsive">
+                <table class="table table-hover table-sm mb-0">
+                    <thead>
+                        <tr>
+                            <th>Sample Code</th>
+                            {% if project_type == 'ignite' %}<th>Transect</th>{% endif %}
+                            {% if result_type == 'basic' %}<th>Depth</th>{% endif %}
+                            <th>Value{% if units %} ({{ units }}){% endif %}</th>
+                            {% if project_type == 'avalanche' %}
+                            <th>Application</th>
+                            <th>Date Sampled</th>
+                            <th>Field</th>
+                            <th>Farm</th>
+                            {% endif %}
+                            <th>Imported</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in rows %}
+                        <tr>
+                            <td><code>{{ row.sample_code|default:"—" }}</code></td>
+                            {% if project_type == 'ignite' %}
+                            <td>{{ row.transect_number|default:"—" }}</td>
+                            {% endif %}
+                            {% if result_type == 'basic' %}
+                            <td>{{ row.depth|default:"—" }}</td>
+                            {% endif %}
+                            <td>
+                                {% if row.field_value is not None %}
+                                    {% if row.is_numeric %}
+                                        {{ row.field_value|floatformat:"4" }}
+                                    {% else %}
+                                        {{ row.field_value }}
+                                    {% endif %}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                            {% if project_type == 'avalanche' %}
+                            <td>
+                                {% if row.application_id %}
+                                    <a href="{% url 'grower_portal:application_view' row.application_id %}">
+                                        {{ row.application_code }}
+                                    </a>
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                            <td>{{ row.date_sampled|default:"—" }}</td>
+                            <td>{{ row.farm_field|default:"—" }}</td>
+                            <td>{{ row.farm_name|default:"—" }}</td>
+                            {% endif %}
+                            <td>{{ row.import_date|default:"—" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="9" class="text-center text-muted py-4">
+                                No individual measurements found for these filters.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
