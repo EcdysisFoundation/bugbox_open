@@ -8,7 +8,7 @@
 {% block title %}Grower Results{% endblock %}
 
 {% block customheadtagcontent %}
-{% render_bundle 'grower_results' 'js' %}
+{% render_bundle 'grower_results' 'js' attrs='defer' %}
 {{ json_context|safe }}
 {% endblock %}
 
