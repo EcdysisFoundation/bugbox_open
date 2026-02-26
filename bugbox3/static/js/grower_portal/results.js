@@ -131,11 +131,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // Carry the current depth into full-page filter submissions (year/project_type changes)
     if (filterForm && depthSelect) {
         filterForm.addEventListener('submit', function() {
-            const hidden = document.createElement('input');
-            hidden.type = 'hidden';
-            hidden.name = 'depth';
+            let hidden = filterForm.querySelector('input[name="depth"]');
+            if (!hidden) {
+                hidden = document.createElement('input');
+                hidden.type = 'hidden';
+                hidden.name = 'depth';
+                filterForm.appendChild(hidden);
+            }
             hidden.value = depthSelect.value;
-            filterForm.appendChild(hidden);
         });
     }
 });
