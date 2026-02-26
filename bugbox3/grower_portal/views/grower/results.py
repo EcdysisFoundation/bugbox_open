@@ -265,7 +265,6 @@ def results(request):
 
     default_year = available_years[0]
     year_str = request.GET.get('year', '')
-    project_type = request.GET.get('project_type', 'avalanche')
     result_type_filter = request.GET.get('result_type', '')
     depth = request.GET.get('depth', '')
 
@@ -273,6 +272,10 @@ def results(request):
         year = int(year_str) if year_str else default_year
     except (ValueError, TypeError):
         year = default_year
+
+    available_for_year = years_to_project_types.get(str(year), [])
+    default_project_type = available_for_year[0] if available_for_year else 'avalanche'
+    project_type = request.GET.get('project_type', default_project_type)
 
     if request.GET:
         form = ResultsFilterForm(data=request.GET, available_years=available_years)
