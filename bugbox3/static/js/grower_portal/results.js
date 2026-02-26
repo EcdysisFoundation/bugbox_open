@@ -1,4 +1,4 @@
-import { Tooltip} from 'bootstrap'
+import Tooltip from 'bootstrap/js/dist/tooltip'
 
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el) {
