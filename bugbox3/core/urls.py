@@ -1,12 +1,7 @@
 from django.urls import path
 
 from ..users.views import EulaReadView, EulaView
-from .stitcher_views import (
-    StitcherDeleteView,
-    StitcherPanoramaStatusView,
-    StitcherUpdateView,
-    StitcherView,
-)
+from .stitcher_views import StitcherDeleteView, StitcherPanoramaStatusView, StitcherUpdateView, StitcherView
 from .views import (
     LookupChoicesCreateView,
     LookupChoicesDeleteView,

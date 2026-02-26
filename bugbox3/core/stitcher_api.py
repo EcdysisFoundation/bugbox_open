@@ -4,7 +4,6 @@ import re
 import requests
 from requests.exceptions import Timeout
 
-
 STITCHER_URL = 'http://host.docker.internal:8090'
 
 # to access production remotely

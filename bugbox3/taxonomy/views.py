@@ -24,7 +24,6 @@ from ..libs.utilities import get_json_context, get_media_url
 from ..samples import constants as samples_constants
 from ..samples.models import Sample, Specimen, SpecimenImage
 from . import constants
-from .forms import MorphospeciesCombineForm, MorphospeciesForm, MorphospeciesUpdateForm
 from .constants import (
     CAT_LIFE_STAGE_ADULT,
     CAT_LIFE_STAGE_YOUNG,
@@ -35,6 +34,7 @@ from .constants import (
     PHYTOPHAGOUS_ORDER,
     ZOOPHAGOUS_ORDER,
 )
+from .forms import MorphospeciesCombineForm, MorphospeciesForm, MorphospeciesUpdateForm
 from .models import AiTraining, FunctionalGroup, Morphospecies
 from .serializers import MorphospeciesDatatablesSerializer, MorphospeciesPickerSerializer
 from .tasks import id_image

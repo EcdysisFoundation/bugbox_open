@@ -1,4 +1,4 @@
-from crispy_forms.layout import Column, Field, HTML, Row
+from crispy_forms.layout import HTML, Column, Field, Row
 from django.forms import (
     CharField,
     ChoiceField,
@@ -16,12 +16,7 @@ from django.utils.html import escape
 from ..core.forms import ModelFormMixin, get_submit_layout
 from ..core.models import LookupChoices
 from . import constants
-from .constants import (
-    ADULT_HABITAT_CHOICES,
-    CAT_LIFE_STAGE_ADULT,
-    CAT_LIFE_STAGE_YOUNG,
-    YOUNG_HABITAT_CHOICES,
-)
+from .constants import ADULT_HABITAT_CHOICES, CAT_LIFE_STAGE_ADULT, CAT_LIFE_STAGE_YOUNG, YOUNG_HABITAT_CHOICES
 from .models import FunctionalGroup, Morphospecies
 
 

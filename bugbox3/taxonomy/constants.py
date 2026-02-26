@@ -213,7 +213,8 @@ FUNCTIONAL_GROUP_DEFINITIONS = (
     (
         'micropredator',
         'Micropredator',
-        'The species is free-living (i.e., not parasitic), but feeds on body fluids or body parts of animals without killing them',
+        'The species is free-living (i.e., not parasitic), but feeds on body fluids'
+        ' or body parts of animals without killing them',
         CAT_ZOOPHAGOUS,
     ),
     (

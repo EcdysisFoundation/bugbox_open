@@ -7,7 +7,14 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 
-from ...constants import AVALANCHE_SAMPLE_CODE_COLUMN, FIELD_TYPE_CHOICES, IGNITE_SAMPLE_CODE_COLUMN, IGNITE_SITE_TRANSECT_COLUMN, LABEL_PROJECT_CHOICES, RESULT_TYPE_CHOICES
+from ...constants import (
+    AVALANCHE_SAMPLE_CODE_COLUMN,
+    FIELD_TYPE_CHOICES,
+    IGNITE_SAMPLE_CODE_COLUMN,
+    IGNITE_SITE_TRANSECT_COLUMN,
+    LABEL_PROJECT_CHOICES,
+    RESULT_TYPE_CHOICES,
+)
 from ...models import Farm
 
 User = get_user_model()
@@ -107,15 +114,24 @@ class CSVUploadForm(forms.Form):
 
                 if any(not header for header in headers):
                     raise ValidationError('CSV file has empty header values')
-                
+
                 if project_type == 'avalanche':
                     if AVALANCHE_SAMPLE_CODE_COLUMN not in headers:
-                        raise ValidationError(f'Sample Code column {AVALANCHE_SAMPLE_CODE_COLUMN} is required for Avalanche project type')
+                        raise ValidationError(
+                            f'Sample Code column {AVALANCHE_SAMPLE_CODE_COLUMN}'
+                            ' is required for Avalanche project type'
+                        )
                 elif project_type == 'ignite':
                     if IGNITE_SAMPLE_CODE_COLUMN not in headers:
-                        raise ValidationError(f'Sample Code column {IGNITE_SAMPLE_CODE_COLUMN} is required for Ignite project type')
+                        raise ValidationError(
+                            f'Sample Code column {IGNITE_SAMPLE_CODE_COLUMN}'
+                            ' is required for Ignite project type'
+                        )
                     if IGNITE_SITE_TRANSECT_COLUMN not in headers:
-                        raise ValidationError(f'Site Transect column {IGNITE_SITE_TRANSECT_COLUMN} is required for Ignite project type')
+                        raise ValidationError(
+                            f'Site Transect column {IGNITE_SITE_TRANSECT_COLUMN}'
+                            ' is required for Ignite project type'
+                        )
 
                 # Check for depth headers for Basic tests
                 cleaned_headers = [header.strip() for header in headers]
