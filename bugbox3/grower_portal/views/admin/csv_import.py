@@ -3,8 +3,6 @@ import io
 import json
 
 import pandas as pd
-from bugbox3.grower_portal.constants import AVALANCHE_SAMPLE_CODE_COLUMN, IGNITE_SAMPLE_CODE_COLUMN, IGNITE_SITE_TRANSECT_COLUMN
-from bugbox3.grower_portal.models.csv_import import CSVImportRow
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
 from django.core.files.base import ContentFile
@@ -15,10 +13,17 @@ from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from bugbox3.core.permissions import IS_GROWERADMIN
+from bugbox3.grower_portal.constants import (
+    AVALANCHE_SAMPLE_CODE_COLUMN,
+    IGNITE_SAMPLE_CODE_COLUMN,
+    IGNITE_SITE_TRANSECT_COLUMN,
+)
+from bugbox3.grower_portal.models.csv_import import CSVImportRow
 
 from ...forms.admin.forms import CSVUploadForm
 from ...middleware import get_user_timezone
 from ...models import CSVImportFieldValue, CSVImportLog, SampleCode, SiteTransect
+
 
 def _add_to_error_log(error_log, row_number, row, message):
     """Helper function to log errors with consistent formatting."""
@@ -49,20 +54,28 @@ def _validate_sample_code(row_number, row, error_log, project_type):
 
     return sample_code_object
 
+
 def _validate_site_transect(row_number, row, error_log, sample_code_object):
     transect_number = row[IGNITE_SITE_TRANSECT_COLUMN]
 
     if not transect_number:
-        _add_to_error_log(error_log, row_number, row, f'Row is missing transect number in column: {IGNITE_SITE_TRANSECT_COLUMN}')
+        _add_to_error_log(
+            error_log, row_number, row,
+            f'Row is missing transect number in column: {IGNITE_SITE_TRANSECT_COLUMN}'
+        )
         return None
 
     try:
         site_transect_object = SiteTransect.objects.get(site_code=sample_code_object, transect_number=transect_number)
     except SiteTransect.DoesNotExist:
-        _add_to_error_log(error_log, row_number, row, f'Site transect number {transect_number} does not exist on sample code {sample_code_object.code}')
+        _add_to_error_log(
+            error_log, row_number, row,
+            f'Site transect number {transect_number} does not exist on sample code {sample_code_object.code}'
+        )
         return None
 
     return site_transect_object
+
 
 def _process_csv_file(csv_import_log, csv_file, project_type, result_type):
     csv_file.seek(0)
@@ -100,7 +113,10 @@ def _process_csv_file(csv_import_log, csv_file, project_type, result_type):
 
             cleaned_row = {k.strip(): v for k, v in row.items()}
 
-            depth = f"{cleaned_row.get('Beginning Depth', '')}-{cleaned_row.get('Ending Depth', '')}" if result_type == 'basic' else None
+            depth = (
+                f"{cleaned_row.get('Beginning Depth', '')}-{cleaned_row.get('Ending Depth', '')}"
+                if result_type == 'basic' else None
+            )
 
             import_row = CSVImportRow(
                 import_log=csv_import_log,
@@ -115,7 +131,7 @@ def _process_csv_file(csv_import_log, csv_file, project_type, result_type):
                 import_field_values.append(CSVImportFieldValue(
                     field_name=field_name,
                     field_value=field_value,
-                    row = import_row
+                    row=import_row
                 ))
             successful_count += 1
         except Exception as e:
@@ -160,7 +176,9 @@ def csv_upload(request):
                 result_type=result_type,
             )
 
-            total, successful, failed, error_log = _process_csv_file(csv_import_log, csv_file, project_type, result_type)
+            total, successful, failed, error_log = _process_csv_file(
+                csv_import_log, csv_file, project_type, result_type
+            )
 
             csv_import_log.status = 'completed' if not error_log else 'failed'
             csv_import_log.total_records = total

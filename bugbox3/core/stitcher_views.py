@@ -22,9 +22,9 @@ from .permissions import IS_ADMIN, IS_RESEARCH, ZEROTIER_USERS
 from .shimsy_api import create_rescan_request
 from .stitcher_api import (
     ERROR_MSG_KEY,
+    STITCHER_FLOWER_URL,
     STITCHER_JS_URL,
     STITCHER_JS_URL_ZEROTIER,
-    STITCHER_FLOWER_URL,
     STITCHER_URL,
     cleanup_matching_retake_records,
     delete_upload_file,
@@ -177,7 +177,10 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
             uploadfile_data = data[constants.STITCHER_UPLOADFILE_KEY]
             initial[constants.STITCHER_APPROVED] = uploadfile_data[constants.STITCHER_APPROVED]
             initial[constants.STITCHER_UPLOAD_DIR_NAME] = uploadfile_data[constants.STITCHER_UPLOAD_DIR_NAME]
-            if not uploadfile_data[constants.STITCHER_BUGBOX_SAMPLE_ID] and not uploadfile_data[constants.STITCHER_NOTA_SAMPLE]:
+            if (
+                not uploadfile_data[constants.STITCHER_BUGBOX_SAMPLE_ID]
+                and not uploadfile_data[constants.STITCHER_NOTA_SAMPLE]
+            ):
                 potential_samples = self.get_potential_samples(uploadfile_data, strict=True)
                 if len(potential_samples) == 1:
                     initial[constants.STITCHER_BUGBOX_SAMPLE_ID] = potential_samples[0][0]
@@ -411,7 +414,8 @@ class StitcherDeleteView(PermissionRequiredMixin, FormView):
 
 
 class StitcherPanoramaStatusView(PermissionRequiredMixin, View):
-    """Returns JSON with current panorama_timestamp and panorama_path for a guid (for polling after update stitching)"""
+    """Returns JSON with current panorama_timestamp and panorama_path for a guid
+    (for polling after update stitching)"""
     permission_required = IS_ADMIN
 
     def get(self, request, *args, **kwargs):

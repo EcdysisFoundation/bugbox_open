@@ -1,4 +1,3 @@
-import json
 from collections import Counter, defaultdict
 from datetime import date
 
@@ -400,7 +399,10 @@ def factor_detail(request):
             'application_code': application.submission_code if application else None,
             'date_sampled': application.date_sampled if application else None,
             'farm_field': application.field.field_name if application and application.field else None,
-            'farm_name': application.field.farm.name if application and application.field and application.field.farm else None,
+            'farm_name': (
+                application.field.farm.name
+                if application and application.field and application.field.farm else None
+            ),
         })
         if fv.field_value is not None and str(fv.field_value).strip():
             if is_num:
