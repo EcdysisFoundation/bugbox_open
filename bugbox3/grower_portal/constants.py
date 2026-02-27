@@ -307,3 +307,409 @@ SUBMITTAL_PLANT_TYPE = 'forage mix'
 AVALANCHE_SAMPLE_CODE_COLUMN = 'Sample ID 1'
 IGNITE_SAMPLE_CODE_COLUMN = 'Field ID'
 IGNITE_SITE_TRANSECT_COLUMN = 'Sample ID 1'
+
+# Maps results display categories to factor names to CSV column names and units
+PLFA_FACTOR_MAPPING = {
+    'Overview': {
+        'Total Biomass': {
+            'field_name': 'Total Living Microbial Biomass, PLFA ng/g',
+            'units': 'PLFA ng/g',
+        },
+        'Functional Group Diversity Index': {
+            'field_name': 'Functional Group Diversity Index'
+        }
+    },
+    'Community Breakdown': {
+        'Total Bacteria': {
+            'field_name': 'Total Bacteria, PLFA ng/g',
+            'units': 'PLFA ng/g',
+        },
+        'Gram +': {
+            'field_name': 'Gram Pos Others, PLFA ng/g',
+            'units': 'PLFA ng/g',
+        },
+        'Actinomycetes': {
+            'field_name': 'Actinomycetes, PLFA ng/g',
+            'units': 'PLFA ng/g',
+        },
+        'Gram -': {
+            'field_name': 'Gram Neg Others, PLFA ng/g',
+            'units': 'PLFA ng/g',
+        },
+        'Total Fungi': {
+            'field_name': 'Total Fungi, PLFA ng/g',
+            'units': 'PLFA ng/g',
+        },
+        'Arbuscular Mycorrhizal Fungi': {
+            'field_name': 'Arbuscular Mycorrhizal Fungi, PLFA ng/g',
+            'units': 'PLFA ng/g',
+        },
+        'Saprophytic Fungi': {
+            'field_name': 'Saprophytic Fungi, PLFA ng/g',
+            'units': 'PLFA ng/g',
+        },
+        'Protozoa': {
+            'field_name': 'Protozoa, PLFA ng/g',
+            'units': 'PLFA ng/g',
+        },
+        'Undifferentiated': {
+            'field_name': 'Undifferentiated, PLFA ng/g',
+            'units': 'PLFA ng/g',
+        },
+    },
+    'Ratios': {
+        'Fungi:Bacteria': {
+            'field_name': 'Fungi:Bacteria',
+        },
+        'Protozoa:Bacteria': {
+            'field_name': 'Protozoa:Bacteria',
+        },
+        'Gram+:Gram-': {
+            'field_name': 'Gram+:Gram-',
+        },
+        'Sat:Unsat': {
+            'field_name': 'Sat:Unsat',
+        },
+        'Mono:Poly': {
+            'field_name': 'Fungi:Bacteria',
+        },
+        'Pre 16:Cyclo 17': {
+            'field_name': 'Pre 16:Cyclo 17',
+        },
+        'Pre 18:Cyclo 19': {
+            'field_name': 'Pre 18:Cyclo 19',
+        },
+    },
+    'Soil Texture': {
+        'Sand': {
+            'field_name': '% Sand',
+            'units': '%'
+        },
+        'Silt': {
+            'field_name': '% Silt',
+            'units': '%'
+        },
+        'Clay': {
+            'field_name': '% Clay',
+            'units': '%'
+        },
+        'Soil Texture': {
+            'field_name': 'soil texture',
+        },
+    },
+    'Soil Aggregate Stability': {
+        'Macroaggregates >0.25mm': {
+            'field_name': 'Macroaggregates, % >0.25mm',
+            'units': '%'
+        },
+        'Microaggregates <0.25, >0.053mm': {
+            'field_name': 'Microaggregates, % <0.25, >0.053mm',
+            'units': '%'
+        },
+        'Total Aggregates': {
+            'field_name': 'Total Aggregates, %',
+            'units': '%'
+        },
+    }
+}
+
+HANEY_FACTOR_MAPPING = {
+    'Nitrogen (H3A Extract)': {
+        'Nitrate': {
+            'field_name': 'H3A Nitrate',
+            'units': 'ppm NO3-N',
+            'summary': 'A short definition of this factor',
+            'description': 'A longer definition of the factor to display on the factor detail page.'
+        },
+        'Ammonium': {
+            'field_name': 'H3A Ammonium',
+            'units': 'ppm NH4-N'
+        },
+        'Inorganic Nitrogen': {
+            'field_name': 'H3A Inorganic Nitrogen',
+            'units': 'ppm N'
+        },
+    },
+    'Nitrogen (H2O Extract)': {
+        'Total N': {
+            'field_name': 'H2O Total N',
+            'units': 'ppm N'
+        },
+        'Organic N': {
+            'field_name': 'H2O Organic N',
+            'units': 'ppm N'
+        },
+        'Total Organic C': {
+            'field_name': 'H2O Total Organic C',
+            'units': 'ppm C'
+        },
+        'Organic N Release': {
+            'field_name': 'Organic N Release',
+            'units': 'ppm N'
+        },
+        'Organic N Reserve': {
+            'field_name': 'Organic N Reserve',
+            'units': 'ppm N'
+        },
+        'Available N': {
+            'field_name': 'Available N',
+            'units': 'lbs/A'
+        }
+    },
+    'Phosphorous (H3A Extract)': {
+        'Total Phosphorous': {
+            'field_name': 'H3A Total Phosphorus',
+            'units': 'ppm P'
+        },
+        'Inorganic Phosphorous': {
+            'field_name': 'H3A Inorganic Phosphorus',
+            'units': 'ppm PO4-P'
+        },
+        'Organic Phosphorus': {
+            'field_name': 'H3A Organic Phosphorus',
+            'units': 'ppm P'
+        },
+        'Organic P Release': {
+            'field_name': 'Organic P Release',
+            'units': 'ppm P'
+        },
+        'Organic P Reserve': {
+            'field_name': 'Organic P Reserve',
+            'units': 'ppm P'
+        },
+        'Available P': {
+            'field_name': 'Available P',
+            'units': 'lbs/A'
+        }
+    },
+    'Other Soil Measures': {
+        'Soil pH 1:1': {
+            'field_name': '1:1 Soil pH',
+        },
+        'WDRF Buffer': {
+            'field_name': 'WDRF Buffer',
+        },
+        'Soluble Salt': {
+            'field_name': '1:1 Soluble Salt',
+            'units': 'mmho/cm'
+        },
+        'Excess Lime': {
+            'field_name': 'Excess Lime',
+        },
+        'Soil Organic Matter': {
+            'field_name': 'Organic Matter',
+            'units': '% LOI'
+        },
+    },
+    'Fertility (H3A Extract)': {
+        'Potassium': {
+            'field_name': 'H3A ICAP Potassium',
+            'units': 'ppm K'
+        },
+        'Calcium': {
+            'field_name': 'H3A ICAP Calcium',
+            'units': 'ppm C'
+        },
+        'Magnesium': {
+            'field_name': 'H3A ICAP Magnesium',
+            'units': 'ppm Mg'
+        },
+        'Sodium': {
+            'field_name': 'H3A ICAP Sodium',
+            'units': 'ppm Na'
+        },
+        'Zinc': {
+            'field_name': 'H3A ICAP Zinc',
+            'units': 'ppm Zn'
+        },
+        'Manganese': {
+            'field_name': 'H3A ICAP Manganese',
+            'units': 'ppm Mn'
+        },
+        'Iron': {
+            'field_name': 'H3A ICAP Iron',
+            'units': 'ppm Fe'
+        },
+        'Copper': {
+            'field_name': 'H3A ICAP Copper',
+            'units': 'ppm Cu'
+        },
+        'Aluminum': {
+            'field_name': 'H3A ICAP Aluminum',
+            'units': 'ppm Al'
+        },
+        'Sulfur': {
+            'field_name': 'H3A ICAP Sulfur',
+            'units': 'ppm S'
+        },
+    },
+    'Soil Health': {
+        'Soil Respiration': {
+            'field_name': 'CO2-C',
+            'units': 'ppm CO2-C'
+        },
+        'MAC': {
+            'field_name': '% MAC',
+            'units': '%'
+        },
+        'Organic C:N': {
+            'field_name': 'Organic C:N',
+        },
+        'Organic N:Inorganic N': {
+            'field_name': 'Organic N:Inorganic N',
+        },
+        'Soil Health Calculation': {
+            'field_name': 'Soil Health Calculation'
+        },
+        'Cover Crop Mix': {
+            'field_name': 'Cover crop mix'
+        }
+    },
+    'Nitrogen Comparison': {
+        'Traditional N': {
+            'field_name': 'Traditional N',
+            'units': 'lbs/A'
+        },
+        'Haney N': {
+            'field_name': 'Haney Test N',
+            'units': 'lbs/A'
+        },
+        'Difference N': {
+            'field_name': 'Lbs N Difference',
+            'units': 'lbs/A'
+        },
+        'Savings N': {
+            'field_name': 'N Savings',
+            'units': '$/A'
+        },
+    },
+}
+
+BASIC_FACTOR_MAPPING = {
+    'Soil Analysis': {
+        'Soil pH': {
+            'field_name': 'Soil pH 1:1',
+        },
+        'Buffer pH': {
+            'field_name': 'Wdrf Buffer',
+        },
+        '1:1 Electrical Conductivity': {
+            'field_name': '1:1 Electrical Conductivity, mmho/cm',
+            'units': 'mmho/cm'
+        },
+        'Excess Lime': {
+            'field_name': 'Excess Lime',
+        },
+        'Organic Matter': {
+            'field_name': 'Organic Matter, % LOI',
+            'units': '% LOI'
+        },
+        'Nitrate (ppm)': {
+            'field_name': '1N KCl-Nitrate, ppm NO3-N',
+            'units': 'ppm NO3-N'
+        },
+        'Nitrate': {
+            'field_name': '1N KCl-Nitrate, lbs/A N',
+            'units': 'lbs/A N'
+        },
+        'Phosphate': {
+            'field_name': 'M3-Phosphate, ppm PO4-P',
+            'units': 'ppm PO4-P'
+        },
+        'Sulfur': {
+            'field_name': 'M3-Sulfur, ppm S',
+            'units': 'ppm S'
+        },
+        'Potassium': {
+            'field_name': 'NH4OAc-Potassium, ppm K',
+            'units': 'ppm K'
+        },
+        'Calcium': {
+            'field_name': 'NH4OAc-Calcium, ppm Ca',
+            'units': 'ppm Ca'
+        },
+        'Magnesium': {
+            'field_name': 'NH4OAc-Magnesium, ppm Mg',
+            'units': 'ppm Mg'
+        },
+        'Sodium': {
+            'field_name': 'NH4OAc-Sodium, ppm Na',
+            'units': 'ppm Na'
+        },
+        'Zinc': {
+            'field_name': 'DTPA-Zinc, ppm Zn',
+            'units': 'ppm Zn'
+        },
+        'Iron': {
+            'field_name': 'DTPA-Iron, ppm Fe',
+            'units': 'ppm Fe'
+        },
+        'Manganese': {
+            'field_name': 'DTPA-Manganese, ppm Mn',
+            'units': 'ppm Mn'
+        },
+        'Copper': {
+            'field_name': 'DTPA-Copper, ppm Cu',
+            'units': 'ppm Cu'
+        },
+        'Boron': {
+            'field_name': 'H2O-Boron, ppm B',
+            'units': 'ppm B'
+        },
+        'Chloride': {
+            'field_name': 'CaNO3-Chloride, ppm Cl',
+            'units': 'ppm Cl'
+        },
+        'CEC': {
+            'field_name': 'CEC, meq/100g',
+            'units': 'meq/100g'
+        },
+        'Base Saturation': {
+            'field_name': 'Base Saturation, %',
+            'units': '%'
+        },
+        'Hydrogen Saturation': {
+            'field_name': 'Hydrogen, % Sat',
+            'units': '%'
+        },
+        'Calcium Saturation': {
+            'field_name': 'Calcium, % Sat',
+            'units': '%'
+        },
+        'Magnesium Saturation': {
+            'field_name': 'Magnesium, % Sat',
+            'units': '%'
+        },
+        'Potassium Saturation': {
+            'field_name': 'Potassium, % Sat',
+            'units': '%'
+        },
+        'Sodium Saturation': {
+            'field_name': 'Sodium, % Sat',
+            'units': '%'
+        },
+        'Total Organic Carbon': {
+            'field_name': 'Total Organic Carbon, % C',
+            'units': '% C'
+        },
+        'Total Carbon': {
+            'field_name': 'Total Carbon, % C',
+            'units': '% C'
+        },
+        'Total Nitrogen': {
+            'field_name': 'Total Nitrogen, % N',
+            'units': '% N'
+        },
+        'Dry Weight': {
+            'field_name': 'Total Dry Weight (g)',
+            'units': 'g'
+        },
+    }
+}
+
+# Maps result types to their factor mappings
+RESULT_TYPE_FACTOR_MAPPING = {
+    'plfa': PLFA_FACTOR_MAPPING,
+    'haney': HANEY_FACTOR_MAPPING,
+    'basic': BASIC_FACTOR_MAPPING,
+}

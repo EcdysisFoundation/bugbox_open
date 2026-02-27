@@ -1,0 +1,70 @@
+{% if organized_results %}
+    <div class="row">
+        {% for table_name, table_data in organized_results.items %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-table"></i> {{ table_name }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Factor</th>
+                                    <th>Value</th>
+                                    <th>Units</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for factor in table_data %}
+                                <tr style="cursor: pointer;"
+                                    data-factor-name="{{ factor.factor_name }}"
+                                    data-result-type="basic">
+                                    <td>
+                                        {{ factor.factor_name }}
+                                        {% if factor.summary %}
+                                        <i class="bi bi-info-circle text-muted ms-1"
+                                           style="cursor: help; font-size: 0.8em;"
+                                           data-bs-toggle="tooltip"
+                                           data-bs-placement="right"
+                                           data-bs-title="{{ factor.summary }}"></i>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if factor.has_value %}
+                                            {% if factor.is_numeric %}
+                                                {{ factor.value|floatformat:"2" }}
+                                            {% else %}
+                                                {{ factor.value }}
+                                            {% endif %}
+                                        {% else %}
+                                            —
+                                        {% endif %}
+                                    </td>
+                                    <td>{% if factor.units %}{{ factor.units }}{% else %}—{% endif %}</td>
+                                    <td class="text-end text-muted">›</td>
+                                </tr>
+                                {% for iv in factor.individual_values %}
+                                <tr class="individual-values-row" style="display:none; background:var(--bs-tertiary-bg,#f8f9fa);">
+                                    <td class="ps-4 text-muted small">{{ iv.label }}</td>
+                                    <td class="small">
+                                        {% if iv.value %}{% if iv.is_numeric %}{{ iv.value|floatformat:"2" }}{% else %}{{ iv.value }}{% endif %}{% else %}—{% endif %}
+                                    </td>
+                                    <td class="text-muted small">{% if factor.units %}{{ factor.units }}{% endif %}</td>
+                                    <td></td>
+                                </tr>
+                                {% endfor %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <p class="text-muted mb-0">No Basic results available for the selected filters.</p>
+{% endif %}

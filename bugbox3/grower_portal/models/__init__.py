@@ -1,5 +1,5 @@
 from .application import GrazingEvent, GrazingEventAnimal, GrowerApplication, ManagementPractices
-from .csv_import import CSVImportFieldValue, CSVImportLog
+from .csv_import import CSVImportFieldValue, CSVImportLog, CSVImportRow
 from .farm import Farm, Field
 from .profile import GrowerProfile
 from .reports import GrowerReport, LabelGeneration
@@ -25,6 +25,7 @@ __all__ = [
     'GrazingEvent',
     'GrazingEventAnimal',
     'CSVImportLog',
+    'CSVImportRow',
     'CSVImportFieldValue',
     'GrowerReport',
     'GrowerSampleCodeMapping',

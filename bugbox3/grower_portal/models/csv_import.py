@@ -11,8 +11,7 @@ from ..constants import (
     RESULT_TYPE_CHOICES,
     STATUS_MAX_LENGTH,
 )
-from .sample_codes import SampleCode
-from .sample_codes import SiteTransect
+from .sample_codes import SampleCode, SiteTransect
 
 User = get_user_model()
 
@@ -45,6 +44,7 @@ class CSVImportLog(models.Model):
     def __str__(self):
         return f"CSV Import: {self.filename} - {self.status}"
 
+
 class CSVImportRow(models.Model):
     """Track CSV imports field rows"""
     row_number = models.IntegerField(null=True, blank=True)
@@ -72,6 +72,7 @@ class CSVImportRow(models.Model):
         verbose_name = _('CSV Import Row ')
         verbose_name_plural = _('CSV Import Row')
         ordering = ['import_log', 'sample_code', 'site_transect', 'depth']
+
 
 class CSVImportFieldValue(models.Model):
     """Track CSV imports field values"""

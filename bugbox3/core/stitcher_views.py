@@ -22,9 +22,9 @@ from .permissions import IS_ADMIN, IS_RESEARCH, ZEROTIER_USERS
 from .shimsy_api import create_rescan_request
 from .stitcher_api import (
     ERROR_MSG_KEY,
+    STITCHER_FLOWER_URL,
     STITCHER_JS_URL,
     STITCHER_JS_URL_ZEROTIER,
-    STITCHER_FLOWER_URL,
     STITCHER_URL,
     cleanup_matching_retake_records,
     delete_upload_file,
@@ -412,7 +412,8 @@ class StitcherDeleteView(PermissionRequiredMixin, FormView):
 
 
 class StitcherPanoramaStatusView(PermissionRequiredMixin, View):
-    """Returns JSON with current panorama_timestamp and panorama_path for a guid (for polling after update stitching)"""
+    """Returns JSON with current panorama_timestamp and panorama_path for a guid
+    (for polling after update stitching)"""
     permission_required = IS_ADMIN
 
     def get(self, request, *args, **kwargs):

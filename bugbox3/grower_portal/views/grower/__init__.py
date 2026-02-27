@@ -9,11 +9,16 @@ from .application_steps import (
     application_step6,
 )
 from .profile import dashboard, grant_full_grower_permissions, profile_complete, profile_edit
+from .results import basic_results_ajax, depth_options_ajax, factor_detail, results
 
 __all__ = [
     'grant_full_grower_permissions',
     'profile_complete',
     'dashboard',
+    'results',
+    'basic_results_ajax',
+    'depth_options_ajax',
+    'factor_detail',
     'profile_edit',
     'application_create',
     'application_view',
