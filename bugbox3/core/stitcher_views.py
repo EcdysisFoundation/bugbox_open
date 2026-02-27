@@ -31,6 +31,7 @@ from .stitcher_api import (
     get_root_message,
     get_stitcher_stats,
     get_upload_file,
+    get_list_upload_abridged,
     patch_upload_file,
 )
 
@@ -138,7 +139,7 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
         context.update({
             'data': self.data,
             'task_response': self.task_response,
-            'panoarma_name': self.panorama_name,
+            'panorama_name': self.panorama_name,
             'img_src': f'{self.stitcher_js_url}{self.img_src}',
             'thumbnail_src': f'{self.stitcher_js_url}{self.thumbnail_src}',
             'label_src': f'{self.stitcher_js_url}{self.label_src}',
@@ -172,22 +173,21 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
 
     def get_initial(self):
         initial = super().get_initial()
-        data = get_upload_file(self.kwargs[constants.STITCHER_GUID])
-        if constants.STITCHER_UPLOADFILE_KEY in data.keys():
-            uploadfile_data = data[constants.STITCHER_UPLOADFILE_KEY]
-            initial[constants.STITCHER_APPROVED] = uploadfile_data[constants.STITCHER_APPROVED]
-            initial[constants.STITCHER_UPLOAD_DIR_NAME] = uploadfile_data[constants.STITCHER_UPLOAD_DIR_NAME]
-            if (
-                not uploadfile_data[constants.STITCHER_BUGBOX_SAMPLE_ID]
-                and not uploadfile_data[constants.STITCHER_NOTA_SAMPLE]
-            ):
-                potential_samples = self.get_potential_samples(uploadfile_data, strict=True)
+        data = get_list_upload_abridged(self.kwargs[constants.STITCHER_GUID])
+        required_keys = [constants.STITCHER_APPROVED, constants.STITCHER_UPLOAD_DIR_NAME,
+                         constants.STITCHER_BUGBOX_SAMPLE_ID, constants.STITCHER_NOTA_SAMPLE,
+                         constants.STITCHER_OMIT_FROM_TRAINING]
+        if all(key in data for key in required_keys):
+            initial[constants.STITCHER_APPROVED] = data[constants.STITCHER_APPROVED]
+            initial[constants.STITCHER_UPLOAD_DIR_NAME] = data[constants.STITCHER_UPLOAD_DIR_NAME]
+            if not data[constants.STITCHER_BUGBOX_SAMPLE_ID] and not data[constants.STITCHER_NOTA_SAMPLE]:
+                potential_samples = self.get_potential_samples(data, strict=True)
                 if len(potential_samples) == 1:
                     initial[constants.STITCHER_BUGBOX_SAMPLE_ID] = potential_samples[0][0]
             else:
-                initial[constants.STITCHER_BUGBOX_SAMPLE_ID] = uploadfile_data[constants.STITCHER_BUGBOX_SAMPLE_ID]
-            initial[constants.STITCHER_NOTA_SAMPLE] = uploadfile_data[constants.STITCHER_NOTA_SAMPLE]
-            initial[constants.STITCHER_OMIT_FROM_TRAINING] = uploadfile_data[constants.STITCHER_OMIT_FROM_TRAINING]
+                initial[constants.STITCHER_BUGBOX_SAMPLE_ID] = data[constants.STITCHER_BUGBOX_SAMPLE_ID]
+            initial[constants.STITCHER_NOTA_SAMPLE] = data[constants.STITCHER_NOTA_SAMPLE]
+            initial[constants.STITCHER_OMIT_FROM_TRAINING] = data[constants.STITCHER_OMIT_FROM_TRAINING]
         return initial
 
     def form_valid(self, form):
@@ -291,8 +291,6 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                     panorama_filename=self.panorama_name,
                     annotations_segment=self.data[constants.STITCHER_ANNOTATIONS_SEGMENT],
                     annotations_updated_at_segment=auat if auat else '',
-                    predictions_coco=self.data[constants.STITCHER_PREDICTIONS_COCO],
-                    predictions_timestamp_coco=predictions_timestamp,
                     upload_dir_name=self.data[constants.STITCHER_UPLOAD_DIR_NAME],
                     uuid=self.data[constants.STITCHER_GUID],
                     uploaded_by_user=self.request.user)
@@ -389,10 +387,10 @@ class StitcherDeleteView(PermissionRequiredMixin, FormView):
     def get_initial(self):
         initial = super().get_initial()
         guid = self.kwargs[constants.STITCHER_GUID]
-        data = get_upload_file(guid)
+        data = get_list_upload_abridged(guid)
         if constants.STITCHER_UPLOADFILE_KEY not in data.keys():
             raise Http404
-        self.upload_dir_name = data[constants.STITCHER_UPLOADFILE_KEY][constants.STITCHER_UPLOAD_DIR_NAME]
+        self.upload_dir_name = data[constants.STITCHER_UPLOAD_DIR_NAME]
         initial[constants.STITCHER_UPLOAD_DIR_NAME] = self.upload_dir_name
         initial[constants.STITCHER_GUID] = guid
         return initial
@@ -420,11 +418,10 @@ class StitcherPanoramaStatusView(PermissionRequiredMixin, View):
 
     def get(self, request, *args, **kwargs):
         guid = self.kwargs[constants.STITCHER_GUID]
-        data = get_upload_file(guid)
+        data = get_list_upload_abridged(guid)
         if ERROR_MSG_KEY in data:
             return JsonResponse({ERROR_MSG_KEY: str(data[ERROR_MSG_KEY])}, status=400)
-        uploadfile = data.get(constants.STITCHER_UPLOADFILE_KEY, data)
         return JsonResponse({
-            'panorama_timestamp': uploadfile.get(constants.STITCHER_PANORAMA_TIMESTAMP),
-            'panorama_path': uploadfile.get(constants.STITCHER_PANORAMA_PATH),
+            'panorama_timestamp': data.get(constants.STITCHER_PANORAMA_TIMESTAMP),
+            'panorama_path': data.get(constants.STITCHER_PANORAMA_PATH),
         })

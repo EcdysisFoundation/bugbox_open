@@ -49,6 +49,8 @@
                     <img src="{{ img_src }}" width="500">
                 </a>
             {% endif %}
+            <h6 class="mt-5">Label image (if available)</h6>
+            <img src="{{ label_src }}" width="300" class="mb-4">
         </div>
         <div class="col mb-2">
             <ul class="list-group">
@@ -57,6 +59,12 @@
                 </li>
                 <li class="list-group-item">
                     <b>Created at:</b> {{ data.created_at }}
+                </li>
+                <li class="list-group-item">
+                    <b>Panorama created:</b> {{ data.panorma_timestamp }}
+                </li>
+                <li class="list-group-item">
+                    <b>Filename:</b> {{ panorama_name }}
                 </li>
                 <li class="list-group-item">
                     <b>Confidence setting:</b> {{ data.panorama_confidence }}
@@ -165,31 +173,6 @@
             <div class="delete-button mt-3"></div>
         </div>
     </div>
-
-    <div class="row">
-        <div class="col">
-            <h6>Label image (if available)</h6>
-            <img src="{{ label_src }}" width="300">
-        </div>
-    </div>
-
-    {% if panorama_name %}
-    <div class="row mb-4 mt-4">
-        <div class="col">
-        <ul class="list-group">
-                <li class="list-group-item">
-                    <b>Filename:</b> {{ panorama_name }}
-                </li>
-                <li class="list-group-item">
-                    <b>Updated at:</b> {{ data.panorama_timestamp}}
-                </li>
-                <li class="list-group-item">
-                    <b>Stitcher confidence:</b> {{ data.panorama_confidence }}
-                </li>
-            </ul>
-        </div>
-    </div>
-    {% endif %}
 
 </div>
 
