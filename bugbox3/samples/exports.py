@@ -24,15 +24,16 @@ from .tasks import export_csv
 
 @permission_required(IS_RESEARCH)
 def experiment_ai_csv(request, id):
-    # get query params and sanitize
+    if request.method != 'POST':
+        raise Http404
     try:
         experiment = Experiment.objects.user_access(request.user).get(id=id)
     except Experiment.DoesNotExist:
         raise Http404
 
-    sample_types = request.GET.getlist('sampleTypes')
-    sites = request.GET.getlist('sites')
-    other_experiments = request.GET.getlist('otherExperiments')
+    sample_types = request.POST.getlist('sampleTypes')
+    sites = request.POST.getlist('sites')
+    other_experiments = request.POST.getlist('otherExperiments')
 
     if not all([v.isnumeric() for v in sites]):
         return HttpResponse(status=404)
