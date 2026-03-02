@@ -9,6 +9,8 @@ from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from django.db.models import Q
 from django.db.models.functions import Lower
+from django.urls import reverse
+
 
 from bugbox3.core.stitcher_utils import crop_img_to_annotations, crop_img_with_segmentation
 from bugbox3.samples.models import (
@@ -19,6 +21,7 @@ from bugbox3.samples.models import (
     SiteVisit,
     Specimen,
     SpecimenImage,
+    UserExperimentAiFile,
     UserExperimentFile,
     UserLocationExportFile,
 )
@@ -201,6 +204,122 @@ def export_csv(
         user_experiment_file.save()
 
     return user_experiment_file.file.url
+
+
+def _experiment_ai_csv_row(specimen, base_url):
+    """Build one CSV data row from a specimen for AI expor"""
+    link = base_url.rstrip('/') + reverse('samples:specimen', args=[specimen.id])
+    site_name = ''
+    visit_date = ''
+    sample_type = ''
+    sample_name = ''
+    experiment_name = ''
+    if specimen.sample and specimen.sample.site_visit and specimen.sample.site_visit.site:
+        site = specimen.sample.site_visit.site
+        site_name = site.site_name or ''
+        if specimen.sample.site_visit.visit_date:
+            visit_date = specimen.sample.site_visit.visit_date.strftime('%Y-%m-%d')
+        sample_type = specimen.sample.sample_type or ''
+        sample_name = f'{specimen.sample.name_no}' if specimen.sample.name_no else ''
+        if getattr(site, 'experiment', None):
+            experiment_name = site.experiment.name or ''
+    c = specimen.classification
+    ai = specimen.ai_classification
+    opt1 = specimen.optional_pred_one or {}
+    opt2 = specimen.optional_pred_two or {}
+    class_name = c.name if c else ''
+    top1 = 1 if (c and ai and c.id == ai.id) else 0
+    top3 = 1 if (
+        class_name and (
+            (ai and class_name == ai.name) or
+            class_name == opt1.get('class_op', '') or
+            class_name == opt2.get('class_op', '')
+        )
+    ) else 0
+    return [
+        experiment_name,
+        link,
+        site_name,
+        visit_date,
+        sample_type,
+        sample_name,
+        class_name,
+        c.gbif_class if c else '',
+        c.gbif_order if c else '',
+        c.gbif_family if c else '',
+        c.gbif_canonical_name if c else '',
+        specimen.ai_model_name or '',
+        ai.name if ai else '',
+        specimen.confidence or '',
+        opt1.get('class_op', ''),
+        opt1.get('pred_op', ''),
+        opt2.get('class_op', ''),
+        opt2.get('pred_op', ''),
+        top1,
+        top3,
+    ]
+
+
+@shared_task(soft_time_limit=1200, hard_time_limit=1500)
+def export_ai_csv(
+    user_id,
+    experiment_id,
+    sample_types,
+    sites,
+    other_experiments,
+    base_url,
+    ai_file_id,
+):
+    """Generate AI CSV export in background and save to UserExperimentAiFile."""
+    user = User.objects.get(pk=user_id)
+    ai_file = UserExperimentAiFile.objects.get(pk=ai_file_id)
+    try:
+        experiment = Experiment.objects.user_access(user).get(id=experiment_id)
+    except Experiment.DoesNotExist:
+        ai_file.exported_file_status = 'error'
+        ai_file.save(update_fields=['exported_file_status'])
+        return
+    all_exp = other_experiments + [experiment.id]
+    headers_arr = (
+        [constants.EXPERIMENT_AI_CSV[0]] +
+        ['Link', 'Site Name', 'Visit Date', 'Sample Type', 'Sample Name'] +
+        constants.EXPERIMENT_AI_CSV[1:] +
+        ['Top 1 Correct', 'Top 3 Correct']
+    )
+    specimens_objs = Specimen.objects.user_access(user).filter(
+        sample__site_visit__site__experiment_id__in=all_exp,
+        sample__sample_type__in=sample_types,
+    ).exclude(
+        acceptance=constants.ACCEPTANCE_PENDING,
+    ).select_related(
+        'sample__site_visit__site__experiment',
+        'sample__site_visit__site',
+        'sample__site_visit',
+        'classification',
+        'ai_classification',
+    )
+    if not other_experiments:
+        specimens_objs = specimens_objs.filter(sample__site_visit__site__in=sites)
+    else:
+        specimens_objs = specimens_objs.order_by('sample__site_visit__site__experiment__name')
+
+    try:
+        timestr = time.strftime("%Y%m%d-%H%M%S")
+        file_name = f"{experiment.abbreviation}-ai-{timestr}.csv"
+        with NamedTemporaryFile(delete=False, mode='w', suffix='.csv', newline='', encoding='utf-8-sig') as temp_file:
+            writer = csv.writer(temp_file)
+            writer.writerow(headers_arr)
+            for s in specimens_objs.iterator(chunk_size=500):
+                writer.writerow(_experiment_ai_csv_row(s, base_url))
+            temp_file.flush()
+        with open(temp_file.name, 'rb') as f:
+            ai_file.file.save(file_name, ContentFile(f.read()), save=True)
+        ai_file.exported_file_status = 'success'
+        ai_file.save(update_fields=['exported_file_status', 'file'])
+    except Exception:
+        ai_file.exported_file_status = 'error'
+        ai_file.save(update_fields=['exported_file_status'])
+        raise
 
 
 @shared_task(soft_time_limit=3600, hard_time_limit=3900)

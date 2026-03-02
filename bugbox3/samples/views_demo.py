@@ -167,6 +167,8 @@ class DemoExperimentView(DemoAccessMixin, TemplateView):
                     flat=True).distinct(),
                 'last_exported_file': None,
                 'last_exported_file_status': None,
+                'last_ai_exported_file': None,
+                'last_ai_exported_file_status': None,
                 'last_location_exported_file': None,
                 'last_location_exported_file_status': None,
             })

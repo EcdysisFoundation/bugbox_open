@@ -486,6 +486,16 @@
         <button class="btn btn-link" data-bs-toggle="modal" data-bs-target="#exportModal">Export AI Data</button>
     </div>
 
+    <div class="col-3" id="ai-export-status">
+        {% if last_ai_exported_file_status == 'pending' %}
+            Exporting AI File...
+        {% elif last_ai_exported_file_status == 'error' %}
+            Exporting AI Error
+        {% elif last_ai_exported_file_status == 'success' %}
+            <a class="btn btn-link" href="{{ last_ai_exported_file }}">Exported AI File</a>
+        {% endif %}
+    </div>
+
     <div class="col-3">
         <button class="btn btn-link" data-bs-toggle="modal" data-bs-target="#exportModal2">Export Experiment Data</button>
     </div>

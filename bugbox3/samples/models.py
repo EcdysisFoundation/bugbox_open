@@ -101,6 +101,21 @@ class UserExperimentFile(Model):
         return f'{self.experiment.name} - {self.user.username}'
 
 
+class UserExperimentAiFile(Model):
+    user = ForeignKey(settings.AUTH_USER_MODEL, on_delete=CASCADE)
+    experiment = ForeignKey(Experiment, on_delete=CASCADE)
+    file = FileField(upload_to='experiment/ai_export/', null=True, blank=True)
+    created_at = DateTimeField(auto_now_add=True)
+    exported_file_status = CharField(
+        max_length=10,
+        choices=[('pending', 'Pending'), ('success', 'Success'), ('error', 'Error')],
+        default='pending'
+    )
+
+    def __str__(self):
+        return f"AI Export by {self.user} for {self.experiment} on {self.created_at.strftime('%Y-%m-%d %H:%M:%S')}"
+
+
 class SamplePlanManager(Manager):
     def user_access(self, user):
         return self.filter(experiment__organization__users=user)
