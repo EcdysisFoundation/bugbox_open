@@ -61,6 +61,7 @@ from .models import (
     SiteVisit,
     Specimen,
     SpecimenImage,
+    UserExperimentAiFile,
     UserExperimentFile,
     UserLocationExportFile,
 )
@@ -186,6 +187,11 @@ class ExperimentView(PermissionRequiredMixin, TemplateView):
             experiment=experiment
         ).order_by('-created_at').first()
 
+        ai_export = UserExperimentAiFile.objects.filter(
+            user=self.request.user,
+            experiment=experiment
+        ).order_by('-created_at').first()
+
         context.update({
             'experiment': experiment,
             'experiment_sites': experiment_sites,
@@ -262,6 +268,17 @@ class ExperimentView(PermissionRequiredMixin, TemplateView):
         context["last_location_exported_file_status"] = (
             location_export.exported_file_status
             if location_export
+            else None
+        )
+
+        context["last_ai_exported_file"] = (
+            get_media_url(ai_export.file)
+            if ai_export and ai_export.file
+            else None
+        )
+        context["last_ai_exported_file_status"] = (
+            ai_export.exported_file_status
+            if ai_export
             else None
         )
 

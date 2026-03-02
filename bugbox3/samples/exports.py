@@ -18,8 +18,8 @@ from ..core.permissions import IS_RESEARCH
 from ..libs.utilities import get_filename_org_timestamp
 from ..taxonomy import constants as constants_tax
 from . import constants
-from .models import Experiment, Specimen, SpecimenImage, UserExperimentFile
-from .tasks import export_csv
+from .models import Experiment, Specimen, SpecimenImage, UserExperimentFile, UserExperimentAiFile
+from .tasks import export_ai_csv, export_csv
 
 
 @permission_required(IS_RESEARCH)
@@ -41,91 +41,25 @@ def experiment_ai_csv(request, id):
     if not all([v.isnumeric() for v in other_experiments]):
         return HttpResponse(status=404)
     other_experiments = [int(v) for v in other_experiments]
-    all_exp = other_experiments + [experiment.id]
-    headersArr = (
-        [constants.EXPERIMENT_AI_CSV[0]] +
-        ['Link', 'Site Name', 'Visit Date', 'Sample Type', 'Sample Name'] +
-        constants.EXPERIMENT_AI_CSV[1:] +
-        ['Top 1 Correct', 'Top 3 Correct']
+
+    ai_file = UserExperimentAiFile.objects.create(
+        user=request.user,
+        experiment=experiment,
+        exported_file_status='pending',
     )
-    specimens = Specimen.objects.user_access(request.user).filter(
-        sample__site_visit__site__experiment_id__in=all_exp,
-        sample__sample_type__in=sample_types).exclude(
-            acceptance=constants.ACCEPTANCE_PENDING)
-    if not other_experiments:
-        specimens = specimens.filter(
-            sample__site_visit__site__in=sites)
-    else:
-        specimens = specimens.order_by('sample__site_visit__site__experiment__name')
-    specimens = specimens.values_list(
-        *constants.EXPERIMENT_AI_CSV,
-        Case(When(classification=F(constants.FIELD_SPECIMEN_AI_CLASSIFICATION), then=1),
-             default=0, output_field=CharField()),
-        Case(
-            When(classification=F(constants.FIELD_SPECIMEN_AI_CLASSIFICATION), then=1),
-            When(
-                **{constants.FIELD_SPECIMEN_OPTIONAL_PRED_ONE + '__isnull': False},
-                classification__name=Func(
-                    F(constants.FIELD_SPECIMEN_OPTIONAL_PRED_ONE),
-                    Value('class_op'),
-                    function='jsonb_extract_path_text',
-                    output_field=CharField()
-                ),
-                then=1
-            ),
-            When(
-                **{constants.FIELD_SPECIMEN_OPTIONAL_PRED_TWO + '__isnull': False},
-                classification__name=Func(
-                    F(constants.FIELD_SPECIMEN_OPTIONAL_PRED_TWO),
-                    Value('class_op'),
-                    function='jsonb_extract_path_text',
-                    output_field=CharField()
-                ),
-                then=1
-            ),
-            default=0, output_field=CharField())
+    base_url = request.build_absolute_uri('/').rstrip('/')
+
+    export_ai_csv.delay(
+        request.user.pk,
+        id,
+        sample_types,
+        sites,
+        other_experiments,
+        base_url,
+        ai_file.pk,
     )
-    timestr = time.strftime("%Y%m%d-%H%M%S")
-    response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="{0}-{1}.csv"'.format(
-        experiment.abbreviation, timestr)
-    raw_values = list(specimens)
 
-    specimens_objs = Specimen.objects.user_access(
-        request.user).filter(
-        sample__site_visit__site__experiment_id__in=all_exp,
-        sample__sample_type__in=sample_types).exclude(
-            acceptance=constants.ACCEPTANCE_PENDING).select_related(
-                'sample__site_visit__site__experiment',
-                'sample__site_visit__site',
-                'sample__site_visit',
-        'classification')
-
-    if not other_experiments:
-        specimens_objs = specimens_objs.filter(sample__site_visit__site__in=sites)
-    else:
-        specimens_objs = specimens_objs.order_by('sample__site_visit__site__experiment__name')
-
-    rows = []
-    for i, s in enumerate(specimens_objs):
-        link = request.build_absolute_uri(reverse('samples:specimen', args=[s.id]))
-        site_name = (
-            s.sample.site_visit.site.site_name
-            if s.sample and s.sample.site_visit and s.sample.site_visit.site
-            else ''
-        )
-        visit_date = s.sample.site_visit.visit_date.strftime(
-            '%Y-%m-%d') if s.sample and s.sample.site_visit and s.sample.site_visit.visit_date else ''
-        sample_type = s.sample.sample_type
-        sample_name = f'{s.sample.name_no}' if s.sample and s.sample.name_no else ''
-        row = list(raw_values[i])
-        row = [row[0], link, site_name, visit_date, sample_type, sample_name] + row[1:]
-        rows.append(row)
-
-    writer = csv.writer(response)
-    writer.writerow(headersArr)
-    writer.writerows(rows)
-    return response
+    return redirect('samples:experiment', experiment_id=id)
 
 
 @permission_required(IS_RESEARCH)
