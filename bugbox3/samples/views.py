@@ -23,9 +23,7 @@ from bugbox3.samples.utils import resolve_entered_by
 from ..core import constants as constants_core
 from ..core.models import LookupChoices
 from ..core.permissions import IS_RESEARCH, REVIEW_SPECIMEN_PAGE
-from ..core.stitcher_api import (
-    ERROR_MSG_KEY, get_root_message, get_list_upload_abridged, patch_upload_file
-)
+from ..core.stitcher_api import ERROR_MSG_KEY, get_list_upload_abridged, get_root_message, patch_upload_file
 from ..libs.ui_helpers import (
     calc_image_height,
     get_datatables_container,

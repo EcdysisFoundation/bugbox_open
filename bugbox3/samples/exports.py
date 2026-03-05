@@ -1,5 +1,3 @@
-import csv
-import time
 import zipfile
 from io import BytesIO
 from tempfile import SpooledTemporaryFile
@@ -8,17 +6,15 @@ import pandas as pd
 from django.conf import settings
 from django.contrib.auth.decorators import permission_required
 from django.core.files import File
-from django.db.models import Case, CharField, F, Func, Value, When
 from django.http import Http404, HttpResponse
 from django.shortcuts import redirect
-from django.urls import reverse
 
 from ..core.models import Exports
 from ..core.permissions import IS_RESEARCH
 from ..libs.utilities import get_filename_org_timestamp
 from ..taxonomy import constants as constants_tax
 from . import constants
-from .models import Experiment, Specimen, SpecimenImage, UserExperimentFile, UserExperimentAiFile
+from .models import Experiment, SpecimenImage, UserExperimentAiFile, UserExperimentFile
 from .tasks import export_ai_csv, export_csv
 
 

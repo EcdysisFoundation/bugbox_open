@@ -11,7 +11,6 @@ from django.db.models import Q
 from django.db.models.functions import Lower
 from django.urls import reverse
 
-
 from bugbox3.core.stitcher_utils import crop_img_to_annotations, crop_img_with_segmentation
 from bugbox3.samples.models import (
     Experiment,
