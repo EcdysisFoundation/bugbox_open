@@ -28,10 +28,10 @@ from .stitcher_api import (
     STITCHER_URL,
     cleanup_matching_retake_records,
     delete_upload_file,
+    get_list_upload_abridged,
     get_root_message,
     get_stitcher_stats,
     get_upload_file,
-    get_list_upload_abridged,
     patch_upload_file,
 )
 
