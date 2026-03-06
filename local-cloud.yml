@@ -45,6 +45,8 @@ services:
   celeryworker:
     container_name: bugbox3_production_celeryworker
     image: bugbox3_production_django
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     deploy:
       resources:
         limits:
