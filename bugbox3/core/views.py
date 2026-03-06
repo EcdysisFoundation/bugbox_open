@@ -268,7 +268,7 @@ class OrgMemberDeleteView(PermissionRequiredMixin, DeleteView):
             user.groups.clear()
             user.user_permissions.clear()
         messages.success(
-            self.request, 'successfully removed member {0}'.format(user.name))
+            self.request, 'Successfully removed member {0}'.format(user.name))
         return HttpResponseRedirect(self.get_success_url())
 
     def get_success_url(self):
