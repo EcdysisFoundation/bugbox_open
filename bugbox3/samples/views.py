@@ -1412,13 +1412,16 @@ class MultiSpecimenImageView(PermissionRequiredMixin, FormView):
         datatables_url = api_reverse(
             'samples:multispecimen-data-list', kwargs=self.kwargs)
         # crop_disabled unless ON_ECDYSIS_SERVER due to high memory usage
+        # crop_disabled also manually disabled in template for now
         crop_disabled = False if settings.ON_ECDYSIS_SERVER == 'YES' else True
+        delete_disabled = False if settings.ON_ECDYSIS_SERVER == 'YES' else True
         if sample.completed:
             crop_disabled = True
         context.update({
             'sample': sample,
             'experiment_id': sample.site_visit.site.experiment_id,
             'crop_disabled': crop_disabled,
+            'delete_disabled': delete_disabled,
             'json_context': get_json_context({
                 'datatables_url': datatables_url
             }),
