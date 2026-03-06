@@ -4,8 +4,8 @@ import re
 import requests
 from requests.exceptions import Timeout
 
-STITCHER_URL = 'http://ecdysis01.local:8090'
 
+STITCHER_URL = 'http://host.docker.internal:8090'
 # to access production remotely
 # STITCHER_URL = 'http://10.147.19.124:8090'
 
@@ -16,9 +16,7 @@ STITCHER_JS_URL_ZEROTIER = 'http://10.147.19.124:8090'
 # STITCHER_JS_URL = 'http://localhost:8090'
 
 STITCHER_JS_URL = 'http://ecdysis01.local:8090'
-
 STITCHER_FLOWER_URL = 'http://ecdysis01.local:5557'
-
 ERROR_MSG_KEY = 'ERROR'
 
 
