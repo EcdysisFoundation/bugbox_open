@@ -768,7 +768,7 @@ class SampleView(PermissionRequiredMixin, FormView):
             if not all([isinstance(v, int) for v in json_data['ids']]):
                 raise ValidationError(mark_safe('non-integers provided in form as ids'))
             Specimen.objects.user_access(self.request.user).filter(id__in=json_data['ids']).delete()
-            messages.warning(self.request, 'Succesfully deleted {0} specimens'.format(len(json_data['ids'])))
+            messages.warning(self.request, 'successfully deleted {0} specimens'.format(len(json_data['ids'])))
         if move_json_data:
             if move_json_data['move_ids'] and move_json_data['move_sample_id']:
                 try:
@@ -777,7 +777,7 @@ class SampleView(PermissionRequiredMixin, FormView):
                     return Http404
                 Specimen.objects.user_access(self.request.user).filter(
                     id__in=move_json_data['move_ids']).update(sample_id=s.id)
-                messages.warning(self.request, 'Succesfully moved {0} specimens to sample ID {1}'.format(
+                messages.warning(self.request, 'successfully moved {0} specimens to sample ID {1}'.format(
                     len(move_json_data['move_ids']),
                     s.id
                 ))
@@ -970,7 +970,7 @@ class SpecimensWithoutImagesFormView(PermissionRequiredMixin, FormView):
                     )
                     entered_names.append(name)
         messages.success(
-            self.request, 'Succesfully entered counts for {0}'.format(
+            self.request, 'successfully entered counts for {0}'.format(
                 ', '.join(entered_names)
             ))
         return super().form_valid(form)
@@ -1030,7 +1030,7 @@ class SpecimenView(PermissionRequiredMixin, FormView):
                     messages.ERROR,
                     'Error: An unsupported file may have been selected, please use .jpg or .png')
                 created_images = 0
-            messages.success(self.request, 'Succesfully added {0} new specimen images'.format(created_images))
+            messages.success(self.request, 'successfully added {0} new specimen images'.format(created_images))
         elif primary_pick:
             try:
                 image = SpecimenImage.objects.user_access(self.request.user).get(id=primary_pick)
@@ -1038,10 +1038,10 @@ class SpecimenView(PermissionRequiredMixin, FormView):
                 raise Http404
             image.primary_image = True
             image.save()
-            messages.success(self.request, 'Succesfully set primary image')
+            messages.success(self.request, 'successfully set primary image')
         elif delete_pick:
             SpecimenImage.objects.user_access(self.request.user).filter(id=delete_pick).delete()
-            messages.success(self.request, 'Succesfully deleted image')
+            messages.success(self.request, 'successfully deleted image')
         elif determin_pick is not None:
             try:
                 specimen = Specimen.objects.user_access(self.request.user).get(id=self.kwargs['id'])
@@ -1380,7 +1380,7 @@ class SpecimensView(PermissionRequiredMixin, FormView):
             id__in=rejected_ids, acceptance=constants.ACCEPTANCE_PENDING).update(
                 acceptance=constants.ACCEPTANCE_REJECTED)
         messages.success(
-            self.request, 'Succesfully confirmed {0} AI classifications and rejected {1}'.format(
+            self.request, 'successfully confirmed {0} AI classifications and rejected {1}'.format(
                 len(confirmed_ids) + add_confirm_count,
                 len(rejected_ids) + add_reject_count))
         return super().form_valid(form)
@@ -1469,7 +1469,7 @@ class MultiSpecimenImageView(PermissionRequiredMixin, FormView):
                         patch_upload_file(uuid, stitcher_data)
                     except Exception as e:
                         messages.error(self.request, f'{general_error_message}{e}')
-            messages.warning(self.request, 'Succesfully deleted {0} multispecimen images and {1} specimens'.format(
+            messages.warning(self.request, 'successfully deleted {0} multispecimen images and {1} specimens'.format(
                 len(uuids), len_specimen_ids))
         if json_crop_ids:
             if not all([isinstance(v, int) for v in json_crop_ids['ids']]):
@@ -1481,7 +1481,7 @@ class MultiSpecimenImageView(PermissionRequiredMixin, FormView):
             img_ids = [i.id for i in selected_images]
             if img_ids:
                 crop_panorama_segmentation.delay(img_ids, sample_id, user_id)
-            messages.warning(self.request, 'Succesfully sent {0} images to be cropped. {1}'.format(
+            messages.warning(self.request, 'successfully sent {0} images to be cropped. {1}'.format(
                 len(selected_images),
                 str(prev_cropped) + ' images were skipped as already cropped.' if prev_cropped else ''
             ))

@@ -360,7 +360,7 @@ class MorphospeciesCreateView(PermissionRequiredMixin, CreateView):
         return context
 
     def form_valid(self, form):
-        messages.success(self.request, 'Succesfully created a Morphospecies')
+        messages.success(self.request, 'successfully created a Morphospecies')
         return super(MorphospeciesCreateView, self).form_valid(form)
 
     def get_success_url(self):
@@ -407,7 +407,7 @@ class MorphospeciesUpdateView(PermissionRequiredMixin, UpdateView):
         return context
 
     def form_valid(self, form):
-        messages.success(self.request, 'Succesfully updated a Morphospecies')
+        messages.success(self.request, 'successfully updated a Morphospecies')
         return super(MorphospeciesUpdateView, self).form_valid(form)
 
     def get_success_url(self):

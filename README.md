@@ -56,7 +56,7 @@ Use the `restore` bash script to restore the db using the backup.
 
     docker compose -f local.yml exec postgres restore BACKUP_FILENAME
 
-After it succesfully restores, bring the local db down and bring everything back up.
+After it successfully restores, bring the local db down and bring everything back up.
 
     docker compose -f local.yml down
 
@@ -70,7 +70,7 @@ bring all services up
 This application is deployed to Heroku for most user access scenarios at bugbox.ecdysis.bio. It is also deployed as a production version on a local server (Ecdysis01) for machine learning and inference processes. Locally, it also uses the same Heroku database server and AWS S3 storage (see local-cloud.yml). As a result, it is important to use caution in deployment to not create conflicts when there is a potential for two different versions of the app to be running simultanously against the database and storage system. When the deployment includes database migrations the following steps should be followed. Consider other scenarios for their potential to create conflicts.
 
 1. On Ecdsyis01, bring down the app
-2. On Heroku, deploy the new version, ensure migrations run succesfully
+2. On Heroku, deploy the new version, ensure migrations run successfully
 3. Ecdysis01, pull new version from github
 4. Ecdysis01, bring app back up. No migrations should run because they already ran on Heroku.
 
@@ -143,7 +143,7 @@ For local development, the app uses Docker with the local.yml file
 
 - `docker compose -f local.yml up`
 
-When first building and brining the app up, migrations should run succesfully creating a database generally empty of records. Docker saves the database state in a volume. In local.yml, there is an env_file entry commented out `# - ./.envs/.local/.secrets` so that the app doesnt fail if you dont have this file. The app should generally work without these vairables, but the variables may be needed if developing a feature that uses them, example an S3 integration.
+When first building and brining the app up, migrations should run successfully creating a database generally empty of records. Docker saves the database state in a volume. In local.yml, there is an env_file entry commented out `# - ./.envs/.local/.secrets` so that the app doesnt fail if you dont have this file. The app should generally work without these vairables, but the variables may be needed if developing a feature that uses them, example an S3 integration.
 
 - To create a **normal user account** for development of pages that dont need special user permissions, just go to Sign Up and fill out the form. Once you submit it, you'll see a "Verify Your E-mail Address" page. Go to your console to see a simulated email verification message. Copy the link into your browser. Now the user's email should be verified and ready to go.
 

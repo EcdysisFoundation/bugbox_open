@@ -316,7 +316,7 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                     lambda: crop_panorama_segmentation.delay((instance.id,), this_sample.id, self.request.user.id)
                 )
                 messages.success(
-                    self.request, f'Succesfully initiated "Save to sample and crop" for {self.guid}')
+                    self.request, f'successfully initiated "Save to sample and crop" for {self.guid}')
                 self.data[constants.STITCHER_BUGBOX_CROPED_SAVED] = str(instance.id)
                 patch_upload_file(self.guid, self.data)
             except IntegrityError as e:
@@ -403,7 +403,7 @@ class StitcherDeleteView(PermissionRequiredMixin, FormView):
         else:
             messages.warning(
                     self.request,
-                    f'Succesfully deleted {self.upload_dir_name}'
+                    f'successfully deleted {self.upload_dir_name}'
                 )
         return super().form_valid(form)
 
