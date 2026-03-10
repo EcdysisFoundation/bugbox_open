@@ -10,7 +10,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
 from bugbox3.grower_portal.constants import PHONE_MAX_LENGTH
-from bugbox3.grower_portal.models import GrowerProfile, GrowerSampleCodeMapping, SampleCode
+from bugbox3.grower_portal.models import GrowerProfile, GrowerSampleCodeMapping, SampleCode, SiteTransect
 from bugbox3.grower_portal.utils import state_name_to_abbreviation
 from bugbox3.grower_portal.views.grower.profile import grant_full_grower_permissions
 
@@ -74,6 +74,7 @@ class Command(BaseCommand):
             'profiles_created': 0,
             'profiles_updated': 0,
             'sample_codes_created': 0,
+            'site_transects_created': 0,
             'mappings_created': 0,
             'errors': []
         }
@@ -241,8 +242,11 @@ class Command(BaseCommand):
                                             self.stdout.write(self.style.WARNING(warning_msg))
                                     except SampleCode.DoesNotExist:
                                         stats['sample_codes_created'] += 1
-                                        self.stdout.write(f'    Would create Ignite sample code: {code}')
+                                        stats['site_transects_created'] += 4
+                                        self.stdout.write(f'    Would create Ignite sample code: {code} (and 4 site transects)')
                                         sample_code = None
+                                    if sample_code is not None and sample_code.project_type == 'ignite':
+                                        self._ensure_ignite_site_transects(sample_code, stats, dry_run=True)
                                 else:
                                     try:
                                         sample_code = SampleCode.objects.get(code=code)
@@ -262,6 +266,15 @@ class Command(BaseCommand):
                                             created_by=user
                                         )
                                         stats['sample_codes_created'] += 1
+                                        for t_num in range(1, 5):
+                                            SiteTransect.objects.create(
+                                                site_code=sample_code,
+                                                transect_number=t_num,
+                                                is_active=True
+                                            )
+                                        stats['site_transects_created'] += 4
+                                    if sample_code is not None and sample_code.project_type == 'ignite':
+                                        self._ensure_ignite_site_transects(sample_code, stats, dry_run=False)
 
                                 if dry_run:
                                     try:
@@ -374,6 +387,7 @@ class Command(BaseCommand):
         self.stdout.write(f"Profiles created: {stats['profiles_created']}")
         self.stdout.write(f"Profiles updated: {stats['profiles_updated']}")
         self.stdout.write(f"Sample codes created: {stats['sample_codes_created']}")
+        self.stdout.write(f"Site transects created (Ignite): {stats['site_transects_created']}")
         self.stdout.write(f"Mappings created: {stats['mappings_created']}")
         self.stdout.write(
             'Imported growers are in the is_grower group and can access grower_portal '
@@ -392,6 +406,27 @@ class Command(BaseCommand):
                 '\nDRY RUN - No changes were saved. Growers would be added to the '
                 'is_grower group.'
             ))
+
+    def _ensure_ignite_site_transects(self, sample_code, stats, dry_run=False):
+        existing = set(
+            SiteTransect.objects.filter(site_code=sample_code).values_list('transect_number', flat=True)
+        )
+        missing = [t for t in range(1, 5) if t not in existing]
+        if not missing:
+            return
+        if dry_run:
+            stats['site_transects_created'] += len(missing)
+            self.stdout.write(
+                f'    Would create {len(missing)} missing site transect(s) for {sample_code.code}'
+            )
+            return
+        for t_num in missing:
+            SiteTransect.objects.create(
+                site_code=sample_code,
+                transect_number=t_num,
+                is_active=True
+            )
+        stats['site_transects_created'] += len(missing)
 
     def _get_exact_column(self, columns, exact_name):
         """Return the column whose header exactly matches exact_name."""

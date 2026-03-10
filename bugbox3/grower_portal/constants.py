@@ -636,30 +636,6 @@ BASIC_FACTOR_MAPPING = {
             'field_name': 'NH4OAc-Sodium, ppm Na',
             'units': 'ppm Na'
         },
-        'Zinc': {
-            'field_name': 'DTPA-Zinc, ppm Zn',
-            'units': 'ppm Zn'
-        },
-        'Iron': {
-            'field_name': 'DTPA-Iron, ppm Fe',
-            'units': 'ppm Fe'
-        },
-        'Manganese': {
-            'field_name': 'DTPA-Manganese, ppm Mn',
-            'units': 'ppm Mn'
-        },
-        'Copper': {
-            'field_name': 'DTPA-Copper, ppm Cu',
-            'units': 'ppm Cu'
-        },
-        'Boron': {
-            'field_name': 'H2O-Boron, ppm B',
-            'units': 'ppm B'
-        },
-        'Chloride': {
-            'field_name': 'CaNO3-Chloride, ppm Cl',
-            'units': 'ppm Cl'
-        },
         'CEC': {
             'field_name': 'CEC, meq/100g',
             'units': 'meq/100g'
