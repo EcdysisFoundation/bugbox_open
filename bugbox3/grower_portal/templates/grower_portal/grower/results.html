@@ -68,18 +68,20 @@
                  class="accordion-collapse collapse {% if forloop.first %}show{% endif %}"
                  aria-labelledby="heading-{{ result_section.result_type }}">
                 <div class="accordion-body">
-                    {% if result_section.result_type == "basic" %}
+                    {% if result_section.depth_options %}
                     <div class="mb-3 d-flex align-items-end gap-3">
                         <div>
-                            <label for="depthSelect" class="form-label fw-semibold mb-1">Depth</label>
-                            <select id="depthSelect" class="form-select" style="width: auto;">
+                            <label for="depthSelect-{{ result_section.result_type }}" class="form-label fw-semibold mb-1">Depth</label>
+                            <select id="depthSelect-{{ result_section.result_type }}" class="form-select depth-select" data-result-type="{{ result_section.result_type }}" style="width: auto;">
                                 <option value="">All Depths</option>
-                                {% for value, label in depth_options %}
+                                {% for value, label in result_section.depth_options %}
                                 <option value="{{ value }}"{% if depth == value %} selected{% endif %}>{{ label }}</option>
                                 {% endfor %}
                             </select>
                         </div>
                     </div>
+                    {% endif %}
+                    {% if result_section.result_type == "basic" %}
                     <div id="basic-results-tables" data-depth="{{ depth }}">
                         {% include "grower_portal/grower/_basic_results_tables.html" with organized_results=result_section.organized_results %}
                     </div>
