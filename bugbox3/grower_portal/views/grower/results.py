@@ -51,7 +51,7 @@ def _get_depth_options(grower, year, project_type, result_type='basic'):
     Get depth options for a given year, project_type, and result_type.
     Returns a list of (value, label) tuples sorted by beginning depth, then ending depth.
     """
-    if result_type != 'basic' or not year:
+    if not year:
         return []
 
     try:
@@ -222,7 +222,7 @@ def depth_options_ajax(request):
     result_type = request.GET.get('result_type', 'basic')
 
     depth_options = []
-    if result_type == 'basic' and year and project_type:
+    if year and project_type and result_type in ('basic', 'haney', 'plfa'):
         depth_options = _get_depth_options(grower, year, project_type, result_type)
 
     return JsonResponse({
@@ -289,23 +289,27 @@ def results(request):
             available_years=available_years,
         )
 
-    depth_options = _get_depth_options(grower, year, project_type, 'basic')
-
     result_type_results = []
+    all_depth_options = {}
     try:
         year_int = int(year)
         for rt_value, rt_display in RESULT_TYPE_CHOICES:
+            rt_depth_options = _get_depth_options(grower, year, project_type, rt_value)
+            all_depth_options[rt_value] = rt_depth_options
             field_values = _field_value_qs(
                 grower, year_int, project_type, rt_value,
-                depth=(depth if rt_value == 'basic' else None),
+                depth=depth,
             )
             result_type_results.append({
                 'result_type': rt_value,
                 'display': rt_display,
                 'organized_results': _organize_results_by_mapping(field_values, rt_value),
+                'depth_options': rt_depth_options,
             })
     except (ValueError, TypeError):
         pass
+
+    depth_options = all_depth_options.get('basic', [])
 
     return render(request, 'grower_portal/grower/results.html', {
         'form': form,

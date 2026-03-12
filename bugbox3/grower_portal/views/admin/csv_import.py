@@ -113,10 +113,9 @@ def _process_csv_file(csv_import_log, csv_file, project_type, result_type):
 
             cleaned_row = {k.strip(): v for k, v in row.items()}
 
-            depth = (
-                f"{cleaned_row.get('Beginning Depth', '')}-{cleaned_row.get('Ending Depth', '')}"
-                if result_type == 'basic' else None
-            )
+            beginning_depth = cleaned_row.get('Beginning Depth ', '') or cleaned_row.get('Beginning Depth', '')
+            ending_depth = cleaned_row.get('Ending Depth', '')
+            depth = f"{beginning_depth}-{ending_depth}" if beginning_depth or ending_depth else None
 
             import_row = CSVImportRow(
                 import_log=csv_import_log,

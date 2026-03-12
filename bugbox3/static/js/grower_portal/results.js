@@ -89,7 +89,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const resultType = row.dataset.resultType;
         let depth = '';
-        if (resultType === 'basic') {
+        const depthSelect = document.getElementById('depthSelect-' + resultType);
+        if (depthSelect) {
+            depth = depthSelect.value || '';
+        } else if (resultType === 'basic') {
             const basicContainer = document.getElementById('basic-results-tables');
             depth = basicContainer ? (basicContainer.dataset.depth || '') : '';
         }
@@ -104,22 +107,21 @@ document.addEventListener('DOMContentLoaded', function() {
         window.location.href = factorDetailBase + '?' + params.toString();
     });
 
-    // AJAX depth filtering — swap only the Basic tables, no page reload
-    const depthSelect = document.getElementById('depthSelect');
+    const basicDepthSelect = document.getElementById('depthSelect-basic');
     const basicContainer = document.getElementById('basic-results-tables');
 
-    if (depthSelect && basicContainer) {
-        depthSelect.addEventListener('change', function() {
+    if (basicDepthSelect && basicContainer) {
+        basicDepthSelect.addEventListener('change', function() {
             const params = new URLSearchParams({
                 year: json_context.year,
                 project_type: json_context.project_type,
-                depth: depthSelect.value,
+                depth: basicDepthSelect.value,
             });
             fetch(`${basicResultsUrl}?${params}`)
                 .then(r => r.text())
                 .then(html => {
                     basicContainer.innerHTML = html;
-                    basicContainer.dataset.depth = depthSelect.value;
+                    basicContainer.dataset.depth = basicDepthSelect.value;
                     applyIndividualValuesVisibility(basicContainer);
                     basicContainer.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el) {
                         new Tooltip(el);
@@ -128,8 +130,18 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    document.querySelectorAll('.depth-select').forEach(function(select) {
+        if (select.id === 'depthSelect-basic') return;
+        select.addEventListener('change', function() {
+            const params = new URLSearchParams(window.location.search);
+            params.set('depth', this.value);
+            window.location.search = params.toString();
+        });
+    });
+
     // Carry the current depth into full-page filter submissions (year/project_type changes)
-    if (filterForm && depthSelect) {
+    const anyDepthSelect = document.querySelector('.depth-select');
+    if (filterForm && anyDepthSelect) {
         filterForm.addEventListener('submit', function() {
             let hidden = filterForm.querySelector('input[name="depth"]');
             if (!hidden) {
@@ -138,7 +150,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 hidden.name = 'depth';
                 filterForm.appendChild(hidden);
             }
-            hidden.value = depthSelect.value;
+            const selectedDepth = document.querySelector('.depth-select')?.value || '';
+            hidden.value = selectedDepth;
         });
     }
 });

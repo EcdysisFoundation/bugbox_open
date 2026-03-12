@@ -111,7 +111,7 @@ class ResultsFilterForm(forms.Form):
     result_type = forms.ChoiceField(
         choices=[('', 'All')] + RESULT_TYPE_CHOICES,
         required=False,
-        label='Result Type'
+        label='Result Test Type'
     )
 
     def __init__(self, *args, available_years=None, **kwargs):

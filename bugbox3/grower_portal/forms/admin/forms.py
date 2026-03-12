@@ -14,6 +14,7 @@ from ...constants import (
     IGNITE_SITE_TRANSECT_COLUMN,
     LABEL_PROJECT_CHOICES,
     RESULT_TYPE_CHOICES,
+    RESULT_TYPE_SIGNATURE_COLUMNS,
 )
 from ...models import Farm
 
@@ -140,6 +141,18 @@ class CSVUploadForm(forms.Form):
                         raise ValidationError('Beginning Depth header is required for Basic tests')
                     if 'Ending Depth' not in cleaned_headers:
                         raise ValidationError('Ending Depth header is required for Basic tests')
+
+                # make sure and validate that the CSV contains the expected columns for the selected result type
+                signature_columns = RESULT_TYPE_SIGNATURE_COLUMNS.get(result_type, [])
+                if signature_columns:
+                    matching_columns = [col for col in signature_columns if col in cleaned_headers]
+                    if not matching_columns:
+                        result_type_display = dict(RESULT_TYPE_CHOICES).get(result_type, result_type)
+                        raise ValidationError(
+                            f'This file does not appear to be a {result_type_display} test file. '
+                            f'Expected at least one of these columns: {", ".join(signature_columns[:3])}... '
+                            f'Please verify you selected the correct Result Type.'
+                        )
 
             except csv.Error as e:
                 raise ValidationError(f'Error reading CSV file: {str(e)}')

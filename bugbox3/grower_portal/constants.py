@@ -308,6 +308,28 @@ AVALANCHE_SAMPLE_CODE_COLUMN = 'Sample ID 1'
 IGNITE_SAMPLE_CODE_COLUMN = 'Field ID'
 IGNITE_SITE_TRANSECT_COLUMN = 'Sample ID 1'
 
+# These columns are used to validate the uploaded CSV matches the selected result type
+RESULT_TYPE_SIGNATURE_COLUMNS = {
+    'basic': [
+        'Soil pH 1:1',
+        'CEC, meq/100g',
+        'NH4OAc-Potassium, ppm K',
+        'Organic Matter, % LOI',
+    ],
+    'haney': [
+        'H3A Nitrate',
+        'CO2-C',
+        'Soil Health Calculation',
+        'H3A Inorganic Nitrogen',
+    ],
+    'plfa': [
+        'Total Living Microbial Biomass, PLFA ng/g',
+        'Fungi:Bacteria',
+        'Total Bacteria, PLFA ng/g',
+        'Functional Group Diversity Index',
+    ],
+}
+
 # Maps results display categories to factor names to CSV column names and units
 PLFA_FACTOR_MAPPING = {
     'Overview': {
@@ -324,37 +346,73 @@ PLFA_FACTOR_MAPPING = {
             'field_name': 'Total Bacteria, PLFA ng/g',
             'units': 'PLFA ng/g',
         },
+        'Total Bacteria %': {
+            'field_name': 'Total Bacteria, % of Tot. Biomass',
+            'units': '%',
+        },
         'Gram +': {
             'field_name': 'Gram Pos Others, PLFA ng/g',
             'units': 'PLFA ng/g',
+        },
+        'Gram + %': {
+            'field_name': 'Gram Pos Others, % of Tot. Biomass',
+            'units': '%',
         },
         'Actinomycetes': {
             'field_name': 'Actinomycetes, PLFA ng/g',
             'units': 'PLFA ng/g',
         },
+        'Actinomycetes %': {
+            'field_name': 'Actinomycetes, % of Tot. Biomass',
+            'units': '%',
+        },
         'Gram -': {
             'field_name': 'Gram Neg Others, PLFA ng/g',
             'units': 'PLFA ng/g',
+        },
+        'Gram - %': {
+            'field_name': 'Gram Neg Others, % of Tot. Biomass',
+            'units': '%',
         },
         'Total Fungi': {
             'field_name': 'Total Fungi, PLFA ng/g',
             'units': 'PLFA ng/g',
         },
+        'Total Fungi %': {
+            'field_name': 'Total Fungi, % of Tot. Biomass',
+            'units': '%',
+        },
         'Arbuscular Mycorrhizal Fungi': {
             'field_name': 'Arbuscular Mycorrhizal Fungi, PLFA ng/g',
             'units': 'PLFA ng/g',
+        },
+        'Arbuscular Mycorrhizal Fungi %': {
+            'field_name': 'Arbuscular Mycorrhizal Fungi, % of Tot. Biomass',
+            'units': '%',
         },
         'Saprophytic Fungi': {
             'field_name': 'Saprophytic Fungi, PLFA ng/g',
             'units': 'PLFA ng/g',
         },
+        'Saprophytic Fungi %': {
+            'field_name': 'Saprophytic Fungi, % of Tot. Biomass',
+            'units': '%',
+        },
         'Protozoa': {
             'field_name': 'Protozoa, PLFA ng/g',
             'units': 'PLFA ng/g',
         },
+        'Protozoa %': {
+            'field_name': 'Protozoa, % of Tot. Biomass',
+            'units': '%',
+        },
         'Undifferentiated': {
             'field_name': 'Undifferentiated, PLFA ng/g',
             'units': 'PLFA ng/g',
+        },
+        'Undifferentiated %': {
+            'field_name': 'Undifferentiated, % of Tot. Biomass',
+            'units': '%',
         },
     },
     'Ratios': {
@@ -562,7 +620,7 @@ HANEY_FACTOR_MAPPING = {
             'field_name': 'Soil Health Calculation'
         },
         'Cover Crop Mix': {
-            'field_name': 'Cover crop mix'
+            'field_name': 'Cover Crop Mix'
         }
     },
     'Nitrogen Comparison': {
@@ -579,7 +637,17 @@ HANEY_FACTOR_MAPPING = {
             'units': 'lbs/A'
         },
         'Savings N': {
-            'field_name': 'N Savings',
+            'field_name': 'N savings',
+            'units': '$/A'
+        },
+    },
+    'Nutrient Availability': {
+        'Available K': {
+            'field_name': 'Available K',
+            'units': 'lbs/A'
+        },
+        'Nutrient Value': {
+            'field_name': 'Nutrient Value',
             'units': '$/A'
         },
     },
