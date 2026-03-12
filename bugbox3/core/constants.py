@@ -136,6 +136,7 @@ STITCHER_FORM_REQUIRED_KEYS = [
     STITCHER_UPLOAD_DIR_NAME
 ]
 STITCHER_LABEL_IMG = 'label_r_001.jpg'
+STITCHER_LABEL_THUMB_IMG = 'label_r_001_thumbnail.jpg'
 STITCHER_APPROVED_CHOICES = (
     (None, '---'),
     (True, 'Approved'),
