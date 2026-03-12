@@ -137,7 +137,6 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                     and self.data[constants.STITCHER_APPROVED]
                     and self.data[constants.STITCHER_BUGBOX_SAMPLE_ID]):
                 disable_crop_save = False
-        print(f'{self.stitcher_js_url}{self.label_thumb_src}')
         context.update({
             'data': self.data,
             'task_response': self.task_response,
