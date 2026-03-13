@@ -94,6 +94,7 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
         self.img_src = ''
         self.thumbnail_src = None
         self.label_src = f'/static/{self.guid}/{constants.STITCHER_LABEL_IMG}'
+        self.label_thumb_src = f'/static/{self.guid}/{constants.STITCHER_LABEL_THUMB_IMG}'
         self.nota_sample = None
         self.omit_from_training = None
         if constants.STITCHER_PANORAMA_PATH in self.data.keys():
@@ -142,7 +143,7 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
             'panorama_name': self.panorama_name,
             'img_src': f'{self.stitcher_js_url}{self.img_src}',
             'thumbnail_src': f'{self.stitcher_js_url}{self.thumbnail_src}',
-            'label_src': f'{self.stitcher_js_url}{self.label_src}',
+            'label_src': f'{self.stitcher_js_url}{self.label_thumb_src}',
             'potential_samples': potential_samples,
             'nota_sample': self.nota_sample,
             'first_potential_sample': first_potential_sample,
@@ -275,11 +276,17 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
             except Exception:
                 raise Http404
             try:
-                label_url = f'{self.stitcher_url}{self.label_src}'
+                label_url = f'{self.stitcher_url}{self.label_thumb_src}'
                 label_response = requests.get(label_url, stream=True, timeout=25)
                 label_response.raise_for_status()
             except Exception:
-                label_response = None
+                # try the orignal
+                try:
+                    label_url = f'{self.stitcher_url}{self.label_src}'
+                    label_response = requests.get(label_url, stream=True, timeout=25)
+                    label_response.raise_for_status()
+                except Exception:
+                    label_response = None
             try:
                 img_url = f'{self.stitcher_url}{self.img_src}'
                 response = requests.get(img_url, stream=True, timeout=25)

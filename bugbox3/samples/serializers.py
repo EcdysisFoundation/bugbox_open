@@ -78,13 +78,13 @@ class MultiSpecimenImageDatatablesSerializer(ModelSerializer):
         fields = [
             'id',
             constants.FIELD_MULTIIMAGE_IMAGE_THUMBNAIL,
-            constants.FIELD_MULTIIMAGE_LABEL_IMAGE_THUMBNAIL,
+            constants.FIELD_MULTIIMAGE_LABEL_IMAGE,
             constants.FIELD_MULTIIMAGE_CROPPED_TO_SPECIMEN]
 
     def pano_details(self, value):
         anno_n = len(value.annotations_segment) if value.annotations_segment else 0
         rows = [
-            get_img_src(value.label_image_thumbnail),
+            get_img_src(value.label_image, 300),
             value.panorama_filename,
             value.upload_dir_name,
             f'annotations: {anno_n}',
