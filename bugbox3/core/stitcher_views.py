@@ -291,7 +291,6 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                 img_url = f'{self.stitcher_url}{self.img_src}'
                 response = requests.get(img_url, stream=True, timeout=25)
                 response.raise_for_status()
-                predictions_timestamp = cast_utc_time(self.data[constants.STITCHER_PREDICTIONS_TIMESTAMP_COCO])
                 auat = self.data[constants.STITCHER_ANNOTATIONS_UPDATED_AT_SEGMENT]
                 instance = MultiSpecimenImage(
                     sample=this_sample,
@@ -319,8 +318,9 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                             sample_label_img_name, ContentFile(label_response.content), save=False)
                         this_sample.save()
                 instance.save()
+                user_id = self.request.user.id
                 transaction.on_commit(
-                    lambda: crop_panorama_segmentation.delay((instance.id,), this_sample.id, self.request.user.id)
+                    lambda: crop_panorama_segmentation.delay((instance.id,), this_sample.id, user_id)
                 )
                 messages.success(
                     self.request, f'Successfully initiated "Save to sample and crop" for {self.guid}')
