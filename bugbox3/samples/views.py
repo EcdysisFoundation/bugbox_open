@@ -1411,9 +1411,10 @@ class MultiSpecimenImageView(PermissionRequiredMixin, FormView):
             raise Http404
         datatables_url = api_reverse(
             'samples:multispecimen-data-list', kwargs=self.kwargs)
-        # crop_disabled unless ON_ECDYSIS_SERVER due to high memory usage
-        # crop_disabled also manually disabled in template for now
+        # crop_disabled unless ON_ECDYSIS_SERVER due to high memory usage, also only superusers
         crop_disabled = False if settings.ON_ECDYSIS_SERVER == 'YES' else True
+        if not self.request.user.is_superuser:
+            crop_disabled = True
         delete_disabled = False if settings.ON_ECDYSIS_SERVER == 'YES' else True
         if sample.completed:
             crop_disabled = True

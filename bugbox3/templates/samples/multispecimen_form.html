@@ -101,11 +101,13 @@
                                 Toggle Select</button>
                                 <br/>
 
-                                <!-- Crop to Specimens disabled for the time being
-                                <button type="button" class="btn btn-warning btn-sm mt-1" id="crop-images-btn" data-bs-toggle="modal" data-bs-target="#cropImagesModal" disabled>
-                                Crop to Specimens</button>
-                                <br/>
-                                 -->
+                                {% if not crop_disabled %}
+                                    (ensure no cropped specimens exist before cropping)
+                                    <br/>
+                                    <button type="button" class="btn btn-warning btn-sm mt-1 mb-2" id="crop-images-btn" data-bs-toggle="modal" data-bs-target="#cropImagesModal">
+                                    Crop to Specimens</button>
+                                    <br/>
+                                {% endif %}
 
                             <button type="button" class="btn btn-danger btn-sm mt-1" data-bs-toggle="modal" data-bs-target="#deleteImagesModal" id="openDeleteModal"
                             {% if delete_disabled %} disabled {% elif sample.completed %} disabled {% endif %}>

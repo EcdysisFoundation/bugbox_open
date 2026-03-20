@@ -207,20 +207,21 @@ def crop_img_with_segmentation(
     ]
     if not annotations_segment:
         return True
-    width = annotations_segment[0]['original_width']
-    height = annotations_segment[0]['original_height']
-    conv = [convert_ls_polygonlabels(
-        v['points'],
-        v['original_width'],
-        v['original_height']) for v in annotations_segment]
-    points = [v['segmentation'] for v in conv]
-    bboxs = [v['bbox'] for v in conv]
+
     img_basename = Path(image.file.name).name.split(".")[:-1]
 
     with closing(image.open()) as img:
         file_bytes = img.read()
         np_arr = np.frombuffer(file_bytes, np.uint8)
         np_arr = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+        height, width = np_arr.shape[:2]
+
+    conv = [convert_ls_polygonlabels(
+        v['points'],
+        width,
+        height) for v in annotations_segment]
+    points = [v['segmentation'] for v in conv]
+    bboxs = [v['bbox'] for v in conv]
 
     if np_arr.shape[2] == 3:
         np_arr = cv2.cvtColor(np_arr, cv2.COLOR_BGR2BGRA)
