@@ -311,7 +311,7 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                 # complete instance save
                 instance.save()
 
-                if not this_sample.label_image and instance.label_image:
+                if not this_sample.image and instance.label_image:
                     # copy the label to sample if appilicable
                     this_sample.image.save(label_img_name, instance.label_image.file, save=True)
 
