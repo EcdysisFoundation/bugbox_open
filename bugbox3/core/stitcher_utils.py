@@ -1,3 +1,4 @@
+import tempfile
 from contextlib import closing
 from io import BytesIO
 from pathlib import Path
@@ -5,6 +6,7 @@ from uuid import uuid4
 
 import cv2
 import numpy as np
+import requests
 from django.conf import settings
 from django.core.files import File
 from django.core.files.base import ContentFile
@@ -270,3 +272,16 @@ def crop_img_with_segmentation(
         return True
     else:
         return False
+
+
+def save_remote_image(instance_field, url, name):
+    """Helper to stream image from URL to Django Field"""
+    with requests.get(url, stream=True, timeout=25) as r:
+        r.raise_for_status()
+        # Using a temporary file ensures we don't bloat RAM
+        with tempfile.TemporaryFile() as tmp_file:
+            for chunk in r.iter_content(chunk_size=8192):
+                tmp_file.write(chunk)
+            tmp_file.seek(0)
+            # save=False keeps us from hitting the DB until the very end
+            instance_field.save(name, File(tmp_file), save=False)
