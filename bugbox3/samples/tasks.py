@@ -530,7 +530,7 @@ def crop_panorama(img_ids, sample_id, user_id):
             i.save()
 
 
-@celery_app.task(soft_time_limit=240)
+@celery_app.task(soft_time_limit=720, time_limit=760)
 def crop_panorama_segmentation(img_ids, sample_id, user_id):
     if settings.ON_ECDYSIS_SERVER != 'YES':
         # High memory usage, run only on local server
@@ -554,6 +554,13 @@ def crop_panorama_segmentation(img_ids, sample_id, user_id):
                 i.uuid)
 
         except SoftTimeLimitExceeded:
+            # in case of running out of time due to many annotations,
+            # need to delete the partial created images, and also
+            # provide a db entry to indicate what happend to the user
+            # may also need to break down to smaller tasks.
+            # currently returning with partial images created.
+            # i.cropped_to_specimen remaing None is some indication
+            # this stopped prematurely
             return
 
         i.cropped_to_specimen = success
