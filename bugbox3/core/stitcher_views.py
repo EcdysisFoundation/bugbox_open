@@ -1,9 +1,7 @@
 import os
 
-import requests
 from django.contrib import messages
 from django.contrib.auth.mixins import PermissionRequiredMixin
-from django.core.files.base import ContentFile
 from django.db import transaction
 from django.db.utils import IntegrityError
 from django.http import Http404, JsonResponse
@@ -34,6 +32,7 @@ from .stitcher_api import (
     get_upload_file,
     patch_upload_file,
 )
+from .stitcher_utils import save_remote_image
 
 
 class StitcherView(PermissionRequiredMixin, TemplateView):
@@ -276,21 +275,6 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
             except Exception:
                 raise Http404
             try:
-                label_url = f'{self.stitcher_url}{self.label_thumb_src}'
-                label_response = requests.get(label_url, stream=True, timeout=25)
-                label_response.raise_for_status()
-            except Exception:
-                # try the orignal
-                try:
-                    label_url = f'{self.stitcher_url}{self.label_src}'
-                    label_response = requests.get(label_url, stream=True, timeout=25)
-                    label_response.raise_for_status()
-                except Exception:
-                    label_response = None
-            try:
-                img_url = f'{self.stitcher_url}{self.img_src}'
-                response = requests.get(img_url, stream=True, timeout=25)
-                response.raise_for_status()
                 auat = self.data[constants.STITCHER_ANNOTATIONS_UPDATED_AT_SEGMENT]
                 instance = MultiSpecimenImage(
                     sample=this_sample,
@@ -300,24 +284,37 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                     upload_dir_name=self.data[constants.STITCHER_UPLOAD_DIR_NAME],
                     uuid=self.data[constants.STITCHER_GUID],
                     uploaded_by_user=self.request.user)
-                img_name = f'{self.data[constants.STITCHER_UPLOAD_DIR_NAME]}.jpg'
-                instance.image.save(img_name, ContentFile(response.content), save=False)
+
+                img_url = f'{self.stitcher_url}{self.img_src}'
+                save_remote_image(instance.image, img_url, f'{self.data[constants.STITCHER_UPLOAD_DIR_NAME]}.jpg')
+
                 if self.thumbnail_src:
                     thumbnail_url = f'{self.stitcher_url}{self.thumbnail_src}'
-                    thumb_response = requests.get(thumbnail_url, stream=True, timeout=25)
-                    thumb_response.raise_for_status()
                     thumb_name = f'{self.data[constants.STITCHER_UPLOAD_DIR_NAME]}_thumbnail.jpg'
-                    instance.image_thumbnail.save(thumb_name, ContentFile(thumb_response.content), save=False)
-                if label_response:
-                    label_img_name = f'{self.data[constants.STITCHER_UPLOAD_DIR_NAME]}_label.jpg'
-                    instance.label_image.save(label_img_name, ContentFile(label_response.content), save=False)
-                    # Save label image to Sample image field
-                    if not this_sample.image:
-                        sample_label_img_name = f'{self.data[constants.STITCHER_UPLOAD_DIR_NAME]}_label.jpg'
-                        this_sample.image.save(
-                            sample_label_img_name, ContentFile(label_response.content), save=False)
-                        this_sample.save()
+                    try:
+                        save_remote_image(instance.image_thumbnail, thumbnail_url, thumb_name)
+                    except Exception as e:
+                        messages.warning(
+                            self.request,
+                            f'Warning: Thumbnail {self.thumbnail_src} did not save due to {e}.'
+                        )
+
+                label_url = f'{self.stitcher_url}{self.label_thumb_src}'
+                label_img_name = f'{self.data[constants.STITCHER_UPLOAD_DIR_NAME]}_label.jpg'
+                try:
+                    save_remote_image(instance.label_image, label_url, label_img_name)
+                except Exception as e:
+                    messages.warning(
+                            self.request,
+                            f'Warning: Label image {self.label_thumb_src} did not save due to {e}.'
+                        )
+                # complete instance save
                 instance.save()
+
+                if not this_sample.label_image and instance.label_image:
+                    # copy the label to sample if appilicable
+                    this_sample.image.save(label_img_name, instance.label_image.file, save=True)
+
                 user_id = self.request.user.id
                 transaction.on_commit(
                     lambda: crop_panorama_segmentation.delay((instance.id,), this_sample.id, user_id)

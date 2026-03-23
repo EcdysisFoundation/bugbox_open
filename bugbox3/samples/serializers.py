@@ -262,7 +262,10 @@ class SpecimenDatatablesSerializer(ModelSerializer):
             img_exists = True
             specimen_image = value.specimenimage_set.first()
             if specimen_image.image_thumbnail:
-                img_thumbnail = get_img_src(specimen_image.image_thumbnail, public=specimen_image.public_image)
+                img_thumbnail = get_img_src(
+                    specimen_image.image_thumbnail,
+                    resize_width=constants.SPECIMEN_IMAGE_THUMBSIZE,
+                    public=specimen_image.public_image)
             else:
                 img_thumbnail = get_img_src(specimen_image.image,
                                             constants.SPECIMEN_IMAGE_THUMBSIZE,
