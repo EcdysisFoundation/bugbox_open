@@ -7,6 +7,10 @@ from django.apps import apps
 from django.conf import settings
 from django.core.management import call_command
 
+from bugbox3.core.models import Exports
+from bugbox3.samples.constants import PRIMARY_ORGANIZATION_ID
+from bugbox3.taxonomy.constants import EXPORT_TITLE_TRAINING_SELECTIONS
+from bugbox3.taxonomy.exports import build_training_csv_file
 from config import celery_app
 
 
@@ -141,6 +145,18 @@ def obj_det_image(specimenimage_id):
         else:
             specimenimage.object_det_label = []
     specimenimage.save()
+
+
+@shared_task
+def export_training_selections():
+    export_file = build_training_csv_file(PRIMARY_ORGANIZATION_ID)
+    description = f'Export Selections for organization id: {PRIMARY_ORGANIZATION_ID}'
+    export = Exports(
+            organization_id=PRIMARY_ORGANIZATION_ID,
+            title=EXPORT_TITLE_TRAINING_SELECTIONS,
+            description=description
+        )
+    export.file.save('training_selections.csv', export_file, save=True)
 
 
 # only run on Ecdysis01
