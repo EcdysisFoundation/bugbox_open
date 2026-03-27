@@ -18,13 +18,16 @@ class Command(BaseCommand):
             print('Currently this cmd is only supported on Ecdysis01')
             return
 
-        file = 'local_files/missing_images.csv'
-        local_storage = settings.LOCAL_MOUNTED_MEDIA
+        file = '/app/local_files/missing_images.csv'
+        local_location = '/pool1/srv/bugbox3/bugbox3/media/'
+        local_storage_mount = settings.LOCAL_MOUNTED_MEDIA
 
         with open(file, newline='') as csvfile:
             reader = csv.DictReader(csvfile)
 
             for row in reader:
-                img = row['image']
-                print('Downloading: ' + img)
-                download_s3_media(img, local_storage + img)
+                local_img_destination = row['image']
+                source_obj = local_img_destination.replace(local_location, '')
+                destination_path = local_storage_mount + source_obj
+                print('Downloading: ' + source_obj)
+                download_s3_media(source_obj, destination_path)
