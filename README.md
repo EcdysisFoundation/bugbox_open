@@ -123,7 +123,7 @@ A get request
 
 When creating new Organizations, these new Organizations will need their LookupChoices populated to be able to create Experiments and use other forms. Populate a default set of LookupChoices to get them started, by running the management command `populate_org_choices`, passing the required argument of the new organization ID.
 
-Certain features of the app assume the first created organization is the apps primary organization. Example `bugbox3.taxonomy.constants.PRIMARY_ORGANIZATION_ID` == 1 is defined to assume the taxonomy app Morphospecies model contents is determined by the primary organization.
+Certain features of the app assume the first created organization is the apps primary organization. Example `bugbox3.samples.constants.PRIMARY_ORGANIZATION_ID` == 1 is defined to assume the taxonomy app Morphospecies model contents is determined by the primary organization.
 
 
 ## Storages, Site-content, and Static

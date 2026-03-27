@@ -16,7 +16,7 @@ from organizations.models import OrganizationUser
 from rest_framework.reverse import reverse as api_reverse
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
-from ..core.models import LookupChoices
+from ..core.models import Exports, LookupChoices
 from ..core.permissions import ADD_MORPHOSPECIES, CHANGE_MORPHOSPECIES, IS_RESEARCH
 from ..core.views import DatatablesModelViewSetMixin
 from ..libs.ui_helpers import calc_image_height, get_datatables_container, get_datatables_row
@@ -30,6 +30,7 @@ from .constants import (
     CAT_OTHER,
     CAT_PHYTOPHAGOUS,
     CAT_ZOOPHAGOUS,
+    EXPORT_TITLE_TRAINING_SELECTIONS,
     OTHER_ORDER,
     PHYTOPHAGOUS_ORDER,
     ZOOPHAGOUS_ORDER,
@@ -123,13 +124,20 @@ class MophospeciesView(PermissionRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        training_selections_download = Exports.objects.filter(
+            organization_id=samples_constants.PRIMARY_ORGANIZATION_ID,
+            title=EXPORT_TITLE_TRAINING_SELECTIONS
+        ).order_by('date_added').last()
+        if training_selections_download:
+            training_selections_download = get_media_url(training_selections_download.file)
         datatables_url = api_reverse('taxonomy:morphospecies-data-list',
                                      kwargs=kwargs)
         context.update(self.get_morphospecies_datatable(datatables_url))
         context.update({
             'can_add': self.request.user.has_perm(ADD_MORPHOSPECIES),
             'exp_morph_choices': constants.EXP_MORPH_CHOICES,
-            'first_check': self.first_check_txt
+            'first_check': self.first_check_txt,
+            'training_selections_download': training_selections_download
         })
         return context
 

@@ -9,7 +9,7 @@ from ...tasks import download_s3_media
 class Command(BaseCommand):
     """
     Given a .csv files, download the images recorded as missing.
-    This is inteded for the output of ultralytics dataset generation step.
+    This is inteded for the output of model training dataset generation step.
     """
 
     def handle(self, *args, **options):
@@ -25,6 +25,6 @@ class Command(BaseCommand):
             reader = csv.DictReader(csvfile)
 
             for row in reader:
-                img = row['image_thumbnail_large']
+                img = row['image']
                 print('Downloading: ' + img)
                 download_s3_media(img, local_storage + img)
