@@ -8,16 +8,25 @@ from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.files.storage import default_storage
 from django.db.models import Count, Q
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
+from django.utils import timezone
 from django.views.generic import CreateView, FormView, TemplateView, UpdateView
 from organizations.models import OrganizationUser
 from rest_framework.reverse import reverse as api_reverse
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
 from ..core.models import Exports, LookupChoices
-from ..core.permissions import ADD_MORPHOSPECIES, CHANGE_MORPHOSPECIES, IS_RESEARCH
+from ..core.permissions import (
+    ADD_MORPHOSPECIES,
+    CHANGE_MORPHOSPECIES,
+    IS_RESEARCH,
+    user_has_morphospecies_research_or_reviewer_access,
+    user_has_specimen_reviewer_access,
+    user_in_taxonomy_reviewer_group,
+    user_is_taxonomy_only_reviewer,
+)
 from ..core.views import DatatablesModelViewSetMixin
 from ..libs.ui_helpers import calc_image_height, get_datatables_container, get_datatables_row
 from ..libs.utilities import get_json_context, get_media_url
@@ -31,19 +40,20 @@ from .constants import (
     CAT_PHYTOPHAGOUS,
     CAT_ZOOPHAGOUS,
     EXPORT_TITLE_TRAINING_SELECTIONS,
+    FIELD_MORPHO_TAXONOMY_REVIEWED,
     OTHER_ORDER,
     PHYTOPHAGOUS_ORDER,
     ZOOPHAGOUS_ORDER,
 )
 from .forms import MorphospeciesCombineForm, MorphospeciesForm, MorphospeciesUpdateForm
+from .mixins import MorphospeciesResearchOrReviewerMixin
 from .models import AiTraining, FunctionalGroup, Morphospecies
 from .serializers import MorphospeciesDatatablesSerializer, MorphospeciesPickerSerializer
 from .tasks import id_image
+from .utils import morphospecies_taxonomy_fields_changed
 
 
-class MorphospeciesDatatablesViewSet(PermissionRequiredMixin, DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
-
-    permission_required = IS_RESEARCH
+class MorphospeciesDatatablesViewSet(MorphospeciesResearchOrReviewerMixin, DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
     serializer_class = MorphospeciesDatatablesSerializer
     search_vector = (
         constants.FIELD_MORPHO_NAME,
@@ -67,12 +77,17 @@ class MorphospeciesDatatablesViewSet(PermissionRequiredMixin, DatatablesModelVie
             morphospecies = morphospecies.filter(tags__contains=[tags_filter])
         if not first_check:
             morphospecies = morphospecies.exclude(defunt_date__isnull=False)
+        if (
+            self.request.query_params.get('hide_reviewed')
+            and user_in_taxonomy_reviewer_group(self.request.user)
+        ):
+            morphospecies = morphospecies.exclude(
+                Q(taxonomy_reviewed=True) | Q(taxonomy_identified=True)
+            )
         return morphospecies.order_by(constants.FIELD_MORPHO_NAME)
 
 
-class MorphospeciesPickerViewSet(PermissionRequiredMixin, DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
-
-    permission_required = IS_RESEARCH
+class MorphospeciesPickerViewSet(MorphospeciesResearchOrReviewerMixin, DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
     serializer_class = MorphospeciesPickerSerializer
     search_vector = (
         constants.FIELD_MORPHO_NAME,
@@ -87,15 +102,17 @@ class MorphospeciesPickerViewSet(PermissionRequiredMixin, DatatablesModelViewSet
                 return morphospecies.filter(gbif_rank=gbif_rank).order_by(constants.FIELD_MORPHO_NAME)
         return morphospecies.order_by(constants.FIELD_MORPHO_NAME)
 
+    def test_func(self):
+        user = self.request.user
+        return user_has_morphospecies_research_or_reviewer_access(user) or user_has_specimen_reviewer_access(user)
 
-class MophospeciesView(PermissionRequiredMixin, TemplateView):
 
-    permission_required = IS_RESEARCH
+class MophospeciesView(MorphospeciesResearchOrReviewerMixin, TemplateView):
     template_name = 'taxonomy/morphospecies.html'
 
     first_check_txt = 'Show defunct morphospecies'
 
-    def get_morphospecies_datatable(self, datatables_url):
+    def get_morphospecies_datatable(self, datatables_url, *, show_taxonomy_review_filter):
         """
         Forat the datatables context, including the url from rest_framework.reverse
         as datatables_url
@@ -112,7 +129,8 @@ class MophospeciesView(PermissionRequiredMixin, TemplateView):
                 'first_picker_text': 'any rank',
                 'first_check': self.first_check_txt,
                 'tags_picker_choices': tags_choices,
-                'tags_picker_text': 'any tag'
+                'tags_picker_text': 'any tag',
+                'show_taxonomy_review_filter': show_taxonomy_review_filter,
             }),
             'container_row_header': get_datatables_container(
                 get_datatables_row([
@@ -132,21 +150,46 @@ class MophospeciesView(PermissionRequiredMixin, TemplateView):
             training_selections_download = get_media_url(training_selections_download.file)
         datatables_url = api_reverse('taxonomy:morphospecies-data-list',
                                      kwargs=kwargs)
-        context.update(self.get_morphospecies_datatable(datatables_url))
+        show_taxonomy_review_filter = user_in_taxonomy_reviewer_group(self.request.user)
+        context.update(self.get_morphospecies_datatable(
+            datatables_url, show_taxonomy_review_filter=show_taxonomy_review_filter))
         context.update({
             'can_add': self.request.user.has_perm(ADD_MORPHOSPECIES),
             'exp_morph_choices': constants.EXP_MORPH_CHOICES,
             'first_check': self.first_check_txt,
-            'training_selections_download': training_selections_download
+            'training_selections_download': training_selections_download,
+            'can_show_morphospecies_export': not user_is_taxonomy_only_reviewer(self.request.user),
         })
         return context
 
 
-class MorphospeciesDetailView(PermissionRequiredMixin, FormView):
+class MorphospeciesDetailView(MorphospeciesResearchOrReviewerMixin, FormView):
 
     form_class = MorphospeciesCombineForm
-    permission_required = IS_RESEARCH
     template_name = 'taxonomy/morphospecies_detail.html'
+
+    def post(self, request, *args, **kwargs):
+        if request.POST.get('taxonomy_reviewed_form'):
+            if not user_in_taxonomy_reviewer_group(request.user):
+                return HttpResponseForbidden()
+            if not request.user.has_perm(CHANGE_MORPHOSPECIES):
+                return HttpResponseForbidden()
+            morphospecies = get_object_or_404(Morphospecies, id=self.kwargs['id'])
+            morphospecies.taxonomy_reviewed = (
+                request.POST.get(FIELD_MORPHO_TAXONOMY_REVIEWED) == 'on'
+            )
+            morphospecies.taxonomy_reviewed_by = request.user
+            morphospecies.taxonomy_reviewed_at = timezone.now()
+            morphospecies.save(
+                update_fields=[
+                    'taxonomy_reviewed',
+                    'taxonomy_reviewed_by',
+                    'taxonomy_reviewed_at',
+                ]
+            )
+            messages.success(request, 'Reviewed status saved.')
+            return redirect('taxonomy:morphospecies-detail', id=morphospecies.id)
+        return super().post(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -285,8 +328,11 @@ class MorphospeciesDetailView(PermissionRequiredMixin, FormView):
             reverse=True
         )
 
+        user = self.request.user
         context.update({
-            'can_edit': self.request.user.has_perm(CHANGE_MORPHOSPECIES),
+            'can_edit_taxonomy': user.has_perm(CHANGE_MORPHOSPECIES),
+            'show_taxonomy_reviewer_reviewed': user_in_taxonomy_reviewer_group(user),
+            'can_combine': user.has_perms(IS_RESEARCH) and user.has_perm(CHANGE_MORPHOSPECIES),
             'display_name': display_name,
             'morphospecies': morphospecies,
             'ai_last_train': ai_accuracy_over_time['total'][-1] if ai_accuracy_over_time['total'] else 0,
@@ -317,7 +363,8 @@ class MorphospeciesDetailView(PermissionRequiredMixin, FormView):
 
     def form_valid(self, form):
         combine_to_id = form.cleaned_data['combine_to_id']
-        if combine_to_id and self.request.user.has_perm(CHANGE_MORPHOSPECIES):
+        if combine_to_id and self.request.user.has_perms(IS_RESEARCH) and self.request.user.has_perm(
+                CHANGE_MORPHOSPECIES):
             morphospecies = get_object_or_404(Morphospecies, id=self.kwargs['id'])
             combine_to = get_object_or_404(Morphospecies, id=combine_to_id)
 
@@ -346,7 +393,7 @@ class MorphospeciesDetailView(PermissionRequiredMixin, FormView):
         return super().form_valid(form)
 
     def get_success_url(self):
-        if self.request.POST['combine_to_id']:
+        if self.request.POST.get('combine_to_id'):
             return reverse(
                 'taxonomy:morphospecies'
             )
@@ -375,12 +422,15 @@ class MorphospeciesCreateView(PermissionRequiredMixin, CreateView):
         return reverse('taxonomy:morphospecies-detail', kwargs={'id': self.object.id})
 
 
-class MorphospeciesUpdateView(PermissionRequiredMixin, UpdateView):
+class MorphospeciesUpdateView(MorphospeciesResearchOrReviewerMixin, UpdateView):
 
-    permission_required = IS_RESEARCH + [CHANGE_MORPHOSPECIES]
     form_class = MorphospeciesUpdateForm
     template_name = 'taxonomy/morphospecies_form_update.html'
     action = 'update'
+
+    def test_func(self):
+        u = self.request.user
+        return u.has_perm(CHANGE_MORPHOSPECIES) and user_has_morphospecies_research_or_reviewer_access(u)
 
     def get_object(self, queryset=None):
         return get_object_or_404(Morphospecies, id=self.kwargs['id'])
@@ -405,6 +455,7 @@ class MorphospeciesUpdateView(PermissionRequiredMixin, UpdateView):
         kwargs['functional_groups_other'] = sorted(
             other, key=lambda x: OTHER_ORDER.index(x.code) if x.code in OTHER_ORDER else 999
         )
+        kwargs['taxonomy_reviewer_user'] = user_in_taxonomy_reviewer_group(self.request.user)
         return kwargs
 
     def get_context_data(self, **kwargs):
@@ -415,6 +466,19 @@ class MorphospeciesUpdateView(PermissionRequiredMixin, UpdateView):
         return context
 
     def form_valid(self, form):
+        old = Morphospecies.objects.get(pk=self.object.pk)
+        instance = form.instance
+        reviewer = user_in_taxonomy_reviewer_group(self.request.user)
+        taxonomy_changed = morphospecies_taxonomy_fields_changed(old, instance)
+        if taxonomy_changed:
+            instance.taxonomy_reviewed = False
+            if reviewer:
+                instance.taxonomy_identified = True
+                instance.taxonomy_reviewed_by = self.request.user
+                instance.taxonomy_reviewed_at = timezone.now()
+        elif reviewer and form.cleaned_data.get(FIELD_MORPHO_TAXONOMY_REVIEWED) != old.taxonomy_reviewed:
+            instance.taxonomy_reviewed_by = self.request.user
+            instance.taxonomy_reviewed_at = timezone.now()
         messages.success(self.request, 'Successfully updated a Morphospecies')
         return super(MorphospeciesUpdateView, self).form_valid(form)
 

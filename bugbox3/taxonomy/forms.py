@@ -1,5 +1,6 @@
 from crispy_forms.layout import HTML, Column, Field, Row
 from django.forms import (
+    BooleanField,
     CharField,
     ChoiceField,
     Form,
@@ -95,15 +96,25 @@ class MorphospeciesUpdateForm(MorphospeciesFormMixin):
         required=False,
         label='Functional groups',
     )
+    taxonomy_reviewed = BooleanField(
+        required=False,
+        label=constants.FORM_FIELDS_MORPHO_LABELS[constants.FIELD_MORPHO_TAXONOMY_REVIEWED],
+    )
 
     class Meta(MorphospeciesFormMixin.Meta):
-        fields = constants.FORM_FIELDS_MORPHO + (constants.FIELD_MORPHO_FUNCTIONAL_GROUPS,)
+        fields = constants.FORM_FIELDS_MORPHO + (
+            constants.FIELD_MORPHO_FUNCTIONAL_GROUPS,
+            constants.FIELD_MORPHO_TAXONOMY_REVIEWED,
+        )
 
     def __init__(self, *args, **kwargs):
+        self._taxonomy_reviewer_user = kwargs.pop('taxonomy_reviewer_user', False)
         self._fg_phytophagous = kwargs.pop('functional_groups_phytophagous', [])
         self._fg_zoophagous = kwargs.pop('functional_groups_zoophagous', [])
         self._fg_other = kwargs.pop('functional_groups_other', [])
         super().__init__(*args, **kwargs)
+        if not self._taxonomy_reviewer_user:
+            self.fields.pop(constants.FIELD_MORPHO_TAXONOMY_REVIEWED, None)
         if self.instance and self.instance.pk:
             fg_codes = set(
                 self.instance.functional_groups.values_list('code', flat=True)
@@ -139,6 +150,11 @@ class MorphospeciesUpdateForm(MorphospeciesFormMixin):
                 Column(constants.FIELD_MORPHO_SUBFAMILY),
                 Column(constants.FIELD_MORPHO_GBIF_GENUS),
                 Column(constants.FIELD_MORPHO_GBIF_SPECIES),
+            ),
+            *(
+                [Field(constants.FIELD_MORPHO_TAXONOMY_REVIEWED)]
+                if self._taxonomy_reviewer_user
+                else []
             ),
             Field(constants.FIELD_MORPHO_NOTE),
             Field(constants.FIELD_MORPHO_IMAGE),

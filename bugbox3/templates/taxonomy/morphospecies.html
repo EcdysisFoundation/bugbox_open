@@ -13,6 +13,7 @@
 
 {% block content %}
 
+{% if can_show_morphospecies_export %}
 <!-- Export Modal -->
 <div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
@@ -43,7 +44,7 @@
         </div>
     </div>
   </div>
-
+{% endif %}
 
 <div class="container">
 
@@ -73,6 +74,9 @@
                   </label>
             </div>
           </div>
+        <div class="col-3">
+          <div class="taxonomy-review-filter"></div>
+        </div>
       </div>
 
     <div class="row pb-2 mt-2">
@@ -87,14 +91,18 @@
         </div>
     </div>
 
+    {% if can_show_morphospecies_export %}
     <div class="row">
         <div class="col-3">
             <button class="btn btn-link" data-bs-toggle="modal" data-bs-target="#exportModal">Export Data</button>
         </div>
         <div class="col-4">
+            {% if training_selections_download %}
             <a href="{{ training_selections_download }}">training selections download</a>
+            {% endif %}
         </div>
     </div>
+    {% endif %}
 
 </div>
 

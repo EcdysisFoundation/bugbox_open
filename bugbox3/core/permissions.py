@@ -41,6 +41,11 @@ CHANGE_SITEVISIT = 'samples.change_sitevisit'
 DELETE_SITEVISIT = 'samples.delete_sitevisit'
 VIEW_SITEVISIT = 'samples.view_sitevisit'
 
+ADD_MULTISPECIMENIMAGE = 'samples.add_multispecimenimage'
+CHANGE_MULTISPECIMENIMAGE = 'samples.change_multispecimenimage'
+DELETE_MULTISPECIMENIMAGE = 'samples.delete_multispecimenimage'
+VIEW_MULTISPECIMENIMAGE = 'samples.view_multispecimenimage'
+
 ADD_LOOKUPCHOICES = 'core.add_lookupchoices'
 CHANGE_LOOKUPCHOICES = 'core.change_lookupchoices'
 DELETE_LOOKUPCHOICES = 'core.delete_lookupchoices'
@@ -118,6 +123,51 @@ IS_ADMIN = [
     CHANGE_LOOKUPCHOICES,
     DELETE_LOOKUPCHOICES,
 ]
+
+TAXONOMY_REVIEWER = [
+    VIEW_MORPHOSPECIES,
+    CHANGE_MORPHOSPECIES,
+]
+
+SPECIMEN_REVIEWER = [
+    REVIEW_SPECIMEN_PAGE,
+    VIEW_SAMPLE,
+    CHANGE_SAMPLE,
+    ADD_SPECIMEN,
+    CHANGE_SPECIMEN,
+    DELETE_SPECIMEN,
+    VIEW_SPECIMEN,
+    ADD_SPECIMENIMAGE,
+    CHANGE_SPECIMENIMAGE,
+    DELETE_SPECIMENIMAGE,
+    VIEW_SPECIMENIMAGE,
+    ADD_MULTISPECIMENIMAGE,
+    CHANGE_MULTISPECIMENIMAGE,
+    DELETE_MULTISPECIMENIMAGE,
+    VIEW_MULTISPECIMENIMAGE,
+]
+
+
+def user_has_morphospecies_research_or_reviewer_access(user):
+    return user.has_perms(IS_RESEARCH) or user.has_perms(TAXONOMY_REVIEWER)
+
+
+def user_has_specimen_reviewer_access(user):
+    return user.has_perms(SPECIMEN_REVIEWER)
+
+
+def user_has_specimen_research_or_reviewer_access(user):
+    return user.has_perms(IS_RESEARCH) or user_has_specimen_reviewer_access(user)
+
+
+def user_in_taxonomy_reviewer_group(user):
+    """True if the user is in the `taxonomy_reviewer` group)."""
+    return user.groups.filter(name='taxonomy_reviewer').exists()
+
+
+def user_is_taxonomy_only_reviewer(user):
+    """Taxonomy reviewer without full research access -- hide morphospecies export UI for these users."""
+    return user_in_taxonomy_reviewer_group(user) and not user.has_perms(IS_RESEARCH)
 
 
 def show_toolbar(request):
