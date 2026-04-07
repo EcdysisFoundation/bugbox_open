@@ -22,7 +22,15 @@ from bugbox3.samples.utils import resolve_entered_by
 
 from ..core import constants as constants_core
 from ..core.models import LookupChoices
-from ..core.permissions import IS_RESEARCH, REVIEW_SPECIMEN_PAGE
+from ..core.permissions import (
+    ADD_SPECIMEN,
+    CHANGE_SPECIMEN,
+    DELETE_SPECIMEN,
+    IS_RESEARCH,
+    REVIEW_SPECIMEN_PAGE,
+    VIEW_MULTISPECIMENIMAGE,
+    VIEW_SPECIMEN,
+)
 from ..core.stitcher_api import ERROR_MSG_KEY, get_list_upload_abridged, get_root_message, patch_upload_file
 from ..libs.ui_helpers import (
     calc_image_height,
@@ -66,6 +74,7 @@ from .models import (
 from .models_query import get_sample_plan_descriptions, get_user_choices
 from .tasks import crop_panorama_segmentation, export_csv_by_location
 from .timeline_events import audit_specimen_update, audit_specimen_view, audit_upload_images, timeline_events
+from .mixins import SpecimenResearchOrReviewerMixin
 
 
 class ExperimentsView(PermissionRequiredMixin, TemplateView):
@@ -908,12 +917,13 @@ class SampleDeleteView(PermissionRequiredMixin, DeleteView):
         return reverse('samples:experiment', kwargs={'experiment_id': self.kwargs['experiment_id']})
 
 
-class SpecimensWithoutImagesFormView(PermissionRequiredMixin, FormView):
-
-    permission_required = IS_RESEARCH
+class SpecimensWithoutImagesFormView(SpecimenResearchOrReviewerMixin, FormView):
 
     form_class = SpecimensWithoutImagesForm
     template_name = 'samples/specimens_wo_images.html'
+
+    def test_func(self):
+        return super().test_func() and self.request.user.has_perm(VIEW_SPECIMEN)
 
     def get_context_data(self, **kwargs):
         context = super(SpecimensWithoutImagesFormView, self).get_context_data(**kwargs)
@@ -979,12 +989,13 @@ class SpecimensWithoutImagesFormView(PermissionRequiredMixin, FormView):
         return reverse('samples:sample', kwargs={'sample_id': self.kwargs['id']})
 
 
-class SpecimenView(PermissionRequiredMixin, FormView):
-
-    permission_required = IS_RESEARCH
+class SpecimenView(SpecimenResearchOrReviewerMixin, FormView):
 
     form_class = SpecimenViewForm
     template_name = 'samples/specimen_detail.html'
+
+    def test_func(self):
+        return super().test_func() and self.request.user.has_perm(VIEW_SPECIMEN)
 
     def get_context_data(self, **kwargs):
         context = super(SpecimenView, self).get_context_data(**kwargs)
@@ -1065,13 +1076,14 @@ class SpecimenView(PermissionRequiredMixin, FormView):
         return reverse('samples:specimen', kwargs={'id': self.kwargs['id']})
 
 
-class SpecimenCreateView(PermissionRequiredMixin, CreateView):
-
-    permission_required = IS_RESEARCH
+class SpecimenCreateView(SpecimenResearchOrReviewerMixin, CreateView):
 
     form_class = SpecimenForm
     template_name = 'samples/specimen_create.html'
     action = 'create'
+
+    def test_func(self):
+        return super().test_func() and self.request.user.has_perm(ADD_SPECIMEN)
 
     def get_form_kwargs(self):
         kwargs = super(SpecimenCreateView, self).get_form_kwargs()
@@ -1126,13 +1138,14 @@ class SpecimenCreateView(PermissionRequiredMixin, CreateView):
         return reverse('samples:specimen', kwargs={'id': self.object.id})
 
 
-class SpecimenUpdateView(PermissionRequiredMixin, UpdateView):
-
-    permission_required = IS_RESEARCH
+class SpecimenUpdateView(SpecimenResearchOrReviewerMixin, UpdateView):
 
     form_class = SpecimenForm
     template_name = 'samples/specimen_update.html'
     action = 'update'
+
+    def test_func(self):
+        return super().test_func() and self.request.user.has_perm(CHANGE_SPECIMEN)
 
     def get_object(self, queryset=None):
         try:
@@ -1196,12 +1209,17 @@ class SpecimenUpdateView(PermissionRequiredMixin, UpdateView):
         return reverse('samples:specimen', kwargs={'id': self.kwargs['id']})
 
 
-class SpecimenDeleteView(PermissionRequiredMixin, DeleteView):
-
-    permission_required = IS_RESEARCH + [REVIEW_SPECIMEN_PAGE]
+class SpecimenDeleteView(SpecimenResearchOrReviewerMixin, DeleteView):
 
     model = Specimen
     template_name = 'samples/confirm_delete.html'
+
+    def test_func(self):
+        return (
+            super().test_func()
+            and self.request.user.has_perm(REVIEW_SPECIMEN_PAGE)
+            and self.request.user.has_perm(DELETE_SPECIMEN)
+        )
 
     def get_object(self, queryset=None):
         try:
@@ -1213,12 +1231,13 @@ class SpecimenDeleteView(PermissionRequiredMixin, DeleteView):
         return reverse('samples:sample', kwargs={'sample_id': self.kwargs['sample_id']})
 
 
-class SpecimensView(PermissionRequiredMixin, FormView):
-
-    permission_required = IS_RESEARCH + [REVIEW_SPECIMEN_PAGE]
+class SpecimensView(SpecimenResearchOrReviewerMixin, FormView):
 
     form_class = JSONFieldSpecimensForm
     template_name = 'samples/specimens.html'
+
+    def test_func(self):
+        return super().test_func() and self.request.user.has_perm(REVIEW_SPECIMEN_PAGE)
 
     # these are also defined in sample_detail.json
     _sv_confirm_ids = 'confirm_ids'
@@ -1396,12 +1415,15 @@ class SpecimensView(PermissionRequiredMixin, FormView):
         )
 
 
-class MultiSpecimenImageView(PermissionRequiredMixin, FormView):
-
-    permission_required = IS_RESEARCH
+class MultiSpecimenImageView(SpecimenResearchOrReviewerMixin, FormView):
 
     form_class = MultiSpecimenForm
     template_name = 'samples/multispecimen_form.html'
+
+    def test_func(self):
+        if self.request.user.has_perms(IS_RESEARCH):
+            return True
+        return super().test_func() and self.request.user.has_perm(VIEW_MULTISPECIMENIMAGE)
 
     def get_context_data(self, **kwargs):
         context = super(MultiSpecimenImageView, self).get_context_data(**kwargs)

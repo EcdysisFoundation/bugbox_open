@@ -40,6 +40,8 @@ def create_app_groups():
         ('review_page', [permissions.REVIEW_SPECIMEN_PAGE]),
         ('is_grower', permissions.IS_GROWER),
         ('is_groweradmin', permissions.IS_GROWERADMIN),
+        ('taxonomy_reviewer', permissions.TAXONOMY_REVIEWER),
+        ('specimen_reviewer', permissions.SPECIMEN_REVIEWER),
     )
 
     for entry in groups_permissions:

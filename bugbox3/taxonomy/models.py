@@ -65,6 +65,19 @@ class Morphospecies(Model):
     exclude_from_export = BooleanField(default=False)
     tags = ArrayField(CharField(max_length=1000, blank=True), default=list)
     functional_groups = ManyToManyField(FunctionalGroup, blank=True)
+    taxonomy_reviewed = BooleanField(
+        default=False,
+        verbose_name='Reviewed',
+    )
+    taxonomy_identified = BooleanField(default=False)
+    taxonomy_reviewed_by = ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=SET_NULL,
+        related_name='morphospecies_taxonomy_reviews',
+    )
+    taxonomy_reviewed_at = DateTimeField(null=True, blank=True)
 
     class Meta:
         app_label = 'taxonomy'

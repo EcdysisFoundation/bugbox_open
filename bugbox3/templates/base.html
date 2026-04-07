@@ -96,19 +96,22 @@
     {% if ON_ECDYSIS_SERVER %}
     <a href="{% url 'core:stitcher' %}">Shimsy Images</a>
     {% else %}
-    {% for group in request.user.groups.all %}
-      {% if group.name == 'is_research' %}
+    {# Tools: researchers (is_research) and taxonomy reviewers both have taxonomy.view_morphospecies; show once via perms #}
+    {% if perms.taxonomy.view_morphospecies %}
         <div class="dropdown-hover">
           <a href="#">Tools ▼</a>
           <div class="dropdown-menu">
+            {% if perms.samples.view_experiment %}
             <a href="{% url 'samples:experiments' 0 %}">Experiments</a>
+            {% endif %}
             <a href="{% url 'taxonomy:morphospecies' %}">Morphospecies</a>
             {% if perms.samples.review_specimen_page %}
               <a href="{% url 'samples:specimens-experiment-sample' 0 0 0 %}">Specimens</a>
             {% endif %}
           </div>
         </div>
-      {% endif %}
+    {% endif %}
+    {% for group in request.user.groups.all %}
       {% if group.name == 'is_admin' %}
         <div class="dropdown-hover">
           <a href="#">Admin ▼</a>

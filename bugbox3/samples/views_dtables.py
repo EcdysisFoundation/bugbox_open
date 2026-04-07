@@ -19,6 +19,7 @@ from .serializers import (
     SpecimensAllDatatablesSerializer,
 )
 from .views_public import PUBLIC_COLLECTIONS
+from .mixins import SpecimenResearchOrReviewerMixin
 
 
 class ExperimentsDatatablesViewSet(PermissionRequiredMixin, DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
@@ -34,9 +35,7 @@ class ExperimentsDatatablesViewSet(PermissionRequiredMixin, DatatablesModelViewS
             organization_id=org_id).order_by(constants.FIELD_NAME)
 
 
-class MultiSpecimenDatatablesViewSet(PermissionRequiredMixin, DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
-
-    permission_required = IS_RESEARCH
+class MultiSpecimenDatatablesViewSet(SpecimenResearchOrReviewerMixin, DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
 
     serializer_class = MultiSpecimenImageDatatablesSerializer
 
@@ -83,9 +82,7 @@ class SitesDatatablesViewSet(PermissionRequiredMixin, DatatablesModelViewSetMixi
         )
 
 
-class SpecimenDatatablesViewSet(PermissionRequiredMixin, DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
-
-    permission_required = IS_RESEARCH
+class SpecimenDatatablesViewSet(SpecimenResearchOrReviewerMixin, DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
 
     serializer_class = SpecimenDatatablesSerializer
     search_vector = ['classification__name']
@@ -95,9 +92,7 @@ class SpecimenDatatablesViewSet(PermissionRequiredMixin, DatatablesModelViewSetM
         return Specimen.objects.user_access(self.request.user).filter(sample_id=sample_id).order_by('-id')
 
 
-class SpecimensAllDatatablesViewSet(PermissionRequiredMixin, DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
-
-    permission_required = IS_RESEARCH
+class SpecimensAllDatatablesViewSet(SpecimenResearchOrReviewerMixin, DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
 
     serializer_class = SpecimensAllDatatablesSerializer
     search_vector = [
