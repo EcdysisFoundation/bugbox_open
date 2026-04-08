@@ -8,7 +8,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
 from django.db import transaction
 from django.forms import inlineformset_factory
-from django.http import Http404, JsonResponse
+from django.http import Http404, HttpResponseForbidden, JsonResponse
 from django.middleware.csrf import get_token
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
@@ -29,6 +29,7 @@ from ..core.permissions import (
     IS_RESEARCH,
     REVIEW_SPECIMEN_PAGE,
     VIEW_MULTISPECIMENIMAGE,
+    VIEW_SAMPLE,
     VIEW_SPECIMEN,
 )
 from ..core.stitcher_api import ERROR_MSG_KEY, get_list_upload_abridged, get_root_message, patch_upload_file
@@ -663,12 +664,22 @@ class SiteDeleteView(PermissionRequiredMixin, DeleteView):
         return reverse('samples:experiment', kwargs={'experiment_id': self.kwargs['experiment_id']})
 
 
-class SampleView(PermissionRequiredMixin, FormView):
-
-    permission_required = IS_RESEARCH
+class SampleView(SpecimenResearchOrReviewerMixin, FormView):
 
     form_class = SampleDetailForm
     template_name = 'samples/sample_detail.html'
+
+    def test_func(self):
+        # Researchers have full access; specimen reviewers get view-only access to sample (they cant edit or delete it)
+        if self.request.user.has_perms(IS_RESEARCH):
+            return True
+        return super().test_func() and self.request.user.has_perm(VIEW_SAMPLE)
+
+    def post(self, request, *args, **kwargs):
+        # View-only for specimen reviewers
+        if not request.user.has_perms(IS_RESEARCH):
+            return HttpResponseForbidden()
+        return super().post(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super(SampleView, self).get_context_data(**kwargs)
