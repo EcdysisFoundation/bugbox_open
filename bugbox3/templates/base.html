@@ -96,6 +96,9 @@
     {% if ON_ECDYSIS_SERVER %}
     <a href="{% url 'core:stitcher' %}">Shimsy Images</a>
     {% else %}
+    {% if perms.samples.review_specimen_page %}
+      <a href="{% url 'samples:specimens-experiment-sample' 0 0 0 %}">Specimens</a>
+    {% endif %}
     {# Tools: researchers (is_research) and taxonomy reviewers both have taxonomy.view_morphospecies; show once via perms #}
     {% if perms.taxonomy.view_morphospecies %}
         <div class="dropdown-hover">
