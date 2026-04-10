@@ -31,6 +31,7 @@ function getUrl(dt_url, data_filters) {
     url_args += `${sep}sample_linked=${data_filters.sample_linked}`;
     url_args += `${sep}nota_sample=${data_filters.nota_sample}`;
     url_args += `${sep}has_duplicate=${data_filters.has_duplicate}`;
+    url_args += `${sep}rejected=${data_filters.rejected}`;
 
     return `${dt_url}/uploads${url_args}`
 }
@@ -102,6 +103,8 @@ function getSent(data, type, row) {
         return '<i class="bi bi-send-check-fill h4 text-success"></i>'
     } if (row.nota_sample) {
         return '<i class="bi bi-ban"></i>'
+    } if (row.bugbox_rejected) {
+        return '<i class="bi bi-x-octagon h4 text-danger"></i>'
     } else { return '' }
 }
 
@@ -120,6 +123,7 @@ $(function () {
         annotations: false,
         not_completed: false,
         completed: false,
+        rejected: false,
         has_duplicate: false
     }
 
@@ -220,7 +224,7 @@ $(function () {
     let new_datatables_url = '';
     let $lsProjectPicker = $('<select placeholder="Filter by" aria-label="Filter by" id="approved-picker" class="form-select"></select>')
         $('.label-studio-picker').append($lsProjectPicker)
-        $lsProjectPicker.append(`<option value="">` + 'LS Projects' + `</option>`)
+        $lsProjectPicker.append(`<option value="">` + 'Label projects' + `</option>`)
         $lsProjectPicker.append(json_context.ls_projects_choices.map(value => `<option value="${value[0]}">${value[1]}</option>`))
         $lsProjectPicker.val('')
     $lsProjectPicker.on('change', () => {
@@ -345,6 +349,18 @@ $(function () {
     $('.nota-sample-check').append($notaSampleCheck)
     $notaSampleCheck.on('change', () => {
         data_filters.nota_sample = $notaSampleCheck.prop("checked");
+        new_datatables_url = getUrl(json_context.STITCHER_URL, data_filters);
+        stitcher_table.ajax.url( new_datatables_url ).load();
+    })
+
+    let rejected_check = '';
+    if (data_filters.rejected) {
+        rejected_check = 'checked';
+    };
+    let $rejectedCheck = $(`<input class="form-check-input" type="checkbox" value="" id="rejectedCheck" ${rejected_check}>`)
+    $('.rejected-check').append($rejectedCheck)
+    $rejectedCheck.on('change', () => {
+        data_filters.rejected = $rejectedCheck.prop("checked");
         new_datatables_url = getUrl(json_context.STITCHER_URL, data_filters);
         stitcher_table.ajax.url( new_datatables_url ).load();
     })

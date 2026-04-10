@@ -86,6 +86,11 @@
                         <br/> Updated at: {{ data.annotations_updated_at_segment }}
                     {% endif %}
                 </li>
+                {% if data.bugbox_rejected %}
+                    <li class="list-group-item list-group-item-warning">
+                        <b>Marked rejected on BugBox:</b> {{ data.bugbox_rejected }}
+                    </li>
+                {% endif %}
                 {% if not data.bugbox_sample_id %}
                     {% if nota_sample %}
                         <li class="list-group-item list-group-item-danger">
