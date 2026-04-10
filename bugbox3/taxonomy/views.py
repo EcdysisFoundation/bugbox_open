@@ -53,6 +53,14 @@ from .tasks import id_image
 from .utils import morphospecies_taxonomy_fields_changed
 
 
+def _morphospecies_queryset_names_with_digit(qs):
+    """Restrict to morphospecies whose `name` contains at least one digit (for example 'Acaridae 001')."""
+    digit_q = Q()
+    for d in '0123456789':
+        digit_q |= Q(**{f'{constants.FIELD_MORPHO_NAME}__contains': d})
+    return qs.filter(digit_q)
+
+
 class MorphospeciesDatatablesViewSet(MorphospeciesResearchOrReviewerMixin, DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
     serializer_class = MorphospeciesDatatablesSerializer
     search_vector = (
@@ -84,6 +92,8 @@ class MorphospeciesDatatablesViewSet(MorphospeciesResearchOrReviewerMixin, Datat
             morphospecies = morphospecies.exclude(
                 Q(taxonomy_reviewed=True) | Q(taxonomy_identified=True)
             )
+        if user_is_taxonomy_only_reviewer(self.request.user):
+            morphospecies = _morphospecies_queryset_names_with_digit(morphospecies)
         return morphospecies.order_by(constants.FIELD_MORPHO_NAME)
 
 
