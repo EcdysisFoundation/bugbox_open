@@ -392,8 +392,6 @@ class StitcherDeleteView(PermissionRequiredMixin, FormView):
         initial = super().get_initial()
         guid = self.kwargs[constants.STITCHER_GUID]
         data = get_list_upload_abridged(guid)
-        if constants.STITCHER_UPLOADFILE_KEY not in data.keys():
-            raise Http404
         self.upload_dir_name = data[constants.STITCHER_UPLOAD_DIR_NAME]
         initial[constants.STITCHER_UPLOAD_DIR_NAME] = self.upload_dir_name
         initial[constants.STITCHER_GUID] = guid
