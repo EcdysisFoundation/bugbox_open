@@ -322,6 +322,7 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                 messages.success(
                     self.request, f'Successfully initiated "Save to sample and crop" for {self.guid}')
                 self.data[constants.STITCHER_BUGBOX_CROPED_SAVED] = str(instance.id)
+                self.data[constants.STITCHER_BUGBOX_REJECTED] = None
                 patch_upload_file(self.guid, self.data)
             except IntegrityError as e:
                 messages.error(self.request, f'Error, possible duplicate image for this record, {e}')

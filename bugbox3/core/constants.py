@@ -116,6 +116,7 @@ STITCHER_ANNOTATIONS_UPDATED_AT_SEGMENT = 'annotations_updated_at_segment'
 STITCHER_BUGBOX_SAMPLE_ID = 'bugbox_sample_id'
 STITCHER_NOTA_SAMPLE = 'nota_sample'
 STITCHER_BUGBOX_CROPED_SAVED = 'bugbox_croped_saved'
+STITCHER_BUGBOX_REJECTED = 'bugbox_rejected'
 STITCHER_OMIT_FROM_TRAINING = 'omit_from_training'
 
 STITCHER_ERROR = 'ERROR'
