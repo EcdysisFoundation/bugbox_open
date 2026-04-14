@@ -69,10 +69,9 @@
                 <li class="list-group-item">
                     <b>Confidence setting:</b> {{ data.panorama_confidence }}
                 </li>
-                {% if data.sent_label_studio %}
+                {% if data.label_studio_project %}
                     <li class="list-group-item list-group-item-info">
-                        <b>Sent to label project</b>{% if data.label_studio_project %}: {{ data.label_studio_project }}
-                        {% endif %}
+                        <b>Sent to label project</b>: {{ data.label_studio_project }} <i>{{ data.label_studio_project_created_at }}</i>
                     </li>
                 {% endif %}
                 <li class="list-group-item">
