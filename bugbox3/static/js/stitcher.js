@@ -23,7 +23,7 @@ function getUrl(dt_url, data_filters) {
     if (sep == '?') {sep = '&'}; // there is at least one arg here
     url_args += `${sep}approved=${data_filters.approved}`;
     url_args += `${sep}disapproved=${data_filters.disapproved}`;
-    url_args += `${sep}predictions=${data_filters.predictions}`;
+    url_args += `${sep}label_updated=${data_filters.label_updated}`;
     url_args += `${sep}annotations=${data_filters.annotations}`;
     url_args += `${sep}completed=${data_filters.completed}`;
     url_args += `${sep}not_completed=${data_filters.not_completed}`;
@@ -119,7 +119,7 @@ $(function () {
         unreviewed: false,
         approved: false,
         disapproved: false,
-        predictions: false,
+        label_updated: false,
         annotations: false,
         not_completed: false,
         completed: false,
@@ -178,10 +178,10 @@ $(function () {
                 data: '',
                 render: getSampleUrl
             },{
-                data: 'predictions_timestamp_coco',
-                render: concatTen
-            },{
                 data: 'label_studio_project'
+            },{
+                data: 'label_file_updated_at',
+                render: concatTen
             },{
                 data: 'annotations_updated_at_segment',
                 render: concatTen
@@ -269,14 +269,14 @@ $(function () {
         stitcher_table.ajax.url( new_datatables_url ).load();
     })
 
-    let predictions_check = '';
-    if (data_filters.predictions) {
-        predictions_check = 'checked';
+    let label_updated_check = '';
+    if (data_filters.label_updated) {
+        label_updated_check = 'checked';
     };
-    let $predictionsCheck = $(`<input class="form-check-input" type="checkbox" value="" id="predictionsCheck" ${predictions_check}>`)
-    $('.predictions-check').append($predictionsCheck)
-    $predictionsCheck.on('change', () => {
-        data_filters.predictions = $predictionsCheck.prop("checked");
+    let $labelUpdatedCheck = $(`<input class="form-check-input" type="checkbox" value="" id="labelUpdatedCheck" ${label_updated_check}>`)
+    $('.label-updated-check').append($labelUpdatedCheck)
+    $labelUpdatedCheck.on('change', () => {
+        data_filters.label_updated = $labelUpdatedCheck.prop("checked");
         new_datatables_url = getUrl(json_context.STITCHER_URL, data_filters);
         stitcher_table.ajax.url( new_datatables_url ).load();
     })

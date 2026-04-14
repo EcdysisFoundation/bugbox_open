@@ -71,13 +71,13 @@
                 </li>
                 {% if data.sent_label_studio %}
                     <li class="list-group-item list-group-item-info">
-                        Sent to Label Studio{% if data.label_studio_project %}: {{ data.label_studio_project }}
+                        <b>Sent to label project</b>{% if data.label_studio_project %}: {{ data.label_studio_project }}
                         {% endif %}
                     </li>
                 {% endif %}
                 <li class="list-group-item">
-                    <b>Predictions:</b> {% if data.predictions_timestamp_coco %}
-                        {{ data.predictions_coco|length }}
+                    <b>Labels updated at:</b> {% if data.label_file_updated_at %}
+                        {{ data.label_file_updated_at }} <a href="{{ cvat_label_file_src }}" target="_blank"><i class="bi bi-file-earmark-arrow-down"></i></a>
                     {% endif %}
                 </li>
                 <li class="list-group-item">
