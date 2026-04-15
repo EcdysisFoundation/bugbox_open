@@ -71,7 +71,8 @@
                 </li>
                 {% if data.label_studio_project %}
                     <li class="list-group-item list-group-item-info">
-                        <b>Sent to label project</b>: {{ data.label_studio_project }} <i>{{ data.label_studio_project_created_at }}</i>
+                        <b>Sent to label project</b>: {{ data.label_studio_project }} {% if data.label_studio_project_created_at %}
+                        <i>{{ data.label_studio_project_created_at }}</i>{% endif %}
                     </li>
                 {% endif %}
                 <li class="list-group-item">
