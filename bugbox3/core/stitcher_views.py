@@ -96,6 +96,13 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
         self.label_thumb_src = f'/static/{self.guid}/{constants.STITCHER_LABEL_THUMB_IMG}'
         self.nota_sample = None
         self.omit_from_training = None
+        self.cvat_label_file_src = None
+        if {constants.STITCHER_LABEL_PROJECT_DIR,
+            constants.STITCHER_LABEL_FILE,
+            constants.STITCHER_LABEL_FILE_UPDATED_AT} <= self.data.keys():
+                self.cvat_label_file_src = f'{self.stitcher_js_url}/cvat_projects/' \
+                                           f'{self.data[constants.STITCHER_LABEL_PROJECT_DIR]}/' \
+                                           f'{self.data[constants.STITCHER_LABEL_FILE]}'
         if constants.STITCHER_PANORAMA_PATH in self.data.keys():
             if self.data[constants.STITCHER_PANORAMA_PATH]:
                 self.img_src = self.data[constants.STITCHER_PANORAMA_PATH].replace('/media/', '/static/')
@@ -142,6 +149,7 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
             'panorama_name': self.panorama_name,
             'img_src': f'{self.stitcher_js_url}{self.img_src}',
             'thumbnail_src': f'{self.stitcher_js_url}{self.thumbnail_src}',
+            'cvat_label_file_src': self.cvat_label_file_src,
             'label_src': f'{self.stitcher_js_url}{self.label_thumb_src}',
             'potential_samples': potential_samples,
             'nota_sample': self.nota_sample,

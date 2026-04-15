@@ -50,10 +50,10 @@
             Sample
         </div>
         <div class="col-3">
-            Segmentation and final save
+            Labeling
         </div>
         <div class="col-3">
-            Labeling
+            Completion status
         </div>
 
     </div>
@@ -121,10 +121,13 @@
         </div>
         <div class="col-3">
             <div class="row">
+                <div class="label-studio-picker mb-2"></div>
+            </div>
+            <div class="row">
                 <div class="form-check">
-                    <div class="predictions-check"></div>
-                    <label class="form-check-label" for="predictionsCheck">
-                        predictions
+                    <div class="label-updated-check"></div>
+                    <label class="form-check-label" for="labelupdatedCheck">
+                        has labels
                     </label>
                 </div>
             </div>
@@ -136,6 +139,8 @@
                     </label>
                 </div>
             </div>
+        </div>
+        <div class="col-3">
             <div class="row">
                 <div class="form-check">
                     <div class="not-completed-check"></div>
@@ -146,16 +151,6 @@
             </div>
             <div class="row">
                 <div class="form-check">
-                    <div class="completed-check"></div>
-                    <label class="form-check-label" for="completedCheck">
-                        completed
-                    </label>
-                </div>
-            </div>
-        </div>
-        <div class="col-3">
-            <div class="row">
-                <div class="form-check">
                     <div class="rejected-check"></div>
                     <label class="form-check-label" for="rejectedCheck">
                         rejected on bugbox
@@ -163,7 +158,12 @@
                 </div>
             </div>
             <div class="row">
-                <div class="label-studio-picker"></div>
+                <div class="form-check">
+                    <div class="completed-check"></div>
+                    <label class="form-check-label" for="completedCheck">
+                        completed
+                    </label>
+                </div>
             </div>
         </div>
     </div>
@@ -177,8 +177,8 @@
                     <th width="10%">Update</th>
                     <th width="10%">Approved</th>
                     <th width="10%">Bugbox<br/>Sample</th>
-                    <th width="15%">Predictions</th>
                     <th width="10%">Label project</th>
+                    <th width="10%">Labels updated</th>
                     <th width="10%">Annotations</th>
                     <th width="5%">Completed</th>
                 </tr>
