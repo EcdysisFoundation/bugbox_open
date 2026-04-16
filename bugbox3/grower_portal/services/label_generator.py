@@ -1,4 +1,5 @@
 import re
+import secrets
 from copy import deepcopy
 from io import BytesIO
 
@@ -47,9 +48,17 @@ class LabelGenerator:
         return choices.get(sample_type_code, sample_type_code)
 
     def generate_unique_sample_codes(self, count):
-        codes = []
+        """
+        Generate unique sample codes.
 
-        all_codes = SampleCode.objects.all().values_list('code', flat=True)
+        - Avalanche: example (cluster=82): 821231
+        - Ignite: numeric sequential (Ignite quick-generate uses generate_unique_site_codes).
+        """
+        if self.project_type == 'avalanche':
+            return self._generate_unique_avalanche_sample_codes(count)
+
+        codes = []
+        all_codes = SampleCode.objects.filter(project_type='ignite').values_list('code', flat=True)
 
         max_code = 0
         for code in all_codes:
@@ -67,6 +76,51 @@ class LabelGenerator:
             codes.append(new_code)
 
         return codes
+
+    def _generate_unique_avalanche_sample_codes(self, count):
+        """
+        Avalanche sample code format: <cluster_number><4 random digits>
+
+        - cluster_number comes from the Quick Generate form
+        """
+        cluster_digits = re.sub(r'\D+', '', str(self.cluster_number or '')).strip()
+        if not cluster_digits:
+            raise ValueError('Cluster number must contain digits to generate Avalanche sample codes.')
+
+        if count > 10_000:
+            raise ValueError(
+                f'Cannot generate {count} Avalanche codes with only 4 digits after the cluster '
+                f'number (max 10000 per cluster).'
+            )
+
+        generated = []
+        generated_set = set()
+
+        max_attempts = max(50_000, count * 200)
+        attempts = 0
+
+        while len(generated) < count:
+            attempts += 1
+            if attempts > max_attempts:
+                raise ValueError(
+                    f'Unable to generate {count} unique Avalanche sample codes for cluster '
+                    f'{cluster_digits} after {max_attempts} attempts. The 4-digit namespace may '
+                    f'be close to exhausted.'
+                )
+
+            suffix = secrets.randbelow(10_000)
+            candidate = f"{cluster_digits}{suffix:04d}"
+
+            if candidate in generated_set:
+                continue
+
+            if SampleCode.objects.filter(code=candidate).exists():
+                continue
+
+            generated.append(candidate)
+            generated_set.add(candidate)
+
+        return generated
 
     def generate_unique_site_codes(self, count):
         """Generate Ignite site codes with auto-incrementing logic"""
@@ -116,10 +170,10 @@ class LabelGenerator:
         """Create label text based on project type"""
         if self.project_type == 'avalanche':
             # Avalanche format: Sample Type / Cluster-Year / Transect Code
-            return f"{sample_type_display}\n{self.cluster_number} – {self.year}\n{transect_code}"
+            return f"{sample_type_display}\nCluster {self.cluster_number} – {self.year}\n{transect_code}"
         else:
             # ignite (1000 farms) format: Cluster-Year / Sample Type / Transect Code
-            return f"{self.cluster_number} – {self.year}\n{sample_type_display}\n{transect_code}"
+            return f"Cluster {self.cluster_number} – {self.year}\n{sample_type_display}\n{transect_code}"
 
     def _load_template(self):
         """Load the template document from PrivateSiteContent"""
@@ -795,23 +849,20 @@ class LabelGenerator:
 
         doc = self._load_template()
 
-        labels_by_column = []
+        # Order labels by transect (sample code)
+        labels_in_order = []
         total_labels = 0
 
-        for sample_type_code in all_sample_types:
-            sample_type_display = self.get_sample_type_display(sample_type_code)
-            column_labels = []
-
-            labels_per_transect = 2 if sample_type_code in ['yield_sample', 'forage'] else 1
-
-            for transect_code in transect_codes:
+        for transect_code in transect_codes:
+            for sample_type_code in all_sample_types:
+                sample_type_display = self.get_sample_type_display(sample_type_code)
+                labels_per_transect = 2 if sample_type_code in ['yield_sample', 'forage'] else 1
                 label_text = self.create_label_text(sample_type_display, transect_code)
-
                 for _ in range(labels_per_transect):
-                    column_labels.append(label_text)
+                    labels_in_order.append(label_text)
                     total_labels += 1
 
-            labels_by_column.append(column_labels)
+        labels_by_column = [labels_in_order]
 
         if doc.tables:
             if self._template_has_placeholders(doc):
@@ -1005,11 +1056,11 @@ class LabelGenerator:
 
     def create_ignite_inner_label(self, sample_type, site_code, transect_num):
         """Format: Cluster XX – YYYY / Sample Type TX / Site: XXXX"""
-        return f"{self.cluster_number} – {self.year}\n{sample_type} T{transect_num}\nSite: {site_code}"
+        return f"Cluster {self.cluster_number} – {self.year}\n{sample_type} T{transect_num}\nSite: {site_code}"
 
     def create_ignite_outer_label(self, sample_type, site_code):
         """Format: Cluster XX – YYYY / Sample Type / Site: XXXX"""
-        return f"{self.cluster_number} – {self.year}\n{sample_type}\nSite: {site_code}"
+        return f"Cluster {self.cluster_number} – {self.year}\n{sample_type}\nSite: {site_code}"
 
     def generate_outer_labels_ignite(self, site_codes):
         """Generate outer labels for Ignite"""
@@ -1044,13 +1095,13 @@ class LabelGenerator:
         total_labels = 0
 
         for transect_code in transect_codes:
-            kit_label = f"Avalanche Sampling Kit - Ecdysis Foundation\n{self.cluster_number} – {
+            kit_label = f"Avalanche Sampling Kit - Ecdysis Foundation\nCluster {self.cluster_number} – {
                 self.year}\n{transect_code}\nGrower Name______________\nDate_____________"
             all_labels.append(kit_label)
             total_labels += 1
 
             room_temp_label = (
-                f"Avalanche Samples - Room Temp\n{self.cluster_number} – "
+                f"Avalanche Samples - Room Temp\nCluster {self.cluster_number} – "
                 f"{self.year}\n{transect_code}\nGrower Name______________\n"
                 f"Date_____________\n\nSample List:\n" +
                 "\n".join(AVALANCHE_ROOM_TEMP_SAMPLES)
@@ -1059,7 +1110,7 @@ class LabelGenerator:
             total_labels += 1
 
             refrigerated_label = (
-                f"Avalanche Samples - REFRIGERATED\n{self.cluster_number} – "
+                f"Avalanche Samples - REFRIGERATED\nCluster {self.cluster_number} – "
                 f"{self.year}\n{transect_code}\nGrower Name______________\n"
                 f"Date_____________\n\nSample List:\n" +
                 "\n".join(AVALANCHE_REFRIGERATED_SAMPLES)
@@ -1067,7 +1118,7 @@ class LabelGenerator:
             all_labels.append(refrigerated_label)
             total_labels += 1
 
-            booklet_label = f"Sampling Booklet\n{self.cluster_number} – {
+            booklet_label = f"Sampling Booklet\nCluster {self.cluster_number} – {
                 self.year}\n{transect_code}\nGrower Name______________"
             all_labels.append(booklet_label)
             total_labels += 1
