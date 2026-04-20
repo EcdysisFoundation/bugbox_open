@@ -839,6 +839,196 @@ class LabelGenerator:
 
         return doc
 
+    def _shade_cell(self, cell, fill_hex):
+        """
+        Apply a solid background fill to a table cell using the w:shd XML element.
+        """
+        try:
+            tc = cell._tc
+            tc_pr = tc.get_or_add_tcPr()
+
+            for existing in tc_pr.findall(qn('w:shd')):
+                tc_pr.remove(existing)
+
+            shd = OxmlElement('w:shd')
+            shd.set(qn('w:val'), 'clear')
+            shd.set(qn('w:color'), 'auto')
+            shd.set(qn('w:fill'), fill_hex.upper().lstrip('#'))
+            tc_pr.append(shd)
+        except Exception:
+            pass
+
+    def _fill_template_by_groups(self, doc, groups_of_labels, group_colors=None):
+        """Fill the template with groups of labels"""
+        if not doc.tables or not groups_of_labels:
+            return doc
+
+        template_table = None
+        for table in doc.tables:
+            try:
+                for row in table.rows:
+                    if any('LABEL' in c.text.upper() for c in list(row.cells)):
+                        template_table = table
+                        break
+                if template_table:
+                    break
+            except (ValueError, AttributeError):
+                continue
+
+        if template_table is None:
+            flat = []
+            for g in groups_of_labels:
+                flat.extend(g)
+            return self._create_tables_for_labels(doc, [flat])
+
+        template_table_xml = deepcopy(template_table._tbl)
+        original_table_style = None
+        original_style_val = None
+        try:
+            original_table_style = template_table.style
+            original_tbl_pr = template_table._tbl.tblPr
+            if original_tbl_pr is not None:
+                for child in original_tbl_pr:
+                    if 'tblStyle' in child.tag:
+                        original_style_val = child.get(
+                            '{http://schemas.openxmlformats.org/wordprocessingml/2006/main}val')
+                        break
+        except Exception:
+            pass
+
+        label_cell_positions = []
+        try:
+            for row_idx, row in enumerate(template_table.rows):
+                for col_idx, cell in enumerate(list(row.cells)):
+                    if 'LABEL' in cell.text.upper():
+                        label_cell_positions.append((row_idx, col_idx))
+        except (ValueError, AttributeError):
+            pass
+
+        if not label_cell_positions:
+            return doc
+
+        def _add_template_table():
+            """Append a page break + fresh template-table copy to the document."""
+            doc.add_page_break()
+            new_tbl = deepcopy(template_table_xml)
+            doc._body._body.append(new_tbl)
+            new_table = doc.tables[-1]
+            if original_style_val:
+                try:
+                    new_tbl_pr = new_table._tbl.get_or_add_tblPr()
+                    has_style = any('tblStyle' in child.tag for child in new_tbl_pr)
+                    if has_style:
+                        for child in new_tbl_pr:
+                            if 'tblStyle' in child.tag:
+                                child.set(
+                                    '{http://schemas.openxmlformats.org/wordprocessingml/2006/main}val',
+                                    original_style_val)
+                                break
+                    else:
+                        tbl_style = OxmlElement('w:tblStyle')
+                        tbl_style.set(qn('w:val'), original_style_val)
+                        new_tbl_pr.append(tbl_style)
+                    if original_table_style:
+                        new_table.style = original_table_style
+                except Exception:
+                    try:
+                        if original_table_style:
+                            new_table.style = original_table_style
+                    except Exception:
+                        pass
+            return new_table
+
+        def _fill_one_table(table, labels, start_idx, fill_color=None):
+
+            filled = 0
+            try:
+                rows = list(table.rows)
+            except (ValueError, AttributeError):
+                return 0
+
+            for (row_idx, col_idx) in label_cell_positions:
+                if start_idx + filled >= len(labels):
+                    break
+                if row_idx >= len(rows):
+                    break
+                try:
+                    cells = list(rows[row_idx].cells)
+                    if col_idx >= len(cells):
+                        continue
+                    cell = cells[col_idx]
+                    label_text = labels[start_idx + filled]
+
+                    replaced = False
+                    for paragraph in cell.paragraphs:
+                        if paragraph.runs:
+                            for run in paragraph.runs:
+                                if 'LABEL' in run.text.upper():
+                                    fmt_size = run.font.size
+                                    fmt_bold = run.font.bold
+                                    fmt_name = run.font.name
+                                    run.text = re.sub(
+                                        r'LABEL', label_text, run.text, flags=re.IGNORECASE)
+                                    if fmt_size:
+                                        run.font.size = fmt_size
+                                    if fmt_bold is not None:
+                                        run.font.bold = fmt_bold
+                                    if fmt_name:
+                                        run.font.name = fmt_name
+                                    replaced = True
+                                    break
+                        if replaced:
+                            break
+
+                    if not replaced:
+                        new_text = re.sub(r'LABEL', label_text, cell.text, flags=re.IGNORECASE)
+                        cell.text = new_text
+                        if cell.paragraphs:
+                            for paragraph in cell.paragraphs:
+                                for run in paragraph.runs:
+                                    if not run.font.size:
+                                        run.font.size = Pt(11)
+                                    if run.font.bold is None:
+                                        run.font.bold = True
+
+                    if fill_color:
+                        self._shade_cell(cell, fill_color)
+
+                    filled += 1
+                except (ValueError, AttributeError, IndexError):
+                    continue
+
+            return filled
+
+        first_group = True
+        for group_idx, group_labels in enumerate(groups_of_labels):
+            if not group_labels:
+                continue
+
+            fill_color = (
+                group_colors[group_idx]
+                if group_colors and group_idx < len(group_colors)
+                else None
+            )
+
+            if not first_group:
+                _add_template_table()
+
+            label_idx = 0
+            while label_idx < len(group_labels):
+                current_table = doc.tables[-1]
+                filled = _fill_one_table(current_table, group_labels, label_idx, fill_color)
+                if filled == 0:
+                    break
+                label_idx += filled
+                if label_idx < len(group_labels):
+                    _add_template_table()
+
+            first_group = False
+
+        self._remove_pages_after_last_filled_cell(doc)
+        return doc
+
     def generate_quick_labels_avalanche(self, num_transects):
         """Generate all labels for Avalanche project. complete set per transect"""
 
@@ -849,28 +1039,27 @@ class LabelGenerator:
 
         doc = self._load_template()
 
-        # Order labels by transect (sample code)
-        labels_in_order = []
+        groups_of_labels = []
         total_labels = 0
 
-        for transect_code in transect_codes:
-            for sample_type_code in all_sample_types:
-                sample_type_display = self.get_sample_type_display(sample_type_code)
-                labels_per_transect = 2 if sample_type_code in ['yield_sample', 'forage'] else 1
+        for sample_type_code in all_sample_types:
+            sample_type_display = self.get_sample_type_display(sample_type_code)
+            labels_per_transect = 2 if sample_type_code in ['yield_sample', 'forage'] else 1
+            group = []
+            for transect_code in transect_codes:
                 label_text = self.create_label_text(sample_type_display, transect_code)
                 for _ in range(labels_per_transect):
-                    labels_in_order.append(label_text)
+                    group.append(label_text)
                     total_labels += 1
-
-        labels_by_column = [labels_in_order]
+            groups_of_labels.append(group)
 
         if doc.tables:
-            if self._template_has_placeholders(doc):
-                doc = self._fill_template_with_placeholders(doc, labels_by_column)
-            else:
-                doc = self._fill_template_labels(doc, labels_by_column)
+            doc = self._fill_template_by_groups(doc, groups_of_labels)
         else:
-            doc = self._create_tables_for_labels(doc, labels_by_column)
+            flat = []
+            for g in groups_of_labels:
+                flat.extend(g)
+            doc = self._create_tables_for_labels(doc, [flat])
 
         buffer = BytesIO()
         doc.save(buffer)
@@ -905,25 +1094,29 @@ class LabelGenerator:
 
         self.generated_codes = saved_codes
 
-        # Generate inner labels grouped by site code
         doc = self._load_template()
-        all_labels = []
         total_labels = 0
 
-        for site_code in site_codes:
-            for sample_type_code in self.sample_types:
-                sample_type_display = self.get_sample_type_display(sample_type_code)
-
+        groups_of_labels = []
+        for sample_type_code in self.sample_types:
+            sample_type_display = self.get_sample_type_display(sample_type_code)
+            group = []
+            for site_code in site_codes:
                 for t_num in range(1, 5):
                     label_text = self.create_ignite_inner_label(
                         sample_type_display, site_code, t_num
                     )
-                    all_labels.append(label_text)
+                    group.append(label_text)
                     total_labels += 1
+            groups_of_labels.append(group)
 
-        [all_labels]
-
-        doc = self._fill_ignite_labels_sequential(doc, all_labels)
+        if doc.tables:
+            doc = self._fill_template_by_groups(doc, groups_of_labels)
+        else:
+            flat = []
+            for g in groups_of_labels:
+                flat.extend(g)
+            doc = self._create_tables_for_labels(doc, [flat])
 
         buffer = BytesIO()
         doc.save(buffer)
@@ -1063,24 +1256,28 @@ class LabelGenerator:
         return f"Cluster {self.cluster_number} – {self.year}\n{sample_type}\nSite: {site_code}"
 
     def generate_outer_labels_ignite(self, site_codes):
-        """Generate outer labels for Ignite"""
+        """Generate outer labels for Ignite – one sample type per page."""
         doc = self._load_template()
-        all_labels = []
         total_labels = 0
 
-        for site_code in site_codes:
-            for sample_type_code in self.sample_types:
-                sample_type_display = self.get_sample_type_display(sample_type_code)
-
-                label_text = self.create_ignite_outer_label(
-                    sample_type_display, site_code
-                )
-                all_labels.append(label_text)
+        # One group per sample type; each type gets its own page(s).
+        groups_of_labels = []
+        for sample_type_code in self.sample_types:
+            sample_type_display = self.get_sample_type_display(sample_type_code)
+            group = []
+            for site_code in site_codes:
+                label_text = self.create_ignite_outer_label(sample_type_display, site_code)
+                group.append(label_text)
                 total_labels += 1
+            groups_of_labels.append(group)
 
-        [all_labels]
-
-        doc = self._fill_ignite_labels_sequential(doc, all_labels)
+        if doc.tables:
+            doc = self._fill_template_by_groups(doc, groups_of_labels)
+        else:
+            flat = []
+            for g in groups_of_labels:
+                flat.extend(g)
+            doc = self._create_tables_for_labels(doc, [flat])
 
         buffer = BytesIO()
         doc.save(buffer)
@@ -1089,74 +1286,49 @@ class LabelGenerator:
         return buffer, total_labels
 
     def generate_outer_labels_avalanche(self, transect_codes):
+        """Generate outer labels for Avalanche – one label category per page."""
         doc = self._load_template()
-
-        all_labels = []
         total_labels = 0
 
-        for transect_code in transect_codes:
-            kit_label = f"Avalanche Sampling Kit - Ecdysis Foundation\nCluster {self.cluster_number} – {
-                self.year}\n{transect_code}\nGrower Name______________\nDate_____________"
-            all_labels.append(kit_label)
-            total_labels += 1
+        kit_labels = []
+        room_temp_labels = []
+        refrigerated_labels = []
+        booklet_labels = []
 
-            room_temp_label = (
+        for transect_code in transect_codes:
+            kit_labels.append(
+                f"Avalanche Sampling Kit - Ecdysis Foundation\nCluster {self.cluster_number} – "
+                f"{self.year}\n{transect_code}\nGrower Name______________\nDate_____________"
+            )
+            room_temp_labels.append(
                 f"Avalanche Samples - Room Temp\nCluster {self.cluster_number} – "
                 f"{self.year}\n{transect_code}\nGrower Name______________\n"
                 f"Date_____________\n\nSample List:\n" +
                 "\n".join(AVALANCHE_ROOM_TEMP_SAMPLES)
             )
-            all_labels.append(room_temp_label)
-            total_labels += 1
-
-            refrigerated_label = (
+            refrigerated_labels.append(
                 f"Avalanche Samples - REFRIGERATED\nCluster {self.cluster_number} – "
                 f"{self.year}\n{transect_code}\nGrower Name______________\n"
                 f"Date_____________\n\nSample List:\n" +
                 "\n".join(AVALANCHE_REFRIGERATED_SAMPLES)
             )
-            all_labels.append(refrigerated_label)
-            total_labels += 1
+            booklet_labels.append(
+                f"Sampling Booklet\nCluster {self.cluster_number} – "
+                f"{self.year}\n{transect_code}\nGrower Name______________"
+            )
+            total_labels += 4
 
-            booklet_label = f"Sampling Booklet\nCluster {self.cluster_number} – {
-                self.year}\n{transect_code}\nGrower Name______________"
-            all_labels.append(booklet_label)
-            total_labels += 1
+        groups_of_labels = [kit_labels, room_temp_labels, refrigerated_labels, booklet_labels]
 
-        num_cols_available = 1
-        if doc.tables and len(doc.tables) > 0:
-            first_table = doc.tables[0]
-            num_template_cols = len(first_table.rows[0].cells) if first_table.rows else 1
-
-            template_cols_with_label = []
-            for row in first_table.rows:
-                for col_idx in range(len(row.cells)):
-                    try:
-                        if 'LABEL' in row.cells[col_idx].text.upper():
-                            if col_idx not in template_cols_with_label:
-                                template_cols_with_label.append(col_idx)
-                    except (IndexError, AttributeError):
-                        continue
-                if template_cols_with_label:
-                    break
-
-            num_cols_available = len(template_cols_with_label) if template_cols_with_label else num_template_cols
-
-        if num_cols_available > 1:
-            labels_by_column = []
-            for i in range(num_cols_available):
-                column_labels = [all_labels[j] for j in range(i, len(all_labels), num_cols_available)]
-                labels_by_column.append(column_labels)
-        else:
-            labels_by_column = [all_labels]
+        group_colors = [None, None, 'CCE5FF', None]
 
         if doc.tables:
-            if self._template_has_placeholders(doc):
-                doc = self._fill_template_with_placeholders(doc, labels_by_column)
-            else:
-                doc = self._fill_template_labels(doc, labels_by_column)
+            doc = self._fill_template_by_groups(doc, groups_of_labels, group_colors=group_colors)
         else:
-            doc = self._create_tables_for_labels(doc, labels_by_column)
+            flat = []
+            for g in groups_of_labels:
+                flat.extend(g)
+            doc = self._create_tables_for_labels(doc, [flat])
 
         buffer = BytesIO()
         doc.save(buffer)
@@ -1203,7 +1375,7 @@ class LabelGenerator:
         return doc
 
     def generate_document_with_table(self):
-        """Generate Word document with labels organized by sample type in columns using template"""
+        """Generate Word document with labels"""
         total_labels = len(self.sample_types) * self.labels_per_type
 
         transect_codes = self.generate_unique_sample_codes(total_labels)
@@ -1212,27 +1384,27 @@ class LabelGenerator:
         doc = self._load_template()
 
         code_index = 0
-        labels_by_column = []
+        groups_of_labels = []
 
         for sample_type_code in self.sample_types:
             sample_type_display = self.get_sample_type_display(sample_type_code)
-            column_labels = []
+            group = []
 
             for _ in range(self.labels_per_type):
                 transect_code = transect_codes[code_index]
                 label_text = self.create_label_text(sample_type_display, transect_code)
-                column_labels.append(label_text)
+                group.append(label_text)
                 code_index += 1
 
-            labels_by_column.append(column_labels)
+            groups_of_labels.append(group)
 
         if doc.tables:
-            if self._template_has_placeholders(doc):
-                doc = self._fill_template_with_placeholders(doc, labels_by_column)
-            else:
-                doc = self._fill_template_labels(doc, labels_by_column)
+            doc = self._fill_template_by_groups(doc, groups_of_labels)
         else:
-            doc = self._create_tables_for_labels(doc, labels_by_column)
+            flat = []
+            for g in groups_of_labels:
+                flat.extend(g)
+            doc = self._create_tables_for_labels(doc, [flat])
 
         buffer = BytesIO()
         doc.save(buffer)
