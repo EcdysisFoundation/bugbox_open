@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+{% load timezone_filters %}
+
+{% block title %}Delete Label Generation{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="fas fa-trash-alt"></i> Confirm deletion</h5>
+                </div>
+                <div class="card-body">
+                    <p class="lead">Delete this label generation record?</p>
+
+                    <ul class="list-unstyled mt-3">
+                        <li><strong>ID:</strong> {{ generation.id }}</li>
+                        <li><strong>Project:</strong> {{ generation.get_project_type_display }}</li>
+                        <li><strong>Category:</strong> {{ generation.get_label_category_display }}</li>
+                        <li><strong>Cluster:</strong> {{ generation.cluster_number }}</li>
+                        <li><strong>Year:</strong> {{ generation.year }}</li>
+                        <li><strong>Generated at:</strong> {{ generation.generated_at|user_datetime:user_timezone }}</li>
+                    </ul>
+
+                    {% if generation.label_category == 'inner' %}
+                    <div class="alert alert-warning">
+                        <strong>Inner generation:</strong> The sample codes listed for this batch will be
+                        <strong>removed from the database</strong> (if they are not in use and not assigned to growers),
+                        so the same codes can be generated again in a new run.
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <strong>Outer generation:</strong> Only this history entry and stored file are removed.
+                        Sample codes are <strong>not</strong> deleted (they belong to the inner generation that created them).
+                    </div>
+                    {% endif %}
+
+                    <form method="post" class="mt-4">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'grower_portal:label_generation_list' %}" class="btn btn-secondary">
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash-alt"></i> Yes, delete
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

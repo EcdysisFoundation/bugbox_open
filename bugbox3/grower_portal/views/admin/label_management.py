@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
 from django.core.files.base import ContentFile
 from django.core.paginator import Paginator
+from django.db import transaction
 from django.http import FileResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
@@ -11,7 +12,7 @@ from bugbox3.core.permissions import IS_GROWERADMIN
 from ...constants import IGNITE_INNER_SAMPLE_TYPES, IGNITE_OUTER_SAMPLE_TYPES, SAMPLE_TYPES
 from ...forms.admin.label_forms import QuickLabelGenerationForm
 from ...middleware import get_user_timezone
-from ...models import LabelGeneration
+from ...models import LabelGeneration, SampleCode
 from ...services.label_generator import LabelGenerator
 
 
@@ -302,6 +303,78 @@ def label_generation_download(request, generation_id):
     response['Content-Disposition'] = f'attachment; filename="{generation.label_file.name.split("/")[-1]}"'
 
     return response
+
+
+@login_required
+@permission_required(IS_GROWERADMIN, raise_exception=True)
+def label_generation_delete(request, generation_id):
+    """
+    Delete a label generation record. For inner generations, also removes the
+    SampleCode rows created for that batch (listed in transect_codes_generated)
+    so codes can be generated again, unless any code is in use or mapped to a grower.
+    Outer generations only remove the history row and stored file.
+    """
+    generation = get_object_or_404(
+        LabelGeneration.objects.select_related('generated_by'),
+        id=generation_id,
+    )
+
+    if request.method == 'POST':
+        try:
+            was_inner = generation.label_category == 'inner'
+            with transaction.atomic():
+                raw_codes = generation.transect_codes_generated or []
+                code_strings = [str(c).strip() for c in raw_codes if str(c).strip()]
+
+                if generation.label_category == 'inner' and code_strings:
+                    blocked = []
+                    for code_str in code_strings:
+                        try:
+                            sc = SampleCode.objects.select_for_update().get(code=code_str)
+                        except SampleCode.DoesNotExist:
+                            continue
+                        if (
+                            sc.is_used
+                            or sc.used_in_application_id
+                            or sc.grower_mappings.exists()
+                        ):
+                            blocked.append(code_str)
+
+                    if blocked:
+                        messages.error(
+                            request,
+                            'Cannot delete this inner label generation: the following sample codes '
+                            'are in use or assigned to growers: '
+                            + ', '.join(blocked[:20])
+                            + ('…' if len(blocked) > 20 else '')
+                            + ' Remove those assignments first, then try again.',
+                        )
+                        return redirect('grower_portal:label_generation_list')
+
+                    SampleCode.objects.filter(code__in=code_strings).delete()
+
+                if generation.label_file:
+                    generation.label_file.delete(save=False)
+                generation.delete()
+
+            messages.success(
+                request,
+                'Label generation deleted.'
+                + (
+                    ' Associated sample codes were removed and can be generated again.'
+                    if was_inner and code_strings
+                    else ''
+                ),
+            )
+        except Exception as e:
+            messages.error(request, f'Could not delete label generation: {e}')
+        return redirect('grower_portal:label_generation_list')
+
+    context = {
+        'generation': generation,
+        'user_timezone': get_user_timezone(request),
+    }
+    return render(request, 'grower_portal/admin/label_generation_delete.html', context)
 
 
 @login_required

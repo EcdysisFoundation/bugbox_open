@@ -32,6 +32,7 @@ from ..views.admin import (
     grower_detail,
     grower_list,
     inner_label_generations_json,
+    label_generation_delete,
     label_generation_detail,
     label_generation_download,
     label_generation_list,
@@ -166,6 +167,11 @@ urlpatterns = [
         'label-generations/<int:generation_id>/download/',
         label_generation_download,
         name='label_generation_download'
+    ),
+    path(
+        'label-generations/<int:generation_id>/delete/',
+        label_generation_delete,
+        name='label_generation_delete'
     ),
 
     path('submittal-form-generator/', generate_submittal_form, name='submittal_form_generator'),
