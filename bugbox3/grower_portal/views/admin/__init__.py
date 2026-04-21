@@ -33,6 +33,7 @@ from .fields import field_detail, field_list
 from .growers import grower_detail, grower_list
 from .label_management import (
     inner_label_generations_json,
+    label_generation_delete,
     label_generation_detail,
     label_generation_download,
     label_generation_list,
@@ -80,5 +81,6 @@ __all__ = [
     'label_generation_list',
     'label_generation_detail',
     'label_generation_download',
+    'label_generation_delete',
     'inner_label_generations_json',
 ]
