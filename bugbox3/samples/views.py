@@ -73,7 +73,7 @@ from .models import (
     UserLocationExportFile,
 )
 from .models_query import get_sample_plan_descriptions, get_user_choices
-from .tasks import crop_panorama_segmentation, export_csv_by_location
+from .tasks import crop_panorama_segmentation_yolo, export_csv_by_location
 from .timeline_events import audit_specimen_update, audit_specimen_view, audit_upload_images, timeline_events
 from .mixins import SpecimenResearchOrReviewerMixin
 
@@ -1515,7 +1515,7 @@ class MultiSpecimenImageView(SpecimenResearchOrReviewerMixin, FormView):
             user_id = self.request.user.id
             img_ids = [i.id for i in selected_images]
             if img_ids:
-                crop_panorama_segmentation.delay(img_ids, sample_id, user_id)
+                crop_panorama_segmentation_yolo.delay(img_ids, sample_id, user_id)
             messages.warning(self.request, 'Successfully sent {0} images to be cropped. {1}'.format(
                 len(selected_images),
                 str(prev_cropped) + ' images were skipped as already cropped.' if prev_cropped else ''

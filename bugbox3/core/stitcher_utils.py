@@ -192,7 +192,8 @@ def convert_coco_bbox_opencv(x, y, w, h):
 def crop_img_with_segmentation(
         image, annotations_segment, sample_instance, user_instance, uuid, polys_first=False):
     """
-    Crop images using their segmentation points, use polys_first=True to apply poly masks
+    Using label studio formatted polygons,
+    crop images using their segmentation points, use polys_first=True to apply poly masks
     to entire image before cropping. Default of False better handles overlapping polygons
     by applying the polygon mask to each cropped image.
     """
@@ -274,8 +275,8 @@ def crop_img_with_segmentation(
         return False
 
 
-def save_remote_image(instance_field, url, name):
-    """Helper to stream image from URL to Django Field"""
+def save_remote_file(instance_field, url, name):
+    """Helper to stream file from URL to Django Field"""
     with requests.get(url, stream=True, timeout=25) as r:
         r.raise_for_status()
         # Using a temporary file ensures we don't bloat RAM
@@ -285,3 +286,109 @@ def save_remote_image(instance_field, url, name):
             tmp_file.seek(0)
             # save=False keeps us from hitting the DB until the very end
             instance_field.save(name, File(tmp_file), save=False)
+
+
+def convert_yolo_to_coco(yolo_file, image_width, image_height):
+    """
+    Reads a YOLO segmentation .txt file from a Django FileField
+    and converts it to COCO format.
+    """
+    coco_results = []
+
+    # 1. Open the Django FileField
+    # 'rt' mode reads it as text
+    with yolo_file.open('rt') as f:
+        for line in f:
+            parts = line.strip().split()
+            if not parts:
+                continue
+
+            class_id = int(parts[0])
+            # Remaining parts are x, y, x, y...
+            coords = list(map(float, parts[1:]))
+
+            # 2. Denormalize coordinates to absolute pixels
+            abs_coords = []
+            x_points = []
+            y_points = []
+
+            for i in range(0, len(coords), 2):
+                x_abs = int(coords[i] * image_width)
+                y_abs = int(coords[i+1] * image_height)
+
+                abs_coords.append(x_abs)
+                abs_coords.append(y_abs)
+                x_points.append(x_abs)
+                y_points.append(y_abs)
+
+            # 3. Calculate Bounding Box [x_min, y_min, width, height]
+            x_min = min(x_points)
+            y_min = min(y_points)
+            bbox_width = max(x_points) - x_min
+            bbox_height = max(y_points) - y_min
+
+            # 4. Format for COCO
+            coco_results.append({
+                "category_id": class_id,
+                "segmentation": [abs_coords],  # COCO expects a list of polygons
+                "bbox": [int(x_min), int(y_min), int(bbox_width), int(bbox_height)],
+                "area": int(bbox_width * bbox_height),  # Simplified area
+                "iscrowd": 0
+            })
+
+    return coco_results
+
+
+def crop_img_with_segmentation_yolo(
+        image, yolo_file, sample_instance, user_instance, uuid):
+    if settings.ON_ECDYSIS_SERVER != 'YES':
+        # high memory usage, do on local server
+        print('Warning: function disabled when not ON_ECDYSIS_SERVER')
+        return
+
+    img_basename = Path(image.file.name).name.split(".")[:-1]
+    completed = 0
+
+    with closing(image.open()) as img:
+        file_bytes = img.read()
+        np_arr = np.frombuffer(file_bytes, np.uint8)
+        np_arr = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+        height, width = np_arr.shape[:2]
+
+    if np_arr.shape[2] == 3:
+        np_arr = cv2.cvtColor(np_arr, cv2.COLOR_BGR2BGRA)
+
+    coco_results = convert_yolo_to_coco(yolo_file, width, height)
+    for i, label in enumerate(coco_results):
+        x_min, y_min, w, h = label['bbox']
+        if w < 50 or h < 50:
+            # skip very small annotations
+            completed += 1
+            continue
+        y_start, y_end, x_start, x_end = convert_coco_bbox_opencv(x_min, y_min, w, h)
+        cropped_img = np_arr[y_start:y_end, x_start:x_end]
+        i_mask = np.zeros((h, w), dtype=np.uint8)
+        np_poly = np.array(label['segmentation'], dtype=np.int32).reshape(-1, 2)
+        pts_local = np_poly - np.array([[x_min, y_min]])
+        cv2.fillPoly(i_mask, (pts_local, ), 255)
+        cropped_img[:, :, 3] = i_mask
+        success, buffer = cv2.imencode(".png", cropped_img)
+        if success:
+            out_filename = f"{img_basename}_{i}.png"
+            content = ContentFile(buffer.tobytes())
+            content.name = out_filename
+            specimen = Specimen.objects.create(
+                sample=sample_instance,
+                created_by_user=user_instance)
+            SpecimenImage.objects.create(
+                specimen=specimen,
+                image=content,
+                multispecimen_image_uuid=uuid,
+                multispecimen_image_index=i,
+                uploaded_by_user=user_instance
+            )
+            completed += 1
+    if completed == len(coco_results):
+        return True
+    else:
+        return False

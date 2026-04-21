@@ -58,12 +58,6 @@ function startPollingForNewImage(panoramaStatusUrl, initialTimestamp, initialPat
 $(function () {
     const json_context = JSON.parse(document.getElementById('json_context').textContent)
 
-    // something like this to prevent double click, but this causes the button to not actually submit
-    //const cropSaveButton = document.getElementById('sample_id-btn');
-    //cropSaveButton.addEventListener('click', function() {
-    //    this.disabled = true;
-    //});
-
     const confidenceStorageKey = STORAGE_KEY_PREFIX + json_context.guid;
     const defaultConfidence = (
         localStorage.getItem(confidenceStorageKey) ||
