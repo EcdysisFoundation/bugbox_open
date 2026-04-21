@@ -12,7 +12,7 @@ from organizations.models import OrganizationUser
 from bugbox3.libs.utilities import cast_utc_time, get_json_context
 from bugbox3.samples.constants import STITCHER_SAMPLE_TYPES
 from bugbox3.samples.models import MultiSpecimenImage, Sample
-from bugbox3.samples.tasks import crop_panorama_segmentation
+from bugbox3.samples.tasks import crop_panorama_segmentation, crop_panorama_segmentation_yolo
 
 from . import constants
 from .forms import StitcherDeleteForm, StitcherForm
@@ -32,7 +32,7 @@ from .stitcher_api import (
     get_upload_file,
     patch_upload_file,
 )
-from .stitcher_utils import save_remote_image
+from .stitcher_utils import save_remote_file
 
 
 class StitcherView(PermissionRequiredMixin, TemplateView):
@@ -98,11 +98,11 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
         self.omit_from_training = None
         self.cvat_label_file_src = None
         if {constants.STITCHER_LABEL_PROJECT_DIR,
-            constants.STITCHER_LABEL_FILE,
-            constants.STITCHER_LABEL_FILE_UPDATED_AT} <= self.data.keys():
-                self.cvat_label_file_src = f'{self.stitcher_js_url}/cvat_projects/' \
-                                           f'{self.data[constants.STITCHER_LABEL_PROJECT_DIR]}/' \
-                                           f'{self.data[constants.STITCHER_LABEL_FILE]}'
+                constants.STITCHER_LABEL_FILE,
+                constants.STITCHER_LABEL_FILE_UPDATED_AT} <= self.data.keys():
+            self.cvat_label_file_src = f'/cvat_projects/' \
+                                        f'{self.data[constants.STITCHER_LABEL_PROJECT_DIR]}/' \
+                                        f'{self.data[constants.STITCHER_LABEL_FILE]}'
         if constants.STITCHER_PANORAMA_PATH in self.data.keys():
             if self.data[constants.STITCHER_PANORAMA_PATH]:
                 self.img_src = self.data[constants.STITCHER_PANORAMA_PATH].replace('/media/', '/static/')
@@ -125,6 +125,7 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
             raise Http404
         disable_stitching = True
         disable_crop_save = True
+        disable_crop_save_cvat = True
         disable_delete = False
         potential_samples = []
         first_potential_sample = None
@@ -143,13 +144,17 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                     and self.data[constants.STITCHER_APPROVED]
                     and self.data[constants.STITCHER_BUGBOX_SAMPLE_ID]):
                 disable_crop_save = False
+            if (self.data[constants.STITCHER_APPROVED]
+                    and self.data[constants.STITCHER_BUGBOX_SAMPLE_ID]
+                    and self.data[constants.STITCHER_LABEL_FILE]):
+                disable_crop_save_cvat = False
         context.update({
             'data': self.data,
             'task_response': self.task_response,
             'panorama_name': self.panorama_name,
             'img_src': f'{self.stitcher_js_url}{self.img_src}',
             'thumbnail_src': f'{self.stitcher_js_url}{self.thumbnail_src}',
-            'cvat_label_file_src': self.cvat_label_file_src,
+            'cvat_label_file_src': f'{self.stitcher_js_url}{self.cvat_label_file_src}',
             'label_src': f'{self.stitcher_js_url}{self.label_thumb_src}',
             'potential_samples': potential_samples,
             'nota_sample': self.nota_sample,
@@ -157,9 +162,11 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
             'form_action_url': reverse(
                 'core:stitcher-form', kwargs={'guid': str(self.guid)}),
             'form_iden_crop_save': constants.STITCHER_FORM_CROPSAVE,
+            'form_iden_crop_save_cvat': constants.STITCHER_FORM_CROPSAVE_CVAT,
             'form_iden_default': constants.STITCHER_FORM_DEFAULT,
             'form_iden_post_cropped': constants.STITCHER_FORM_POST_CROPPED,
             'disable_crop_save': disable_crop_save,
+            'disable_crop_save_cvat': disable_crop_save_cvat,
             'json_context': get_json_context({
                 constants.STITCHER_GUID: self.guid,
                 'STITCHER_URL': self.stitcher_js_url,
@@ -277,6 +284,7 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                 self.request, f'Successfully updated {self.guid}'
             )
         elif formdata[constants.STITCHER_FORM_IDENT] == constants.STITCHER_FORM_CROPSAVE:
+            # TO BE DEPRICATED: TO BE REMOVED AFTER ALL LABEL STUDIO ANNOTATIONS FINALIZED ON BUGBOX
             try:
                 this_sample = Sample.objects.user_access(self.request.user).get(
                     id=self.data[constants.STITCHER_BUGBOX_SAMPLE_ID])
@@ -294,13 +302,13 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                     uploaded_by_user=self.request.user)
 
                 img_url = f'{self.stitcher_url}{self.img_src}'
-                save_remote_image(instance.image, img_url, f'{self.data[constants.STITCHER_UPLOAD_DIR_NAME]}.jpg')
+                save_remote_file(instance.image, img_url, f'{self.data[constants.STITCHER_UPLOAD_DIR_NAME]}.jpg')
 
                 if self.thumbnail_src:
                     thumbnail_url = f'{self.stitcher_url}{self.thumbnail_src}'
                     thumb_name = f'{self.data[constants.STITCHER_UPLOAD_DIR_NAME]}_thumbnail.jpg'
                     try:
-                        save_remote_image(instance.image_thumbnail, thumbnail_url, thumb_name)
+                        save_remote_file(instance.image_thumbnail, thumbnail_url, thumb_name)
                     except Exception as e:
                         messages.warning(
                             self.request,
@@ -310,7 +318,7 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                 label_url = f'{self.stitcher_url}{self.label_thumb_src}'
                 label_img_name = f'{self.data[constants.STITCHER_UPLOAD_DIR_NAME]}_label.jpg'
                 try:
-                    save_remote_image(instance.label_image, label_url, label_img_name)
+                    save_remote_file(instance.label_image, label_url, label_img_name)
                 except Exception as e:
                     messages.warning(
                             self.request,
@@ -336,6 +344,67 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                 messages.error(self.request, f'Error, possible duplicate image for this record, {e}')
             except Exception as e:
                 messages.error(self.request, f'There was an error in "Save to sample". {e}')
+
+        elif formdata[constants.STITCHER_FORM_IDENT] == constants.STITCHER_FORM_CROPSAVE_CVAT:
+            try:
+                this_sample = Sample.objects.user_access(self.request.user).get(
+                    id=self.data[constants.STITCHER_BUGBOX_SAMPLE_ID])
+            except Exception:
+                raise Http404
+            try:
+                instance = MultiSpecimenImage(
+                    sample=this_sample,
+                    panorama_filename=self.panorama_name,
+                    upload_dir_name=self.data[constants.STITCHER_UPLOAD_DIR_NAME],
+                    uuid=self.data[constants.STITCHER_GUID],
+                    uploaded_by_user=self.request.user)
+
+                # save external media
+                img_url = f'{self.stitcher_url}{self.img_src}'
+                yolo_label_url = f'{self.stitcher_url}{self.cvat_label_file_src}'
+                save_remote_file(instance.image, img_url, f'{self.guid}.jpg')
+                save_remote_file(instance.yolo_label_file, yolo_label_url, f'{self.guid}.txt')
+
+                if self.thumbnail_src:
+                    thumbnail_url = f'{self.stitcher_url}{self.thumbnail_src}'
+                    thumb_name = f'{self.guid}_thumbnail.jpg'
+                    try:
+                        save_remote_file(instance.image_thumbnail, thumbnail_url, thumb_name)
+                    except Exception as e:
+                        messages.warning(
+                            self.request,
+                            f'Warning: Thumbnail {self.thumbnail_src} did not save due to {e}.'
+                        )
+                try:
+                    label_url = f'{self.stitcher_url}{self.label_thumb_src}'
+                    label_img_name = f'{self.data[constants.STITCHER_UPLOAD_DIR_NAME]}_label.jpg'
+                    save_remote_file(instance.label_image, label_url, label_img_name)
+                except Exception as e:
+                    messages.warning(
+                            self.request,
+                            f'Warning: Label image {self.label_thumb_src} did not save due to {e}.'
+                        )
+                # complete instance save
+                instance.save()
+
+                if not this_sample.image and instance.label_image:
+                    # copy the label to sample if appilicable
+                    this_sample.image.save(label_img_name, instance.label_image.file, save=True)
+
+                user_id = self.request.user.id
+                transaction.on_commit(
+                    lambda: crop_panorama_segmentation_yolo.delay((instance.id,), this_sample.id, user_id)
+                )
+                messages.success(
+                    self.request, f'Successfully initiated "Save to sample and crop" for {self.guid}')
+                self.data[constants.STITCHER_BUGBOX_CROPED_SAVED] = str(instance.id)
+                self.data[constants.STITCHER_BUGBOX_REJECTED] = None
+                patch_upload_file(self.guid, self.data)
+            except IntegrityError as e:
+                messages.error(self.request, f'Error, possible duplicate image for this record, {e}')
+            except Exception as e:
+                messages.error(self.request, f'There was an error in "Save to sample". {e}')
+
         else:
             messages.error(self.request, 'There was an error in form submission.')
         return super().form_valid(form)

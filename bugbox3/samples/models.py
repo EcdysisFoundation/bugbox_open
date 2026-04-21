@@ -293,14 +293,13 @@ class MultiSpecimenImage(Model):
     uuid = UUIDField(default=uuid.uuid4, unique=True)
     panorama_filename = CharField(max_length=100, blank=True)
     upload_dir_name = CharField(max_length=100, blank=True)
-    annotations = JSONField(null=True, blank=True)
+    annotations = JSONField(null=True, blank=True)  # object detection
     annotations_updated_at = CharField(max_length=100, blank=True)
     annotations_segment = JSONField(null=True, blank=True)
     annotations_updated_at_segment = CharField(max_length=100, blank=True)
-    predictions = JSONField(null=True, blank=True)
-    predictions_timestamp = DateTimeField(null=True)
-    predictions_coco = JSONField(null=True, blank=True)
-    predictions_timestamp_coco = DateTimeField(null=True)
+    annotations_segment_format = CharField(
+        max_length=100, blank=True, choices=constants.ANNOTATIONS_FORMAT_CHOICES)
+    yolo_label_file = FileField(null=True, upload_to='annotations')
     image = ImageField(upload_to='multi_specimen_images')
     image_thumbnail = ImageField(null=True, blank=True, upload_to='multi_specimen_images')
     label_image = ImageField(null=True, blank=True, upload_to='multi_specimen_images')
