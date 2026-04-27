@@ -15,9 +15,6 @@ class Command(BaseCommand):
     PrivateSiteContent = apps.get_model('core', 'PrivateSiteContent')
 
     def handle(self, *args, **options):
-        if settings.ON_ECDYSIS_SERVER != 'YES':
-            self.stdout.write(self.style.ERROR('Currently this cmd is only supported on Ecdysis01'))
-            return
 
         model_name = 'model_name'
         morphospecies_id = 'morphospecies_id'
