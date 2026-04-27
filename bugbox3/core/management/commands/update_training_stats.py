@@ -3,9 +3,7 @@ import csv
 from django.apps import apps
 from django.conf import settings
 from django.core.management.base import BaseCommand
-
-# from datetime import datetime
-
+from django.db import transaction
 
 class Command(BaseCommand):
     """
@@ -14,84 +12,97 @@ class Command(BaseCommand):
     Specimen = apps.get_model(app_label='samples', model_name='Specimen')
     AiTraining = apps.get_model('taxonomy', 'AiTraining')
     Morphospecies = apps.get_model('taxonomy', 'Morphospecies')
+    PrivateSiteContent = apps.get_model('core', 'PrivateSiteContent')
 
     def handle(self, *args, **options):
         if settings.ON_ECDYSIS_SERVER != 'YES':
-            print('Currently this cmd is only supported on Ecdysis01')
+            self.stdout.write(self.style.ERROR('Currently this cmd is only supported on Ecdysis01'))
             return
 
-        csv_path = 'local_files/dataset_report_stats.csv'
         model_name = 'model_name'
         morphospecies_id = 'morphospecies_id'
-        h = ['', 'TP', 'FP', 'TN', 'FN', 'Precision', 'Recall', 'F1', 'Total_samples',
+        required_headers = ['', 'TP', 'FP', 'TN', 'FN', 'Precision', 'Recall', 'F1', 'Total_samples',
              model_name, 'morphos_name',
              'dataset_report_train', 'dataset_report_val',
              'dataset_report_test', 'dataset_report_morphos_name', 'dataset_report_total_samples']
 
-        with open(csv_path, newline='') as file:
-            reader = csv.reader(file)
-            headers = next(reader)
-            data = [row for row in reader]
-            if headers == h:
-                print('Headers read as expected')
-            else:
-                print('Headers not as expected, got..')
-                print(headers)
-                print('expected...')
-                print(h)
-                return
-            h[0] = morphospecies_id
+        recent_dataset_report_stats = self.PrivateSiteContent.objects.filter(
+            title__icontains='dataset_report_stats',
+            file__icontains='dataset_report_stats').last()
 
-            version = [row[h.index(model_name)] for row in data]
-            version = list(set(version))
-            if len(version) != 1:
-                print('More than one model_name version represented in file. Is this an error? got...')
-                print(len)
-                return
-            else:
-                version = version[0]
+        if not recent_dataset_report_stats:
+            self.stdout.write(self.style.ERROR("No dataset report stats file found."))
+            return
 
-            print('Processing data for model version {0}'.format(version))
-            print('Checking that model doesnt already have stats data....')
+        with recent_dataset_report_stats.file.open('r') as csv_data:
 
-            v = self.AiTraining.objects.filter(model_name=version)
-            if v:
-                message = 'WARNING: {0} records with model_name = {1} already exist, exiting.'.format(
-                    len(v), version
-                )
-                # or make function to delete existing to update
-                print(message)
+            reader = csv.DictReader(csv_data)
+            headers = list(reader.fieldnames)
+            if not all(h in headers for h in required_headers):
+                raise ValueError(f"Missing headers! {headers} != {required_headers}")
+            # rename expected blank first header
+            headers[0] = morphospecies_id
+            reader.fieldnames = headers
+
+            data = list(reader)
+            if not data:
+                self.stdout.write("File is empty.")
                 return
-            print('No previous entries, continuing ....')
-            obs = []
-            for d in data:
-                try:
-                    obs.append(self.AiTraining(
-                        model_name=version,
-                        morphospecies=self.Morphospecies.objects.get(
-                            id=int(d[h.index(morphospecies_id)])),
-                        total=int(d[h.index('dataset_report_total_samples')]),
-                        precision=float(d[h.index('Precision')]),
-                        recall=float(d[h.index('Recall')]),
-                        f1=float(d[h.index('F1')]),
-                        tp=int(d[h.index('TP')]),
-                        fp=int(d[h.index('FP')]),
-                        tn=int(d[h.index('TN')]),
-                        fn=int(d[h.index('FN')]),
-                        train=int(d[h.index('dataset_report_train')]),
-                        test=int(d[h.index('dataset_report_test')]),
-                        val=int(d[h.index('dataset_report_val')]),
-                    ))
-                except Exception as e:
-                    print('invalid data encountered, exception ...')
-                    print(e)
-                    print('failing row...')
-                    print(d)
-                    return
-            created = self.AiTraining.objects.bulk_create(
-                obs)
-            print(
-                'created {0} AiTraining records for model_name {1}'.format(
-                    len(created), version
-                )
-            )
+
+            versions = list(set(row[model_name] for row in data))
+            if len(versions) != 1:
+                print(f'Error: Found {len(versions)} model versions, expected 1. Got: {versions}')
+                return
+
+            version = versions[0]
+
+            self.stdout.write(f'Processing data for model version {version}')
+
+            try:
+                with transaction.atomic():
+                    existing_count = self.AiTraining.objects.filter(model_name=version).count()
+                    if existing_count > 0:
+                        self.stdout.write(self.style.WARNING(
+                            f"Found {existing_count} records for {version}. Skipping."
+                        ))
+                        return
+
+                morpho_ids = set(row[morphospecies_id] for row in data if row[morphospecies_id])
+                morpho_cache = {
+                    m.id: m for m in self.Morphospecies.objects.filter(id__in=morpho_ids)
+                }
+
+                obs = []
+                for d in data:
+                    try:
+                        m_id = int(d[morphospecies_id])
+                        morpho_obj = morpho_cache.get(m_id)
+
+                        if not morpho_obj:
+                            print(f"Skipping row: Morphospecies ID {m_id} not found in database.")
+                            continue
+
+                        obs.append(self.AiTraining(
+                            model_name=version,
+                            morphospecies=morpho_obj,
+                            total=int(d['dataset_report_total_samples']),
+                            precision=float(d['Precision']),
+                            recall=float(d['Recall']),
+                            f1=float(d['F1']),
+                            tp=int(d['TP']),
+                            fp=int(d['FP']),
+                            tn=int(d['TN']),
+                            fn=int(d['FN']),
+                            train=int(d['dataset_report_train']),
+                            test=int(d['dataset_report_test']),
+                            val=int(d['dataset_report_val']),
+                        ))
+                    except Exception as e:
+                        print(f'Invalid data: {e} | Row: {d}')
+                        return
+                created = self.AiTraining.objects.bulk_create(obs)
+                print(f'created {len(created)} records for model_name {version}')
+
+            except Exception as e:
+                self.stdout.write(self.style.ERROR(f"Transaction failed and rolled back: {e}"))
+                return
