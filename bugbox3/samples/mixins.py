@@ -8,4 +8,3 @@ class SpecimenResearchOrReviewerMixin(UserPassesTestMixin):
 
     def test_func(self):
         return user_has_specimen_research_or_reviewer_access(self.request.user)
-

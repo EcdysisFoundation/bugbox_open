@@ -2,8 +2,8 @@ from rest_framework.serializers import HyperlinkedModelSerializer
 from rest_framework.viewsets import ModelViewSet
 
 from bugbox3.samples.constants import SERIALIZER_FIELDS_MUTIIMAGE
-from bugbox3.samples.models import MultiSpecimenImage
 from bugbox3.samples.mixins import SpecimenResearchOrReviewerMixin
+from bugbox3.samples.models import MultiSpecimenImage
 
 
 class MultiSpecimenSerializer(HyperlinkedModelSerializer):

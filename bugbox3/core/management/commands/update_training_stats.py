@@ -1,9 +1,9 @@
 import csv
 
 from django.apps import apps
-from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.db import transaction
+
 
 class Command(BaseCommand):
     """
@@ -18,10 +18,24 @@ class Command(BaseCommand):
 
         model_name = 'model_name'
         morphospecies_id = 'morphospecies_id'
-        required_headers = ['', 'TP', 'FP', 'TN', 'FN', 'Precision', 'Recall', 'F1', 'Total_samples',
-             model_name, 'morphos_name',
-             'dataset_report_train', 'dataset_report_val',
-             'dataset_report_test', 'dataset_report_morphos_name', 'dataset_report_total_samples']
+        required_headers = [
+            '',
+            'TP',
+            'FP',
+            'TN',
+            'FN',
+            'Precision',
+            'Recall',
+            'F1',
+            'Total_samples',
+            model_name,
+            'morphos_name',
+            'dataset_report_train',
+            'dataset_report_val',
+            'dataset_report_test',
+            'dataset_report_morphos_name',
+            'dataset_report_total_samples',
+        ]
 
         recent_dataset_report_stats = self.PrivateSiteContent.objects.filter(
             title__icontains='dataset_report_stats',

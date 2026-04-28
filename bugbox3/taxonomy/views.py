@@ -61,7 +61,11 @@ def _morphospecies_queryset_names_with_digit(qs):
     return qs.filter(digit_q)
 
 
-class MorphospeciesDatatablesViewSet(MorphospeciesResearchOrReviewerMixin, DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
+class MorphospeciesDatatablesViewSet(
+    MorphospeciesResearchOrReviewerMixin,
+    DatatablesModelViewSetMixin,
+    ReadOnlyModelViewSet,
+):
     serializer_class = MorphospeciesDatatablesSerializer
     search_vector = (
         constants.FIELD_MORPHO_NAME,
@@ -97,7 +101,11 @@ class MorphospeciesDatatablesViewSet(MorphospeciesResearchOrReviewerMixin, Datat
         return morphospecies.order_by(constants.FIELD_MORPHO_NAME)
 
 
-class MorphospeciesPickerViewSet(MorphospeciesResearchOrReviewerMixin, DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
+class MorphospeciesPickerViewSet(
+    MorphospeciesResearchOrReviewerMixin,
+    DatatablesModelViewSetMixin,
+    ReadOnlyModelViewSet,
+):
     serializer_class = MorphospeciesPickerSerializer
     search_vector = (
         constants.FIELD_MORPHO_NAME,
