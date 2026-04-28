@@ -27,18 +27,25 @@
                 <form id="exportForm" action="{% url 'samples:experiment-ai-csv' experiment.id %}" method="POST">
                     {% csrf_token %}
                     <h5>Sites</h5>
-                    <div class="form-check">
-                        <input class="form-check-input" id="check-all_sites" type="checkbox" checked="checked" >
-                        <label class="form-check-label" for="check-all_sites">
-                            Check All
-                        </label>
-                    </div>
-                    {% for site in experiment_sites %}
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input ms-2" id="site-{{site.id}}" value="{{site.id}}" type="checkbox" name="sites" checked>
-                            <label class="form-check-label ms-2" for="site-{{site.id}}">{{site.site_name|truncatechars:15}}</label>
+                    <div class="bb-multiselect mt-2" data-bb-multiselect>
+                        <div class="bb-multiselect__toolbar">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <input class="form-control form-control-sm" type="search" placeholder="Filter sites…" data-bb-filter>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" data-bb-select-all>All</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" data-bb-select-none>None</button>
+                                <span class="text-muted small ms-auto" data-bb-count></span>
+                            </div>
                         </div>
-                    {% endfor %}
+                        <select class="form-select bb-multiselect__select" multiple name="sites" data-bb-select>
+                            {% for site in experiment_sites %}
+                                <option value="{{site.id}}" selected>{{site.site_name}}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">
+                            Tip: Hold <strong>Ctrl</strong> (Windows/Linux) or <strong>⌘ Command</strong> (Mac) to select multiple items.
+                            Use <strong>Shift</strong> to select a range.
+                        </div>
+                    </div>
                     <h5 class="mt-3">Sample Types</h5>
                     <div class="form-check">
                         <input id="check-all_sampleTypes" class="form-check-input" type="checkbox" checked>
@@ -52,15 +59,26 @@
                         </div>
                     {% endfor %}
                         <h5 class="mt-3">Include other experiments</h5>
-                            <input class="form-check-input" id="check-all_otherExperiments" type="checkbox">
-                                <label class="form-check-label" for="check-all_otherExperiments">Check All</label>
-                            <p class="ms-5">*if any selected, current experiment will include all sites</p>
-                            {% for e in other_experiments %}
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input ms-2" id="exp-{{e.id}}" value="{{e.id}}" type="checkbox" name="otherExperiments" >
-                                    <label class="form-check-label ms-2" for="exp-{{e.id}}">{{ e.abbreviation }}</label>
+                        <div class="text-muted small mb-2">If you select any experiments here, the export will include all sites.</div>
+                        <div class="bb-multiselect" data-bb-multiselect>
+                            <div class="bb-multiselect__toolbar">
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <input class="form-control form-control-sm" type="search" placeholder="Filter experiments…" data-bb-filter>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bb-select-all>All</button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bb-select-none>None</button>
+                                    <span class="text-muted small ms-auto" data-bb-count></span>
                                 </div>
-                            {% endfor %}
+                            </div>
+                            <select class="form-select bb-multiselect__select" multiple name="otherExperiments" data-bb-select>
+                                {% for e in other_experiments %}
+                                    <option value="{{e.id}}">{{ e.abbreviation }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">
+                                Tip: Hold <strong>Ctrl</strong> (Windows/Linux) or <strong>⌘ Command</strong> (Mac) to select multiple items.
+                                Use <strong>Shift</strong> to select a range.
+                            </div>
+                        </div>
                     <div class="modal-footer">
                         <button type="submit" name="ai" class="btn btn-primary" data-bs-dismiss="modal">
                             Export AI Evaluations
@@ -99,18 +117,26 @@
                       </select>
                     </div>
                     <h5 class="mt-3">Sites (select none to include all sites)</h5>
-                    <div class="form-check">
-                        <input class="form-check-input" id="check-all_sites2" type="checkbox" checked="checked" >
-                        <label class="form-check-label" for="check-all_sites2">
-                            Check All
-                        </label>
-                    </div>
-                    {% for site in experiment_sites %}
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input ms-2" id="site2-{{site.id}}" value="{{site.id}}" type="checkbox" name="sites2" checked>
-                            <label class="form-check-label ms-2" for="site2-{{site.id}}">{{site.site_name|truncatechars:15}}</label>
+                    <div class="bb-multiselect mt-2" data-bb-multiselect>
+                        <div class="bb-multiselect__toolbar">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <input class="form-control form-control-sm" type="search" placeholder="Filter sites…" data-bb-filter>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" data-bb-select-all>All</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" data-bb-select-none>None</button>
+                                <span class="text-muted small ms-auto" data-bb-count></span>
+                            </div>
                         </div>
-                    {% endfor %}
+                        <select class="form-select bb-multiselect__select" multiple name="sites2" data-bb-select>
+                            {% for site in experiment_sites %}
+                                <option value="{{site.id}}">{{site.site_name}}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">Leave empty to include all sites.</div>
+                        <div class="form-text">
+                            Tip: Hold <strong>Ctrl</strong> (Windows/Linux) or <strong>⌘ Command</strong> (Mac) to select multiple items.
+                            Use <strong>Shift</strong> to select a range.
+                        </div>
+                    </div>
                     <h5 class="mt-3">Sample Types</h5>
                     <div class="form-check">
                         <input id="check-all_sampleTypes2" class="form-check-input" type="checkbox" checked>
@@ -157,15 +183,26 @@
                     {% endfor %}
 
                         <h5 class="mt-3">Include other experiments</h5>
-                            <input class="form-check-input" id="check-all_otherExperiments2" type="checkbox">
-                                <label class="form-check-label" for="check-all_otherExperiments2">Check All</label>
-                            <p class="ms-5">*if any selected, current experiment will include all sites</p>
-                            {% for e in other_experiments %}
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input ms-2" id="exp2-{{e.id}}" value="{{e.id}}" type="checkbox" name="otherExperiments2" >
-                                    <label class="form-check-label ms-2" for="exp2-{{e.id}}">{{ e.abbreviation }}</label>
+                        <div class="text-muted small mb-2">If you select any experiments here, the export will include all sites.</div>
+                        <div class="bb-multiselect" data-bb-multiselect>
+                            <div class="bb-multiselect__toolbar">
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <input class="form-control form-control-sm" type="search" placeholder="Filter experiments…" data-bb-filter>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bb-select-all>All</button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bb-select-none>None</button>
+                                    <span class="text-muted small ms-auto" data-bb-count></span>
                                 </div>
-                            {% endfor %}
+                            </div>
+                            <select class="form-select bb-multiselect__select" multiple name="otherExperiments2" data-bb-select>
+                                {% for e in other_experiments %}
+                                    <option value="{{e.id}}">{{ e.abbreviation }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">
+                                Tip: Hold <strong>Ctrl</strong> (Windows/Linux) or <strong>⌘ Command</strong> (Mac) to select multiple items.
+                                Use <strong>Shift</strong> to select a range.
+                            </div>
+                        </div>
                     <div class="modal-footer">
                         <button type="submit" name="experiment" class="btn btn-primary" data-bs-dismiss="modal">
                             Export Experiment Data
