@@ -9,6 +9,63 @@ $(function () {
     const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
     const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new Tooltip(tooltipTriggerEl))
 
+    function bbNorm(s) {
+        return (s || "").toString().trim().toLowerCase();
+    }
+
+    function bbUpdateCounts(root) {
+        const select = root.querySelector("[data-bb-select]");
+        const count = root.querySelector("[data-bb-count]");
+        if (!select || !count) return;
+
+        const opts = Array.from(select.options);
+        const visible = opts.filter(o => !o.hidden);
+        const selectedVisible = visible.filter(o => o.selected);
+        count.textContent = `${selectedVisible.length} selected (of ${visible.length} shown)`;
+    }
+
+    function bbApplyFilter(root, q) {
+        const select = root.querySelector("[data-bb-select]");
+        if (!select) return;
+
+        const query = bbNorm(q);
+        for (const opt of Array.from(select.options)) {
+            opt.hidden = query.length > 0 && !bbNorm(opt.textContent).includes(query);
+        }
+        bbUpdateCounts(root);
+    }
+
+    function bbSelectVisible(root, shouldSelect) {
+        const select = root.querySelector("[data-bb-select]");
+        if (!select) return;
+        for (const opt of Array.from(select.options)) {
+            if (opt.hidden) continue;
+            opt.selected = shouldSelect;
+        }
+        select.dispatchEvent(new Event("change", { bubbles: true }));
+        bbUpdateCounts(root);
+    }
+
+    function bbWireMultiselect(root) {
+        const filter = root.querySelector("[data-bb-filter]");
+        const select = root.querySelector("[data-bb-select]");
+        const allBtn = root.querySelector("[data-bb-select-all]");
+        const noneBtn = root.querySelector("[data-bb-select-none]");
+
+        if (filter) {
+            filter.addEventListener("input", () => bbApplyFilter(root, filter.value));
+        }
+        if (select) {
+            select.addEventListener("change", () => bbUpdateCounts(root));
+        }
+        if (allBtn) allBtn.addEventListener("click", () => bbSelectVisible(root, true));
+        if (noneBtn) noneBtn.addEventListener("click", () => bbSelectVisible(root, false));
+
+        bbUpdateCounts(root);
+    }
+
+    document.querySelectorAll("[data-bb-multiselect]").forEach(bbWireMultiselect);
+
     function getDetail( row ) {
         return row.detail_row
     }
@@ -68,14 +125,6 @@ $(function () {
     pollLocationExportProgress(json_context.experiment.id);
     }
 
-    const checkAllSites = document.querySelector('#check-all_sites');
-    if (checkAllSites) {
-        checkAllSites.onchange = (e) => {
-            document.querySelectorAll('[name=sites]').forEach(el => {
-                el.checked = e.target.checked
-            })
-        }
-    }
     const checkAllSampleTypes = document.querySelector('#check-all_sampleTypes');
     if (checkAllSampleTypes) {
         checkAllSampleTypes.onchange = (e) => {
@@ -84,34 +133,10 @@ $(function () {
             })
         }
     }
-    const checkAllOtherExperiments = document.querySelector('#check-all_otherExperiments');
-    if (checkAllOtherExperiments) {
-        checkAllOtherExperiments.onchange = (e) => {
-            document.querySelectorAll('[name=otherExperiments]').forEach(el => {
-                el.checked = e.target.checked
-            })
-        }
-    }
-    const checkAllSites2 = document.querySelector('#check-all_sites2');
-    if (checkAllSites2) {
-        checkAllSites2.onchange = (e) => {
-            document.querySelectorAll('[name=sites2]').forEach(el => {
-                el.checked = e.target.checked
-            })
-        }
-    }
     const checkAllSampleTypes2 = document.querySelector('#check-all_sampleTypes2');
     if (checkAllSampleTypes2) {
         checkAllSampleTypes2.onchange = (e) => {
             document.querySelectorAll('[name=sampleTypes2]').forEach(el => {
-                el.checked = e.target.checked
-            })
-        }
-    }
-    const checkAllOtherExperiments2 = document.querySelector('#check-all_otherExperiments2');
-    if (checkAllOtherExperiments2) {
-        checkAllOtherExperiments2.onchange = (e) => {
-            document.querySelectorAll('[name=otherExperiments2]').forEach(el => {
                 el.checked = e.target.checked
             })
         }

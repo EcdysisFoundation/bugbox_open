@@ -182,3 +182,20 @@ tr.details td.details-control {
 .grower-portal-navbar > .dropdown-hover > a:hover {
   color: #ffffff;
 }
+
+.bb-multiselect select.form-select[multiple] {
+  font-variant-numeric: tabular-nums;
+}
+
+.bb-multiselect .bb-multiselect__toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--bs-modal-bg, #fff);
+  padding-top: 0.25rem;
+}
+
+.bb-multiselect .bb-multiselect__select {
+  max-height: 260px;
+  overflow: auto;
+}
