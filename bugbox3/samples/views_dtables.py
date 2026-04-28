@@ -8,6 +8,7 @@ from ..core.views import DatatablesModelViewSetMixin
 from ..taxonomy import constants as constants_tax
 from ..taxonomy.models_query import get_taxon_entries
 from . import constants
+from .mixins import SpecimenResearchOrReviewerMixin
 from .models import Experiment, MultiSpecimenImage, Sample, Site, Specimen
 from .serializers import (
     CollectionDatatablesSerializer,
@@ -19,7 +20,6 @@ from .serializers import (
     SpecimensAllDatatablesSerializer,
 )
 from .views_public import PUBLIC_COLLECTIONS
-from .mixins import SpecimenResearchOrReviewerMixin
 
 
 class ExperimentsDatatablesViewSet(PermissionRequiredMixin, DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
@@ -35,7 +35,11 @@ class ExperimentsDatatablesViewSet(PermissionRequiredMixin, DatatablesModelViewS
             organization_id=org_id).order_by(constants.FIELD_NAME)
 
 
-class MultiSpecimenDatatablesViewSet(SpecimenResearchOrReviewerMixin, DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
+class MultiSpecimenDatatablesViewSet(
+    SpecimenResearchOrReviewerMixin,
+    DatatablesModelViewSetMixin,
+    ReadOnlyModelViewSet,
+):
 
     serializer_class = MultiSpecimenImageDatatablesSerializer
 
@@ -92,7 +96,11 @@ class SpecimenDatatablesViewSet(SpecimenResearchOrReviewerMixin, DatatablesModel
         return Specimen.objects.user_access(self.request.user).filter(sample_id=sample_id).order_by('-id')
 
 
-class SpecimensAllDatatablesViewSet(SpecimenResearchOrReviewerMixin, DatatablesModelViewSetMixin, ReadOnlyModelViewSet):
+class SpecimensAllDatatablesViewSet(
+    SpecimenResearchOrReviewerMixin,
+    DatatablesModelViewSetMixin,
+    ReadOnlyModelViewSet,
+):
 
     serializer_class = SpecimensAllDatatablesSerializer
     search_vector = [

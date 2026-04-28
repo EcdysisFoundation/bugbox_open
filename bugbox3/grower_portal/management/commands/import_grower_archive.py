@@ -243,7 +243,10 @@ class Command(BaseCommand):
                                     except SampleCode.DoesNotExist:
                                         stats['sample_codes_created'] += 1
                                         stats['site_transects_created'] += 4
-                                        self.stdout.write(f'    Would create Ignite sample code: {code} (and 4 site transects)')
+                                        self.stdout.write(
+                                            f'    Would create Ignite sample code: {code} '
+                                            f'(and 4 site transects)'
+                                        )
                                         sample_code = None
                                     if sample_code is not None and sample_code.project_type == 'ignite':
                                         self._ensure_ignite_site_transects(sample_code, stats, dry_run=True)

@@ -59,6 +59,7 @@ from .forms import (
     SpecimensWithoutImagesForm,
     SpecimenViewForm,
 )
+from .mixins import SpecimenResearchOrReviewerMixin
 from .models import (
     Experiment,
     MultiSpecimenImage,
@@ -75,7 +76,6 @@ from .models import (
 from .models_query import get_sample_plan_descriptions, get_user_choices
 from .tasks import crop_panorama_segmentation_yolo, export_csv_by_location
 from .timeline_events import audit_specimen_update, audit_specimen_view, audit_upload_images, timeline_events
-from .mixins import SpecimenResearchOrReviewerMixin
 
 
 class ExperimentsView(PermissionRequiredMixin, TemplateView):

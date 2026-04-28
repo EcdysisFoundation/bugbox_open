@@ -1062,7 +1062,7 @@ class LabelGenerator:
         transect_codes = self.generate_unique_sample_codes(num_transects)
         self.save_sample_codes(transect_codes)
 
-        # taking into considration the excluded sample types passed in from the form 
+        # taking into considration the excluded sample types passed in from the form
         sample_type_codes = list(self.sample_types) if self.sample_types else [code for code, _ in SAMPLE_TYPES]
 
         doc = self._load_template()
