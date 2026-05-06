@@ -1,0 +1,169 @@
+{% load i18n %}
+
+{% with bd=bird_data %}
+
+<div class="row g-3 mb-4">
+
+  <div class="col-md-6">
+    <div class="card h-100 border-0 shadow-sm">
+      <div class="card-header bird-card-header">
+        <h6 class="mb-0"><i class="fas fa-binoculars me-2"></i>Survey Summary</h6>
+      </div>
+      <div class="card-body">
+        <div class="row text-center g-2">
+          <div class="col-4">
+            <div class="bird-stat-box p-2 rounded">
+              <div class="fs-3 fw-bold text-primary">{{ bd.survey_count }}</div>
+              <div class="small text-muted">Surveys</div>
+            </div>
+          </div>
+          {% for table_name, table_data in bd.organized_results.items %}
+            {% if table_name == "Survey Summary" %}
+              {% for factor in table_data %}
+              <div class="col-4">
+                <div class="bird-stat-box p-2 rounded">
+                  <div class="fs-3 fw-bold text-success">
+                    {% if factor.has_value and factor.is_numeric %}
+                      {{ factor.value|floatformat:"0" }}
+                    {% elif factor.has_value %}
+                      {{ factor.value }}
+                    {% else %}—{% endif %}
+                  </div>
+                  <div class="small text-muted">
+                    {{ factor.factor_name }}
+                    {% if factor.units %}({{ factor.units }}){% endif %}
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="card h-100 border-0 shadow-sm">
+      <div class="card-header bird-card-header">
+        <h6 class="mb-0"><i class="fas fa-cloud-sun me-2"></i>Survey Conditions</h6>
+      </div>
+      <div class="card-body p-0">
+        {% if bd.conditions_by_site %}
+          <div class="table-responsive">
+            <table class="table table-sm mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th class="ps-3">Site</th>
+                  <th class="text-end">Distance (mi)</th>
+                  <th class="text-end pe-3">Duration (min)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in bd.conditions_by_site %}
+                <tr>
+                  <td class="ps-3 small text-muted">{{ row.site_code }}</td>
+                  <td class="text-end small fw-semibold">{% if row.distance_mi %}{{ row.distance_mi }}{% else %}—{% endif %}</td>
+                  <td class="text-end small text-muted pe-3">{% if row.duration_min %}{{ row.duration_min }}{% else %}—{% endif %}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="p-3 text-muted small">No survey condition values available.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+</div>
+
+{% if bd.species_by_family %}
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-header bird-card-header">
+    <h6 class="mb-0"><i class="fas fa-feather-alt me-2"></i>Species observed</h6>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive bird-species-table-wrap">
+      <table class="table table-sm table-hover mb-0 bird-species-table">
+        <thead class="table-light sticky-top shadow-sm">
+          <tr>
+            <th class="ps-3" style="min-width: 28%;">Family</th>
+            <th style="min-width: 36%;">Species</th>
+            <th style="min-width: 10%;">Site</th>
+            <th class="text-end pe-2"
+                title="Total individuals counted for this species at this site across all surveys shown.">
+              Count
+            </th>
+            <th class="text-end pe-3"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for family, species_list in bd.species_by_family.items %}
+          <tr class="bird-family-subheader">
+            <td colspan="5" class="py-2 ps-3 small fw-semibold text-muted">
+              {{ family }}
+              <span class="badge bg-secondary ms-2 align-middle fw-normal">{{ species_list|length }} species</span>
+            </td>
+          </tr>
+          {% for sp in species_list %}
+          <tr class="bird-species-row">
+            <td class="ps-3 small text-muted bird-family-cell">{{ family }}</td>
+            <td class="small">{{ sp.species }}</td>
+            <td class="small text-muted">{{ sp.site_code }}</td>
+            <td class="text-end pe-2 small fw-semibold">{{ sp.total_count }}</td>
+            <td class="text-end pe-3 small text-muted"></td>
+          </tr>
+          {% endfor %}
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% if bd.survey_rows %}
+<div class="card border-0 shadow-sm">
+  <div class="card-header bird-card-header">
+    <h6 class="mb-0"><i class="fas fa-list-ul me-2"></i>Survey history</h6>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-sm table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th class="ps-3">Site</th>
+            <th class="ps-3">Date</th>
+            <th class="text-center">Abundance</th>
+            <th class="text-center">Richness</th>
+            <th class="text-center pe-3">Temp (°F)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for survey in bd.survey_rows %}
+          <tr>
+            <td class="ps-3 small text-muted">{{ survey.site_code }}</td>
+            <td class="ps-3 small">{{ survey.date }}</td>
+            <td class="text-center small">
+              {% if survey.abundance %}{{ survey.abundance|floatformat:"0" }}{% else %}—{% endif %}
+            </td>
+            <td class="text-center small">
+              {% if survey.richness %}{{ survey.richness|floatformat:"0" }}{% else %}—{% endif %}
+            </td>
+            <td class="text-center small text-muted pe-3">
+              {% if survey.temp_f %}{{ survey.temp_f }}{% else %}—{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% else %}
+<p class="text-muted small">No individual survey records available.</p>
+{% endif %}
+
+{% endwith %}

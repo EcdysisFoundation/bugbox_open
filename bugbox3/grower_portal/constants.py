@@ -37,6 +37,7 @@ CSV_IMPORT_STATUS_CHOICES = [
     ('pending', 'Pending'),
     ('processing', 'Processing'),
     ('completed', 'Completed'),
+    ('completed_with_errors', 'Completed with errors'),
     ('failed', 'Failed'),
 ]
 
@@ -212,7 +213,43 @@ RESULT_TYPE_CHOICES = [
     ('haney', 'Haney'),
     ('plfa', 'PLFA'),
     ('basic', 'Basic'),
+    ('birds', 'Birds'),
+    ('water', 'Water'),
+    ('plants', 'Plants'),
 ]
+
+# Data categories
+CATEGORY_CHOICES = [
+    ('soils',  'Soils'),
+    ('water',  'Water'),
+    ('plants', 'Plants'),
+    ('birds',  'Birds'),
+]
+
+CATEGORY_MAX_LENGTH = 20
+
+# map categories to the result types that belong to it
+CATEGORY_RESULT_TYPE_MAP = {
+    'soils':  ['basic', 'haney', 'plfa'],
+    'water':  ['water'],
+    'plants': ['plants'],
+    'birds':  ['birds'],
+}
+
+# lookup: result_type → category
+RESULT_TYPE_CATEGORY_MAP = {
+    rt: cat
+    for cat, rts in CATEGORY_RESULT_TYPE_MAP.items()
+    for rt in rts
+}
+
+# S3/storage root prefix for all grower portal ingestion files
+GROWER_DATA_S3_PREFIX = 'grower_portal_data'
+
+# Bird-specific ingestion constants
+BIRD_SITE_CODE_COLUMN = 'Site Code'
+BIRD_FAMILY_HEADER_ROW = 0  # 0-indexed Excel row that contains family names
+BIRD_DATA_HEADER_ROW = 1    # the row that contains the column headers
 
 LABEL_PROJECT_CHOICES = [
     ('avalanche', 'Avalanche'),
@@ -327,6 +364,11 @@ RESULT_TYPE_SIGNATURE_COLUMNS = {
         'Fungi:Bacteria',
         'Total Bacteria, PLFA ng/g',
         'Functional Group Diversity Index',
+    ],
+    'birds': [
+        'Site Code',
+        'Abundance',
+        'Richness',
     ],
 }
 
@@ -751,9 +793,59 @@ BASIC_FACTOR_MAPPING = {
     }
 }
 
+BIRD_FACTOR_MAPPING = {
+    'Survey Summary': {
+        'Total Abundance': {
+            'field_name': 'Abundance',
+            'units': 'individuals',
+            'summary': 'Total number of individual birds counted across all surveys for this site.',
+        },
+        'Species Richness': {
+            'field_name': 'Richness',
+            'units': 'species',
+            'summary': 'Number of distinct bird species observed across all surveys for this site.',
+        },
+    },
+    'Survey Conditions': {
+        'Temperature (°F)': {
+            'field_name': 'Temp °F',
+            'units': '°F',
+        },
+        'Distance (mi)': {
+            'field_name': 'Distance mi',
+            'units': 'mi',
+        },
+        'Duration (min)': {
+            'field_name': 'Duration (min)',
+            'units': 'min',
+        },
+    },
+}
+
 # Maps result types to their factor mappings
 RESULT_TYPE_FACTOR_MAPPING = {
     'plfa': PLFA_FACTOR_MAPPING,
     'haney': HANEY_FACTOR_MAPPING,
     'basic': BASIC_FACTOR_MAPPING,
+    'birds': BIRD_FACTOR_MAPPING,
+}
+
+# Category display metadata
+CATEGORY_DISPLAY_META = {
+    'soils': {
+        'icon': 'fa-mountain',
+        'description': 'Basic, Haney, and PLFA soil test results.',
+    },
+    'water': {
+        'icon': 'fa-tint',
+        'description': 'Water infiltration, holding capacity, and conductivity.',
+    },
+    'plants': {
+        'icon': 'fa-leaf',
+        'description': 'Plant biomass, cover, and forage data.',
+    },
+    'birds': {
+        'icon': 'fa-dove',
+        'description': 'Bird point-count survey data including species richness and abundance.',
+    },
 }

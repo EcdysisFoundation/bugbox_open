@@ -36,6 +36,7 @@ module.exports = {
     grower_maps_view: path.resolve(__dirname, '../bugbox3/static/js/grower_portal/google_maps_view'),
     grower_label_management: path.resolve(__dirname, '../bugbox3/static/js/grower_portal/label_management'),
     grower_results: path.resolve(__dirname, '../bugbox3/static/js/grower_portal/results'),
+    grower_data_ingestion: path.resolve(__dirname, '../bugbox3/static/js/grower_portal/data_ingestion'),
   },
   output: {
     path: path.resolve(

@@ -20,9 +20,28 @@ from bugbox3.grower_portal.constants import (
 )
 from bugbox3.grower_portal.models.csv_import import CSVImportRow
 
-from ...forms.admin.forms import CSVUploadForm
 from ...middleware import get_user_timezone
 from ...models import CSVImportFieldValue, CSVImportLog, SampleCode, SiteTransect
+
+
+def _admin_display_import_description(import_log: CSVImportLog) -> str:
+    """
+    notes from the upload.
+    """
+    raw = (import_log.description or "").strip()
+    if not raw:
+        return ""
+    try:
+        data = json.loads(raw)
+    except (json.JSONDecodeError, TypeError):
+        return raw
+    if isinstance(data, dict):
+        for key in ("notes", "admin_notes"):
+            note = data.get(key)
+            if note is not None and str(note).strip():
+                return str(note).strip()
+        return ""
+    return ""
 
 
 def _add_to_error_log(error_log, row_number, row, message):
@@ -149,71 +168,6 @@ def _process_csv_file(csv_import_log, csv_file, project_type, result_type):
 
 @login_required
 @permission_required(IS_GROWERADMIN, raise_exception=True)
-def csv_upload(request):
-    if request.method == 'POST':
-        form = CSVUploadForm(request.POST, request.FILES)
-        if form.is_valid():
-            csv_file = form.cleaned_data['csv_file']
-            description = form.cleaned_data.get('description', '')
-            project_type = form.cleaned_data['project_type']
-            result_type = form.cleaned_data['result_type']
-
-            file_path = f'csv_imports/{csv_file.name}'
-            csv_file.seek(0)
-            saved_path = default_storage.save(file_path, ContentFile(csv_file.read()))
-
-            csv_import_log = CSVImportLog.objects.create(
-                filename=csv_file.name,
-                imported_by=request.user,
-                file_path=saved_path,
-                description=description,
-                status='pending',
-                total_records=0,
-                successful_records=0,
-                failed_records=0,
-                project_type=project_type,
-                result_type=result_type,
-            )
-
-            total, successful, failed, error_log = _process_csv_file(
-                csv_import_log, csv_file, project_type, result_type
-            )
-
-            csv_import_log.status = 'completed' if not error_log else 'failed'
-            csv_import_log.total_records = total
-            csv_import_log.successful_records = successful
-            csv_import_log.failed_records = failed
-            csv_import_log.error_log = error_log
-            csv_import_log.save()
-
-            if not error_log:
-                messages.success(
-                    request,
-                    f'CSV file "{csv_file.name}" uploaded successfully. Import log ID: {csv_import_log.id}'
-                )
-            else:
-                messages.error(
-                    request,
-                    f'CSV file "{csv_file.name}" contains errors. '
-                    'File has been saved but not processed. '
-                    'Please correct the errors and try again. '
-                    f'Import log ID: {
-                        csv_import_log.id}')
-
-            return redirect('grower_portal:admin_csv_import_detail', import_id=csv_import_log.id)
-    else:
-        form = CSVUploadForm()
-
-    context = {
-        'form': form,
-        'user_timezone': get_user_timezone(request),
-    }
-
-    return render(request, 'grower_portal/admin/csv_upload.html', context)
-
-
-@login_required
-@permission_required(IS_GROWERADMIN, raise_exception=True)
 def csv_import_list(request):
     imports_queryset = CSVImportLog.objects.select_related('imported_by').order_by('-import_date')
 
@@ -242,15 +196,17 @@ def csv_import_detail(request, import_id):
         pretty = json.dumps(obj.get('row_data', ''), indent=4)
         pretty_error_log.append({
             "error": obj.get('error', ''),
+            "warning": obj.get('warning', ''),
             "row_number": obj.get('row_number', ''),
-            "row_data": pretty
+            "row_data": pretty,
         })
 
     # Format JSON before sending to template
     context = {
         'import_log': import_log,
         'pretty_error_log': pretty_error_log,
-        'user_timezone': get_user_timezone(request)
+        'user_timezone': get_user_timezone(request),
+        'import_description_display': _admin_display_import_description(import_log),
     }
 
     return render(request, 'grower_portal/admin/csv_import_detail.html', context)

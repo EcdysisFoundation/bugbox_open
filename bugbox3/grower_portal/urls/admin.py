@@ -19,12 +19,13 @@ from ..views.admin import (
     application_detail,
     application_edit_redirect,
     application_list,
+    category_result_types_ajax,
     csv_import_delete,
     csv_import_detail,
     csv_import_download,
     csv_import_download_error_log,
     csv_import_list,
-    csv_upload,
+    data_ingestion_hub,
     farm_detail,
     farm_list,
     field_detail,
@@ -144,7 +145,10 @@ urlpatterns = [
         name='admin_sample_code_reactivate'
     ),
 
-    path('csv-upload/', csv_upload, name='admin_csv_upload'),
+    # data ingestion hub
+    path('data-ingestion/', data_ingestion_hub, name='admin_data_ingestion'),
+    path('data-ingestion/result-types/', category_result_types_ajax, name='admin_category_result_types'),
+
     path('csv-imports/', csv_import_list, name='admin_csv_import_list'),
     path('csv-imports/<int:import_id>/', csv_import_detail, name='admin_csv_import_detail'),
     path('csv-imports/<int:import_id>/download/', csv_import_download, name='admin_csv_import_download'),
