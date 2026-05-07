@@ -1393,8 +1393,7 @@ class LabelGenerator:
                 f"Cluster {self.cluster_number} – {self.year}\n"
                 f"{transect_code}\n"
                 "Grower Name______________\n"
-                "Date_____________\n\n"
-                "Sample List:\n" +
+                "Date_____________\n" +
                 "\n".join(AVALANCHE_ROOM_TEMP_SAMPLES)
             )
             room_temp_labels.append({
@@ -1409,8 +1408,7 @@ class LabelGenerator:
                 f"Cluster {self.cluster_number} – {self.year}\n"
                 f"{transect_code}\n"
                 "Grower Name______________\n"
-                "Date_____________\n\n"
-                "Sample List:\n" +
+                "Date_____________\n" +
                 "\n".join(AVALANCHE_REFRIGERATED_SAMPLES)
             )
             refrigerated_labels.append({
