@@ -121,8 +121,7 @@
               {# Basic: AJAX-refreshable partial #}
               {% elif section.result_type == "basic" %}
               <div id="basic-results-tables" data-depth="{{ depth }}">
-                {% include "grower_portal/grower/_basic_results_tables.html"
-                   with organized_results=section.organized_results %}
+                {% include "grower_portal/grower/_basic_results_tables.html" with organized_results=section.organized_results %}
               </div>
 
               {# All other result types: standard factor table grid #}

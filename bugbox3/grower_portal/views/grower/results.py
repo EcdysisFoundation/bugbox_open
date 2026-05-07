@@ -286,8 +286,21 @@ def _get_bird_context(grower, year_int, project_type):
             'distance_mi': row_data.get('Distance mi', '') or row_data.get('Distance MI', '') or row_data.get('Distance Mi', ''),
             'duration_min': row_data.get('Duration (min)', ''),
         })
+    # Per-site survey abundance and survey count
+    abundance_total_by_site: dict[str, float] = defaultdict(float)
+    abundance_survey_count_by_site: dict[str, int] = defaultdict(int)
+    for s in survey_rows:
+        site = str(s.get("site_code") or "").strip()
+        if not site:
+            continue
+        abundance_val = s.get("abundance", "")
+        if _is_numeric(abundance_val):
+            f = _to_float(abundance_val)
+            if f is not None:
+                abundance_total_by_site[site] += f
+                abundance_survey_count_by_site[site] += 1
 
-    # Per-site survey conditions (latest survey per site; no averaging)
+    # Per-site survey conditions
     conditions_by_site_map: dict[str, dict] = {}
     for s in survey_rows:
         site = str(s.get("site_code") or "").strip()
@@ -339,6 +352,8 @@ def _get_bird_context(grower, year_int, project_type):
             pass
 
     # Build species counts per family per site (no cross-site averaging)
+    species_richness_by_site: dict[str, int] = {}
+    species_richness_combined: int = 0
     if family_map:
         non_species_keys = {
             'Date', 'Time', 'Duration (min)', 'Distance KM', 'Distance mi', 'Distance MI', 'Distance Mi',
@@ -349,6 +364,8 @@ def _get_bird_context(grower, year_int, project_type):
         }
         # key: (species_col_name, site_code) -> [counts...]
         species_totals: dict = defaultdict(list)
+        present_species_by_site: dict[str, set] = defaultdict(set)
+        present_species_combined: set = set()
         for row_data in surveys_by_row.values():
             site_code = row_data.get('site_code') or row_data.get('Site Code') or ''
             site_code = str(site_code).strip()
@@ -357,6 +374,8 @@ def _get_bird_context(grower, year_int, project_type):
                     continue
                 if _is_numeric(val) and float(val) > 0:
                     species_totals[(col, site_code)].append(float(val))
+                    present_species_by_site[site_code].add(col)
+                    present_species_combined.add(col)
 
         for (species, site_code), counts in species_totals.items():
             family = family_map.get(species, 'Unknown Family')
@@ -368,11 +387,27 @@ def _get_bird_context(grower, year_int, project_type):
                 'visit_count': len(counts),
             })
 
+        species_richness_by_site = {
+            site: len(species_set)
+            for site, species_set in present_species_by_site.items()
+            if site
+        }
+        species_richness_combined = len(present_species_combined)
+
         # Sort families alphabetically and species within each family by total_count desc
         species_by_family = {
             fam: sorted(spp, key=lambda x: x['total_count'], reverse=True)
             for fam, spp in sorted(species_by_family.items())
         }
+
+    per_site_summary = []
+    for site in sorted(set(list(abundance_total_by_site.keys()) + list(species_richness_by_site.keys()))):
+        per_site_summary.append({
+            'site_code': site,
+            'survey_count': abundance_survey_count_by_site.get(site, 0),
+            'abundance_total': round(abundance_total_by_site.get(site, 0.0), 0) if site in abundance_total_by_site else None,
+            'species_richness': species_richness_by_site.get(site, None),
+        })
 
     return {
         'organized_results': organized,
@@ -381,6 +416,11 @@ def _get_bird_context(grower, year_int, project_type):
         'conditions_by_site': conditions_by_site,
         'family_map': family_map,
         'species_by_family': dict(species_by_family),
+        'summary_combined': {
+            'abundance_total': round(sum(abundance_total_by_site.values()), 0) if abundance_total_by_site else None,
+            'species_richness': species_richness_combined if species_richness_combined else None,
+        },
+        'summary_by_site': per_site_summary,
     }
 
 
