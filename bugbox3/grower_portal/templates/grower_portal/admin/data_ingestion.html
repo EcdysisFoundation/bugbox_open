@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load crispy_forms_tags %}
+{% load timezone_filters %}
+{% load render_bundle from webpack_loader %}
+
+{% block title %}Data Ingestion Hub{% endblock %}
+
+{% block customheadtagcontent %}
+{% render_bundle 'grower_data_ingestion' 'js' attrs='defer' %}
+{{ json_context|safe }}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4 px-4">
+
+  {# Page header #}
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="mb-1">Data Ingestion Hub</h1>
+      <p class="text-muted mb-0">Upload field, lab, and survey data for growers.</p>
+    </div>
+    <a href="{% url 'grower_portal:admin_dashboard' %}" class="btn btn-outline-secondary">
+      <i class="fas fa-arrow-left"></i> Back to Dashboard
+    </a>
+  </div>
+
+  {# Upload card #}
+  <div class="card shadow-sm mb-5">
+    <div class="card-header bg-primary text-white">
+      <h5 class="mb-0"><i class="fas fa-upload me-2"></i>Upload Data File</h5>
+    </div>
+    <div class="card-body">
+
+      {# Step 1 Category cards #}
+      <div class="mb-4">
+        <label class="form-label fw-semibold fs-6 mb-3">
+          <span class="badge bg-primary me-2">1</span>Select Category
+        </label>
+        <div class="row g-3" id="categoryCardRow">
+          {% for meta in categories_meta %}
+          <div class="col-6 col-sm-4 col-md-3 col-xl-2">
+            <button type="button"
+                    class="category-card btn w-100 h-100 text-center p-3 border rounded-3"
+                    data-category="{{ meta.value }}"
+                    title="{{ meta.description }}">
+              <i class="fas {{ meta.icon }} fa-2x mb-2 d-block category-icon"></i>
+              <span class="fw-semibold">{{ meta.label }}</span>
+            </button>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      {# Hidden crispy form shown after category selected #}
+      <div id="uploadFormWrapper" class="d-none">
+        <hr>
+        <form method="post" enctype="multipart/form-data" id="dataIngestionForm" novalidate>
+          {% csrf_token %}
+
+          {# Hidden category value populated by JS #}
+          <input type="hidden" name="category" id="id_category">
+
+          {# Step 2 Data type + project type + year #}
+          <div class="mb-3">
+            <label class="form-label fw-semibold fs-6">
+              <span class="badge bg-primary me-2">2</span>Configure Upload
+            </label>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-4">
+              <label for="id_result_type" class="form-label">Data Type <span class="text-danger">*</span></label>
+              <select name="result_type" id="id_result_type" class="form-select" required>
+                <option value="">select category first</option>
+              </select>
+              <div class="invalid-feedback" id="result_type_error"></div>
+            </div>
+            <div class="col-md-4">
+              <label for="id_project_type" class="form-label">Project Type <span class="text-danger">*</span></label>
+              <select name="project_type" id="id_project_type" class="form-select" required>
+                <option value="avalanche">Avalanche</option>
+                <option value="ignite">Ignite</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label for="id_year" class="form-label">Sampling Year <span class="text-danger">*</span></label>
+              <select name="year" id="id_year" class="form-select" required>
+                {% for val, label in form.year.field.choices %}
+                <option value="{{ val }}" {% if val == form.year.value|default:'' %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          {# Step 3 File #}
+          <div class="mb-3">
+            <label class="form-label fw-semibold fs-6">
+              <span class="badge bg-primary me-2">3</span>Upload File
+            </label>
+            <div class="row g-3">
+              <div class="col-md-8">
+                <input type="file" name="data_file" id="id_data_file" class="form-control" required>
+                <div class="form-text" id="fileHelpText">
+                  CSV ≤ 10 MB. Birds: .xlsx accepted.
+                </div>
+              </div>
+              <div class="col-md-4">
+                <textarea name="description" id="id_description" class="form-control" rows="3"
+                          placeholder="Optional notes about this upload…" maxlength="500"></textarea>
+              </div>
+            </div>
+          </div>
+
+          {# Form-level errors from Django (POST re-render) #}
+          {% if form.errors %}
+          <div class="alert alert-danger">
+            <strong>Please correct the following errors:</strong>
+            <ul class="mb-0 mt-1">
+              {% for field in form %}
+                {% for error in field.errors %}
+                  <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                {% endfor %}
+              {% endfor %}
+              {% for error in form.non_field_errors %}
+                <li>{{ error }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endif %}
+
+          <button type="submit" class="btn btn-success px-4" id="submitBtn">
+            <i class="fas fa-upload me-2"></i>Upload Data
+          </button>
+        </form>
+      </div>
+
+      {# Requirements info (always visible below form) #}
+      <div class="alert alert-info mt-4 mb-0">
+        <h6 class="alert-heading"><i class="fas fa-info-circle me-1"></i>File Requirements</h6>
+        <ul class="mb-0 small">
+          <li><strong>Avalanche (CSV)</strong> must include column <code>Sample ID 1</code> matching a SampleCode.</li>
+          <li><strong>Ignite (CSV)</strong> must include <code>Field ID</code> (site code) and <code>Sample ID 1</code> (transect number).</li>
+          <li><strong>Birds (Excel .xlsx)</strong>: row 1: family headers; row 2: column headers including Site Code, Abundance, Richness; row 3+: survey data.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  {# Import History #}
+  <div class="card shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0"><i class="fas fa-history me-2"></i>Import History</h5>
+
+      {# Category filter #}
+      <form method="get" class="d-flex align-items-center gap-2">
+        <label for="categoryFilterSelect" class="form-label mb-0 text-muted small">Filter by category:</label>
+        <select id="categoryFilterSelect" name="category" class="form-select form-select-sm" style="width:auto;"
+                onchange="this.form.submit()">
+          <option value="">All</option>
+          {% for value, label in category_choices %}
+          <option value="{{ value }}" {% if value == category_filter %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </form>
+    </div>
+
+    <div class="card-body p-0">
+      {% if imports %}
+      <div class="table-responsive">
+        <table class="table table-hover table-sm mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>ID</th>
+              <th>Category</th>
+              <th>Data Type</th>
+              <th>Project</th>
+              <th>Filename</th>
+              <th>Status</th>
+              <th>Records</th>
+              <th>Uploaded by</th>
+              <th>Date</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for imp in imports %}
+            <tr>
+              <td class="text-muted small">{{ imp.id }}</td>
+              <td>
+                <span class="badge bg-secondary">{{ imp.get_category_display }}</span>
+              </td>
+              <td>{{ imp.get_result_type_display }}</td>
+              <td>{{ imp.get_project_type_display }}</td>
+              <td class="text-truncate" style="max-width:200px;" title="{{ imp.filename }}">
+                {{ imp.filename }}
+              </td>
+              <td>
+                {% if imp.status == 'completed' %}
+                  <span class="badge bg-success">Completed</span>
+                {% elif imp.status == 'completed_with_errors' %}
+                  <span class="badge bg-warning text-dark">With issues</span>
+                {% elif imp.status == 'failed' %}
+                  <span class="badge bg-danger">Failed</span>
+                {% elif imp.status == 'processing' %}
+                  <span class="badge bg-info">Processing</span>
+                {% else %}
+                  <span class="badge bg-secondary">{{ imp.status|capfirst }}</span>
+                {% endif %}
+              </td>
+              <td>
+                <span class="text-success">{{ imp.successful_records }}</span>
+                /
+                <span class="text-muted">{{ imp.total_records }}</span>
+              </td>
+              <td class="small">{{ imp.imported_by.email }}</td>
+              <td class="small text-muted">{{ imp.import_date|user_datetime:request.user_timezone }}</td>
+              <td>
+                <a href="{% url 'grower_portal:admin_csv_import_detail' imp.id %}"
+                   class="btn btn-sm btn-outline-primary">
+                  <i class="fas fa-eye"></i>
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {# Pagination #}
+      {% if imports.has_other_pages %}
+      <div class="d-flex justify-content-center py-3">
+        <nav>
+          <ul class="pagination pagination-sm mb-0">
+            {% if imports.has_previous %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ imports.previous_page_number }}{% if category_filter %}&category={{ category_filter }}{% endif %}">
+                &laquo;
+              </a>
+            </li>
+            {% endif %}
+            <li class="page-item active">
+              <span class="page-link">{{ imports.number }} / {{ imports.paginator.num_pages }}</span>
+            </li>
+            {% if imports.has_next %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ imports.next_page_number }}{% if category_filter %}&category={{ category_filter }}{% endif %}">
+                &raquo;
+              </a>
+            </li>
+            {% endif %}
+          </ul>
+        </nav>
+      </div>
+      {% endif %}
+
+      {% else %}
+      <p class="text-muted text-center py-4 mb-0">No imports found.</p>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}

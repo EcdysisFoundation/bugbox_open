@@ -1,3 +1,4 @@
+import json
 from collections import Counter, defaultdict
 from datetime import date
 
@@ -9,34 +10,56 @@ from django.urls import reverse
 from bugbox3.core.permissions import IS_GROWER_USER
 from bugbox3.libs.utilities import get_json_context
 
-from ...constants import LABEL_PROJECT_CHOICES, RESULT_TYPE_CHOICES, RESULT_TYPE_FACTOR_MAPPING
+from ...constants import (
+    CATEGORY_CHOICES,
+    CATEGORY_DISPLAY_META,
+    CATEGORY_RESULT_TYPE_MAP,
+    LABEL_PROJECT_CHOICES,
+    RESULT_TYPE_CHOICES,
+    RESULT_TYPE_FACTOR_MAPPING,
+)
 from ...forms.grower.forms import ResultsFilterForm
 from ...middleware import get_user_timezone
-from ...models import CSVImportFieldValue, CSVImportRow
+from ...models import CSVImportFieldValue, CSVImportLog, CSVImportRow
+
+_RESULT_TYPE_DISPLAY = dict(RESULT_TYPE_CHOICES)
+_CATEGORY_DISPLAY = dict(CATEGORY_CHOICES)
 
 
-def _field_value_filters(grower, year_int, project_type, result_type):
-    """Build ORM filter kwargs scoping CSVImportFieldValue to a grower/year/project/result."""
-    if project_type == 'ignite':
-        prefix = 'row__site_transect__site_code__grower_mappings'
-    else:
+def _uses_sample_code_grower_join(project_type: str, result_type: str) -> bool:
+    """
+    Ignite soil uploads scope rows by SiteTransect
+    bird uploads attach to SampleCode for both projects (ignite & Avalanche)
+    """
+    return result_type == 'birds' or project_type != 'ignite'
+
+def _field_value_filters(grower, year_int, project_type, result_type, category=None):
+    """Build ORM filter kwargs scoping CSVImportFieldValue to a grower."""
+    if _uses_sample_code_grower_join(project_type, result_type):
         prefix = 'row__sample_code__grower_mappings'
-    return {
+    else:
+        prefix = 'row__site_transect__site_code__grower_mappings'
+    filters = {
         f'{prefix}__grower': grower,
         f'{prefix}__year_sampled': year_int,
         'row__import_log__project_type': project_type,
         'row__import_log__result_type': result_type,
     }
+    if category:
+        filters['row__import_log__category'] = category
+    return filters
 
 
-def _field_value_qs(grower, year_int, project_type, result_type, depth=None):
+def _field_value_qs(grower, year_int, project_type, result_type, depth=None, category=None):
     """Return a CSVImportFieldValue queryset with appropriate select_related."""
-    filters = _field_value_filters(grower, year_int, project_type, result_type)
+    filters = _field_value_filters(grower, year_int, project_type, result_type, category=category)
     if depth:
         filters['row__depth'] = depth
-    related = ['row', 'row__site_transect', 'row__site_transect__site_code', 'row__import_log']
-    if project_type != 'ignite':
+    related = ['row', 'row__import_log']
+    if _uses_sample_code_grower_join(project_type, result_type):
         related.append('row__sample_code')
+    else:
+        related.extend(['row__site_transect', 'row__site_transect__site_code'])
     return (
         CSVImportFieldValue.objects
         .filter(**filters)
@@ -47,13 +70,8 @@ def _field_value_qs(grower, year_int, project_type, result_type, depth=None):
 
 
 def _get_depth_options(grower, year, project_type, result_type='basic'):
-    """
-    Get depth options for a given year, project_type, and result_type.
-    Returns a list of (value, label) tuples sorted by beginning depth, then ending depth.
-    """
     if not year:
         return []
-
     try:
         year_int = int(year)
     except (ValueError, TypeError):
@@ -96,24 +114,54 @@ def _get_depth_options(grower, year, project_type, result_type='basic'):
 
 
 def _is_numeric(value):
-    """Check if a value can be converted to a numeric type."""
     if value is None or value == '':
         return False
+    s = str(value).strip()
     try:
-        float(str(value).strip())
+        float(s)
+        return True
+    except (ValueError, TypeError):
+        pass
+    return _is_numeric_range(s)
+
+
+def _is_numeric_range(s: str) -> bool:
+    """True for strings like '88-91' or '10.5-12.0'."""
+    parts = s.split('-')
+    if len(parts) != 2:
+        return False
+    try:
+        float(parts[0].strip())
+        float(parts[1].strip())
         return True
     except (ValueError, TypeError):
         return False
 
 
+def _to_float(value) -> float | None:
+    """
+    Convert a value to float for averaging
+    Range strings ('88-91') uses midpoint
+    """
+    if value is None or value == '':
+        return None
+    s = str(value).strip()
+    try:
+        return float(s)
+    except (ValueError, TypeError):
+        pass
+    parts = s.split('-')
+    if len(parts) == 2:
+        try:
+            return (float(parts[0].strip()) + float(parts[1].strip())) / 2
+        except (ValueError, TypeError):
+            pass
+    return None
+
+
 def _aggregate_field_values(field_values):
-    """
-    Aggregate CSVImportFieldValues with the same field_name.
-    Returns average for numeric values, most common value for non-numeric.
-    """
     if not field_values:
         return {}
-
     groups = defaultdict(list)
     for fv in field_values:
         groups[fv.field_name].append(fv.field_value)
@@ -124,9 +172,10 @@ def _aggregate_field_values(field_values):
         if not non_empty:
             aggregated[field_name] = None
             continue
-        numeric = [float(str(v).strip()) for v in non_empty if _is_numeric(v)]
-        if numeric:
-            aggregated[field_name] = sum(numeric) / len(numeric)
+        numeric_floats = [_to_float(v) for v in non_empty if _is_numeric(v)]
+        numeric_floats = [f for f in numeric_floats if f is not None]
+        if numeric_floats:
+            aggregated[field_name] = sum(numeric_floats) / len(numeric_floats)
         else:
             non_numeric = [str(v).strip() for v in non_empty]
             aggregated[field_name] = Counter(non_numeric).most_common(1)[0][0]
@@ -135,10 +184,6 @@ def _aggregate_field_values(field_values):
 
 
 def _organize_results_by_mapping(field_values, result_type):
-    """
-    Organize aggregated field values according to RESULT_TYPE_FACTOR_MAPPING.
-    Returns {table_name: [{factor_name, units, value, individual_values}]}
-    """
     factor_mapping = RESULT_TYPE_FACTOR_MAPPING.get(result_type)
     if not factor_mapping:
         return {}
@@ -147,7 +192,6 @@ def _organize_results_by_mapping(field_values, result_type):
     if not aggregated_values:
         return {}
 
-    # Build per-row values keyed by field_name (queryset already evaluated above).
     individual_by_field = {}
     for fv in field_values:
         row = fv.row
@@ -190,10 +234,199 @@ def _organize_results_by_mapping(field_values, result_type):
     return organized_results
 
 
+# Bird-specific helpers
+
+def _get_bird_context(grower, year_int, project_type):
+    """
+    Return bird-specific display data:
+      - summary: avg Abundance, avg Richness, survey count
+      - survey_rows: individual survey events (date, richness, abundance, conditions)
+      - family_map: {species_name: family_name}  (CSVImportLog.ingestion_metadata family_map)
+      - species_by_family: {family: [{species, avg_count}]}
+    """
+    prefix = 'row__sample_code__grower_mappings'
+
+    filters = {
+        f'{prefix}__grower': grower,
+        f'{prefix}__year_sampled': year_int,
+        'row__import_log__project_type': project_type,
+        'row__import_log__result_type': 'birds',
+        'row__import_log__category': 'birds',
+    }
+
+    fvs = (
+        CSVImportFieldValue.objects
+        .filter(**filters)
+        .select_related('row', 'row__import_log', 'row__sample_code')
+        .order_by('row__row_number', 'field_name')
+    )
+
+    # Aggregate factor fields
+    organized = _organize_results_by_mapping(list(fvs), 'birds')
+
+    # Build per-survey rows for history table
+    surveys_by_row: dict = {}
+    for fv in fvs:
+        rid = fv.row_id
+        if rid not in surveys_by_row:
+            surveys_by_row[rid] = {}
+        if "site_code" not in surveys_by_row[rid]:
+            surveys_by_row[rid]["site_code"] = fv.row.sample_code.code if fv.row and fv.row.sample_code else ""
+        surveys_by_row[rid][fv.field_name] = fv.field_value
+
+    survey_rows = []
+    for rid, row_data in surveys_by_row.items():
+        survey_rows.append({
+            'site_code': row_data.get('site_code', ''),
+            'date': row_data.get('Date', ''),
+            'time': row_data.get('Time', ''),
+            'abundance': row_data.get('Abundance', ''),
+            'richness': row_data.get('Richness', ''),
+            'temp_f': row_data.get('Temp \ufffdF', '') or row_data.get('Temp °F', '') or row_data.get('Temp F', ''),
+            'distance_mi': row_data.get('Distance mi', '') or row_data.get('Distance MI', '') or row_data.get('Distance Mi', ''),
+            'duration_min': row_data.get('Duration (min)', ''),
+        })
+    # Per-site survey abundance and survey count
+    abundance_total_by_site: dict[str, float] = defaultdict(float)
+    abundance_survey_count_by_site: dict[str, int] = defaultdict(int)
+    for s in survey_rows:
+        site = str(s.get("site_code") or "").strip()
+        if not site:
+            continue
+        abundance_val = s.get("abundance", "")
+        if _is_numeric(abundance_val):
+            f = _to_float(abundance_val)
+            if f is not None:
+                abundance_total_by_site[site] += f
+                abundance_survey_count_by_site[site] += 1
+
+    # Per-site survey conditions
+    conditions_by_site_map: dict[str, dict] = {}
+    for s in survey_rows:
+        site = str(s.get("site_code") or "").strip()
+        if not site:
+            continue
+        current_key = f"{s.get('date','')} {s.get('time','')}"
+        prev = conditions_by_site_map.get(site)
+        prev_key = f"{prev.get('date','')} {prev.get('time','')}" if prev else ""
+        if not prev or current_key > prev_key:
+            conditions_by_site_map[site] = s
+
+    conditions_by_site = [
+        {
+            "site_code": site,
+            "distance_mi": row.get("distance_mi", ""),
+            "duration_min": row.get("duration_min", ""),
+        }
+        for site, row in sorted(conditions_by_site_map.items(), key=lambda x: x[0])
+    ]
+
+    # Retrieve family_map from the most recent import log for this grower/year/project
+    family_map: dict = {}
+    species_by_family: dict = defaultdict(list)
+
+    log_qs = (
+        CSVImportLog.objects
+        .filter(
+            **{
+                'csvimportrow__sample_code__grower_mappings__grower': grower,
+                'project_type': project_type,
+                'result_type': 'birds',
+                'category': 'birds',
+            }
+        )
+        .order_by('-import_date')
+        .distinct()
+    )
+    for log in log_qs:
+        meta = log.ingestion_metadata or {}
+        if meta.get('family_map'):
+            family_map = meta['family_map']
+            break
+        try:
+            desc = json.loads(log.description) if log.description else {}
+            if isinstance(desc, dict) and 'family_map' in desc:
+                family_map = desc['family_map']
+                break
+        except (json.JSONDecodeError, TypeError):
+            pass
+
+    # Build species counts per family per site (no cross-site averaging)
+    species_richness_by_site: dict[str, int] = {}
+    species_richness_combined: int = 0
+    if family_map:
+        non_species_keys = {
+            'Date', 'Time', 'Duration (min)', 'Distance KM', 'Distance mi', 'Distance MI', 'Distance Mi',
+            'Temp \ufffdC', 'Temp °C', 'Temp \ufffdF', 'Temp °F', 'Temp F',
+            'Matrix Score', 'Site Code', 'Abundance', 'Richness', '',
+            # Internal key added for the survey history table; not a species column.
+            'site_code',
+        }
+        # key: (species_col_name, site_code) -> [counts...]
+        species_totals: dict = defaultdict(list)
+        present_species_by_site: dict[str, set] = defaultdict(set)
+        present_species_combined: set = set()
+        for row_data in surveys_by_row.values():
+            site_code = row_data.get('site_code') or row_data.get('Site Code') or ''
+            site_code = str(site_code).strip()
+            for col, val in row_data.items():
+                if col in non_species_keys:
+                    continue
+                if _is_numeric(val) and float(val) > 0:
+                    species_totals[(col, site_code)].append(float(val))
+                    present_species_by_site[site_code].add(col)
+                    present_species_combined.add(col)
+
+        for (species, site_code), counts in species_totals.items():
+            family = family_map.get(species, 'Unknown Family')
+            total = sum(counts) if counts else 0
+            species_by_family[family].append({
+                'species': species,
+                'site_code': site_code,
+                'total_count': round(total, 2),
+                'visit_count': len(counts),
+            })
+
+        species_richness_by_site = {
+            site: len(species_set)
+            for site, species_set in present_species_by_site.items()
+            if site
+        }
+        species_richness_combined = len(present_species_combined)
+
+        # Sort families alphabetically and species within each family by total_count desc
+        species_by_family = {
+            fam: sorted(spp, key=lambda x: x['total_count'], reverse=True)
+            for fam, spp in sorted(species_by_family.items())
+        }
+
+    per_site_summary = []
+    for site in sorted(set(list(abundance_total_by_site.keys()) + list(species_richness_by_site.keys()))):
+        per_site_summary.append({
+            'site_code': site,
+            'survey_count': abundance_survey_count_by_site.get(site, 0),
+            'abundance_total': round(abundance_total_by_site.get(site, 0.0), 0) if site in abundance_total_by_site else None,
+            'species_richness': species_richness_by_site.get(site, None),
+        })
+
+    return {
+        'organized_results': organized,
+        'survey_rows': sorted(survey_rows, key=lambda x: x.get('date', '') or '', reverse=True),
+        'survey_count': len(survey_rows),
+        'conditions_by_site': conditions_by_site,
+        'family_map': family_map,
+        'species_by_family': dict(species_by_family),
+        'summary_combined': {
+            'abundance_total': round(sum(abundance_total_by_site.values()), 0) if abundance_total_by_site else None,
+            'species_richness': species_richness_combined if species_richness_combined else None,
+        },
+        'summary_by_site': per_site_summary,
+    }
+
+
 @login_required
 @permission_required(IS_GROWER_USER, raise_exception=True)
 def basic_results_ajax(request):
-    """AJAX endpoint returning the Basic results tables HTML fragment."""
     grower = request.user
     year = request.GET.get('year', '')
     project_type = request.GET.get('project_type', 'avalanche')
@@ -215,7 +448,6 @@ def basic_results_ajax(request):
 @login_required
 @permission_required(IS_GROWER_USER, raise_exception=True)
 def depth_options_ajax(request):
-    """AJAX endpoint to get depth options based on year, project_type, and result_type."""
     grower = request.user
     year = request.GET.get('year')
     project_type = request.GET.get('project_type')
@@ -233,9 +465,9 @@ def depth_options_ajax(request):
 @login_required
 @permission_required(IS_GROWER_USER, raise_exception=True)
 def results(request):
-    """Grower results dashboard."""
     grower = request.user
 
+    # determine available years (union across all result types)
     avalanche_year_set = set(
         CSVImportFieldValue.objects.filter(
             row__sample_code__grower_mappings__grower=grower,
@@ -245,7 +477,7 @@ def results(request):
         ).distinct()
     ) - {None}
 
-    ignite_year_set = set(
+    ignite_year_from_transect = set(
         CSVImportFieldValue.objects.filter(
             row__site_transect__site_code__grower_mappings__grower=grower,
             row__import_log__project_type='ignite',
@@ -253,10 +485,18 @@ def results(request):
             'row__site_transect__site_code__grower_mappings__year_sampled', flat=True
         ).distinct()
     ) - {None}
+    ignite_year_from_sample_code = set(
+        CSVImportFieldValue.objects.filter(
+            row__sample_code__grower_mappings__grower=grower,
+            row__import_log__project_type='ignite',
+        ).order_by().values_list(
+            'row__sample_code__grower_mappings__year_sampled', flat=True
+        ).distinct()
+    ) - {None}
+    ignite_year_set = ignite_year_from_transect | ignite_year_from_sample_code
 
     available_years = sorted(avalanche_year_set | ignite_year_set, reverse=True) or [date.today().year]
 
-    # Build year -> available project types mapping for client-side dropdown filtering.
     years_to_project_types = {}
     for y in avalanche_year_set:
         years_to_project_types.setdefault(str(y), []).append('avalanche')
@@ -265,7 +505,6 @@ def results(request):
 
     default_year = available_years[0]
     year_str = request.GET.get('year', '')
-    result_type_filter = request.GET.get('result_type', '')
     depth = request.GET.get('depth', '')
 
     try:
@@ -282,43 +521,70 @@ def results(request):
         if form.is_valid():
             year = form.cleaned_data.get('year') or year
             project_type = form.cleaned_data.get('project_type') or project_type
-            result_type_filter = form.cleaned_data.get('result_type', result_type_filter)
     else:
         form = ResultsFilterForm(
             initial={'year': year, 'project_type': project_type},
             available_years=available_years,
         )
 
-    result_type_results = []
-    all_depth_options = {}
-    try:
-        year_int = int(year)
-        for rt_value, rt_display in RESULT_TYPE_CHOICES:
-            rt_depth_options = _get_depth_options(grower, year, project_type, rt_value)
-            all_depth_options[rt_value] = rt_depth_options
-            field_values = _field_value_qs(
-                grower, year_int, project_type, rt_value,
-                depth=depth,
-            )
-            result_type_results.append({
-                'result_type': rt_value,
-                'display': rt_display,
-                'organized_results': _organize_results_by_mapping(field_values, rt_value),
-                'depth_options': rt_depth_options,
-            })
-    except (ValueError, TypeError):
-        pass
+    year_int = int(year)
 
-    depth_options = all_depth_options.get('basic', [])
+    # build categories_data
+    categories_data = []
+
+    for cat_value, cat_label in CATEGORY_CHOICES:
+        result_types_for_cat = CATEGORY_RESULT_TYPE_MAP.get(cat_value, [])
+        sections = []
+
+        for rt_value in result_types_for_cat:
+            rt_display = _RESULT_TYPE_DISPLAY.get(rt_value, rt_value)
+
+            if rt_value == 'birds':
+                bird_ctx = _get_bird_context(grower, year_int, project_type)
+                has_data = bool(bird_ctx['survey_count'])
+                sections.append({
+                    'result_type': rt_value,
+                    'display': rt_display,
+                    'is_birds': True,
+                    'has_data': has_data,
+                    'bird_data': bird_ctx,
+                    'depth_options': [],
+                })
+            else:
+                depth_options = _get_depth_options(grower, year, project_type, rt_value)
+                fv_qs = _field_value_qs(
+                    grower, year_int, project_type, rt_value,
+                    depth=depth,
+                    category=cat_value,
+                )
+                organized = _organize_results_by_mapping(fv_qs, rt_value)
+                sections.append({
+                    'result_type': rt_value,
+                    'display': rt_display,
+                    'is_birds': False,
+                    'has_data': bool(organized),
+                    'organized_results': organized,
+                    'depth_options': depth_options,
+                })
+
+        has_any = any(s['has_data'] for s in sections)
+        categories_data.append({
+            'value': cat_value,
+            'label': cat_label,
+            'icon': CATEGORY_DISPLAY_META.get(cat_value, {}).get('icon', 'fa-folder'),
+            'sections': sections,
+            'has_data': has_any,
+        })
+
+    depth_options_basic = _get_depth_options(grower, year, project_type, 'basic')
 
     return render(request, 'grower_portal/grower/results.html', {
         'form': form,
-        'result_type_results': result_type_results,
-        'depth_options': depth_options,
+        'categories_data': categories_data,
+        'depth_options': depth_options_basic,
         'year': year,
         'project_type': project_type,
         'project_type_display': dict(LABEL_PROJECT_CHOICES).get(project_type, project_type),
-        'result_type_filter': result_type_filter,
         'depth': depth,
         'user_timezone': get_user_timezone(request),
         'json_context': get_json_context({
@@ -326,7 +592,6 @@ def results(request):
             'basic_results_url': reverse('grower_portal:basic_results_ajax'),
             'year': year,
             'project_type': project_type,
-            'result_type_filter': result_type_filter,
             'years_to_project_types': years_to_project_types,
             'project_type_labels': dict(LABEL_PROJECT_CHOICES),
         }),
@@ -357,20 +622,20 @@ def factor_detail(request):
     if csv_field_name:
         try:
             year_int = int(year)
-            if project_type == 'ignite':
-                extra_related = [
-                    'row__site_transect__site_code__used_in_application',
-                    'row__site_transect__site_code__used_in_application__field',
-                    'row__site_transect__site_code__used_in_application__field__farm',
-                ]
-                order = ('row__site_transect__site_code__code', 'row__depth', 'pk')
-            else:
+            if _uses_sample_code_grower_join(project_type, result_type):
                 extra_related = [
                     'row__sample_code__used_in_application',
                     'row__sample_code__used_in_application__field',
                     'row__sample_code__used_in_application__field__farm',
                 ]
                 order = ('row__sample_code__code', 'row__depth', 'pk')
+            else:
+                extra_related = [
+                    'row__site_transect__site_code__used_in_application',
+                    'row__site_transect__site_code__used_in_application__field',
+                    'row__site_transect__site_code__used_in_application__field__farm',
+                ]
+                order = ('row__site_transect__site_code__code', 'row__depth', 'pk')
             field_values = (
                 _field_value_qs(grower, year_int, project_type, result_type, depth=depth)
                 .filter(field_name=csv_field_name)
@@ -389,10 +654,14 @@ def factor_detail(request):
             sample_code = row.site_transect.site_code.code
             transect_number = row.site_transect.transect_number
             application = row.site_transect.site_code.used_in_application
-        else:
-            sample_code = row.sample_code.code if row.sample_code else None
+        elif row.sample_code:
+            sample_code = row.sample_code.code
             transect_number = None
-            application = row.sample_code.used_in_application if row.sample_code else None
+            application = row.sample_code.used_in_application
+        else:
+            sample_code = None
+            transect_number = None
+            application = None
 
         is_num = _is_numeric(fv.field_value)
         rows.append({

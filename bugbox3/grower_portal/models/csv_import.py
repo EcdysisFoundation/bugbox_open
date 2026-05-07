@@ -3,6 +3,8 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from ..constants import (
+    CATEGORY_CHOICES,
+    CATEGORY_MAX_LENGTH,
     CSV_FILENAME_MAX_LENGTH,
     CSV_IMPORT_STATUS_CHOICES,
     FIELD_NAME_MAX_LENGTH,
@@ -24,6 +26,11 @@ class CSVImportLog(models.Model):
     import_date = models.DateTimeField(auto_now_add=True)
     file_path = models.CharField(max_length=FILE_PATH_MAX_LENGTH)
     description = models.TextField(blank=True)
+    ingestion_metadata = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text='Internal ingestion data (e.g. birds family_map). Not for admin-facing copy.',
+    )
     total_records = models.IntegerField(default=0)
     successful_records = models.IntegerField(default=0)
     failed_records = models.IntegerField(default=0)
@@ -35,6 +42,11 @@ class CSVImportLog(models.Model):
     error_log = models.JSONField(default=list, blank=True)
     project_type = models.CharField(max_length=20, choices=LABEL_PROJECT_CHOICES, default='avalanche')
     result_type = models.CharField(max_length=20, choices=RESULT_TYPE_CHOICES, default='basic')
+    category = models.CharField(
+        max_length=CATEGORY_MAX_LENGTH,
+        choices=CATEGORY_CHOICES,
+        default='soils',
+    )
 
     class Meta:
         verbose_name = _('CSV Import Log')

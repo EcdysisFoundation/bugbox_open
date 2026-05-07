@@ -25,8 +25,8 @@ from .csv_import import (
     csv_import_download,
     csv_import_download_error_log,
     csv_import_list,
-    csv_upload,
 )
+from .data_ingestion import category_result_types_ajax, data_ingestion_hub
 from .dashboard import admin_dashboard
 from .farms import farm_detail, farm_list
 from .fields import field_detail, field_list
@@ -69,12 +69,13 @@ __all__ = [
     'sample_code_generate',
     'sample_code_deactivate',
     'sample_code_reactivate',
-    'csv_upload',
     'csv_import_list',
     'csv_import_detail',
     'csv_import_download',
     'csv_import_download_error_log',
     'csv_import_delete',
+    'data_ingestion_hub',
+    'category_result_types_ajax',
     'report_list',
     'report_detail',
     'label_management',

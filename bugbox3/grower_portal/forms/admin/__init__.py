@@ -1,6 +1,5 @@
 from .forms import (
     ApplicationFilterForm,
-    CSVUploadForm,
     FarmFilterForm,
     FieldFilterForm,
     GrowerFilterForm,
@@ -11,7 +10,6 @@ from .label_forms import LabelGenerationForm, QuickLabelGenerationForm
 
 __all__ = [
     'TransectCodeGenerationForm',
-    'CSVUploadForm',
     'ApplicationFilterForm',
     'TransectCodeFilterForm',
     'GrowerFilterForm',

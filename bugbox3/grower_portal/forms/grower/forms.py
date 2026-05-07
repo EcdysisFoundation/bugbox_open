@@ -124,19 +124,6 @@ class ResultsFilterForm(forms.Form):
             if hasattr(field.widget, 'attrs'):
                 field.widget.attrs.update({'class': 'form-select'})
 
-        self.helper = FormHelper()
-        self.helper.form_method = 'get'
-        self.helper.form_class = 'row g-3'
-        self.helper.form_id = 'resultsFilterForm'
-
-        self.helper.layout = Layout(
-            Row(
-                Column('year', css_class='col-md-4'),
-                Column('project_type', css_class='col-md-4'),
-                Column('result_type', css_class='col-md-4'),
-            ),
-        )
-
 
 class ApplicationCreationForm(ModelFormMixin):
     farm_name = forms.CharField(

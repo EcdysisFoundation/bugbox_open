@@ -1,6 +1,3 @@
-import csv
-import io
-
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Column, Layout, Row, Submit
 from django import forms
@@ -8,13 +5,9 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 
 from ...constants import (
-    AVALANCHE_SAMPLE_CODE_COLUMN,
     FIELD_TYPE_CHOICES,
-    IGNITE_SAMPLE_CODE_COLUMN,
-    IGNITE_SITE_TRANSECT_COLUMN,
     LABEL_PROJECT_CHOICES,
     RESULT_TYPE_CHOICES,
-    RESULT_TYPE_SIGNATURE_COLUMNS,
 )
 from ...models import Farm
 
@@ -56,114 +49,6 @@ class TransectCodeGenerationForm(forms.Form):
         if prefix and not prefix.replace('-', '').replace('_', '').isalnum():
             raise ValidationError('Prefix must contain only alphanumeric characters, hyphens, or underscores')
         return prefix
-
-
-class CSVUploadForm(forms.Form):
-    csv_file = forms.FileField(
-        label='CSV File',
-        help_text='Select a CSV file to upload (max 10MB)',
-        widget=forms.FileInput(attrs={'accept': '.csv'})
-    )
-    project_type = forms.ChoiceField(choices=LABEL_PROJECT_CHOICES, label='Project Type')
-    result_type = forms.ChoiceField(choices=RESULT_TYPE_CHOICES, label='Result Type')
-    description = forms.CharField(
-        required=False,
-        widget=forms.Textarea(attrs={'rows': 4}),
-        label='Description/Annotations',
-        help_text='Optional notes about this import',
-        max_length=500
-    )
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.helper = FormHelper()
-        self.helper.form_method = 'post'
-        self.helper.form_enctype = 'multipart/form-data'
-        self.helper.layout = Layout(
-            'csv_file',
-            'project_type',
-            'result_type',
-            'description',
-            Submit('submit', 'Upload CSV', css_class='btn btn-primary')
-        )
-
-    def clean_csv_file(self):
-        csv_file = self.cleaned_data.get('csv_file')
-        project_type = self.data.get('project_type')
-        result_type = self.data.get('result_type')
-
-        if csv_file:
-            if not csv_file.name.endswith('.csv'):
-                raise ValidationError('File must be a CSV file (.csv extension)')
-            if csv_file.size > 10 * 1024 * 1024:
-                raise ValidationError('File size must not exceed 10MB')
-
-            # Read and validate CSV headers
-            try:
-                csv_file.seek(0)
-                content = csv_file.read()
-                if isinstance(content, bytes):
-                    content = content.decode('utf-8-sig')
-
-                csv_reader = csv.DictReader(io.StringIO(content))
-                headers = csv_reader.fieldnames
-
-                if not headers:
-                    raise ValidationError(
-                        'CSV file appears to be empty or has no headers'
-                    )
-
-                if any(not header for header in headers):
-                    raise ValidationError('CSV file has empty header values')
-
-                if project_type == 'avalanche':
-                    if AVALANCHE_SAMPLE_CODE_COLUMN not in headers:
-                        raise ValidationError(
-                            f'Sample Code column {AVALANCHE_SAMPLE_CODE_COLUMN}'
-                            ' is required for Avalanche project type'
-                        )
-                elif project_type == 'ignite':
-                    if IGNITE_SAMPLE_CODE_COLUMN not in headers:
-                        raise ValidationError(
-                            f'Sample Code column {IGNITE_SAMPLE_CODE_COLUMN}'
-                            ' is required for Ignite project type'
-                        )
-                    if IGNITE_SITE_TRANSECT_COLUMN not in headers:
-                        raise ValidationError(
-                            f'Site Transect column {IGNITE_SITE_TRANSECT_COLUMN}'
-                            ' is required for Ignite project type'
-                        )
-
-                # Check for depth headers for Basic tests
-                cleaned_headers = [header.strip() for header in headers]
-                if result_type == 'basic':
-                    if 'Beginning Depth' not in cleaned_headers:
-                        raise ValidationError('Beginning Depth header is required for Basic tests')
-                    if 'Ending Depth' not in cleaned_headers:
-                        raise ValidationError('Ending Depth header is required for Basic tests')
-
-                # make sure and validate that the CSV contains the expected columns for the selected result type
-                signature_columns = RESULT_TYPE_SIGNATURE_COLUMNS.get(result_type, [])
-                if signature_columns:
-                    matching_columns = [col for col in signature_columns if col in cleaned_headers]
-                    if not matching_columns:
-                        result_type_display = dict(RESULT_TYPE_CHOICES).get(result_type, result_type)
-                        raise ValidationError(
-                            f'This file does not appear to be a {result_type_display} test file. '
-                            f'Expected at least one of these columns: {", ".join(signature_columns[:3])}... '
-                            f'Please verify you selected the correct Result Type.'
-                        )
-
-            except csv.Error as e:
-                raise ValidationError(f'Error reading CSV file: {str(e)}')
-            except UnicodeDecodeError:
-                raise ValidationError(
-                    'CSV file encoding error. Please ensure the file is UTF-8 encoded.'
-                )
-            except Exception as e:
-                raise ValidationError(f'Error validating CSV file: {str(e)}')
-
-        return csv_file
 
 
 class ApplicationFilterForm(forms.Form):

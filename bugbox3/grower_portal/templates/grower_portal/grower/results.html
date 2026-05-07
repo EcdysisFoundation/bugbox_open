@@ -1,11 +1,8 @@
 {% extends "base.html" %}
 {% load render_bundle from webpack_loader %}
-
 {% load i18n %}
 {% load timezone_filters %}
-{% load crispy_forms_tags %}
-
-{% block title %}Grower Results{% endblock %}
+{% block title %}My Results{% endblock %}
 
 {% block customheadtagcontent %}
 {% render_bundle 'grower_results' 'js' attrs='defer' %}
@@ -14,153 +11,208 @@
 
 {% block content %}
 <div class="container mt-4">
-    <div class="row mb-4">
-        <div class="col-12">
-            <h1>My Results</h1>
-        </div>
-    </div>
 
-    <!-- Filter Bar -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-filter"></i> Filter Results</h5>
-                </div>
-                <div class="card-body">
-                    {% crispy form %}
-                </div>
-            </div>
-        </div>
+  {# Page header #}
+  <div class="row mb-3">
+    <div class="col-12">
+      <h1 class="mb-0">My Results</h1>
+      <p class="text-muted small mt-1 mb-0">
+        Displaying results for <strong>{{ year }}</strong> &mdash;
+        <strong>{{ project_type_display }}</strong>.
+        Numeric values show the average; non-numeric values show the most common value.
+      </p>
     </div>
+  </div>
 
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card-body">
-                <p>Currently displaying results for <strong>{{ year }}</strong> for project type <strong>{{ project_type_display }}</strong>.</p>
-                <p>Results values are aggregated. Numeric values display the average, and non-numeric values display the most common value.</p>
-                <p>Click on any factor to see detailed values and information.</p>
-                <div class="form-check mt-2">
-                    <input class="form-check-input" type="checkbox" id="showIndividualValues">
-                    <label class="form-check-label" for="showIndividualValues">
-                        Show individual transect values
-                    </label>
-                </div>
-            </div>
+  {# Filter bar #}
+  <div class="card mb-4">
+    <div class="card-body py-3">
+      <form method="get" id="resultsFilterForm" class="row g-3 gx-md-4 align-items-end">
+        <div class="col-12 col-md-4">
+          <label for="{{ form.year.id_for_label }}" class="form-label mb-1">{{ form.year.label }}</label>
+          {{ form.year }}
         </div>
+        <div class="col-12 col-md-4">
+          <label for="{{ form.project_type.id_for_label }}" class="form-label mb-1">{{ form.project_type.label }}</label>
+          {{ form.project_type }}
+        </div>
+        <div class="col-12 col-md-4">
+          <label for="{{ form.result_type.id_for_label }}" class="form-label mb-1">{{ form.result_type.label }}</label>
+          {{ form.result_type }}
+        </div>
+      </form>
     </div>
+  </div>
 
-    <!-- Results by Type (collapsible accordion) -->
-    <div class="accordion" id="resultsAccordion">
-        {% for result_section in result_type_results %}
-        <div class="accordion-item mb-3 border rounded" data-result-type="{{ result_section.result_type }}">
-            <h2 class="accordion-header" id="heading-{{ result_section.result_type }}">
-                <button class="accordion-button {% if not forloop.first %}collapsed{% endif %} fw-semibold fs-5"
-                        type="button"
-                        data-bs-toggle="collapse"
-                        data-bs-target="#collapse-{{ result_section.result_type }}"
-                        aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}"
-                        aria-controls="collapse-{{ result_section.result_type }}">
-                    <i class="fas fa-flask me-2"></i> {{ result_section.display }} Results
-                </button>
-            </h2>
-            <div id="collapse-{{ result_section.result_type }}"
-                 class="accordion-collapse collapse {% if forloop.first %}show{% endif %}"
-                 aria-labelledby="heading-{{ result_section.result_type }}">
-                <div class="accordion-body">
-                    {% if result_section.depth_options %}
-                    <div class="mb-3 d-flex align-items-end gap-3">
-                        <div>
-                            <label for="depthSelect-{{ result_section.result_type }}" class="form-label fw-semibold mb-1">Depth</label>
-                            <select id="depthSelect-{{ result_section.result_type }}" class="form-select depth-select" data-result-type="{{ result_section.result_type }}" style="width: auto;">
-                                <option value="">All Depths</option>
-                                {% for value, label in result_section.depth_options %}
-                                <option value="{{ value }}"{% if depth == value %} selected{% endif %}>{{ label }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
+  {# Individual values toggle #}
+  <div class="form-check mb-3">
+    <input class="form-check-input" type="checkbox" id="showIndividualValues">
+    <label class="form-check-label text-muted small" for="showIndividualValues">
+      Show individual transect / site values
+    </label>
+  </div>
+
+  {# Category nav-tabs #}
+  <ul class="nav nav-tabs mb-0" id="categoryTabs" role="tablist">
+    {% for cat in categories_data %}
+    {% if cat.has_data %}
+    <li class="nav-item" role="presentation">
+      <button class="nav-link {% if forloop.first %}active{% endif %}"
+              id="tab-{{ cat.value }}"
+              data-bs-toggle="tab"
+              data-bs-target="#pane-{{ cat.value }}"
+              type="button"
+              role="tab"
+              aria-controls="pane-{{ cat.value }}"
+              aria-selected="{% if forloop.first %}true{% else %}false{% endif %}">
+        <i class="fas {{ cat.icon }} me-1"></i>{{ cat.label }}
+      </button>
+    </li>
+    {% endif %}
+    {% endfor %}
+  </ul>
+
+  {# Category tab panes #}
+  <div class="tab-content border border-top-0 rounded-bottom p-3 bg-white mb-5" id="categoryTabsContent">
+    {% for cat in categories_data %}
+    {% if cat.has_data %}
+    <div class="tab-pane fade {% if forloop.first %}show active{% endif %}"
+         id="pane-{{ cat.value }}"
+         role="tabpanel"
+         aria-labelledby="tab-{{ cat.value }}">
+
+      {# Accordion by result_type within each category #}
+      <div class="accordion" id="accordion-{{ cat.value }}">
+        {% for section in cat.sections %}
+        {% if section.has_data %}
+        <div class="accordion-item mb-2 border rounded"
+             data-result-type="{{ section.result_type }}">
+          <h2 class="accordion-header" id="heading-{{ cat.value }}-{{ section.result_type }}">
+            <button class="accordion-button {% if not forloop.first %}collapsed{% endif %} fw-semibold"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapse-{{ cat.value }}-{{ section.result_type }}"
+                    aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}">
+              {{ section.display }} Results
+            </button>
+          </h2>
+          <div id="collapse-{{ cat.value }}-{{ section.result_type }}"
+               class="accordion-collapse collapse {% if forloop.first %}show{% endif %}">
+            <div class="accordion-body">
+
+              {# Depth selector (soils Basic) #}
+              {% if section.depth_options %}
+              <div class="mb-3">
+                <label class="form-label fw-semibold small mb-1">Depth</label>
+                <select class="form-select form-select-sm depth-select w-auto"
+                        data-result-type="{{ section.result_type }}">
+                  <option value="">All Depths</option>
+                  {% for value, label in section.depth_options %}
+                  <option value="{{ value }}"{% if depth == value %} selected{% endif %}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              {% endif %}
+
+              {# Birds: custom partial #}
+              {% if section.is_birds %}
+                {% include "grower_portal/grower/_bird_results.html" with bird_data=section.bird_data %}
+
+              {# Basic: AJAX-refreshable partial #}
+              {% elif section.result_type == "basic" %}
+              <div id="basic-results-tables" data-depth="{{ depth }}">
+                {% include "grower_portal/grower/_basic_results_tables.html" with organized_results=section.organized_results %}
+              </div>
+
+              {# All other result types: standard factor table grid #}
+              {% else %}
+              <div class="row">
+                {% for table_name, table_data in section.organized_results.items %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                  <div class="card h-100">
+                    <div class="card-header">
+                      <h6 class="mb-0"><i class="fas fa-table me-1"></i>{{ table_name }}</h6>
                     </div>
-                    {% endif %}
-                    {% if result_section.result_type == "basic" %}
-                    <div id="basic-results-tables" data-depth="{{ depth }}">
-                        {% include "grower_portal/grower/_basic_results_tables.html" with organized_results=result_section.organized_results %}
-                    </div>
-                {% else %}
-                    {% if result_section.organized_results %}
-                        <div class="row">
-                            {% for table_name, table_data in result_section.organized_results.items %}
-                            <div class="col-md-6 col-lg-4 mb-4">
-                                <div class="card h-100">
-                                    <div class="card-header">
-                                        <h5 class="mb-0"><i class="fas fa-table"></i> {{ table_name }}</h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="table-responsive">
-                                            <table class="table table-hover table-sm">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Factor</th>
-                                                        <th>Value</th>
-                                                        <th>Units</th>
-                                                        <th></th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {% for factor in table_data %}
-                                                    <tr style="cursor: pointer;"
-                                                        data-factor-name="{{ factor.factor_name }}"
-                                                        data-result-type="{{ result_section.result_type }}">
-                                                        <td>
-                                                            {{ factor.factor_name }}
-                                                            {% if factor.summary %}
-                                                            <i class="bi bi-info-circle text-muted ms-1"
-                                                               style="cursor: help; font-size: 0.8em;"
-                                                               data-bs-toggle="tooltip"
-                                                               data-bs-placement="right"
-                                                               data-bs-title="{{ factor.summary }}"></i>
-                                                            {% endif %}
-                                                        </td>
-                                                        <td>
-                                                            {% if factor.has_value %}
-                                                                {% if factor.is_numeric %}
-                                                                    {{ factor.value|floatformat:"2" }}
-                                                                {% else %}
-                                                                    {{ factor.value }}
-                                                                {% endif %}
-                                                            {% else %}
-                                                                —
-                                                            {% endif %}
-                                                        </td>
-                                                        <td>{% if factor.units %}{{ factor.units }}{% else %}—{% endif %}</td>
-                                                        <td class="text-end text-muted">›</td>
-                                                    </tr>
-                                                    {% for iv in factor.individual_values %}
-                                                    <tr class="individual-values-row" style="display:none; background:var(--bs-tertiary-bg,#f8f9fa);">
-                                                        <td class="ps-4 text-muted small">{{ iv.label }}</td>
-                                                        <td class="small">
-                                                            {% if iv.value %}{% if iv.is_numeric %}{{ iv.value|floatformat:"2" }}{% else %}{{ iv.value }}{% endif %}{% else %}—{% endif %}
-                                                        </td>
-                                                        <td class="text-muted small">{% if factor.units %}{{ factor.units }}{% endif %}</td>
-                                                        <td></td>
-                                                    </tr>
-                                                    {% endfor %}
-                                                    {% endfor %}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                    <div class="card-body p-0">
+                      <div class="table-responsive">
+                        <table class="table table-hover table-sm mb-0">
+                          <thead class="table-light">
+                            <tr>
+                              <th>Factor</th>
+                              <th>Value</th>
+                              <th>Units</th>
+                              <th></th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {% for factor in table_data %}
+                            <tr style="cursor:pointer;"
+                                data-factor-name="{{ factor.factor_name }}"
+                                data-result-type="{{ section.result_type }}">
+                              <td>
+                                {{ factor.factor_name }}
+                                {% if factor.summary %}
+                                <i class="bi bi-info-circle text-muted ms-1"
+                                   style="font-size:.8em;cursor:help;"
+                                   data-bs-toggle="tooltip"
+                                   data-bs-title="{{ factor.summary }}"></i>
+                                {% endif %}
+                              </td>
+                              <td>
+                                {% if factor.has_value %}
+                                  {% if factor.is_numeric %}
+                                    {{ factor.value|floatformat:"2" }}
+                                  {% else %}
+                                    {{ factor.value }}
+                                  {% endif %}
+                                {% else %}—{% endif %}
+                              </td>
+                              <td>{% if factor.units %}{{ factor.units }}{% else %}—{% endif %}</td>
+                              <td class="text-end text-muted">›</td>
+                            </tr>
+                            {% for iv in factor.individual_values %}
+                            <tr class="individual-values-row"
+                                style="display:none;background:var(--bs-tertiary-bg,#f8f9fa);">
+                              <td class="ps-4 text-muted small">{{ iv.label }}</td>
+                              <td class="small">
+                                {% if iv.value %}
+                                  {% if iv.is_numeric %}{{ iv.value|floatformat:"2" }}{% else %}{{ iv.value }}{% endif %}
+                                {% else %}—{% endif %}
+                              </td>
+                              <td class="text-muted small">{% if factor.units %}{{ factor.units }}{% endif %}</td>
+                              <td></td>
+                            </tr>
                             {% endfor %}
-                        </div>
-                    {% else %}
-                        <p class="text-muted mb-0">No {{ result_section.display }} results available for the selected filters.</p>
-                    {% endif %}
-                {% endif %}
+                            {% endfor %}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-            </div>
-        </div>
-        {% endfor %}
+                {% endfor %}
+              </div>
+              {% endif %}{# end result_type branch #}
+
+            </div>{# accordion-body #}
+          </div>{# accordion-collapse #}
+        </div>{# accordion-item #}
+        {% endif %}{# has_data #}
+        {% endfor %}{# sections #}
+      </div>{# accordion #}
+
+    </div>{# tab-pane #}
+    {% endif %}
+    {% endfor %}{# categories #}
+
+    {# Fallback: no data at all #}
+    {% if not categories_data %}
+    <div class="text-center py-5 text-muted">
+      <i class="fas fa-chart-bar fa-3x mb-3"></i>
+      <p>No results available for {{ year }}. Check back after data has been uploaded.</p>
     </div>
+    {% endif %}
+  </div>
+
 </div>
 {% endblock %}
