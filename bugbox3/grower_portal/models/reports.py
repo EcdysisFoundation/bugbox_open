@@ -44,6 +44,13 @@ class GrowerReport(models.Model):
 class LabelGeneration(models.Model):
     """Track label generation history for admin users"""
 
+    STATUS_CHOICES = [
+        ('queued', 'Queued'),
+        ('processing', 'Processing'),
+        ('ready', 'Ready'),
+        ('failed', 'Failed'),
+    ]
+
     project_type = models.CharField(
         max_length=20,
         choices=LABEL_PROJECT_CHOICES,
@@ -74,6 +81,19 @@ class LabelGeneration(models.Model):
         related_name='label_generations'
     )
     generated_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='queued',
+        help_text='Generation status'
+    )
+    generation_params = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text='Internal parameters used for async generation'
+    )
+    error_message = models.TextField(blank=True, default='', help_text='Error details if generation failed')
+    task_id = models.CharField(max_length=64, blank=True, default='', help_text='Celery task id')
     label_file = models.FileField(
         upload_to='label_documents/',
         help_text='Generated Word document with labels'
