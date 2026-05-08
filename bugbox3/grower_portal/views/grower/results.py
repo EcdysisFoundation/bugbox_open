@@ -21,6 +21,7 @@ from ...constants import (
 from ...forms.grower.forms import ResultsFilterForm
 from ...middleware import get_user_timezone
 from ...models import CSVImportFieldValue, CSVImportLog, CSVImportRow
+from ...services.bird_references import build_all_about_birds_overview_url
 
 _RESULT_TYPE_DISPLAY = dict(RESULT_TYPE_CHOICES)
 _CATEGORY_DISPLAY = dict(CATEGORY_CHOICES)
@@ -385,6 +386,7 @@ def _get_bird_context(grower, year_int, project_type):
                 'site_code': site_code,
                 'total_count': round(total, 2),
                 'visit_count': len(counts),
+                'all_about_birds_url': build_all_about_birds_overview_url(species),
             })
 
         species_richness_by_site = {

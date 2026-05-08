@@ -208,3 +208,19 @@
   }
 }
 
+.aab-ref-btn {
+  background-color: #fff;
+  color: #111 !important;
+  border: 1px solid #198754;
+  transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover,
+  &:focus {
+    background-color: rgba(25, 135, 84, 0.12);
+    border-color: #198754;
+    color: #111 !important;
+    box-shadow: 0 0 0 0.15rem rgba(25, 135, 84, 0.25);
+    text-decoration: none;
+  }
+}
+
