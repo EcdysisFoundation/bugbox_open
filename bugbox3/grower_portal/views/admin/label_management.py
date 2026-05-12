@@ -15,6 +15,22 @@ from ...models import LabelGeneration, SampleCode
 from ...tasks import generate_labels_async
 
 
+def _enqueue_label_generation_task(label_generation: LabelGeneration) -> None:
+    """
+    Queue Celery after the HTTP request's DB transaction commits.
+
+    With ATOMIC_REQUESTS=True, .delay() must not run inside the open request transaction
+    or the worker will not see the new LabelGeneration row (DoesNotExist).
+    """
+    pk = label_generation.pk
+
+    def enqueue():
+        task = generate_labels_async.delay(pk)
+        LabelGeneration.objects.filter(pk=pk).update(task_id=task.id)
+
+    transaction.on_commit(enqueue)
+
+
 @login_required
 @permission_required(IS_GROWERADMIN, raise_exception=True)
 def label_management(request):
@@ -75,9 +91,7 @@ def label_management(request):
                                     'site_codes': site_codes,
                                 },
                             )
-                            task = generate_labels_async.delay(label_generation.id)
-                            label_generation.task_id = task.id
-                            label_generation.save(update_fields=['task_id'])
+                            _enqueue_label_generation_task(label_generation)
 
                             messages.success(request, 'Ignite outer labels queued for generation.')
                             return redirect('grower_portal:label_generation_detail', generation_id=label_generation.id)
@@ -106,9 +120,7 @@ def label_management(request):
                                     'labels_per_type': 4,
                                 },
                             )
-                            task = generate_labels_async.delay(label_generation.id)
-                            label_generation.task_id = task.id
-                            label_generation.save(update_fields=['task_id'])
+                            _enqueue_label_generation_task(label_generation)
 
                             messages.success(request, 'Ignite inner labels queued for generation.')
                             return redirect('grower_portal:label_generation_detail', generation_id=label_generation.id)
@@ -150,9 +162,7 @@ def label_management(request):
                                 'sample_types': [],
                             },
                         )
-                        task = generate_labels_async.delay(label_generation.id)
-                        label_generation.task_id = task.id
-                        label_generation.save(update_fields=['task_id'])
+                        _enqueue_label_generation_task(label_generation)
 
                         messages.success(request, 'Outer labels queued for generation.')
                         return redirect('grower_portal:label_generation_detail', generation_id=label_generation.id)
@@ -185,9 +195,7 @@ def label_management(request):
                                 'labels_per_type': number_of_transects,
                             },
                         )
-                        task = generate_labels_async.delay(label_generation.id)
-                        label_generation.task_id = task.id
-                        label_generation.save(update_fields=['task_id'])
+                        _enqueue_label_generation_task(label_generation)
 
                         messages.success(request, 'Inner labels queued for generation.')
                         return redirect('grower_portal:label_generation_detail', generation_id=label_generation.id)
