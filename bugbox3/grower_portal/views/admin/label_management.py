@@ -4,7 +4,7 @@ from django.core.paginator import Paginator
 from django.db import transaction
 from django.http import FileResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.views.decorators.http import require_http_methods
+from django.views.decorators.http import require_http_methods, require_POST
 
 from bugbox3.core.permissions import IS_GROWERADMIN
 
@@ -17,10 +17,7 @@ from ...tasks import generate_labels_async
 
 def _enqueue_label_generation_task(label_generation: LabelGeneration) -> None:
     """
-    Queue Celery after the HTTP request's DB transaction commits.
-
-    With ATOMIC_REQUESTS=True, .delay() must not run inside the open request transaction
-    or the worker will not see the new LabelGeneration row (DoesNotExist).
+    Queue Celery after the HTTP requests DB transaction commits
     """
     pk = label_generation.pk
 
@@ -352,6 +349,54 @@ def label_generation_delete(request, generation_id):
         'user_timezone': get_user_timezone(request),
     }
     return render(request, 'grower_portal/admin/label_generation_delete.html', context)
+
+
+@login_required
+@permission_required(IS_GROWERADMIN, raise_exception=True)
+@require_POST
+def label_regenerate_quick_avalanche(request, generation_id):
+    """
+    Re-queue label generation using codes already stored on the LabelGeneration row
+    (rebuilds the Word file with current template fill logic; no new SampleCode rows).
+    Applies to Avalanche or Ignite, inner or outer, whenever codes are stored.
+    """
+    generation = get_object_or_404(
+        LabelGeneration.objects.select_related('generated_by'),
+        id=generation_id,
+    )
+
+    codes = list(generation.transect_codes_generated or [])
+    if not codes:
+        messages.error(
+            request,
+            'This generation has no stored codes to reuse.',
+        )
+        return redirect('grower_portal:label_generation_detail', generation_id=generation.id)
+
+    if generation.status in ('queued', 'processing'):
+        messages.warning(
+            request,
+            'This generation is already queued or processing. Wait for it to finish.',
+        )
+        return redirect('grower_portal:label_generation_detail', generation_id=generation.id)
+
+    with transaction.atomic():
+        gen = LabelGeneration.objects.select_for_update().get(pk=generation_id)
+        params = dict(gen.generation_params or {})
+        params['reuse_transect_codes'] = True
+        gen.generation_params = params
+        gen.status = 'queued'
+        gen.error_message = ''
+        gen.save(update_fields=['generation_params', 'status', 'error_message'])
+
+    _enqueue_label_generation_task(gen)
+
+    messages.success(
+        request,
+        'Regeneration has been queued. The same stored codes will be used with the '
+        'current label logic and templates. Refresh this page in a moment, then download the file.',
+    )
+    return redirect('grower_portal:label_generation_detail', generation_id=generation.id)
 
 
 @login_required
