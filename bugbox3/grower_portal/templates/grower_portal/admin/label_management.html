@@ -90,6 +90,20 @@
                                     <div class="text-danger">{{ quick_form.excluded_sample_types.errors }}</div>
                                 {% endif %}
                             </div>
+                            <div class="col-12 mb-2" id="ignite-inner-forage-row" style="display: none;">
+                                <div class="form-check">
+                                    {{ quick_form.include_forage_labels }}
+                                    <label class="form-check-label" for="{{ quick_form.include_forage_labels.id_for_label }}">
+                                        {{ quick_form.include_forage_labels.label }}
+                                    </label>
+                                </div>
+                                {% if quick_form.include_forage_labels.help_text %}
+                                    <small class="form-text text-muted">{{ quick_form.include_forage_labels.help_text }}</small>
+                                {% endif %}
+                                {% if quick_form.include_forage_labels.errors %}
+                                    <div class="text-danger">{{ quick_form.include_forage_labels.errors }}</div>
+                                {% endif %}
+                            </div>
                         </div>
                         
                         <div class="row" id="outer-labels-quick-section" style="display: none;">

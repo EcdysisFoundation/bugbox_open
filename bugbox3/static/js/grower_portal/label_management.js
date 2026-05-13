@@ -7,9 +7,26 @@ document.addEventListener('DOMContentLoaded', function() {
     const yearInput = document.getElementById('id_quick_year');
     const projectTypeSelect = document.getElementById('id_quick_project_type');
     const quickLabelForm = document.getElementById('quick-label-form');
+    const igniteInnerForageRow = document.getElementById('ignite-inner-forage-row');
+    const includeForageInput = document.getElementById('id_include_forage_labels');
     
     // Get the inner label generations URL from the form's data attribute
     const innerLabelGenerationsUrl = quickLabelForm ? quickLabelForm.getAttribute('data-inner-label-generations-url') : null;
+    
+    function updateIgniteForageRowVisibility() {
+        const labelCategory = labelCategorySelect ? labelCategorySelect.value : 'inner';
+        const projectType = projectTypeSelect ? projectTypeSelect.value : '';
+        const show = projectType === 'ignite' && labelCategory === 'inner';
+        if (igniteInnerForageRow) {
+            igniteInnerForageRow.style.display = show ? 'block' : 'none';
+        }
+        if (includeForageInput) {
+            includeForageInput.disabled = !show;
+            if (!show) {
+                includeForageInput.checked = false;
+            }
+        }
+    }
     
     function updateFormVisibility() {
         const labelCategory = labelCategorySelect ? labelCategorySelect.value : 'inner';
@@ -22,6 +39,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (numberOfTransectsSection) numberOfTransectsSection.style.display = 'flex';
             if (outerLabelsSection) outerLabelsSection.style.display = 'none';
         }
+        updateIgniteForageRowVisibility();
     }
     
     function loadInnerLabelGenerations() {
@@ -82,6 +100,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         projectTypeSelect.addEventListener('change', function() {
+            updateIgniteForageRowVisibility();
             if (labelCategorySelect && labelCategorySelect.value === 'outer') {
                 loadInnerLabelGenerations();
             }

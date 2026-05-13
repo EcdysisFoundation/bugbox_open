@@ -282,7 +282,7 @@ LABEL_COUNT_MIN = 1
 LABEL_COUNT_MAX = 1000
 CLUSTER_NUMBER_MAX_LENGTH = 10
 
-# Ignite inner sample types
+# Ignite inner sample types (Forage is optional; the checkbox on form has to be checked to include it)
 IGNITE_INNER_SAMPLE_TYPES = [
     'soil_core_0_60cm',
     'soil_core_0_5cm',

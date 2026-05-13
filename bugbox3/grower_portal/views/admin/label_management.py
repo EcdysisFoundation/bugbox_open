@@ -101,6 +101,10 @@ def label_management(request):
                                     request, 'All sample types are excluded. Please include at least one sample type.')
                                 return redirect('grower_portal:label_management')
 
+                            include_forage = bool(quick_form.cleaned_data.get('include_forage_labels'))
+                            if include_forage:
+                                sample_types = list(sample_types) + ['forage']
+
                             label_generation = LabelGeneration.objects.create(
                                 project_type=project_type,
                                 label_category='inner',
@@ -115,6 +119,7 @@ def label_management(request):
                                     'number_of_transects': number_of_transects,
                                     'sample_types': sample_types,
                                     'labels_per_type': 4,
+                                    'include_forage_labels': include_forage,
                                 },
                             )
                             _enqueue_label_generation_task(label_generation)

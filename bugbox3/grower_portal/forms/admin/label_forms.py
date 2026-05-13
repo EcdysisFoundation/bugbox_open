@@ -168,6 +168,14 @@ class QuickLabelGenerationForm(forms.Form):
         help_text='Select sample types to exclude from label generation'
     )
 
+    include_forage_labels = forms.BooleanField(
+        required=False,
+        initial=False,
+        label='Include Forage labels',
+        help_text='Adds Forage inner labels (T1-T4 per site). Shown for Ignite inner quick generate only.',
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input', 'id': 'id_include_forage_labels'}),
+    )
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
