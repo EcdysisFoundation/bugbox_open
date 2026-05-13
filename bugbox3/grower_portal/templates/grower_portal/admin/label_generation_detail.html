@@ -24,6 +24,18 @@
                         </form>
                         {% endif %}
                     {% endif %}
+                    {% if generation.project_type == 'ignite' and generation.label_category == 'inner' and generation.transect_codes_generated and generation.sample_types %}
+                        {% if 'forage' not in generation.sample_types %}
+                            {% if generation.status != 'queued' and generation.status != 'processing' %}
+                            <form method="post" action="{% url 'grower_portal:label_ignite_forage_supplement' generation.id %}" class="d-inline me-2">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-primary" title="Creates a new queued job: Forage inner labels only (T1-T4 per site), same site codes as this batch. doesnt create new sample codes.">
+                                    <i class="fas fa-leaf"></i> Queue Forage-only labels (same sites)
+                                </button>
+                            </form>
+                            {% endif %}
+                        {% endif %}
+                    {% endif %}
                     <a href="{% url 'grower_portal:label_generation_list' %}" class="btn btn-outline-secondary">
                         <i class="fas fa-arrow-left"></i> Back to List
                     </a>

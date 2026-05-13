@@ -291,7 +291,8 @@ def label_generation_delete(request, generation_id):
     Delete a label generation record. For inner generations, also removes the
     SampleCode rows created for that batch (listed in transect_codes_generated)
     so codes can be generated again, unless any code is in use or mapped to a grower.
-    Outer generations only remove the history row and stored file.
+    Ignite Forage-only supplement rows reuse codes from an earlier batch; deleting those
+    does not remove SampleCode rows. Outer generations only remove the history row and stored file.
     """
     generation = get_object_or_404(
         LabelGeneration.objects.select_related('generated_by'),
@@ -305,7 +306,10 @@ def label_generation_delete(request, generation_id):
                 raw_codes = generation.transect_codes_generated or []
                 code_strings = [str(c).strip() for c in raw_codes if str(c).strip()]
 
-                if generation.label_category == 'inner' and code_strings:
+                params = generation.generation_params or {}
+                skip_sample_code_delete = bool(params.get('ignite_forage_supplement'))
+
+                if generation.label_category == 'inner' and code_strings and not skip_sample_code_delete:
                     blocked = []
                     for code_str in code_strings:
                         try:
@@ -341,7 +345,7 @@ def label_generation_delete(request, generation_id):
                 'Label generation deleted.'
                 + (
                     ' Associated sample codes were removed and can be generated again.'
-                    if was_inner and code_strings
+                    if was_inner and code_strings and not skip_sample_code_delete
                     else ''
                 ),
             )
@@ -406,6 +410,83 @@ def label_regenerate_quick_avalanche(request, generation_id):
 
 @login_required
 @permission_required(IS_GROWERADMIN, raise_exception=True)
+@require_POST
+def label_ignite_forage_supplement(request, generation_id):
+    """
+    Queue a new Ignite inner label generation that contains only Forage labels (T1-T4 per site),
+    reusing the site codes from an existing inner batch. does not create new SampleCode rows.
+    """
+    source = get_object_or_404(
+        LabelGeneration.objects.select_related('generated_by'),
+        id=generation_id,
+    )
+
+    if source.project_type != 'ignite' or source.label_category != 'inner':
+        messages.error(
+            request,
+            'Forage-only supplement is only available for Ignite inner label generations.',
+        )
+        return redirect('grower_portal:label_generation_detail', generation_id=source.id)
+
+    codes = list(source.transect_codes_generated or [])
+    if not codes:
+        messages.error(
+            request,
+            'This generation has no stored site codes to reuse.',
+        )
+        return redirect('grower_portal:label_generation_detail', generation_id=source.id)
+
+    sample_types = source.sample_types or []
+    if 'forage' in sample_types:
+        messages.info(
+            request,
+            'This batch already included Forage in its sample types. Use Regenerate on this row '
+            'for an updated full document, or open Label Management to generate a new inner batch.',
+        )
+        return redirect('grower_portal:label_generation_detail', generation_id=source.id)
+
+    if source.status in ('queued', 'processing'):
+        messages.warning(
+            request,
+            'Wait until this generation has finished processing, then try again.',
+        )
+        return redirect('grower_portal:label_generation_detail', generation_id=source.id)
+
+    n = len(codes)
+    child = LabelGeneration.objects.create(
+        project_type='ignite',
+        label_category='inner',
+        cluster_number=source.cluster_number,
+        year=source.year,
+        sample_types=['forage'],
+        labels_per_type=4,
+        total_labels_generated=0,
+        generated_by=request.user,
+        description=(
+            f'Ignite inner Forage-only labels (same {n} site code(s) as generation #{source.id}).'
+        ),
+        transect_codes_generated=list(codes),
+        generation_params={
+            'reuse_transect_codes': True,
+            'number_of_transects': n,
+            'sample_types': ['forage'],
+            'labels_per_type': 4,
+            'ignite_forage_supplement': True,
+            'ignite_forage_supplement_source_generation_id': source.id,
+        },
+    )
+    _enqueue_label_generation_task(child)
+
+    messages.success(
+        request,
+        'A Forage-only label document has been queued using the same site codes (T1-T4 per site). '
+        'Open the new generation when it is ready, then download the Word file.',
+    )
+    return redirect('grower_portal:label_generation_detail', generation_id=child.id)
+
+
+@login_required
+@permission_required(IS_GROWERADMIN, raise_exception=True)
 @require_http_methods(["GET"])
 def inner_label_generations_json(request):
     """endpoint to get inner label generations for a cluster/year/project"""
@@ -431,6 +512,8 @@ def inner_label_generations_json(request):
 
     results = []
     for gen in generations:
+        if (gen.generation_params or {}).get('ignite_forage_supplement'):
+            continue
         transect_count = len(gen.transect_codes_generated) if gen.transect_codes_generated else 0
         results.append({
             'id': gen.id,

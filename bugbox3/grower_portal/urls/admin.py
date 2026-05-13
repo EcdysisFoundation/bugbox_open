@@ -37,6 +37,7 @@ from ..views.admin import (
     label_generation_detail,
     label_generation_download,
     label_generation_list,
+    label_ignite_forage_supplement,
     label_management,
     label_regenerate_quick_avalanche,
     link_application_to_grower,
@@ -168,6 +169,11 @@ urlpatterns = [
         name='inner_label_generations_json'
     ),
     path('label-generations/<int:generation_id>/', label_generation_detail, name='label_generation_detail'),
+    path(
+        'label-generations/<int:generation_id>/ignite-forage-supplement/',
+        label_ignite_forage_supplement,
+        name='label_ignite_forage_supplement',
+    ),
     path(
         'label-generations/<int:generation_id>/regenerate-quick/',
         label_regenerate_quick_avalanche,

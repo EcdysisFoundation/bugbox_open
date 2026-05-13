@@ -38,6 +38,7 @@ from .label_management import (
     label_generation_download,
     label_generation_list,
     label_management,
+    label_ignite_forage_supplement,
     label_regenerate_quick_avalanche,
 )
 from .reports import report_detail, report_list
@@ -85,5 +86,6 @@ __all__ = [
     'label_generation_download',
     'label_generation_delete',
     'label_regenerate_quick_avalanche',
+    'label_ignite_forage_supplement',
     'inner_label_generations_json',
 ]
