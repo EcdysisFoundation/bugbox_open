@@ -14,6 +14,16 @@
                     <a href="{% url 'grower_portal:label_generation_download' generation.id %}" class="btn btn-success me-2 {% if generation.status != 'ready' %}disabled{% endif %}">
                         <i class="fas fa-download"></i> Download Labels
                     </a>
+                    {% if generation.transect_codes_generated %}
+                        {% if generation.status != 'queued' and generation.status != 'processing' %}
+                        <form method="post" action="{% url 'grower_portal:label_regenerate_quick_avalanche' generation.id %}" class="d-inline me-2">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-warning" title="Rebuilds the Word file using the same stored codes and current label logic.">
+                                <i class="fas fa-redo"></i> Regenerate document (same codes)
+                            </button>
+                        </form>
+                        {% endif %}
+                    {% endif %}
                     <a href="{% url 'grower_portal:label_generation_list' %}" class="btn btn-outline-secondary">
                         <i class="fas fa-arrow-left"></i> Back to List
                     </a>

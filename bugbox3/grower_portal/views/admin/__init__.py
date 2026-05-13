@@ -38,6 +38,7 @@ from .label_management import (
     label_generation_download,
     label_generation_list,
     label_management,
+    label_regenerate_quick_avalanche,
 )
 from .reports import report_detail, report_list
 from .sample_codes import sample_code_deactivate, sample_code_generate, sample_code_list, sample_code_reactivate
@@ -83,5 +84,6 @@ __all__ = [
     'label_generation_detail',
     'label_generation_download',
     'label_generation_delete',
+    'label_regenerate_quick_avalanche',
     'inner_label_generations_json',
 ]

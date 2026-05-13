@@ -38,6 +38,7 @@ from ..views.admin import (
     label_generation_download,
     label_generation_list,
     label_management,
+    label_regenerate_quick_avalanche,
     link_application_to_grower,
     report_detail,
     report_list,
@@ -167,6 +168,11 @@ urlpatterns = [
         name='inner_label_generations_json'
     ),
     path('label-generations/<int:generation_id>/', label_generation_detail, name='label_generation_detail'),
+    path(
+        'label-generations/<int:generation_id>/regenerate-quick/',
+        label_regenerate_quick_avalanche,
+        name='label_regenerate_quick_avalanche',
+    ),
     path(
         'label-generations/<int:generation_id>/download/',
         label_generation_download,

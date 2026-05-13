@@ -1,3 +1,5 @@
+import logging
+import os
 import re
 import secrets
 from copy import deepcopy
@@ -22,9 +24,35 @@ from ..constants import (
 )
 from ..models import SampleCode, SiteTransect
 
+logger = logging.getLogger(__name__)
+
+
+def _label_fill_debug_enabled() -> bool:
+    """per-cell label fill logs"""
+    return os.environ.get('BUGBOX_LABEL_FILL_DEBUG', '').strip().lower() in (
+        '1',
+        'true',
+        'yes',
+        'on',
+    )
+
+
+def _label_fill_info_enabled() -> bool:
+    """fill summaries"""
+    if _label_fill_debug_enabled():
+        return True
+    return os.environ.get('BUGBOX_LABEL_FILL_INFO', '').strip().lower() in (
+        '1',
+        'true',
+        'yes',
+        'on',
+    )
+
 
 class LabelGenerator:
     """Service for generating label documents"""
+
+    _MIN_LABEL_SLOT_CELL_WIDTH_TWIPS = 1000
 
     def __init__(
             self,
@@ -874,18 +902,52 @@ class LabelGenerator:
         except (AttributeError, TypeError):
             return False
 
+    def _tc_preferred_width_twips(self, tc):
+        """Return w:tc preferred width in twips if set; None if missing or invalid."""
+        try:
+            tc_pr = tc.find(qn('w:tcPr'))
+            if tc_pr is None:
+                return None
+            tc_w = tc_pr.find(qn('w:tcW'))
+            if tc_w is None:
+                return None
+            w = tc_w.get(qn('w:w'))
+            if w is None:
+                return None
+            return int(w)
+        except (TypeError, ValueError, AttributeError):
+            return None
+
     def _collect_placeholder_cells_xml(self, table):
         tbl = table._tbl
         cells_out = []
-        for tr in tbl.iter(qn('w:tr')):
+        # Only direct child w:tr of the table. tbl.iter(w:tr) would include rows of nested tables
+        # inside a cell, corrupting slot order and count.
+        for tr in tbl:
+            if tr.tag != qn('w:tr'):
+                continue
             row = _Row(tr, table)
-            for tc in tr.iter(qn('w:tc')):
+            # Only direct child w:tc per row. tr.iter(w:tc) would include nested-table cells and
+            # inflate the slot list, so two specs can target the same visual label and one transect
+            # disappears (e.g. 48 codes → 47 on single-per-transect types).
+            for tc in tr:
+                if tc.tag != qn('w:tc'):
+                    continue
                 texts = []
                 for wt in tc.iter(qn('w:t')):
                     if wt.text:
                         texts.append(wt.text)
                 blob = ''.join(texts)
                 if self._string_contains_label_placeholder(blob):
+                    tw = self._tc_preferred_width_twips(tc)
+                    if (
+                        tw is not None
+                        and tw < self._MIN_LABEL_SLOT_CELL_WIDTH_TWIPS
+                    ):
+                        continue
+                    # Same physical tc should not be listed twice (would double-write and lose labels).
+                    if any(c._tc is tc for c in cells_out):
+                        continue
                     cells_out.append(_Cell(tc, row))
         return cells_out
 
@@ -975,8 +1037,6 @@ class LabelGenerator:
         if not template_label_cells:
             return doc
 
-        capacity_per_table = len(template_label_cells)
-
         def _add_template_table():
             """Append a page break + fresh template-table copy to the document."""
             doc.add_page_break()
@@ -1042,15 +1102,27 @@ class LabelGenerator:
             except Exception:
                 pass
 
-        def _fill_placeholder_cells_for_table(table, specs_slice, fill_color=None, fill_remaining_spec=None):
+        def _fill_placeholder_cells_for_table(
+            table,
+            specs_slice,
+            fill_color=None,
+            fill_remaining_spec=None,
+            placeholder_cells=None,
+            fill_log_context=None,
+        ):
             """Fill one sheet's worth of label cells (same layout as template table)."""
             filled_specs = 0
-            try:
-                cells = self._collect_placeholder_cells_xml(table)
-            except (ValueError, AttributeError, TypeError):
-                return 0
+            cells = placeholder_cells
+            if cells is None:
+                try:
+                    cells = self._collect_placeholder_cells_xml(table)
+                except (ValueError, AttributeError, TypeError):
+                    return 0
             if not cells:
                 return 0
+            debug_cells = _label_fill_debug_enabled()
+            gix = (fill_log_context or {}).get('group_idx')
+            spec0 = (fill_log_context or {}).get('spec_index_start')
             for idx, cell in enumerate(cells):
                 if idx < len(specs_slice):
                     spec = dict(specs_slice[idx] or {})
@@ -1058,11 +1130,28 @@ class LabelGenerator:
                         spec['cell_fill_hex'] = fill_color
                     _write_cell_from_spec(cell, spec)
                     filled_specs += 1
+                    if debug_cells and gix is not None and spec0 is not None:
+                        preview = (spec.get('text') or '')[:120].replace('\n', '|')
+                        logger.debug(
+                            'labels.fill.write group=%s abs_spec=%s cell_slot=%s/%s preview=%r',
+                            gix,
+                            spec0 + idx,
+                            idx,
+                            len(cells) - 1,
+                            preview,
+                        )
                 elif fill_remaining_spec is not None:
                     spec = dict(fill_remaining_spec or {})
                     if fill_color and not spec.get('cell_fill_hex'):
                         spec['cell_fill_hex'] = fill_color
                     _write_cell_from_spec(cell, spec)
+                    if debug_cells and gix is not None:
+                        logger.debug(
+                            'labels.fill.address group=%s cell_slot=%s/%s',
+                            gix,
+                            idx,
+                            len(cells) - 1,
+                        )
             return filled_specs
 
         first_group = True
@@ -1079,6 +1168,15 @@ class LabelGenerator:
             if not first_group:
                 _add_template_table()
 
+            if _label_fill_info_enabled():
+                logger.info(
+                    'labels.fill.group_start group=%s specs=%s project=%s category=%s',
+                    group_idx,
+                    len(group_specs),
+                    self.project_type,
+                    self.label_category,
+                )
+
             label_idx = 0
             while label_idx < len(group_specs):
                 # First page of the first sample-type group must use the template's label table,
@@ -1087,9 +1185,25 @@ class LabelGenerator:
                     current_table = doc.tables[template_table_idx]
                 else:
                     current_table = doc.tables[-1]
-                specs_slice = group_specs[label_idx:label_idx + capacity_per_table]
+                try:
+                    page_cells = self._collect_placeholder_cells_xml(current_table)
+                except (ValueError, AttributeError, TypeError):
+                    page_cells = []
+                page_capacity = len(page_cells)
+                if page_capacity == 0:
+                    logger.error(
+                        'labels.fill.zero_capacity group=%s label_idx=%s of %s doc_tables=%s',
+                        group_idx,
+                        label_idx,
+                        len(group_specs),
+                        len(doc.tables),
+                    )
+                    break
+                remaining = len(group_specs) - label_idx
+                chunk = min(page_capacity, remaining)
+                specs_slice = group_specs[label_idx:label_idx + chunk]
 
-                is_last_table_for_group = (label_idx + capacity_per_table) >= len(group_specs)
+                is_last_table_for_group = (label_idx + chunk) >= len(group_specs)
                 _addr_fs = 12 if self.project_type == 'ignite' else 16
                 fill_remaining_spec = (
                     {'text': ADDRESS_BLOCK, 'font_size': _addr_fs, 'bold_all': True, 'bold_first_line': False}
@@ -1097,17 +1211,67 @@ class LabelGenerator:
                     else None
                 )
 
+                try:
+                    cur_tbl_i = next(
+                        i for i, t in enumerate(doc.tables) if t._tbl is current_table._tbl
+                    )
+                except StopIteration:
+                    cur_tbl_i = -1
+
                 filled_specs = _fill_placeholder_cells_for_table(
                     current_table,
                     specs_slice,
                     fill_color=fill_color,
                     fill_remaining_spec=fill_remaining_spec,
+                    placeholder_cells=page_cells,
+                    fill_log_context={
+                        'group_idx': group_idx,
+                        'spec_index_start': label_idx,
+                    },
                 )
+                if _label_fill_info_enabled():
+                    logger.info(
+                        'labels.fill.page group=%s table_idx=%s label_range=[%s,%s) chunk=%s '
+                        'capacity=%s last_table_for_group=%s filled_specs=%s',
+                        group_idx,
+                        cur_tbl_i,
+                        label_idx,
+                        label_idx + chunk,
+                        chunk,
+                        page_capacity,
+                        is_last_table_for_group,
+                        filled_specs,
+                    )
+                if filled_specs != len(specs_slice):
+                    logger.warning(
+                        'labels.fill.filled_vs_slice group=%s filled_specs=%s slice_len=%s',
+                        group_idx,
+                        filled_specs,
+                        len(specs_slice),
+                    )
                 if filled_specs == 0 and not fill_remaining_spec:
+                    logger.error(
+                        'labels.fill.zero_fill group=%s label_idx=%s chunk=%s capacity=%s',
+                        group_idx,
+                        label_idx,
+                        chunk,
+                        page_capacity,
+                    )
                     break
-                label_idx += len(specs_slice)
+                # Advance by specs actually written from specs_slice (must match len(specs_slice)
+                # when every cell received a spec or trailing address; avoids skipping if slice
+                # length ever disagreed with the cell list used for filling).
+                label_idx += filled_specs
                 if label_idx < len(group_specs):
                     _add_template_table()
+
+            if label_idx != len(group_specs):
+                logger.error(
+                    'labels.fill.incomplete_group group=%s wrote_specs=%s expected=%s',
+                    group_idx,
+                    label_idx,
+                    len(group_specs),
+                )
 
             first_group = False
 
@@ -1121,6 +1285,60 @@ class LabelGenerator:
         transect_codes = self.generate_unique_sample_codes(num_transects)
         self.save_sample_codes(transect_codes)
 
+        logger.info(
+            'labels.quick.transects requested=%s generated=%s cluster=%s year=%s fill_info=%s fill_debug=%s',
+            num_transects,
+            len(transect_codes),
+            self.cluster_number,
+            self.year,
+            _label_fill_info_enabled(),
+            _label_fill_debug_enabled(),
+        )
+        if len(transect_codes) != num_transects:
+            msg = (
+                f'Expected {num_transects} unique Avalanche transect codes, '
+                f'but generate_unique_sample_codes returned {len(transect_codes)}.'
+            )
+            logger.error('labels.quick.count_mismatch %s', msg)
+            raise ValueError(msg)
+        return self._build_quick_avalanche_docx(transect_codes, expected_len=num_transects)
+
+    def regenerate_quick_avalanche_inner_docx(self, transect_codes):
+        """
+        Rebuild the inner quick-label Word file from existing codes only (no new SampleCode rows).
+
+        Used when an earlier document was produced with buggy fill logic but the same codes
+        should appear in the file.
+        """
+        codes = [str(c).strip() for c in (transect_codes or []) if str(c).strip()]
+        if not codes:
+            raise ValueError('No transect codes supplied; cannot regenerate the label document.')
+        self.generated_codes = codes
+        expected = self.labels_per_type or len(codes)
+        if len(codes) != expected:
+            raise ValueError(
+                f'This batch is configured for {expected} transect codes but '
+                f'{len(codes)} non-empty code(s) were provided.'
+            )
+        logger.info(
+            'labels.quick.regenerate codes=%s cluster=%s year=%s fill_info=%s fill_debug=%s',
+            len(codes),
+            self.cluster_number,
+            self.year,
+            _label_fill_info_enabled(),
+            _label_fill_debug_enabled(),
+        )
+        return self._build_quick_avalanche_docx(codes, expected_len=expected)
+
+    def _build_quick_avalanche_docx(self, transect_codes, *, expected_len):
+        """Shared body for quick inner Avalanche: build groups, fill template, return buffer."""
+        if len(transect_codes) != expected_len:
+            msg = (
+                f'Internal error: expected {expected_len} transect codes in document build, '
+                f'got {len(transect_codes)}.'
+            )
+            logger.error('labels.quick.build_len_mismatch %s', msg)
+            raise ValueError(msg)
         # consider excluded sample types passed in from the form
         sample_type_codes = list(self.sample_types) if self.sample_types else [code for code, _ in SAMPLE_TYPES]
         ordered_type_codes = self._avalanche_inner_sample_types_for_fill_order(sample_type_codes)
@@ -1214,6 +1432,67 @@ class LabelGenerator:
             sample_type_display = self.get_sample_type_display(sample_type_code)
             group = []
             for site_code in site_codes:
+                for t_num in range(1, 5):
+                    label_text = self.create_ignite_inner_label(
+                        sample_type_display, site_code, t_num
+                    )
+                    group.append({
+                        'text': label_text,
+                        'font_size': 12,
+                        'bold_all': False,
+                        'bold_first_line': False,
+                    })
+                    total_labels += 1
+            groups_of_label_specs.append(group)
+
+        if doc.tables:
+            doc = self._fill_template_by_groups(doc, groups_of_label_specs)
+        else:
+            flat = []
+            for g in groups_of_label_specs:
+                flat.extend([spec.get('text', '') for spec in g])
+            doc = self._create_tables_for_labels(doc, [flat])
+
+        buffer = BytesIO()
+        doc.save(buffer)
+        buffer.seek(0)
+
+        return buffer, total_labels
+
+    def regenerate_quick_ignite_inner_docx(self, site_codes, *, expected_num_sites: int | None = None):
+        """
+        Rebuild Ignite inner labels from existing site codes only (no new SampleCode / SiteTransect rows).
+
+        ``transect_codes_generated`` on Ignite inner batches stores site codes (one per farm/site).
+        """
+        codes = [str(c).strip() for c in (site_codes or []) if str(c).strip()]
+        if not codes:
+            raise ValueError('No site codes supplied; cannot regenerate Ignite inner labels.')
+        expected = expected_num_sites if expected_num_sites is not None else len(codes)
+        if len(codes) != expected:
+            raise ValueError(
+                f'Expected {expected} Ignite site code(s) for this batch but received '
+                f'{len(codes)} non-empty value(s).'
+            )
+        self.generated_codes = codes
+        logger.info(
+            'labels.quick.regenerate_ignite_inner sites=%s cluster=%s year=%s fill_info=%s fill_debug=%s',
+            len(codes),
+            self.cluster_number,
+            self.year,
+            _label_fill_info_enabled(),
+            _label_fill_debug_enabled(),
+        )
+
+        doc = self._load_template()
+        total_labels = 0
+
+        groups_of_label_specs = []
+        ordered_types = self._ignite_inner_sample_types_for_fill_order(self.sample_types)
+        for sample_type_code in ordered_types:
+            sample_type_display = self.get_sample_type_display(sample_type_code)
+            group = []
+            for site_code in codes:
                 for t_num in range(1, 5):
                     label_text = self.create_ignite_inner_label(
                         sample_type_display, site_code, t_num
