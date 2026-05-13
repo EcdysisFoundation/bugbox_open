@@ -26,11 +26,18 @@
                     </ul>
 
                     {% if generation.label_category == 'inner' %}
+                    {% if generation.generation_params and generation.generation_params.ignite_forage_supplement %}
+                    <div class="alert alert-info">
+                        <strong>Forage-only supplement:</strong> This document reuses site codes from another inner batch.
+                        Deleting this entry does <strong>not</strong> remove sample codes from the database.
+                    </div>
+                    {% else %}
                     <div class="alert alert-warning">
                         <strong>Inner generation:</strong> The sample codes listed for this batch will be
                         <strong>removed from the database</strong> (if they are not in use and not assigned to growers),
                         so the same codes can be generated again in a new run.
                     </div>
+                    {% endif %}
                     {% else %}
                     <div class="alert alert-info">
                         <strong>Outer generation:</strong> Only this history entry and stored file are removed.

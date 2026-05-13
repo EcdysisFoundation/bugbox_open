@@ -64,7 +64,12 @@ def generate_labels_async(label_generation_id: int):
                         expected_num_sites=num_sites,
                     )
                     transect_codes_generated = stored_codes
-                    filename = f"ignite_inner_{cluster_number}_{year}_labels.docx"
+                    if params.get('ignite_forage_supplement') or (
+                        params.get('sample_types', gen.sample_types or []) == ['forage']
+                    ):
+                        filename = f"ignite_inner_{cluster_number}_{year}_forage_only.docx"
+                    else:
+                        filename = f"ignite_inner_{cluster_number}_{year}_labels.docx"
                     sample_types = params.get('sample_types', gen.sample_types)
                     labels_per_type = 4
                 else:

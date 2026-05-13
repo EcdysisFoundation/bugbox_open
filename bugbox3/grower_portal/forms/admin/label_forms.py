@@ -168,6 +168,14 @@ class QuickLabelGenerationForm(forms.Form):
         help_text='Select sample types to exclude from label generation'
     )
 
+    include_forage_labels = forms.BooleanField(
+        required=False,
+        initial=False,
+        label='Include Forage labels',
+        help_text='Adds Forage inner labels (T1-T4 per site). Shown for Ignite inner quick generate only.',
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input', 'id': 'id_include_forage_labels'}),
+    )
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -192,6 +200,8 @@ class QuickLabelGenerationForm(forms.Form):
                 inner_generations = LabelGeneration.objects.filter(**filter_kwargs).order_by('-generated_at')[:50]
 
                 for gen in inner_generations:
+                    if (gen.generation_params or {}).get('ignite_forage_supplement'):
+                        continue
                     transect_count = len(gen.transect_codes_generated) if gen.transect_codes_generated else 0
                     project_label = dict(LABEL_PROJECT_CHOICES).get(gen.project_type, gen.project_type)
                     label = f"[{project_label}] Generated on {gen.generated_at.strftime(

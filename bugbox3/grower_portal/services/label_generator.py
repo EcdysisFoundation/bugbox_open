@@ -1650,7 +1650,13 @@ class LabelGenerator:
     @staticmethod
     def _ignite_inner_sample_types_for_fill_order(sample_type_codes):
         seq = list(sample_type_codes)
-        return [c for c in seq if c != 'plant_dna'] + (['plant_dna'] if 'plant_dna' in seq else [])
+        rest = [c for c in seq if c not in ('plant_dna', 'forage')]
+        tail = []
+        if 'forage' in seq:
+            tail.append('forage')
+        if 'plant_dna' in seq:
+            tail.append('plant_dna')
+        return rest + tail
 
     @staticmethod
     def _avalanche_inner_sample_types_for_fill_order(sample_type_codes):
