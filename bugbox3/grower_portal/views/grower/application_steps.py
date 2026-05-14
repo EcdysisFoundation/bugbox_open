@@ -185,7 +185,11 @@ def application_step3(request, application_id):
     application.field
 
     if request.method == 'POST':
-        form = TransectCodesForm(request.POST, field_type=application.field.field_type)
+        form = TransectCodesForm(
+            request.POST,
+            field_type=application.field.field_type,
+            for_application=application,
+        )
         if form.is_valid():
             application.transect_code_1 = form.cleaned_data.get('transect_code_1', '').strip()
             application.transect_code_2 = form.cleaned_data.get('transect_code_2', '').strip()
@@ -217,7 +221,11 @@ def application_step3(request, application_id):
                 initial_data[f'transect_{i}_latitude'] = None
                 initial_data[f'transect_{i}_longitude'] = None
 
-        form = TransectCodesForm(initial=initial_data, field_type=application.field.field_type)
+        form = TransectCodesForm(
+            initial=initial_data,
+            field_type=application.field.field_type,
+            for_application=application,
+        )
 
     transect_data = []
     for i, code in enumerate(application.transect_codes):

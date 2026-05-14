@@ -571,6 +571,7 @@ class TransectCodesForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         self.field_type = kwargs.pop('field_type', None)
+        self.for_application = kwargs.pop('for_application', None)
         super().__init__(*args, **kwargs)
 
         self.helper = FormHelper(self)
@@ -655,10 +656,19 @@ class TransectCodesForm(forms.Form):
                     transect_obj = SampleCode.objects.get(code=code, is_active=True)
 
                     if transect_obj.is_used:
-                        self.add_error(
-                            f'transect_code_{i}',
-                            f'Transect code "{code}" has already been used in a submitted application.'
+                        same_app = (
+                            self.for_application is not None
+                            and transect_obj.used_in_application_id == self.for_application.pk
                         )
+                        if not same_app:
+                            other = transect_obj.used_in_application
+                            submission = (
+                                other.submission_code if other else 'another application'
+                            )
+                            self.add_error(
+                                f'transect_code_{i}',
+                                f'Transect code "{code}" has already been used in application {submission}.',
+                            )
                 except SampleCode.DoesNotExist:
                     self.add_error(f'transect_code_{i}', f'Transect code "{code}" is not valid.')
 

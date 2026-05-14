@@ -203,7 +203,11 @@ def admin_application_edit_transects(request, application_id):
     application = get_object_or_404(GrowerApplication, id=application_id)
 
     if request.method == 'POST':
-        form = TransectCodesForm(request.POST, field_type=application.field.field_type)
+        form = TransectCodesForm(
+            request.POST,
+            field_type=application.field.field_type,
+            for_application=application,
+        )
         if form.is_valid():
             application.transect_code_1 = form.cleaned_data.get('transect_code_1', '').strip()
             application.transect_code_2 = form.cleaned_data.get('transect_code_2', '').strip()
@@ -233,7 +237,11 @@ def admin_application_edit_transects(request, application_id):
             else:
                 initial_data[f'transect_{i}_latitude'] = None
                 initial_data[f'transect_{i}_longitude'] = None
-        form = TransectCodesForm(initial=initial_data, field_type=application.field.field_type)
+        form = TransectCodesForm(
+            initial=initial_data,
+            field_type=application.field.field_type,
+            for_application=application,
+        )
 
     field_latitude = DEFAULT_FIELD_LATITUDE
     field_longitude = DEFAULT_FIELD_LONGITUDE
