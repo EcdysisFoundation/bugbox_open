@@ -15,7 +15,12 @@
   <div class="row mb-3">
     <div class="col-12">
       <div class="alert alert-primary">
-        <strong><i class="fas fa-user-shield"></i> Admin Mode:</strong> Creating application for <strong>{{ grower_display|default:application.grower_display_name }}</strong>
+        <strong><i class="fas fa-user-shield"></i> Admin Mode:</strong>
+        {% if admin_measurements_mode == 'edit' %}
+        Editing transect measurements for <strong>{{ grower_display|default:application.grower_display_name }}</strong> — application <strong>{{ application.submission_code }}</strong>
+        {% else %}
+        Creating application for <strong>{{ grower_display|default:application.grower_display_name }}</strong>
+        {% endif %}
         {% if not has_linked_account|default:application.has_linked_account %}
           <span class="badge bg-warning text-dark ms-2">No Linked Account</span>
         {% else %}
@@ -26,13 +31,25 @@
   </div>
   {% endif %}
   
+  {% if wizard_step %}
+  <div class="row">
+    <div class="col-12">
+      {% include 'grower_portal/admin/includes/_admin_application_edit_wizard_nav.html' %}
+    </div>
+  </div>
+  {% endif %}
+  
   <div class="row">
     <div class="col-12">
       <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
           {% if is_admin %}
           <li class="breadcrumb-item"><a href="{% url 'grower_portal:admin_application_list' %}">Applications</a></li>
+          {% if admin_measurements_mode == 'edit' %}
+          <li class="breadcrumb-item"><a href="{% url 'grower_portal:admin_application_detail' application.id %}">{{ application.submission_code }}</a></li>
+          {% else %}
           <li class="breadcrumb-item"><a href="{% url 'grower_portal:admin_application_create_step1' application.id %}">{{ application.submission_code }}</a></li>
+          {% endif %}
           {% else %}
           <li class="breadcrumb-item"><a href="{% url 'grower_portal:dashboard' %}">Dashboard</a></li>
           <li class="breadcrumb-item"><a href="{% url 'grower_portal:application_step1' application.id %}">{{ application.submission_code }}</a></li>
@@ -46,7 +63,7 @@
   <div class="row">
     <div class="col-12">
       <div class="progress mb-4">
-        {% if application.field.field_type == 'range' %}
+        {% if application.field and application.field.field_type == 'range' %}
           <div class="progress-bar progress-width-66-67" role="progressbar">Step 4 of 6</div>
         {% else %}
           <div class="progress-bar progress-width-80" role="progressbar">Step 4 of 5</div>
@@ -65,7 +82,7 @@
         <div class="card-body">
           <div class="d-flex justify-content-start mb-3">
             {% if is_admin %}
-            <a href="{% url 'grower_portal:admin_application_create_step3' application.id %}" class="btn btn-secondary">
+            <a href="{% if admin_measurements_mode == 'edit' %}{% url 'grower_portal:admin_application_edit_transects' application.id %}{% else %}{% url 'grower_portal:admin_application_create_step3' application.id %}{% endif %}" class="btn btn-secondary">
               <i class="fas fa-arrow-left"></i> Previous
             </a>
             {% else %}
@@ -138,6 +155,7 @@
                       </div>
                     </div>
 
+                    {% if application.field %}
                     {% if application.field.field_type == 'range' or application.field.field_type == 'orchard' or application.field.field_type == 'crop' and application.field.crop_type == 'hayfield' %}
                     <div class="measurement-section">
                       <h5 class="text-primary border-bottom pb-2">Plant Biomass Drop Plate (every 2m, 0–48m)</h5>
@@ -161,6 +179,7 @@
                         {% endfor %}
                       </div>
                     </div>
+                    {% endif %}
                     {% endif %}
 
                     <div class="measurement-section">
@@ -417,7 +436,15 @@
 
             <div class="d-flex justify-content-end mt-4">
               <button type="submit" class="btn btn-primary btn-lg">
-                Next: {% if application.field.field_type == 'range' %}Grazing Events{% else %}Review & Submit{% endif %} 
+                {% if is_admin and admin_measurements_mode == 'edit' %}
+                  {% if application.field and application.field.field_type == 'range' %}
+                  Next: Grazing Events
+                  {% else %}
+                  Save and return to application details
+                  {% endif %}
+                {% else %}
+                Next: {% if application.field and application.field.field_type == 'range' %}Grazing Events{% else %}Review & Submit{% endif %}
+                {% endif %}
                 <i class="fas fa-arrow-right"></i>
               </button>
             </div>
@@ -445,7 +472,7 @@
             <li class="list-group-item active">
               <i class="fas fa-circle"></i> Step 4: Transect Measurements
             </li>
-            {% if application.field.field_type == 'range' %}
+            {% if application.field and application.field.field_type == 'range' %}
               <li class="list-group-item">Step 5: Grazing Events</li>
               <li class="list-group-item">Step 6: Review & Submit</li>
             {% else %}

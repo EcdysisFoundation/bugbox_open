@@ -1,0 +1,43 @@
+{% if application.field and application.field.field_type == 'range' %}
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0">Grazing Events</h5>
+                </div>
+                <div class="card-body">
+                    {% if grazing_events %}
+                        {% for event in grazing_events %}
+                            {% if event.animals.exists %}
+                                <h6>Grazing Event {{ event.event_number }}</h6>
+                                {% if event.start_date %}
+                                <p class="mb-2"><strong>Start Date:</strong> {{ event.start_date|date:"F d, Y" }}</p>
+                                {% endif %}
+                                <table class="table table-sm table-bordered mb-3">
+                                    <thead>
+                                        <tr>
+                                            <th>Class of Animal</th>
+                                            <th>Number</th>
+                                            <th>Avg Weight (lbs)</th>
+                                            <th>Grazing days</th>
+                                            <th>Rest Period (days)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for animal in event.animals.all %}
+                                            <tr>
+                                                <td>{{ animal.class_of_animal }}</td>
+                                                <td>{{ animal.number_of_animals }}</td>
+                                                <td>{{ animal.average_weight_lbs }}</td>
+                                                <td>{{ animal.duration_days }}</td>
+                                                <td>{{ animal.rest_period_days }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">No grazing events recorded.</p>
+                    {% endif %}
+                </div>
+            </div>
+{% endif %}

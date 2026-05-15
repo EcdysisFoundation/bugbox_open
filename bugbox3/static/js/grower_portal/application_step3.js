@@ -1,3 +1,5 @@
+import { bootstrapGoogleMapsFromContext } from './google_maps_api_loader';
+
 let map;
 let markers = [];
 let userLocation = null;
@@ -409,4 +411,6 @@ document.addEventListener('DOMContentLoaded', function() {
         setupTransectCodeMonitoring();
     }
 });
+
+bootstrapGoogleMapsFromContext();
 

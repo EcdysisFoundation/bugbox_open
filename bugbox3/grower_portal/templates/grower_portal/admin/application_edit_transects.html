@@ -7,13 +7,7 @@
 {% block title %}Edit Application - Transect Codes{% endblock %}
 
 {% block customheadtagcontent %}
-<script id="json_context" type="application/json">
-{
-    "transectData": {{ transect_data|safe }},
-    "fieldLatitude": {{ field_latitude }},
-    "fieldLongitude": {{ field_longitude }}
-}
-</script>
+{{ json_context|safe }}
 {% render_bundle 'grower_application_step3' 'js' %}
 {% endblock %}
 
@@ -32,6 +26,8 @@
             </div>
         </div>
     </div>
+
+    {% include 'grower_portal/admin/includes/_admin_application_edit_wizard_nav.html' %}
 
     <div class="row">
         <div class="col-12">
@@ -84,7 +80,5 @@
     </div>
 </div>
 
-<!-- Google Maps API + callback -->
-<script src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}&callback=initMap&v=weekly" async defer></script>
 {% endblock %}
 

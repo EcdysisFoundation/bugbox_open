@@ -1,0 +1,45 @@
+{% load i18n %}
+{% if application.is_draft %}
+<nav class="navbar navbar-expand-lg navbar-light bg-light rounded border mb-4 px-2 py-2">
+  <span class="navbar-text fw-bold me-3">Edit wizard:</span>
+  <ul class="navbar-nav flex-row flex-wrap gap-1">
+    <li class="nav-item">
+      <a class="nav-link py-1 {% if wizard_step == 'basic' %}fw-bold text-primary{% endif %}" href="{% url 'grower_portal:admin_application_edit_basic' application.id %}">1. Basic</a>
+    </li>
+    <li class="nav-item"><span class="nav-link py-1 text-muted">|</span></li>
+    <li class="nav-item">
+      <a class="nav-link py-1 {% if wizard_step == 'management' %}fw-bold text-primary{% endif %}" href="{% url 'grower_portal:admin_application_edit_management' application.id %}">2. Management</a>
+    </li>
+    <li class="nav-item"><span class="nav-link py-1 text-muted">|</span></li>
+    <li class="nav-item">
+      <a class="nav-link py-1 {% if wizard_step == 'transects' %}fw-bold text-primary{% endif %}" href="{% url 'grower_portal:admin_application_edit_transects' application.id %}">3. Transects</a>
+    </li>
+    <li class="nav-item"><span class="nav-link py-1 text-muted">|</span></li>
+    <li class="nav-item">
+      {% if application.transect_codes %}
+      <a class="nav-link py-1 {% if wizard_step == 'measurements' %}fw-bold text-primary{% endif %}" href="{% url 'grower_portal:admin_application_edit_measurements' application.id %}">4. Measurements</a>
+      {% else %}
+      <span class="nav-link py-1 text-muted" title="Enter at least one transect code on step 3 first">4. Measurements</span>
+      {% endif %}
+    </li>
+    {% if application.field and application.field.field_type == 'range' %}
+    <li class="nav-item"><span class="nav-link py-1 text-muted">|</span></li>
+    <li class="nav-item">
+      {% if application.transect_codes %}
+      <a class="nav-link py-1 {% if wizard_step == 'grazing' %}fw-bold text-primary{% endif %}" href="{% url 'grower_portal:admin_application_edit_grazing' application.id %}">5. Grazing</a>
+      {% else %}
+      <span class="nav-link py-1 text-muted" title="Enter at least one transect code on step 3 first">5. Grazing</span>
+      {% endif %}
+    </li>
+    {% endif %}
+    <li class="nav-item"><span class="nav-link py-1 text-muted">|</span></li>
+    <li class="nav-item">
+      {% if application.transect_codes %}
+      <a class="nav-link py-1 {% if wizard_step == 'review' %}fw-bold text-primary{% endif %}" href="{% url 'grower_portal:admin_application_edit_review' application.id %}">{% if application.field and application.field.field_type == 'range' %}6.{% else %}5.{% endif %} Review</a>
+      {% else %}
+      <span class="nav-link py-1 text-muted" title="Enter at least one transect code on step 3 first">{% if application.field and application.field.field_type == 'range' %}6.{% else %}5.{% endif %} Review</span>
+      {% endif %}
+    </li>
+  </ul>
+</nav>
+{% endif %}

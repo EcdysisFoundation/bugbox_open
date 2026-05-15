@@ -7,11 +7,7 @@
 {% block title %}Transect Codes & Locations - Step 3{% endblock %}
 
 {% block customheadtagcontent %}
-<script id="json_context" type="application/json">
-{
-    "transectData": {{ transect_data|safe }}
-}
-</script>
+{{ json_context|safe }}
 {% render_bundle 'grower_application_step3' 'js' %}
 {% endblock %}
 
@@ -146,7 +142,5 @@
     </div>
 </div>
 
-<!-- Google Maps API + callback -->
-<script src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}&callback=initMap&v=weekly" async defer></script>
 {% endblock %}
 

@@ -8,11 +8,7 @@
 {% block title %}Management Practices - Step 2{% endblock %}
 
 {% block customheadtagcontent %}
-<script id="json_context" type="application/json">
-{
-    "fieldType": "{{ application.field.field_type }}"
-}
-</script>
+{{ json_context|safe }}
 {% render_bundle 'grower_application_step2' 'js' %}
 {% render_bundle 'grower_conditional_fields' 'js' %}
 {% endblock %}

@@ -33,22 +33,17 @@ from ...models import (
 )
 
 
-@login_required
-@permission_required(IS_GROWERADMIN, raise_exception=True)
-def admin_application_create_step4(request, application_id):
-    """Step 4: Measurements - matches grower view structure"""
-    application = get_object_or_404(
-        GrowerApplication,
-        id=application_id,
-        is_admin_created=True
-    )
+def _admin_application_measurements_step(request, application, *, mode):
+    """Shared Step 4 GET/POST. mode is 'create' (admin wizard) or 'edit' (any draft app)."""
+    assert mode in ('create', 'edit')
 
     active_codes = application.transect_codes
     if len(active_codes) == 0:
         messages.error(request, 'Please enter at least one transect code before recording measurements.')
-        return redirect('grower_portal:admin_application_create_step3', application_id=application.id)
+        if mode == 'create':
+            return redirect('grower_portal:admin_application_create_step3', application_id=application.id)
+        return redirect('grower_portal:admin_application_edit_transects', application_id=application.id)
 
-    # show drop plate (in grower applications) in these conditions
     should_show_dropplate = (
         application.field and (
             application.field.field_type == 'range' or
@@ -208,11 +203,19 @@ def admin_application_create_step4(request, application_id):
                 data['ring_formset'].save()
 
             messages.success(request, 'All measurements saved successfully!')
-            return redirect('grower_portal:admin_application_complete', application_id=application.id)
-        else:
-            messages.error(request, 'Please correct the errors below.')
-            for error in validation_errors:
-                messages.error(request, error)
+            if mode == 'create':
+                if application.field_id and application.field.field_type == 'range':
+                    return redirect(
+                        'grower_portal:admin_application_create_step5',
+                        application_id=application.id,
+                    )
+                return redirect('grower_portal:admin_application_complete', application_id=application.id)
+            if application.field_id and application.field.field_type == 'range':
+                return redirect('grower_portal:admin_application_edit_grazing', application_id=application.id)
+            return redirect('grower_portal:admin_application_detail', application_id=application.id)
+        messages.error(request, 'Please correct the errors below.')
+        for error in validation_errors:
+            messages.error(request, error)
     else:
         transect_data = []
         for m in measurements:
@@ -259,11 +262,38 @@ def admin_application_create_step4(request, application_id):
 
             transect_data.append(data)
 
-    return render(request, 'grower_portal/grower/application_step4.html', {
+    ctx = {
         'application': application,
         'transect_data': transect_data,
         'is_admin': True,
+        'admin_measurements_mode': mode,
         'grower_display': application.grower_display_name,
         'has_linked_account': application.has_linked_account,
-        'user_timezone': get_user_timezone(request)
-    })
+        'user_timezone': get_user_timezone(request),
+    }
+    if mode == 'edit':
+        ctx['wizard_step'] = 'measurements'
+    return render(request, 'grower_portal/grower/application_step4.html', ctx)
+
+
+@login_required
+@permission_required(IS_GROWERADMIN, raise_exception=True)
+def admin_application_create_step4(request, application_id):
+    """Step 4: Measurements (admin create wizard only)."""
+    application = get_object_or_404(
+        GrowerApplication,
+        id=application_id,
+        is_admin_created=True
+    )
+    return _admin_application_measurements_step(request, application, mode='create')
+
+
+@login_required
+@permission_required(IS_GROWERADMIN, raise_exception=True)
+def admin_application_edit_measurements(request, application_id):
+    """Step 4: Edit transect measurements for any draft application."""
+    application = get_object_or_404(GrowerApplication, id=application_id)
+    if not application.is_draft:
+        messages.error(request, 'Transect measurements can only be edited for draft applications.')
+        return redirect('grower_portal:admin_application_detail', application_id=application.id)
+    return _admin_application_measurements_step(request, application, mode='edit')

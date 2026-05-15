@@ -1,5 +1,3 @@
-import json
-
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
 from django.db import IntegrityError, transaction
@@ -10,6 +8,7 @@ from bugbox3.core.permissions import IS_GROWER
 from ...forms.grower.forms import ApplicationCreationForm
 from ...middleware import get_user_timezone
 from ...models import Farm, Field, GrazingEvent, GrowerApplication, ManagementPractices, TransectMeasurement
+from ...utils import get_grower_maps_json_context
 
 
 @login_required
@@ -143,14 +142,16 @@ def application_view(request, application_id):
         'infiltration_ring'
     ).order_by('transect_index')
 
-    return render(request, 'grower_portal/grower/application_view.html', {
+    context = {
         'application': application,
         'management_practices': management_practices,
         'grazing_events': grazing_events,
         'transect_measurements': transect_measurements,
-        'transect_data': json.dumps(transect_data),
-        'user_timezone': get_user_timezone(request)
-    })
+        'user_timezone': get_user_timezone(request),
+    }
+    if application.field:
+        context['json_context'] = get_grower_maps_json_context(transect_data)
+    return render(request, 'grower_portal/grower/application_view.html', context)
 
 
 @login_required

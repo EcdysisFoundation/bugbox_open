@@ -10,9 +10,13 @@ from ..views.admin import (
     admin_application_create_step2,
     admin_application_create_step3,
     admin_application_create_step4,
+    admin_application_create_step5,
     admin_application_edit_basic,
     admin_application_edit_management,
     admin_application_edit_transects,
+    admin_application_edit_measurements,
+    admin_application_edit_grazing,
+    admin_application_edit_review,
     admin_application_submit,
     admin_dashboard,
     application_delete,
@@ -89,6 +93,11 @@ urlpatterns = [
         name='admin_application_create_step4'
     ),
     path(
+        'applications/create/<int:application_id>/step5/',
+        admin_application_create_step5,
+        name='admin_application_create_step5'
+    ),
+    path(
         'applications/create/<int:application_id>/complete/',
         admin_application_complete,
         name='admin_application_complete'
@@ -117,6 +126,21 @@ urlpatterns = [
         'applications/<int:application_id>/edit/transects/',
         admin_application_edit_transects,
         name='admin_application_edit_transects'
+    ),
+    path(
+        'applications/<int:application_id>/edit/measurements/',
+        admin_application_edit_measurements,
+        name='admin_application_edit_measurements'
+    ),
+    path(
+        'applications/<int:application_id>/edit/grazing/',
+        admin_application_edit_grazing,
+        name='admin_application_edit_grazing'
+    ),
+    path(
+        'applications/<int:application_id>/edit/review/',
+        admin_application_edit_review,
+        name='admin_application_edit_review'
     ),
     path(
         'applications/<int:application_id>/submit/',

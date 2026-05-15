@@ -12,13 +12,35 @@ from bugbox3.core.permissions import IS_GROWERADMIN
 from ...constants import DEFAULT_FIELD_LATITUDE, DEFAULT_FIELD_LONGITUDE
 from ...forms.grower.forms import ApplicationCreationForm, ManagementPracticesForm, TransectCodesForm
 from ...middleware import get_user_timezone
-from ...models import Farm, Field, GrowerApplication, ManagementPractices, SampleCode
+from ...models import Farm, Field, GrowerApplication, ManagementPractices, SampleCode, GrazingEvent, TransectMeasurement
+from ...utils import get_grower_maps_json_context, get_grower_maps_json_context_interactive
+
+
+def _require_draft_for_wizard_edit(request, application):
+    if application.is_draft:
+        return None
+    messages.error(request, 'Only draft applications can be edited through the wizard.')
+    return redirect('grower_portal:admin_application_detail', application_id=application.id)
+
+
+def _require_transect_codes_for_edit_wizard(request, application):
+    """Steps 4+ need at least one transect code"""
+    if application.transect_codes:
+        return None
+    messages.error(
+        request,
+        'Please enter at least one transect code before recording measurements.',
+    )
+    return redirect('grower_portal:admin_application_edit_transects', application_id=application.id)
 
 
 @login_required
 @permission_required(IS_GROWERADMIN, raise_exception=True)
 def admin_application_edit_basic(request, application_id):
     application = get_object_or_404(GrowerApplication, id=application_id)
+    block = _require_draft_for_wizard_edit(request, application)
+    if block:
+        return block
 
     if request.method == 'POST':
         form = ApplicationCreationForm(request.POST)
@@ -164,6 +186,7 @@ def admin_application_edit_basic(request, application_id):
         'form': form,
         'user_timezone': get_user_timezone(request),
         'is_admin_edit': True,
+        'wizard_step': 'basic',
     }
 
     return render(request, 'grower_portal/admin/application_edit_basic.html', context)
@@ -173,6 +196,9 @@ def admin_application_edit_basic(request, application_id):
 @permission_required(IS_GROWERADMIN, raise_exception=True)
 def admin_application_edit_management(request, application_id):
     application = get_object_or_404(GrowerApplication, id=application_id)
+    block = _require_draft_for_wizard_edit(request, application)
+    if block:
+        return block
 
     practices, created = ManagementPractices.objects.get_or_create(
         application=application
@@ -192,6 +218,7 @@ def admin_application_edit_management(request, application_id):
         'form': form,
         'user_timezone': get_user_timezone(request),
         'is_admin_edit': True,
+        'wizard_step': 'management',
     }
 
     return render(request, 'grower_portal/admin/application_edit_management.html', context)
@@ -201,6 +228,9 @@ def admin_application_edit_management(request, application_id):
 @permission_required(IS_GROWERADMIN, raise_exception=True)
 def admin_application_edit_transects(request, application_id):
     application = get_object_or_404(GrowerApplication, id=application_id)
+    block = _require_draft_for_wizard_edit(request, application)
+    if block:
+        return block
 
     if request.method == 'POST':
         form = TransectCodesForm(
@@ -221,7 +251,7 @@ def admin_application_edit_transects(request, application_id):
 
             application.save()
             messages.success(request, 'Transect codes updated successfully!')
-            return redirect('grower_portal:admin_application_detail', application_id=application.id)
+            return redirect('grower_portal:admin_application_edit_measurements', application_id=application.id)
     else:
         initial_data = {
             'transect_code_1': application.transect_code_1 or '',
@@ -269,12 +299,90 @@ def admin_application_edit_transects(request, application_id):
         'form': form,
         'field_latitude': field_latitude,
         'field_longitude': field_longitude,
-        'transect_data': json.dumps(transect_data),
+        'json_context': get_grower_maps_json_context_interactive(
+            transect_data, field_latitude, field_longitude,
+        ),
         'user_timezone': get_user_timezone(request),
         'is_admin_edit': True,
+        'wizard_step': 'transects',
     }
 
     return render(request, 'grower_portal/admin/application_edit_transects.html', context)
+
+
+def _edit_review_page_context(application):
+    try:
+        management_practices = ManagementPractices.objects.get(application=application)
+    except ManagementPractices.DoesNotExist:
+        management_practices = None
+
+    grazing_events = GrazingEvent.objects.filter(
+        application=application
+    ).prefetch_related('animals').order_by('event_number')
+
+    transect_measurements = TransectMeasurement.objects.filter(
+        application=application
+    ).prefetch_related(
+        'drop_plate',
+        'vegetation',
+        'soil',
+        'compaction',
+        'infiltrometer',
+        'infiltration_ring',
+    ).order_by('transect_index')
+
+    map_transect_points = []
+    for i, code in enumerate(application.transect_codes):
+        location = getattr(application, f'transect_{i + 1}_location', None)
+        if location:
+            map_transect_points.append({
+                'index': i,
+                'code': code,
+                'latitude': float(location.y),
+                'longitude': float(location.x),
+            })
+    ctx = {
+        'management_practices': management_practices,
+        'grazing_events': grazing_events,
+        'transect_measurements': transect_measurements,
+    }
+    if application.field:
+        ctx['json_context'] = get_grower_maps_json_context(map_transect_points)
+    return ctx
+
+
+@login_required
+@permission_required(IS_GROWERADMIN, raise_exception=True)
+def admin_application_edit_review(request, application_id):
+    application = get_object_or_404(
+        GrowerApplication.objects.select_related('grower', 'field', 'field__farm'),
+        id=application_id,
+    )
+    block = _require_draft_for_wizard_edit(request, application)
+    if block:
+        return block
+
+    block = _require_transect_codes_for_edit_wizard(request, application)
+    if block:
+        return block
+
+    if request.method == 'POST' and request.POST.get('action') == 'save_draft':
+        application.is_draft = True
+        application.is_submitted = False
+        application.save()
+        messages.success(
+            request,
+            f'Application {application.submission_code} saved as draft.',
+        )
+        return redirect('grower_portal:admin_application_detail', application_id=application.id)
+
+    ctx = {
+        'application': application,
+        'user_timezone': get_user_timezone(request),
+        'wizard_step': 'review',
+        **_edit_review_page_context(application),
+    }
+    return render(request, 'grower_portal/admin/application_edit_review.html', ctx)
 
 
 @login_required
