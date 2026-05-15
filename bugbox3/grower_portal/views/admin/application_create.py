@@ -1,5 +1,3 @@
-import json
-
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
 from django.core.exceptions import ValidationError
@@ -17,7 +15,19 @@ from ...forms.grower.forms import (
     TransectCodesForm,
 )
 from ...middleware import get_user_timezone
-from ...models import Farm, Field, GrazingEvent, GrowerApplication, ManagementPractices, SampleCode
+from ...models import (
+    Farm,
+    Field,
+    GrazingEvent,
+    GrowerApplication,
+    ManagementPractices,
+    SampleCode,
+    TransectMeasurement,
+)
+from bugbox3.libs.utilities import get_json_context
+
+from ...constants import DEFAULT_FIELD_LATITUDE, DEFAULT_FIELD_LONGITUDE
+from ...utils import get_grower_maps_json_context, get_grower_maps_json_context_interactive
 
 
 @login_required
@@ -320,12 +330,13 @@ def admin_application_create_step2(request, application_id):
     return render(request, 'grower_portal/grower/application_step2.html', {
         'application': application,
         'form': form,
+        'json_context': get_json_context({'fieldType': application.field.field_type}),
         'is_admin': True,
         'is_rangeland': is_rangeland,
         'grazing_events': grazing_events,
         'grower_display': application.grower_display_name,
         'has_linked_account': application.has_linked_account,
-        'user_timezone': get_user_timezone(request)
+        'user_timezone': get_user_timezone(request),
     })
 
 
@@ -344,7 +355,11 @@ def admin_application_create_step3(request, application_id):
         return redirect('grower_portal:admin_application_create_step1', application_id=application.id)
 
     if request.method == 'POST':
-        form = TransectCodesForm(request.POST, field_type=application.field.field_type)
+        form = TransectCodesForm(
+            request.POST,
+            field_type=application.field.field_type,
+            for_application=application,
+        )
         if form.is_valid():
             application.transect_code_1 = form.cleaned_data.get('transect_code_1', '').strip()
             application.transect_code_2 = form.cleaned_data.get('transect_code_2', '').strip()
@@ -394,7 +409,14 @@ def admin_application_create_step3(request, application_id):
                 initial_data[f'transect_{i}_latitude'] = None
                 initial_data[f'transect_{i}_longitude'] = None
 
-        form = TransectCodesForm(initial=initial_data, field_type=application.field.field_type)
+        form = TransectCodesForm(
+            initial=initial_data,
+            field_type=application.field.field_type,
+            for_application=application,
+        )
+
+    field_latitude = DEFAULT_FIELD_LATITUDE
+    field_longitude = DEFAULT_FIELD_LONGITUDE
 
     transect_data = []
     for i, code in enumerate(application.transect_codes):
@@ -403,21 +425,27 @@ def admin_application_create_step3(request, application_id):
         if location:
             latitude = float(location.y)
             longitude = float(location.x)
-            transect_data.append({
-                'index': i,
-                'code': code,
-                'latitude': latitude,
-                'longitude': longitude
-            })
+        else:
+            latitude = field_latitude
+            longitude = field_longitude
+
+        transect_data.append({
+            'index': i,
+            'code': code,
+            'latitude': latitude,
+            'longitude': longitude,
+        })
 
     return render(request, 'grower_portal/grower/application_step3.html', {
         'application': application,
         'form': form,
-        'transect_data': json.dumps(transect_data),
+        'json_context': get_grower_maps_json_context_interactive(
+            transect_data, field_latitude, field_longitude,
+        ),
         'is_admin': True,
         'grower_display': application.grower_display_name,
         'has_linked_account': application.has_linked_account,
-        'user_timezone': get_user_timezone(request)
+        'user_timezone': get_user_timezone(request),
     })
 
 
@@ -517,11 +545,48 @@ def admin_application_complete(request, application_id):
             )
             return redirect('grower_portal:admin_application_detail', application_id=application.id)
 
-    return render(request, 'grower_portal/admin/application_create/complete.html', {
+    try:
+        management_practices = ManagementPractices.objects.get(application=application)
+    except ManagementPractices.DoesNotExist:
+        management_practices = None
+
+    grazing_events = GrazingEvent.objects.filter(
+        application=application
+    ).prefetch_related('animals').order_by('event_number')
+
+    transect_measurements = TransectMeasurement.objects.filter(
+        application=application
+    ).prefetch_related(
+        'drop_plate',
+        'vegetation',
+        'soil',
+        'compaction',
+        'infiltrometer',
+        'infiltration_ring',
+    ).order_by('transect_index')
+
+    map_transect_points = []
+    for i, code in enumerate(application.transect_codes):
+        location = getattr(application, f'transect_{i + 1}_location', None)
+        if location:
+            map_transect_points.append({
+                'index': i,
+                'code': code,
+                'latitude': float(location.y),
+                'longitude': float(location.x),
+            })
+    complete_ctx = {
         'application': application,
         'grower_display': application.grower_display_name,
         'grower_email': application.grower_display_email,
         'has_linked_account': application.has_linked_account,
         'admin_email': application.created_by_admin.email if application.created_by_admin else 'Unknown',
-        'user_timezone': get_user_timezone(request)
-    })
+        'user_timezone': get_user_timezone(request),
+        'management_practices': management_practices,
+        'grazing_events': grazing_events,
+        'transect_measurements': transect_measurements,
+    }
+    if application.field:
+        complete_ctx['json_context'] = get_grower_maps_json_context(map_transect_points)
+
+    return render(request, 'grower_portal/admin/application_create/complete.html', complete_ctx)

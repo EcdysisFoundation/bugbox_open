@@ -199,9 +199,18 @@ class GrowerApplication(models.Model):
                 if char_field and char_field.strip():
                     try:
                         transect_obj = SampleCode.objects.get(code=char_field.strip(), is_active=True)
-                        if transect_obj.is_used:
+                        # allow codes already reserved for this application
+                        if (
+                            transect_obj.is_used
+                            and transect_obj.used_in_application_id != self.pk
+                        ):
+                            other = transect_obj.used_in_application
+                            scode = (
+                                other.submission_code if other else 'another application'
+                            )
                             raise ValidationError(
-                                f'Transect code {i} "{char_field}" has already been used in a submitted application.')
+                                f'Transect code {i} "{char_field}" has already been used in application {scode}.'
+                            )
                     except SampleCode.DoesNotExist:
                         raise ValidationError(f'Transect code {i} "{char_field}" is not valid or inactive.')
 

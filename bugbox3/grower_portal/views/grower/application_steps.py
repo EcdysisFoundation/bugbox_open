@@ -1,5 +1,3 @@
-import json
-
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
 from django.core.exceptions import ValidationError
@@ -9,7 +7,11 @@ from django.utils import timezone
 
 from bugbox3.core.permissions import IS_GROWER
 
+from bugbox3.libs.utilities import get_json_context
+
 from ...constants import (
+    DEFAULT_FIELD_LATITUDE,
+    DEFAULT_FIELD_LONGITUDE,
     DISTANCES_DROP_PLATE,
     INFILTROMETER_TIMES,
     POSITIONS_3POINT,
@@ -31,6 +33,7 @@ from ...forms.grower.forms import (
     VegetationFormSet,
 )
 from ...middleware import get_user_timezone
+from ...utils import get_grower_maps_json_context, get_grower_maps_json_context_interactive
 from ...models import (
     DropPlateReading,
     Farm,
@@ -168,7 +171,8 @@ def application_step2(request, application_id):
     return render(request, 'grower_portal/grower/application_step2.html', {
         'application': application,
         'form': form,
-        'user_timezone': get_user_timezone(request)
+        'json_context': get_json_context({'fieldType': application.field.field_type}),
+        'user_timezone': get_user_timezone(request),
     })
 
 
@@ -185,7 +189,11 @@ def application_step3(request, application_id):
     application.field
 
     if request.method == 'POST':
-        form = TransectCodesForm(request.POST, field_type=application.field.field_type)
+        form = TransectCodesForm(
+            request.POST,
+            field_type=application.field.field_type,
+            for_application=application,
+        )
         if form.is_valid():
             application.transect_code_1 = form.cleaned_data.get('transect_code_1', '').strip()
             application.transect_code_2 = form.cleaned_data.get('transect_code_2', '').strip()
@@ -217,7 +225,14 @@ def application_step3(request, application_id):
                 initial_data[f'transect_{i}_latitude'] = None
                 initial_data[f'transect_{i}_longitude'] = None
 
-        form = TransectCodesForm(initial=initial_data, field_type=application.field.field_type)
+        form = TransectCodesForm(
+            initial=initial_data,
+            field_type=application.field.field_type,
+            for_application=application,
+        )
+
+    field_latitude = DEFAULT_FIELD_LATITUDE
+    field_longitude = DEFAULT_FIELD_LONGITUDE
 
     transect_data = []
     for i, code in enumerate(application.transect_codes):
@@ -226,18 +241,24 @@ def application_step3(request, application_id):
         if location:
             latitude = float(location.y)
             longitude = float(location.x)
-            transect_data.append({
-                'index': i,
-                'code': code,
-                'latitude': latitude,
-                'longitude': longitude
-            })
+        else:
+            latitude = field_latitude
+            longitude = field_longitude
+
+        transect_data.append({
+            'index': i,
+            'code': code,
+            'latitude': latitude,
+            'longitude': longitude,
+        })
 
     return render(request, 'grower_portal/grower/application_step3.html', {
         'application': application,
         'form': form,
-        'transect_data': json.dumps(transect_data),
-        'user_timezone': get_user_timezone(request)
+        'json_context': get_grower_maps_json_context_interactive(
+            transect_data, field_latitude, field_longitude,
+        ),
+        'user_timezone': get_user_timezone(request),
     })
 
 
@@ -703,6 +724,6 @@ def application_step6(request, application_id):
         'management_practices': management_practices,
         'grazing_events': grazing_events,
         'transect_measurements': transect_measurements,
-        'transect_data': json.dumps(transect_data),
-        'user_timezone': get_user_timezone(request)
+        'json_context': get_grower_maps_json_context(transect_data),
+        'user_timezone': get_user_timezone(request),
     })

@@ -7,11 +7,7 @@
 {% block title %}Review & Submit - Step {% if application.field.field_type == 'range' %}6{% else %}5{% endif %}{% endblock %}
 
 {% block customheadtagcontent %}
-<script id="json_context" type="application/json">
-{
-    "transectData": {{ transect_data|safe }}
-}
-</script>
+{{ json_context|safe }}
 {% render_bundle 'grower_maps_view' 'js' %}
 {% endblock %}
 
@@ -621,8 +617,6 @@
     </div>
 </div>
 
-<!-- Google Maps API with callback -->
-<script src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}&callback=initMapView&v=weekly" async defer></script>
 {% endblock %}
 
 

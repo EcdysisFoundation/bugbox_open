@@ -11,7 +11,8 @@ from bugbox3.core.permissions import IS_GROWERADMIN
 from ...forms.admin.application_forms import LinkGrowerForm
 from ...forms.admin.forms import ApplicationFilterForm
 from ...middleware import get_user_timezone
-from ...models import GrazingEvent, GrowerApplication, ManagementPractices
+from ...models import GrazingEvent, GrowerApplication, ManagementPractices, TransectMeasurement
+from ...utils import get_grower_maps_json_context
 
 User = get_user_model()
 
@@ -97,27 +98,36 @@ def application_detail(request, application_id):
         application=application
     ).prefetch_related('animals').order_by('event_number')
 
-    transect_data = []
-    for i in range(1, 5):
-        code = getattr(application, f'transect_code_{i}', None)
-        location = getattr(application, f'transect_{i}_location', None)
-        if code:
-            lat = location.y if location else None
-            lon = location.x if location else None
-            transect_data.append({
-                'number': i,
-                'code': code,
-                'latitude': lat,
-                'longitude': lon
-            })
+    transect_measurements = TransectMeasurement.objects.filter(
+        application=application
+    ).prefetch_related(
+        'drop_plate',
+        'vegetation',
+        'soil',
+        'compaction',
+        'infiltrometer',
+        'infiltration_ring',
+    ).order_by('transect_index')
 
+    map_transect_points = []
+    for i, code in enumerate(application.transect_codes):
+        location = getattr(application, f'transect_{i + 1}_location', None)
+        if location:
+            map_transect_points.append({
+                'index': i,
+                'code': code,
+                'latitude': float(location.y),
+                'longitude': float(location.x),
+            })
     context = {
         'application': application,
         'management_practices': management_practices,
         'grazing_events': grazing_events,
-        'transect_data': transect_data,
-        'user_timezone': get_user_timezone(request)
+        'transect_measurements': transect_measurements,
+        'user_timezone': get_user_timezone(request),
     }
+    if application.field:
+        context['json_context'] = get_grower_maps_json_context(map_transect_points)
 
     return render(request, 'grower_portal/admin/application_detail.html', context)
 
@@ -126,6 +136,9 @@ def application_detail(request, application_id):
 @permission_required(IS_GROWERADMIN, raise_exception=True)
 def application_edit_redirect(request, application_id):
     application = get_object_or_404(GrowerApplication, id=application_id)
+    if not application.is_draft:
+        messages.error(request, 'Only draft applications can be edited through the wizard.')
+        return redirect('grower_portal:admin_application_detail', application_id=application.id)
     return redirect('grower_portal:admin_application_edit_basic', application_id=application.id)
 
 

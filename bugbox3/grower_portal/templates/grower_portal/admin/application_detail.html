@@ -1,9 +1,17 @@
 {% extends "base.html" %}
+{% load render_bundle from webpack_loader %}
 
 {% load i18n %}
 {% load timezone_filters %}
 
 {% block title %}Application Details{% endblock %}
+
+{% block customheadtagcontent %}
+{% if json_context %}
+{{ json_context|safe }}
+{% render_bundle 'grower_maps_view' 'js' %}
+{% endif %}
+{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
@@ -15,6 +23,9 @@
                     {% if application.is_draft %}
                     <a href="{% url 'grower_portal:admin_application_submit' application.id %}" class="btn btn-success me-2">
                         <i class="fas fa-paper-plane"></i> Submit on Behalf of Grower
+                    </a>
+                    <a href="{% url 'grower_portal:admin_application_edit_measurements' application.id %}" class="btn btn-outline-primary me-2">
+                        <i class="fas fa-ruler-combined"></i> Edit Transect Measurements
                     </a>
                     {% endif %}
                     <a href="{% url 'grower_portal:admin_application_edit' application.id %}" class="btn btn-warning">
@@ -94,7 +105,7 @@
                     {% if not application.grower %}
                         <div class="alert alert-info mt-3 mb-0">
                             <i class="fas fa-info-circle"></i>
-                            <strong>Note:</strong> This application is not linked to a grower account. It will not appear in any grower dashboard. 
+                            <strong>Note:</strong> This application is not linked to a grower account. It will not appear in any grower dashboard.
                             <a href="{% url 'grower_portal:admin_application_link_grower' application.id %}" class="btn btn-sm btn-primary ms-2">
                                 <i class="fas fa-link"></i> Link to Grower Account
                             </a>
@@ -106,116 +117,12 @@
     </div>
 
     <div class="row">
-        <div class="col-12 mb-4">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Transect Codes & GPS Coordinates</h5>
-                </div>
-                <div class="card-body">
-                    {% if transect_data %}
-                        <div class="table-responsive">
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>Transect #</th>
-                                        <th>Code</th>
-                                        <th>Latitude</th>
-                                        <th>Longitude</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for transect in transect_data %}
-                                    <tr>
-                                        <td>{{ transect.number }}</td>
-                                        <td>{{ transect.code }}</td>
-                                        <td>{{ transect.latitude|default:"N/A" }}</td>
-                                        <td>{{ transect.longitude|default:"N/A" }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% else %}
-                        <p class="text-muted">No transect codes recorded</p>
-                    {% endif %}
-                </div>
-            </div>
+        <div class="col-12 col-lg-10">
+            {% include 'grower_portal/grower/includes/_application_field_and_management_readonly.html' %}
+            {% include 'grower_portal/grower/includes/_application_map_and_field_measurements_readonly.html' %}
+            {% include 'grower_portal/grower/includes/_application_transect_measurements_readonly.html' %}
+            {% include 'grower_portal/grower/includes/_application_grazing_events_readonly.html' %}
         </div>
     </div>
-
-    <div class="row">
-        <div class="col-12 mb-4">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Management Practices</h5>
-                </div>
-                <div class="card-body">
-                    {% if management_practices %}
-                        <div class="row">
-                            <div class="col-md-6">
-                                <p><strong>Uses Tillage:</strong> {% if management_practices.uses_tillage %}Yes{% else %}No{% endif %}</p>
-                                <p><strong>Uses Cover Crop:</strong> {% if management_practices.uses_cover_crop %}Yes{% else %}No{% endif %}</p>
-                                <p><strong>Synthetic Fertilizers:</strong> {% if management_practices.uses_synthetic_fertilizers %}Yes{% else %}No{% endif %}</p>
-                                <p><strong>Synthetic Insecticides:</strong> {% if management_practices.uses_synthetic_insecticides %}Yes{% else %}No{% endif %}</p>
-                            </div>
-                            <div class="col-md-6">
-                                <p><strong>Synthetic Herbicides:</strong> {% if management_practices.uses_synthetic_herbicides %}Yes{% else %}No{% endif %}</p>
-                                <p><strong>Synthetic Fungicides:</strong> {% if management_practices.uses_synthetic_fungicides %}Yes{% else %}No{% endif %}</p>
-                                <p><strong>Organic Amendments:</strong> {% if management_practices.uses_organic_amendments %}Yes{% else %}No{% endif %}</p>
-                                <p><strong>Uses Grazing:</strong> {% if management_practices.uses_grazing %}Yes{% else %}No{% endif %}</p>
-                            </div>
-                        </div>
-                    {% else %}
-                        <p class="text-muted">No management practices recorded</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {% if application.field.field_type == 'range' and grazing_events %}
-    <div class="row">
-        <div class="col-12 mb-4">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Grazing Events ({{ grazing_events.count }})</h5>
-                </div>
-                <div class="card-body">
-                    {% for event in grazing_events %}
-                    <div class="mb-3 border-bottom pb-3">
-                        <h6>Event {{ event.event_number }}</h6>
-                        <p><strong>Start Date:</strong> {{ event.start_date|user_date:request.user_timezone|default:"N/A" }}</p>
-                        {% if event.animals.all %}
-                            <table class="table table-sm">
-                                <thead>
-                                    <tr>
-                                        <th>Class of Animal</th>
-                                        <th>Number</th>
-                                        <th>Avg Weight (lbs)</th>
-                                        <th>Duration (days)</th>
-                                        <th>Rest Period (days)</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for animal in event.animals.all %}
-                                    <tr>
-                                        <td>{{ animal.class_of_animal }}</td>
-                                        <td>{{ animal.number_of_animals }}</td>
-                                        <td>{{ animal.average_weight_lbs }}</td>
-                                        <td>{{ animal.duration_days }}</td>
-                                        <td>{{ animal.rest_period_days }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        {% endif %}
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-    </div>
-    {% endif %}
 </div>
 {% endblock %}
-

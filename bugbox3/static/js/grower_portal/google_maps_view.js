@@ -1,3 +1,5 @@
+import { bootstrapGoogleMapsFromContext } from './google_maps_api_loader';
+
 window.initMapView = function() {
     
     const jsonContextElement = document.getElementById('json_context');
@@ -119,4 +121,6 @@ window.initMapView = function() {
     });
     
 };
+
+bootstrapGoogleMapsFromContext();
 

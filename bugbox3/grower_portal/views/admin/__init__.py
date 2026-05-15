@@ -5,10 +5,18 @@ from .application_create import (
     admin_application_create_step2,
     admin_application_create_step3,
 )
-from .application_create_measurements import admin_application_create_step4
+from .application_create_grazing import (
+    admin_application_create_step5,
+    admin_application_edit_grazing,
+)
+from .application_create_measurements import (
+    admin_application_create_step4,
+    admin_application_edit_measurements,
+)
 from .application_edit import (
     admin_application_edit_basic,
     admin_application_edit_management,
+    admin_application_edit_review,
     admin_application_edit_transects,
     admin_application_submit,
 )
@@ -60,12 +68,16 @@ __all__ = [
     'admin_application_edit_basic',
     'admin_application_edit_management',
     'admin_application_edit_transects',
+    'admin_application_edit_measurements',
+    'admin_application_edit_grazing',
+    'admin_application_edit_review',
     'admin_application_submit',
     'admin_application_create_start',
     'admin_application_create_step1',
     'admin_application_create_step2',
     'admin_application_create_step3',
     'admin_application_create_step4',
+    'admin_application_create_step5',
     'admin_application_complete',
     'sample_code_list',
     'sample_code_generate',

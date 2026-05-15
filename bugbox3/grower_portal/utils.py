@@ -1,4 +1,12 @@
+from django.conf import settings
+
 from bugbox3.core.constants import FIPS_STATE
+from bugbox3.grower_portal.constants import (
+    GOOGLE_MAPS_CALLBACK_INTERACTIVE,
+    GOOGLE_MAPS_CALLBACK_READONLY,
+    GOOGLE_MAPS_VERSION,
+)
+from bugbox3.libs.utilities import get_json_context
 
 
 def state_name_to_abbreviation(state_name):
@@ -75,3 +83,32 @@ def state_name_to_abbreviation(state_name):
         return state_name.upper()
 
     return state_name
+
+
+def get_grower_maps_json_context(
+    transect_data,
+    *,
+    callback=GOOGLE_MAPS_CALLBACK_READONLY,
+    field_latitude=None,
+    field_longitude=None,
+):
+    payload = {
+        'transectData': transect_data,
+        'googleMapsApiKey': settings.GOOGLE_MAPS_API_KEY,
+        'googleMapsCallback': callback,
+        'googleMapsVersion': GOOGLE_MAPS_VERSION,
+    }
+    if field_latitude is not None:
+        payload['fieldLatitude'] = field_latitude
+    if field_longitude is not None:
+        payload['fieldLongitude'] = field_longitude
+    return get_json_context(payload)
+
+
+def get_grower_maps_json_context_interactive(transect_data, field_latitude, field_longitude):
+    return get_grower_maps_json_context(
+        transect_data,
+        callback=GOOGLE_MAPS_CALLBACK_INTERACTIVE,
+        field_latitude=field_latitude,
+        field_longitude=field_longitude,
+    )
