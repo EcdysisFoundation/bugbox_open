@@ -1,12 +1,13 @@
 {% extends "base.html" %}
 {% load i18n %}
+{% load render_bundle from webpack_loader %}
 
 {% block title %}Generate Submittal Form{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
     <h1>Generate Submittal Form</h1>
-    <p class="text-muted">Generate Excel submittal forms for soil sample submissions based on cluster and year</p>
+    <p class="text-muted">Generate Excel submittal forms for soil and plant sample submissions by project, label batch, and selected codes</p>
 
     <div class="row mt-4">
         <div class="col-md-8">
@@ -16,30 +17,79 @@
                 </div>
                 <div class="card-body">
                     <p class="text-muted">
-                        Enter a cluster number and year to generate an Excel submittal form. 
-                        The system will find the associated label generation and populate the template 
-                        with transect codes and depth information.
+                        Choose <strong>Avalanche</strong> or <strong>Ignite</strong>, then cluster and year.
+                        The system lists ready <strong>inner</strong> label generations for that project (so the same
+                        cluster/year can exist for both projects). Select which sample/transect codes to include.
                     </p>
 
-                    <form method="post">
+                    <form method="post" id="submittal-form" data-submittal-generations-url="{% url 'grower_portal:submittal_label_generations_json' %}">
                         {% csrf_token %}
-                        
-                        <div class="mb-3">
-                            {{ form.cluster_number.label_tag }}
-                            {{ form.cluster_number }}
-                            <small class="form-text text-muted">{{ form.cluster_number.help_text }}</small>
-                            {% if form.cluster_number.errors %}
-                                <div class="text-danger">{{ form.cluster_number.errors }}</div>
-                            {% endif %}
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                {{ form.project_type.label_tag }}
+                                {{ form.project_type }}
+                                {% if form.project_type.errors %}
+                                    <div class="text-danger">{{ form.project_type.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                {{ form.cluster_number.label_tag }}
+                                {{ form.cluster_number }}
+                                <small class="form-text text-muted">{{ form.cluster_number.help_text }}</small>
+                                {% if form.cluster_number.errors %}
+                                    <div class="text-danger">{{ form.cluster_number.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                {{ form.year.label_tag }}
+                                {{ form.year }}
+                                <small class="form-text text-muted">{{ form.year.help_text }}</small>
+                                {% if form.year.errors %}
+                                    <div class="text-danger">{{ form.year.errors }}</div>
+                                {% endif %}
+                            </div>
                         </div>
 
                         <div class="mb-3">
-                            {{ form.year.label_tag }}
-                            {{ form.year }}
-                            <small class="form-text text-muted">{{ form.year.help_text }}</small>
-                            {% if form.year.errors %}
-                                <div class="text-danger">{{ form.year.errors }}</div>
+                            {{ form.label_generation_id.label_tag }}
+                            {{ form.label_generation_id }}
+                            <small class="form-text text-muted">{{ form.label_generation_id.help_text }}</small>
+                            {% if form.label_generation_id.errors %}
+                                <div class="text-danger">{{ form.label_generation_id.errors }}</div>
                             {% endif %}
+                        </div>
+
+                        <div id="submittal-codes-loading" class="text-muted mb-2" style="display: none;">
+                            <i class="fas fa-spinner fa-spin"></i> Loading label batches…
+                        </div>
+                        <p id="submittal-codes-empty" class="text-muted small"></p>
+
+                        <div class="mb-3" id="submittal-codes-panel"{% if not form.selected_codes.field.choices %} style="display: none;"{% endif %}>
+                            <label class="form-label">{{ form.selected_codes.label }}</label>
+                            <small class="form-text text-muted d-block mb-2">{{ form.selected_codes.help_text }}</small>
+                            <div class="mb-2">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="submittal-select-all-codes">Select all</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="submittal-select-none-codes">Select none</button>
+                            </div>
+                            <div id="submittal-codes-container" class="row">
+                                {% if form.selected_codes.field.choices %}
+                                    {% for checkbox in form.selected_codes %}
+                                        <div class="col-md-2 col-sm-3 col-4 mb-2">
+                                            <div class="form-check">
+                                                {{ checkbox.tag }}
+                                                <label class="form-check-label" for="{{ checkbox.id_for_label }}">
+                                                    {{ checkbox.choice_label }}
+                                                </label>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                            {% if form.selected_codes.errors %}
+                                <div class="text-danger">{{ form.selected_codes.errors }}</div>
+                            {% endif %}
+                            <div id="submittal-forage-hint" class="alert alert-info mt-2" style="display: none;"></div>
                         </div>
 
                         <div class="mb-3">
@@ -92,14 +142,15 @@
                 </div>
                 <div class="card-body">
                     <ol>
-                        <li>Enter the cluster number (e.g., C1, C2)</li>
-                        <li>Enter the year</li>
-                        <li>Select which submittal forms to generate (Soil and/or Plant)</li>
-                        <li>System finds the latest label generation for that cluster</li>
-                        <li>For Soil: Creates 5 rows per transect (one for each depth: 0-5, 5-10, 10-15, 15-30, 30-60 cm)</li>
-                        <li>For Plant: Creates 1 row per transect with forage type (only for transects with forage labels)</li>
-                        <li>Populates grower names from submitted applications</li>
-                        <li>Downloads Excel file(s) ready for submission</li>
+                        <li>Select <strong>project type</strong> (Avalanche or Ignite)</li>
+                        <li>Enter cluster number and year</li>
+                        <li>Tab out of the year field to load inner label batches for that project</li>
+                        <li>Pick the label generation to use (if several exist)</li>
+                        <li>Check which codes to include on the submittal form(s)</li>
+                        <li>Choose Soil and/or Plant submittal forms</li>
+                        <li>For Soil: 5 rows per selected code (depths 0-5, 5-10, 10-15, 15-30, 30-60 cm)</li>
+                        <li>For Plant: 1 row per selected code when the batch includes forage</li>
+                        <li>Grower names are filled from submitted applications when codes match</li>
                     </ol>
                 </div>
             </div>
@@ -122,5 +173,6 @@
 </div>
 {% endblock %}
 
-
-
+{% block customheadtagcontent %}
+{% render_bundle 'grower_submittal_form_generator' 'js' %}
+{% endblock %}

@@ -30,38 +30,33 @@ class SubmittalFormGenerator:
         (30, 60)
     ]
 
-    def __init__(self, cluster_number, year):
+    def __init__(self, cluster_number, year, project_type, label_generation, transect_codes):
         self.cluster_number = cluster_number
         self.year = year
-        self.transect_codes = []
+        self.project_type = project_type
+        self.label_generation = label_generation
+        self.transect_codes = list(transect_codes or [])
         self.forage_transect_codes = []
         self.grower_names = {}
-        self.label_generation = None
+        self._set_forage_codes()
+
+    def _set_forage_codes(self):
+        sample_types = self.label_generation.sample_types or [] if self.label_generation else []
+        if 'forage' in sample_types:
+            self.forage_transect_codes = list(self.transect_codes)
+        elif not sample_types and self.transect_codes:
+            self.forage_transect_codes = list(self.transect_codes)
+        else:
+            self.forage_transect_codes = []
 
     def validate_cluster(self):
         return LabelGeneration.objects.filter(
             cluster_number=self.cluster_number,
-            year=self.year
+            year=self.year,
+            project_type=self.project_type,
+            label_category='inner',
+            status='ready',
         ).exists()
-
-    def get_latest_label_generation(self):
-        self.label_generation = LabelGeneration.objects.filter(
-            cluster_number=self.cluster_number,
-            year=self.year
-        ).order_by('-generated_at').first()
-
-        if self.label_generation:
-            self.transect_codes = self.label_generation.transect_codes_generated or []
-            sample_types = self.label_generation.sample_types or []
-
-            if not sample_types and self.transect_codes:
-                self.forage_transect_codes = list(self.transect_codes) if self.transect_codes else []
-            elif 'forage' in sample_types:
-                self.forage_transect_codes = list(self.transect_codes) if self.transect_codes else []
-            else:
-                self.forage_transect_codes = []
-
-        return self.label_generation
 
     def get_grower_applications(self):
         """
@@ -82,7 +77,6 @@ class SubmittalFormGenerator:
         applications = GrowerApplication.objects.filter(query).select_related('grower').distinct()
 
         for app in applications:
-            # Handle admin created applications where grower can be None
             if app.grower:
                 grower_name = app.grower.name if hasattr(
                     app.grower, 'name') and app.grower.name else app.grower.username
@@ -134,6 +128,9 @@ class SubmittalFormGenerator:
 
     def _cm_to_inches(self, cm):
         return round(cm / 2.54)
+
+    def _file_prefix(self):
+        return f"{self.project_type}_{self.cluster_number}_{self.year}"
 
     def _populate_soil_sheet(self, workbook, transect_codes, grower_names):
         try:
@@ -306,22 +303,20 @@ class SubmittalFormGenerator:
         return workbook
 
     def generate_submittal_form(self, generate_soil=True, generate_plant=True):
-        if not self.validate_cluster():
+        if not self.label_generation:
             raise ValueError(
-                f"No label generation found for cluster {self.cluster_number} in year {self.year}"
+                f"No label generation provided for {self.project_type} cluster "
+                f"{self.cluster_number} in year {self.year}"
             )
 
-        label_gen = self.get_latest_label_generation()
-        if not label_gen:
-            raise ValueError(
-                f"Could not retrieve label generation for cluster {self.cluster_number} in year {self.year}"
-            )
+        if not self.transect_codes:
+            raise ValueError('No sample/transect codes selected for submittal generation.')
 
         grower_names = self.get_grower_applications()
 
         files = []
+        prefix = self._file_prefix()
 
-        # Generate soil submittal form
         if generate_soil:
             workbook = self._load_template(SUBMITTAL_TEMPLATE_SLUG)
             workbook = self._populate_soil_sheet(workbook, self.transect_codes, grower_names)
@@ -331,33 +326,22 @@ class SubmittalFormGenerator:
             workbook.save(buffer)
             buffer.seek(0)
 
-            filename = f"Submittal_Form_Soil_{self.cluster_number}_{self.year}.xlsx"
+            filename = f"Submittal_Form_Soil_{prefix}.xlsx"
             files.append((buffer, filename))
 
-        # Generate plant submittal form
         if generate_plant:
             if not self.forage_transect_codes:
-                sample_types = self.label_generation.sample_types or [] if self.label_generation else []
+                sample_types = self.label_generation.sample_types or []
                 has_forage = 'forage' in sample_types
-                has_transect_codes = bool(self.transect_codes)
-
                 if not has_forage:
                     raise ValueError(
-                        f"No forage labels found for cluster {self.cluster_number} in year {self.year}. "
-                        f"The label generation for this cluster does not include 'forage' in its sample types. "
+                        f"The selected label generation does not include forage sample types. "
                         f"Found sample types: {sample_types}. "
-                        "Please regenerate labels with 'forage' included in the sample types."
+                        "Use a batch with forage labels, or uncheck Plant submittal."
                     )
-                elif not has_transect_codes:
-                    raise ValueError(
-                        f"No transect codes found for cluster {self.cluster_number} in year {self.year}. "
-                        "The label generation exists but has no transect codes."
-                    )
-                else:
-                    raise ValueError(
-                        f"No forage labels found for cluster {self.cluster_number} in year {self.year}. "
-                        "Please ensure 'forage' is included in the sample types when generating labels."
-                    )
+                raise ValueError(
+                    'No codes eligible for plant (forage) submittal in your selection.'
+                )
 
             workbook = self._load_template(SUBMITTAL_PLANT_TEMPLATE_SLUG)
             workbook = self._populate_plant_sheet(workbook, self.forage_transect_codes, grower_names)
@@ -366,7 +350,7 @@ class SubmittalFormGenerator:
             workbook.save(buffer)
             buffer.seek(0)
 
-            filename = f"Submittal_Form_Plant_{self.cluster_number}_{self.year}.xlsx"
+            filename = f"Submittal_Form_Plant_{prefix}.xlsx"
             files.append((buffer, filename))
 
         if not files:
