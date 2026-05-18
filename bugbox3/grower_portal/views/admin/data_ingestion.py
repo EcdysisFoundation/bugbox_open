@@ -3,34 +3,27 @@ Admin Data Ingestion Hub
 Single interface for uploading all data categories into Grower Portal
 """
 
-import json
-
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from django.core.paginator import Paginator
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import redirect, render
 from django.urls import reverse
 
 from bugbox3.core.permissions import IS_GROWERADMIN
-from bugbox3.libs.utilities import get_json_context
 from bugbox3.grower_portal.constants import (
     CATEGORY_CHOICES,
     CATEGORY_DISPLAY_META,
     CATEGORY_RESULT_TYPE_MAP,
-    GROWER_DATA_S3_PREFIX,
     RESULT_TYPE_CHOICES,
 )
 from bugbox3.grower_portal.forms.admin.data_ingestion_form import DataIngestionForm
 from bugbox3.grower_portal.middleware import get_user_timezone
 from bugbox3.grower_portal.models import CSVImportLog
-from bugbox3.grower_portal.services.data_ingestion import (
-    build_s3_path,
-    process_bird_csv,
-    process_generic_csv,
-)
+from bugbox3.grower_portal.services.data_ingestion import build_s3_path, process_bird_csv, process_generic_csv
+from bugbox3.libs.utilities import get_json_context
 
 _RESULT_TYPE_DISPLAY = dict(RESULT_TYPE_CHOICES)
 

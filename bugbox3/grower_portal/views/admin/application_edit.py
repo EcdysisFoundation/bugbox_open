@@ -1,5 +1,3 @@
-import json
-
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
 from django.core.exceptions import ValidationError
@@ -12,7 +10,15 @@ from bugbox3.core.permissions import IS_GROWERADMIN
 from ...constants import DEFAULT_FIELD_LATITUDE, DEFAULT_FIELD_LONGITUDE
 from ...forms.grower.forms import ApplicationCreationForm, ManagementPracticesForm, TransectCodesForm
 from ...middleware import get_user_timezone
-from ...models import Farm, Field, GrowerApplication, ManagementPractices, SampleCode, GrazingEvent, TransectMeasurement
+from ...models import (
+    Farm,
+    Field,
+    GrazingEvent,
+    GrowerApplication,
+    ManagementPractices,
+    SampleCode,
+    TransectMeasurement,
+)
 from ...utils import get_grower_maps_json_context, get_grower_maps_json_context_interactive
 
 

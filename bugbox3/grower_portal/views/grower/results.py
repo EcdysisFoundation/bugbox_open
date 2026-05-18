@@ -34,6 +34,7 @@ def _uses_sample_code_grower_join(project_type: str, result_type: str) -> bool:
     """
     return result_type == 'birds' or project_type != 'ignite'
 
+
 def _field_value_filters(grower, year_int, project_type, result_type, category=None):
     """Build ORM filter kwargs scoping CSVImportFieldValue to a grower."""
     if _uses_sample_code_grower_join(project_type, result_type):
@@ -284,7 +285,11 @@ def _get_bird_context(grower, year_int, project_type):
             'abundance': row_data.get('Abundance', ''),
             'richness': row_data.get('Richness', ''),
             'temp_f': row_data.get('Temp \ufffdF', '') or row_data.get('Temp °F', '') or row_data.get('Temp F', ''),
-            'distance_mi': row_data.get('Distance mi', '') or row_data.get('Distance MI', '') or row_data.get('Distance Mi', ''),
+            'distance_mi': (
+                row_data.get('Distance mi', '')
+                or row_data.get('Distance MI', '')
+                or row_data.get('Distance Mi', '')
+            ),
             'duration_min': row_data.get('Duration (min)', ''),
         })
     # Per-site survey abundance and survey count
@@ -307,9 +312,9 @@ def _get_bird_context(grower, year_int, project_type):
         site = str(s.get("site_code") or "").strip()
         if not site:
             continue
-        current_key = f"{s.get('date','')} {s.get('time','')}"
+        current_key = f"{s.get('date', '')} {s.get('time', '')}"
         prev = conditions_by_site_map.get(site)
-        prev_key = f"{prev.get('date','')} {prev.get('time','')}" if prev else ""
+        prev_key = f"{prev.get('date', '')} {prev.get('time', '')}" if prev else ""
         if not prev or current_key > prev_key:
             conditions_by_site_map[site] = s
 
@@ -407,7 +412,11 @@ def _get_bird_context(grower, year_int, project_type):
         per_site_summary.append({
             'site_code': site,
             'survey_count': abundance_survey_count_by_site.get(site, 0),
-            'abundance_total': round(abundance_total_by_site.get(site, 0.0), 0) if site in abundance_total_by_site else None,
+            'abundance_total': (
+                round(abundance_total_by_site.get(site, 0.0), 0)
+                if site in abundance_total_by_site
+                else None
+            ),
             'species_richness': species_richness_by_site.get(site, None),
         })
 

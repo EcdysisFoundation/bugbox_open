@@ -6,7 +6,6 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
 from bugbox3.core.permissions import IS_GROWER
-
 from bugbox3.libs.utilities import get_json_context
 
 from ...constants import (
@@ -33,7 +32,6 @@ from ...forms.grower.forms import (
     VegetationFormSet,
 )
 from ...middleware import get_user_timezone
-from ...utils import get_grower_maps_json_context, get_grower_maps_json_context_interactive
 from ...models import (
     DropPlateReading,
     Farm,
@@ -48,6 +46,7 @@ from ...models import (
     TransectMeasurement,
     VegetationReading,
 )
+from ...utils import get_grower_maps_json_context, get_grower_maps_json_context_interactive
 
 
 @login_required

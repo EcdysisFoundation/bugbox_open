@@ -4,11 +4,7 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 
-from ...constants import (
-    FIELD_TYPE_CHOICES,
-    LABEL_PROJECT_CHOICES,
-    RESULT_TYPE_CHOICES,
-)
+from ...constants import FIELD_TYPE_CHOICES
 from ...models import Farm
 
 User = get_user_model()

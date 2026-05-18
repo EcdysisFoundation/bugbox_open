@@ -6,7 +6,9 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
 from bugbox3.core.permissions import IS_GROWERADMIN
+from bugbox3.libs.utilities import get_json_context
 
+from ...constants import DEFAULT_FIELD_LATITUDE, DEFAULT_FIELD_LONGITUDE
 from ...forms.admin.application_forms import AdminApplicationCreationForm, GrowerSelectionForm
 from ...forms.grower.forms import (
     GrazingEventAnimalFormSet,
@@ -24,9 +26,6 @@ from ...models import (
     SampleCode,
     TransectMeasurement,
 )
-from bugbox3.libs.utilities import get_json_context
-
-from ...constants import DEFAULT_FIELD_LATITUDE, DEFAULT_FIELD_LONGITUDE
 from ...utils import get_grower_maps_json_context, get_grower_maps_json_context_interactive
 
 

@@ -72,7 +72,7 @@ class DataIngestionForm(forms.Form):
             Row(
                 Column("category",    css_class="form-group col-md-4 mb-3"),
                 Column("result_type", css_class="form-group col-md-4 mb-3"),
-                Column("project_type",css_class="form-group col-md-4 mb-3"),
+                Column("project_type", css_class="form-group col-md-4 mb-3"),
                 css_class="form-row",
             ),
             Row(

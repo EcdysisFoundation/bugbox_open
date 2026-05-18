@@ -151,4 +151,3 @@ def generate_labels_async(label_generation_id: int):
             gen.error_message = str(e)
             gen.save(update_fields=['status', 'error_message'])
         raise
-
