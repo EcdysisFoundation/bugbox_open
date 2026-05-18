@@ -12,6 +12,7 @@ from ...constants import IGNITE_INNER_SAMPLE_TYPES, IGNITE_OUTER_SAMPLE_TYPES, S
 from ...forms.admin.label_forms import QuickLabelGenerationForm
 from ...middleware import get_user_timezone
 from ...models import LabelGeneration, SampleCode
+from ...services.label_generation_repair import prepare_label_generation_retry
 from ...tasks import generate_labels_async
 
 
@@ -363,11 +364,43 @@ def label_generation_delete(request, generation_id):
 @login_required
 @permission_required(IS_GROWERADMIN, raise_exception=True)
 @require_POST
+def label_generation_retry(request, generation_id):
+    """
+    Fix stuck queued/processing rows.
+
+    if a Word file already exists, marks the row Ready. Otherwise re-queues Celery.
+    """
+    generation = get_object_or_404(
+        LabelGeneration.objects.select_related('generated_by'),
+        id=generation_id,
+    )
+
+    try:
+        with transaction.atomic():
+            gen = LabelGeneration.objects.select_for_update().get(pk=generation_id)
+            action, detail = prepare_label_generation_retry(gen)
+    except ValueError as e:
+        messages.error(request, str(e))
+        return redirect('grower_portal:label_generation_detail', generation_id=generation.id)
+
+    if action == 'requeue':
+        _enqueue_label_generation_task(gen)
+        messages.success(
+            request,
+            f'{detail} Refresh this page in a moment, then download the file.',
+        )
+    else:
+        messages.success(request, detail)
+
+    return redirect('grower_portal:label_generation_detail', generation_id=generation.id)
+
+
+@login_required
+@permission_required(IS_GROWERADMIN, raise_exception=True)
+@require_POST
 def label_regenerate_quick_avalanche(request, generation_id):
     """
-    Re-queue label generation using codes already stored on the LabelGeneration row
-    (rebuilds the Word file with current template fill logic; no new SampleCode rows).
-    Applies to Avalanche or Ignite, inner or outer, whenever codes are stored.
+    Re-queue label generation using codes already stored on the LabelGeneration row.
     """
     generation = get_object_or_404(
         LabelGeneration.objects.select_related('generated_by'),
@@ -382,10 +415,11 @@ def label_regenerate_quick_avalanche(request, generation_id):
         )
         return redirect('grower_portal:label_generation_detail', generation_id=generation.id)
 
-    if generation.status in ('queued', 'processing'):
+    if generation.status in ('queued', 'processing') and not generation.label_file:
         messages.warning(
             request,
-            'This generation is already queued or processing. Wait for it to finish.',
+            'This generation is still queued or processing. Use “Complete label generation” '
+            'if it appears stuck, or wait and refresh.',
         )
         return redirect('grower_portal:label_generation_detail', generation_id=generation.id)
 
