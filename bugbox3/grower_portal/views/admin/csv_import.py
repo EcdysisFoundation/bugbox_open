@@ -5,7 +5,6 @@ import json
 import pandas as pd
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
-from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from django.core.paginator import Paginator
 from django.db import transaction

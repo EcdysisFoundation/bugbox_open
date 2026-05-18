@@ -5,14 +5,8 @@ from .application_create import (
     admin_application_create_step2,
     admin_application_create_step3,
 )
-from .application_create_grazing import (
-    admin_application_create_step5,
-    admin_application_edit_grazing,
-)
-from .application_create_measurements import (
-    admin_application_create_step4,
-    admin_application_edit_measurements,
-)
+from .application_create_grazing import admin_application_create_step5, admin_application_edit_grazing
+from .application_create_measurements import admin_application_create_step4, admin_application_edit_measurements
 from .application_edit import (
     admin_application_edit_basic,
     admin_application_edit_management,
@@ -34,8 +28,8 @@ from .csv_import import (
     csv_import_download_error_log,
     csv_import_list,
 )
-from .data_ingestion import category_result_types_ajax, data_ingestion_hub
 from .dashboard import admin_dashboard
+from .data_ingestion import category_result_types_ajax, data_ingestion_hub
 from .farms import farm_detail, farm_list
 from .fields import field_detail, field_list
 from .growers import grower_detail, grower_list
@@ -45,8 +39,8 @@ from .label_management import (
     label_generation_detail,
     label_generation_download,
     label_generation_list,
-    label_management,
     label_ignite_forage_supplement,
+    label_management,
     label_regenerate_quick_avalanche,
 )
 from .reports import report_detail, report_list

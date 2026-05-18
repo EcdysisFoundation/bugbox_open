@@ -30,6 +30,7 @@ def _aab_slug_from_name(name: str) -> str:
     parts = n.split(" ")
     return "_".join(parts)
 
+
 def build_all_about_birds_overview_url(common_name: str) -> str:
     """Build the All About Birds overview URL for a species common name."""
     name = _normalize_common_name(common_name)
