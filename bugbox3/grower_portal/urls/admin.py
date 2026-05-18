@@ -52,7 +52,10 @@ from ..views.admin import (
     sample_code_list,
     sample_code_reactivate,
 )
-from ..views.admin.submittal_management import generate_submittal_form
+from ..views.admin.submittal_management import (
+    generate_submittal_form,
+    submittal_label_generations_json,
+)
 
 urlpatterns = [
     path('dashboard/', admin_dashboard, name='admin_dashboard'),
@@ -215,6 +218,11 @@ urlpatterns = [
     ),
 
     path('submittal-form-generator/', generate_submittal_form, name='submittal_form_generator'),
+    path(
+        'submittal-form-generator/label-generations/',
+        submittal_label_generations_json,
+        name='submittal_label_generations_json',
+    ),
     path('reports/', report_list, name='admin_report_list'),
     path('reports/<int:report_id>/', report_detail, name='admin_report_detail'),
 ]
