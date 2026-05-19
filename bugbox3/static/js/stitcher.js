@@ -7,6 +7,8 @@ let messageModal = new Modal(document.getElementById('messageModal'), {
     keyboard: false
   })
 
+let labelsUpdatedIcon = '<i class="bi bi-person-fill-check h4 text-success"></i>'
+
 
 function getUrl(dt_url, data_filters) {
 
@@ -98,6 +100,38 @@ function concatTen(data) {
     } else { return '' }
 }
 
+function isDateString(value) {
+  // 1. Check if it's a string
+  // 2. Try to parse it. If it's a valid date string, Date.parse() returns a number.
+  //    If it's an invalid date string (like "hello"), it returns NaN.
+  return typeof value === 'string' && !isNaN(Date.parse(value));
+}
+
+function getLabelFileStatus(data, type, row) {
+    // check if the label file time is newer than one minute of when it was created
+    // indicates a seperate database write when a label file was updated
+    // times within milisecons of one another are written in the same api call
+    if (isDateString(row.label_file_updated_at) && isDateString(row.label_studio_project_created_at)) {
+        let d1 = new Date(row.label_file_updated_at);
+        let d2 = new Date(row.label_studio_project_created_at);
+
+        const isSameDay = d1.getFullYear() === d2.getFullYear() &&
+                    d1.getMonth() === d2.getMonth() &&
+                    d1.getDate() === d2.getDate();
+
+        if (!isSameDay) {
+            return labelsUpdatedIcon; // Returns true because they aren't on the same day
+        }
+        const differenceInMs = Math.abs(d1.getTime() - d2.getTime());
+
+        // 3. Return true only if the gap is strictly larger than 1 minute (60,000 ms)
+        if (differenceInMs > 60000) {
+            return labelsUpdatedIcon
+        }
+    }
+    return ''
+}
+
 function getSent(data, type, row) {
     if (row.bugbox_croped_saved) {
         return '<i class="bi bi-send-check-fill h4 text-success"></i>'
@@ -143,6 +177,13 @@ $(function () {
     };
 
     var stitcher_table = $('#stitcher-table').DataTable({
+        columnDefs: [
+            {
+                // Targets everything except the 1st column (index 0)
+                targets: ":not(:first-child)",
+                className: "dt-center" // Centers both headers and body rows
+            }
+        ],
         layout: {
             top: 'info',
             topStart:{
@@ -182,6 +223,9 @@ $(function () {
             },{
                 data: 'label_file_updated_at',
                 render: concatTen
+            },{
+                data: '',
+                render: getLabelFileStatus
             },{
                 data: 'annotations_updated_at_segment',
                 render: concatTen
