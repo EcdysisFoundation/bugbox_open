@@ -1,3 +1,4 @@
+import datetime
 import tempfile
 from contextlib import closing
 from io import BytesIO
@@ -13,6 +14,7 @@ from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from PIL import Image
 
+from bugbox3.core import constants
 from bugbox3.samples.models import Specimen, SpecimenImage
 
 
@@ -392,3 +394,29 @@ def crop_img_with_segmentation_yolo(
         return True
     else:
         return False
+
+
+def get_label_file_status(data):
+    """
+    Check if label file updated. Small difference in time can be api call artifact.
+    """
+
+    d1 = data.get(constants.STITCHER_LABEL_FILE_UPDATED_AT)
+    d2 = data.get(constants.STITCHER_LABEL_STUDIO_PROJECT_CREATED_AT)
+
+    if isinstance(d1, datetime.datetime) and isinstance(d2, datetime.datetime):
+
+        # Check if they are on the same calendar day
+        is_same_day = d1.date() == d2.date()
+
+        if not is_same_day:
+            return True
+
+        # 2. Calculate the difference in seconds
+        difference_in_seconds = abs((d1 - d2).total_seconds())
+
+        # 3. Check if the gap is strictly larger than 1 minute (60 seconds)
+        if difference_in_seconds > 60:
+            return True
+
+    return False

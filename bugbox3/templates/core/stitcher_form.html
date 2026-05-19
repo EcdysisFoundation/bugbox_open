@@ -78,6 +78,9 @@
                 <li class="list-group-item">
                     <b>Labels updated at:</b> {% if data.label_file_updated_at %}
                         {{ data.label_file_updated_at }} <a href="{{ cvat_label_file_src }}" target="_blank"><i class="bi bi-file-earmark-arrow-down"></i></a>
+                            {% if label_file_status %}
+                                <i class="bi bi-person-fill-check h4 text-success"></i>
+                            {% endif %}
                     {% endif %}
                 </li>
                 <li class="list-group-item">

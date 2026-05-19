@@ -32,7 +32,7 @@ from .stitcher_api import (
     get_upload_file,
     patch_upload_file,
 )
-from .stitcher_utils import save_remote_file
+from .stitcher_utils import save_remote_file, get_label_file_status
 
 
 class StitcherView(PermissionRequiredMixin, TemplateView):
@@ -150,6 +150,7 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                 disable_crop_save_cvat = False
         context.update({
             'data': self.data,
+            'label_file_status': get_label_file_status(self.data),
             'task_response': self.task_response,
             'panorama_name': self.panorama_name,
             'img_src': f'{self.stitcher_js_url}{self.img_src}',

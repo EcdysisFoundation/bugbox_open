@@ -232,9 +232,10 @@ def uniform_time_display(date_time):
 
 
 def cast_utc_time(utc_string):
-    utc_format = "%Y-%m-%dT%H:%M:%S.%f"
     try:
-        naive_dt = datetime.strptime(utc_string, utc_format).replace(tzinfo=timezone.utc)
-        return naive_dt
+        dt = datetime.fromisoformat(utc_string)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt
     except Exception:
         return utc_string
