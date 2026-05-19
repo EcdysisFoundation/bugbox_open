@@ -12,16 +12,30 @@ SECRET_KEY = env(
     default="Vg7uq2A2ICRRuh8dEgynpQxQ4GPs2Gm23A6vTNCYoyXXOb7ps7nN5ZBU1LYVM1PX",
 )
 # https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = [
-    "localhost", "0.0.0.0", "127.0.0.1", "ecdysis01", "ecdysis01.local", "172.30.0.7", "10.147.19.124",
-    "216.106.203.179", "172.16.16.147",
-    ".localhost", ".local", "172.30.0.8", "django", "192.168.16.8", "[::1]"
-]
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:3000",
-    "http://ecdysis01.local:3000",
-    "http://10.147.19.124:3000"
-]
+ALLOWED_HOSTS = env.list(
+    "DJANGO_ALLOWED_HOSTS",
+    default=[
+        "localhost",
+        "0.0.0.0",
+        "127.0.0.1",
+        ".localhost",
+        ".local",
+        "django",
+        "[::1]",
+    ],
+)
+CSRF_TRUSTED_ORIGINS = env.list(
+    "DJANGO_CSRF_TRUSTED_ORIGINS",
+    default=["http://localhost:3000"],
+)
+
+STITCHER_API_URL = env(
+    "STITCHER_API_URL",
+    default="http://host.docker.internal:8090",
+)
+STITCHER_JS_URL = env("STITCHER_JS_URL", default="")
+STITCHER_JS_URL_ZEROTIER = env("STITCHER_JS_URL_ZEROTIER", default="")
+STITCHER_FLOWER_URL = env("STITCHER_FLOWER_URL", default="")
 
 # CACHES
 # ------------------------------------------------------------------------------
@@ -52,7 +66,8 @@ CELERY_RESULT_BACKEND = CELERY_BROKER_URL
 # set this to YES in env variable on ECDYSIS01
 ON_ECDYSIS_SERVER = env("ON_ECDYSIS_SERVER", default='NO')
 # mounted as volume in local-cloud.yml
-LOCAL_MOUNTED_MEDIA = '/mounted_local_media/'
+LOCAL_MOUNTED_MEDIA = env("LOCAL_MOUNTED_MEDIA", default="/mounted_local_media/")
+S3_DOWNLOAD_MEDIA_SOURCE_PREFIX = env("S3_DOWNLOAD_MEDIA_SOURCE_PREFIX", default="")
 
 # Use cloud (S3) storage on Ecdysis01 for media, but not static
 aws_s3_domain_media = f"{AWS_STORAGE_BUCKET_NAME_MEDIA}.s3.amazonaws.com"

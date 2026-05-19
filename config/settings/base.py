@@ -41,13 +41,16 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/dev/ref/settings/#locale-paths
 LOCALE_PATHS = [str(BASE_DIR / "locale")]
 
-# AI_INFERENCE_URL
-# override this to blank string on Heroku
-# Torchserve is down
-AI_INFERENCE_URL = 'http://10.147.19.124:8070/'
-
-# SHIMSY_API_URL
-SHIMSY_API_URL = env('SHIMSY_API_URL', default='http://192.168.2.59:8000')
+AI_INFERENCE_URL = env('AI_INFERENCE_URL', default='')
+SHIMSY_API_URL = env('SHIMSY_API_URL', default='')
+# Server-side stitcher API 
+STITCHER_API_URL = env('STITCHER_API_URL', default='')
+# Browser (webpack / stitcher UI)
+STITCHER_JS_URL = env('STITCHER_JS_URL', default='')
+STITCHER_JS_URL_ZEROTIER = env('STITCHER_JS_URL_ZEROTIER', default='')
+STITCHER_FLOWER_URL = env('STITCHER_FLOWER_URL', default='')
+# for paths in s3_download_missing_images
+S3_DOWNLOAD_MEDIA_SOURCE_PREFIX = env('S3_DOWNLOAD_MEDIA_SOURCE_PREFIX', default='')
 
 # GOOGLE MAPS
 # ------------------------------------------------------------------------------

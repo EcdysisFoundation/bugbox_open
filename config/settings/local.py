@@ -12,11 +12,29 @@ SECRET_KEY = env(
     default="Vg7uq2A2ICRRuh8dEgynpQxQ4GPs2Gm23A6vTNCYoyXXOb7ps7nN5ZBU1LYVM1PX",
 )
 # https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = [
-    "localhost", "0.0.0.0", "127.0.0.1", "ecdysis01", "ecdysis01.local", "172.30.0.7", "10.147.19.124",
-    "216.106.203.179", "172.16.16.147",
-    ".localhost", ".local", "172.30.0.8", "django", "192.168.16.8", "[::1]"
-]
+ALLOWED_HOSTS = env.list(
+    "DJANGO_ALLOWED_HOSTS",
+    default=[
+        "localhost",
+        "0.0.0.0",
+        "127.0.0.1",
+        ".localhost",
+        ".local",
+        "django",
+        "[::1]",
+    ],
+)
+
+STITCHER_API_URL = env(
+    "STITCHER_API_URL",
+    default="http://host.docker.internal:8090",
+)
+STITCHER_JS_URL = env("STITCHER_JS_URL", default="http://localhost:8090")
+STITCHER_JS_URL_ZEROTIER = env(
+    "STITCHER_JS_URL_ZEROTIER",
+    default="http://localhost:8090",
+)
+STITCHER_FLOWER_URL = env("STITCHER_FLOWER_URL", default="http://localhost:5557")
 
 # CACHES
 # ------------------------------------------------------------------------------

@@ -19,7 +19,11 @@ class Command(BaseCommand):
             return
 
         file = '/app/local_files/missing_images.csv'
-        local_location = '/pool1/srv/bugbox3/bugbox3/media/'
+        local_location = getattr(
+            settings,
+            'S3_DOWNLOAD_MEDIA_SOURCE_PREFIX',
+            settings.LOCAL_MOUNTED_MEDIA,
+        )
         local_storage_mount = settings.LOCAL_MOUNTED_MEDIA
 
         with open(file, newline='') as csvfile:

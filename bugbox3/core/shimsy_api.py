@@ -1,5 +1,3 @@
-import os
-
 import requests
 from django.conf import settings
 
@@ -12,10 +10,12 @@ def create_rescan_request(sample_name):
     Returns:
         dict with 'success' (bool) and 'message' (str)
     """
-    # Get shimsy API URL from settings or environment variable, - failback to def
-    shimsy_url = getattr(settings, 'SHIMSY_API_URL', None)
+    shimsy_url = (settings.SHIMSY_API_URL or '').rstrip('/')
     if not shimsy_url:
-        shimsy_url = os.environ.get('SHIMSY_API_URL', 'http://192.168.2.59:8000')
+        return {
+            'success': False,
+            'message': 'Shimsy API is not configured (set SHIMSY_API_URL).',
+        }
 
     api_url = f'{shimsy_url}/api/rescan-request/'
 
