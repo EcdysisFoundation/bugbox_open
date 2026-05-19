@@ -20,11 +20,10 @@ from .permissions import IS_ADMIN, IS_RESEARCH, ZEROTIER_USERS
 from .shimsy_api import create_rescan_request
 from .stitcher_api import (
     ERROR_MSG_KEY,
-    STITCHER_FLOWER_URL,
-    STITCHER_JS_URL,
-    STITCHER_JS_URL_ZEROTIER,
-    STITCHER_URL,
     cleanup_matching_retake_records,
+    get_stitcher_api_url,
+    get_stitcher_flower_url,
+    get_stitcher_js_url,
     delete_upload_file,
     get_list_upload_abridged,
     get_root_message,
@@ -42,8 +41,9 @@ class StitcherView(PermissionRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        stitcher_url = STITCHER_JS_URL_ZEROTIER if \
-            str(self.request.user) in ZEROTIER_USERS else STITCHER_JS_URL
+        stitcher_url = get_stitcher_js_url(
+            zerotier=str(self.request.user) in ZEROTIER_USERS
+        )
         stats = get_stitcher_stats()
         if constants.STITCHER_STATS_LS_PROJECTS in stats.keys():
             ls_projects_choices = [(v[0], f'{v[0]} ({v[1]})')
@@ -53,7 +53,7 @@ class StitcherView(PermissionRequiredMixin, TemplateView):
 
         context.update({
             'stats': stats,
-            'STITCHER_FLOWER_URL': STITCHER_FLOWER_URL,
+            'STITCHER_FLOWER_URL': get_stitcher_flower_url(),
             'json_context': get_json_context({
                 'STITCHER_URL': stitcher_url,
                 'ls_projects_choices': ls_projects_choices,
@@ -86,9 +86,10 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
             if constants.STITCHER_UPLOADFILE_KEY in upload_file_response.keys() else upload_file_response
         self.task_response = upload_file_response[constants.STITCHER_TASK_KEY] \
             if constants.STITCHER_TASK_KEY in upload_file_response.keys() else None
-        self.stitcher_url = STITCHER_URL
-        self.stitcher_js_url = STITCHER_JS_URL_ZEROTIER if \
-            str(self.request.user) in ZEROTIER_USERS else STITCHER_JS_URL
+        self.stitcher_url = get_stitcher_api_url()
+        self.stitcher_js_url = get_stitcher_js_url(
+            zerotier=str(self.request.user) in ZEROTIER_USERS
+        )
         self.panorama_name = ''
         self.img_src = ''
         self.thumbnail_src = None

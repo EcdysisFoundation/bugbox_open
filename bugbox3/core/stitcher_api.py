@@ -2,25 +2,39 @@ import json
 import re
 
 import requests
+from django.conf import settings
 from requests.exceptions import Timeout
 
-STITCHER_URL = 'http://host.docker.internal:8090'
-# to access production remotely
-# STITCHER_URL = 'http://10.147.19.124:8090'
-
-STITCHER_JS_URL_ZEROTIER = 'http://10.147.19.124:8090'
-# move URLs dev differences to local.yml and local-cloud.yml
-# for local dev
-# STITCHER_JS_URL_ZEROTIER = 'http://localhost:8090'
-# STITCHER_JS_URL = 'http://localhost:8090'
-
-STITCHER_JS_URL = 'http://ecdysis01.local:8090'
-STITCHER_FLOWER_URL = 'http://ecdysis01.local:5557'
 ERROR_MSG_KEY = 'ERROR'
+_STITCHER_NOT_CONFIGURED = 'STITCHER_API_URL is not configured'
+
+
+def get_stitcher_api_url():
+    return (settings.STITCHER_API_URL or '').rstrip('/')
+
+
+def get_stitcher_js_url(*, zerotier=False):
+    if zerotier:
+        url = settings.STITCHER_JS_URL_ZEROTIER or settings.STITCHER_JS_URL
+    else:
+        url = settings.STITCHER_JS_URL
+    return (url or '').rstrip('/')
+
+
+def get_stitcher_flower_url():
+    return (settings.STITCHER_FLOWER_URL or '').rstrip('/')
+
+
+def _stitcher_not_configured():
+    return {ERROR_MSG_KEY: _STITCHER_NOT_CONFIGURED}
 
 
 def list_upload_files():
-    api_list_url = STITCHER_URL + '/list-upload-files/'
+    base = get_stitcher_api_url()
+    if not base:
+        return []
+
+    api_list_url = base + '/list-upload-files/'
     all_data = []
     offset = 0
     limit = 100
@@ -72,22 +86,34 @@ def simple_response_wguid(guid, api_url):
 
 
 def get_upload_file(guid):
-    api_list_url = STITCHER_URL + '/list-upload-w-task/'
+    base = get_stitcher_api_url()
+    if not base:
+        return _stitcher_not_configured()
+    api_list_url = base + '/list-upload-w-task/'
     return simple_response_wguid(guid, api_list_url)
 
 
 def get_list_upload_abridged(guid):
-    api_list_url = STITCHER_URL + '/list-upload-abridged/'
+    base = get_stitcher_api_url()
+    if not base:
+        return _stitcher_not_configured()
+    api_list_url = base + '/list-upload-abridged/'
     return simple_response_wguid(guid, api_list_url)
 
 
 def get_only_upload_file(guid):
-    api_list_url = STITCHER_URL + '/list-upload/'
+    base = get_stitcher_api_url()
+    if not base:
+        return _stitcher_not_configured()
+    api_list_url = base + '/list-upload/'
     return simple_response_wguid(guid, api_list_url)
 
 
 def patch_upload_file(guid, data):
-    api_url = STITCHER_URL + f'/update-record/{guid}'
+    base = get_stitcher_api_url()
+    if not base:
+        return _stitcher_not_configured()
+    api_url = base + f'/update-record/{guid}'
     try:
         response = requests.patch(api_url, data=json.dumps(data), timeout=25)
         if response.status_code == 200:
@@ -105,7 +131,10 @@ def patch_upload_file(guid, data):
 
 
 def delete_upload_file(guid):
-    api_url = STITCHER_URL + f'/delete/{guid}'
+    base = get_stitcher_api_url()
+    if not base:
+        return _stitcher_not_configured()
+    api_url = base + f'/delete/{guid}'
     try:
         response = requests.delete(api_url, timeout=25)
         if response.status_code in [200, 204]:
@@ -118,9 +147,11 @@ def delete_upload_file(guid):
 
 
 def get_root_message():
-    api_url = STITCHER_URL
+    base = get_stitcher_api_url()
+    if not base:
+        return _stitcher_not_configured()
     try:
-        response = requests.get(api_url, timeout=25)
+        response = requests.get(base, timeout=25)
         if response.status_code == 200:
             data = response.json()
             return data
@@ -132,7 +163,10 @@ def get_root_message():
 
 
 def get_stitcher_stats():
-    api_url = STITCHER_URL + '/stats/'
+    base = get_stitcher_api_url()
+    if not base:
+        return _stitcher_not_configured()
+    api_url = base + '/stats/'
     try:
         response = requests.get(api_url, timeout=25)
         if response.status_code == 200:
@@ -187,7 +221,11 @@ def list_retake_records(upload_dir_name=None):
     """
     fetches records from Stitcher that are marked as Retake (approved=False).
     """
-    api_list_url = STITCHER_URL + '/list-upload-files/'
+    base = get_stitcher_api_url()
+    if not base:
+        return []
+
+    api_list_url = base + '/list-upload-files/'
     all_data = []
     offset = 0
     limit = 100
