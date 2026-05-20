@@ -1,4 +1,5 @@
 from .application import GrazingEvent, GrazingEventAnimal, GrowerApplication, ManagementPractices
+from .bird_recording import BirdRecordingUpload
 from .csv_import import CSVImportFieldValue, CSVImportLog, CSVImportRow
 from .farm import Farm, Field
 from .profile import GrowerProfile
@@ -37,4 +38,5 @@ __all__ = [
     'SoilCompactionReading',
     'InfiltrometerReading',
     'InfiltrationRingReading',
+    'BirdRecordingUpload',
 ]

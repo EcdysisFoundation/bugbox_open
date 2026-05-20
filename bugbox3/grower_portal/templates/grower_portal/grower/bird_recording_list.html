@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load timezone_filters %}
+
+{% block title %}My Bird Recordings{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <h1 class="mb-0">My bird recordings</h1>
+        <a href="{% url 'grower_portal:bird_recording_upload' %}" class="btn btn-primary">
+            <i class="fas fa-cloud-upload-alt"></i> Upload recording
+        </a>
+    </div>
+
+    {% if uploads %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Sample code</th>
+                    <th>Year</th>
+                    <th>Filename</th>
+                    <th>Size</th>
+                    <th>Uploaded</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in uploads %}
+                <tr>
+                    <td><strong>{{ u.sample_code.code }}</strong></td>
+                    <td>{{ u.year_sampled }}</td>
+                    <td>{{ u.original_filename }}</td>
+                    <td>{{ u.file_size_bytes|filesizeformat }}</td>
+                    <td>{{ u.uploaded_at|user_datetime:user_timezone }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i> No recordings uploaded yet.
+        <a href="{% url 'grower_portal:bird_recording_upload' %}">Upload your first recording</a>.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
