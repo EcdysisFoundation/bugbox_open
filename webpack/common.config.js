@@ -38,6 +38,7 @@ module.exports = {
     grower_submittal_form_generator: path.resolve(__dirname, '../bugbox3/static/js/grower_portal/submittal_form_generator'),
     grower_results: path.resolve(__dirname, '../bugbox3/static/js/grower_portal/results'),
     grower_data_ingestion: path.resolve(__dirname, '../bugbox3/static/js/grower_portal/data_ingestion'),
+    grower_bird_recording_upload: path.resolve(__dirname, '../bugbox3/static/js/grower_portal/bird_recording_upload'),
   },
   output: {
     path: path.resolve(

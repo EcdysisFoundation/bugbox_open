@@ -246,6 +246,24 @@ RESULT_TYPE_CATEGORY_MAP = {
 # S3/storage root prefix for all grower portal ingestion files
 GROWER_DATA_S3_PREFIX = 'grower_portal_data'
 
+# Grower bird recording uploads
+BIRD_RECORDING_MAX_BYTES = 250 * 1024 * 1024  # 250 MB per file
+BIRD_RECORDING_MAX_BYTES_PER_CODE = 1024 * 1024 * 1024  # 1 GB per grower + sample code
+BIRD_RECORDING_PRESIGNED_EXPIRY_SECONDS = 900  # 15 minutes
+BIRD_RECORDING_ALLOWED_CONTENT_TYPES = frozenset({
+    'audio/wav',
+    'audio/x-wav',
+    'audio/wave',
+    'audio/mpeg',
+    'audio/mp3',
+    'audio/mp4',
+    'video/mp4',  # some browsers report .mp4 audio this way
+    'application/octet-stream',  # some browsers for .wav
+})
+BIRD_RECORDING_ALLOWED_EXTENSIONS = frozenset({
+    '.wav', '.mp3', '.mp4',
+})
+
 # Bird-specific ingestion constants
 BIRD_SITE_CODE_COLUMN = 'Site Code'
 BIRD_FAMILY_HEADER_ROW = 0  # 0-indexed Excel row that contains family names
