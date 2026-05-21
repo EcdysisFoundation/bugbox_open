@@ -27,7 +27,7 @@ Check other Flake8 issues
 
 ### Database and backups
 
-The production database is on Heroku. A copy can be obtained for development purposes. Using local.yml for development, a postgres container is created. To restore a db to it, proceed as follows.
+If your database is on Heroku. A copy can be obtained for development purposes. Using local.yml for development, a postgres container is created. To restore a db to it, proceed as follows.
 
 A script, `backup_db_s3.py` is run on Heroku at defined intervals to create long term backups or can be ran as needed to create a backup file and upload to S3.
 The file is named with the date, for example 2025-04-11.dump generated the morning of April 11, 2025.
@@ -67,16 +67,7 @@ bring all services up
 
 ## Deployment
 
-This application is deployed to Heroku for most user access scenarios at bugbox.ecdysis.bio. It is also deployed as a production version on a local server (Ecdysis01) for machine learning and inference processes. Locally, it also uses the same Heroku database server and AWS S3 storage (see local-cloud.yml). As a result, it is important to use caution in deployment to not create conflicts when there is a potential for two different versions of the app to be running simultanously against the database and storage system. When the deployment includes database migrations the following steps should be followed. Consider other scenarios for their potential to create conflicts.
-
-1. On Ecdsyis01, bring down the app
-2. On Heroku, deploy the new version, ensure migrations run successfully
-3. Ecdysis01, pull new version from github
-4. Ecdysis01, bring app back up. No migrations should run because they already ran on Heroku.
-
-#### Deployment to local production server
-
-local-cloud.yml is the .yml to use. This will establish a local Django app with Node built in the same docker container. The database and filesystem is the production system on Heroku and AWS S3. This is not for development purposes. This is to have a Django instance running locally to manage image identifications and other needs to communicate with the Heroku database and AWS S3 storage. This instance uses Gunicorn and Nginx with static files served locally, and media files on the cloud. For any repo change, the container will need to be rebuilt, not just restarted, to copy all the app files to the container image.
+This application is configured for deployed to Heroku for most user access scenarios. While, it is also deployed as a production version on a local server for machine learning and inference processes. Locally, it also uses the same Heroku database server and AWS S3 storage (see local-cloud.yml). Therefore, this is setup for hybrid deployment where computationally intensive methods, or integrations with computationally intensive services, happen on a local network using edge servers, while cloud/public access is also available through a Heroku instance. The local server instance uses Gunicorn and Nginx with static files served locally, and media files on the cloud. For any repo change, the container will need to be rebuilt, not just restarted, to copy all the app files to the container image.
 
 build the two docker images, django and nginx. Celery containers share the django image.
 
@@ -128,9 +119,9 @@ Certain features of the app assume the first created organization is the apps pr
 
 ## Storages, Site-content, and Static
 
-local.yml uses local storage and a local database
+local.yml uses local storage and a local database for development purposes
 
-local-cloud.yml uses cloud storage and the cloud database for production
+local-cloud.yml uses cloud storage and the cloud database for production purposes
 
 For site static media content such as a homepage image, or a downloadable document, use core.models.PublicSiteContent to upload new media content through the Django Admin. A slugfield provides a uniqe identifier. This media is uploaded to the S3 media bucket with a public acl, instead of being set to private by default as regular media files are set. Using the slug field, a queryset can be used to insert the url to the media into the view. Note on development machines, if the local database does not have the entry, the queryset will return none, while if the entry is present, it will use the S3 url for the file.
 
