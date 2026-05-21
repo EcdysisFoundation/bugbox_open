@@ -73,8 +73,8 @@
                     <li class="list-group-item list-group-item-info">
                         <b>Sent to label project</b>:
                         {% if data.label_task_id and data.label_job_id %}
-                            <a href="https://app.cvat.ai/tasks/{{ data.label_task_id }}/jobs/{{ data.label_job_id }}" target="_blank">
-                                {{ data.label_studio_project }}
+                            {{ data.label_studio_project }} <a href="https://app.cvat.ai/tasks/{{ data.label_task_id }}/jobs/{{ data.label_job_id }}" target="_blank">
+                                <i class="bi bi-box-arrow-up-right"></i>
                             </a>
                         {% else %}
                             {{ data.label_studio_project }}

@@ -68,7 +68,7 @@ function getApproved(approved) {
 
 function getLabelProject (data, type, row) {
     if (row.label_studio_project && row.label_task_id && row.label_job_id) {
-        return `<a href="https://app.cvat.ai/tasks/${row.label_task_id}/jobs/${row.label_job_id}" target="_blank">${row.label_studio_project}</a>`
+        return `${row.label_studio_project} <a href="https://app.cvat.ai/tasks/${row.label_task_id}/jobs/${row.label_job_id}" target="_blank"><i class="bi bi-box-arrow-up-right"></i></a>`
     }
     if (row.label_studio_project) {
         return row.label_studio_project
