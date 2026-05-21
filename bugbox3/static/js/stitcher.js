@@ -66,6 +66,16 @@ function getApproved(approved) {
     return approved
 }
 
+function getLabelProject (data, type, row) {
+    if (row.label_studio_project && row.label_task_id && row.label_job_id) {
+        return `<a href="https://app.cvat.ai/tasks/${row.label_task_id}/jobs/${row.label_job_id}" target="_blank">${row.label_studio_project}</a>`
+    }
+    if (row.label_studio_project) {
+        return row.label_studio_project
+    }
+    return ''
+}
+
 function sendZipFile(formData, api_url) {
     fetch(api_url, {
         method: 'POST',
@@ -219,7 +229,8 @@ $(function () {
                 data: '',
                 render: getSampleUrl
             },{
-                data: 'label_studio_project'
+                data: '',
+                render: getLabelProject
             },{
                 data: 'label_file_updated_at',
                 render: concatTen
