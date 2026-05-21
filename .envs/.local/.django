@@ -10,6 +10,6 @@ REDIS_URL=redis://redis:6380/0
 # Celery
 # ------------------------------------------------------------------------------
 
-# Flower
+# Flower, USED FOR LOCAL DEVELOPMENT, NOT PUBLICLY HOSTED
 CELERY_FLOWER_USER=qANzJKLJRdrXFdZKUhoCRuOJYQwYwAhi
 CELERY_FLOWER_PASSWORD=KnKkIk6Wq5dwzrcBIcOeShp59pYYNfaYoVvoP4rC4cZWg5qAa0G57OTkrvPm0EqV
