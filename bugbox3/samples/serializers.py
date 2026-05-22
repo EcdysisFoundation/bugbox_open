@@ -359,32 +359,22 @@ class CollectionDatatablesSerializer(ModelSerializer):
         ]
 
     def to_representation(self, value):
-        img_thumbnail_large = None
         specimen_image = value.specimenimage_set.first()
         if specimen_image:
+            # get progressively smallest image, except not the very smallest image_thumbnail
+            if specimen_image.image_thumbnail_medium:
+                thumbnail = specimen_image.image_thumbnail_medium
+            elif specimen_image.image_thumbnail_large:
+                thumbnail = specimen_image.image_thumbnail_large
+            else:
+                # some very small images may not have a smaller thumbnail
+                thumbnail = specimen_image.image
             image = get_img_captioned(
-                specimen_image.image_thumbnail_medium,
+                thumbnail,
                 value.classification.gbif_canonical_name,
                 public=specimen_image.public_image)
-            if specimen_image.image_thumbnail_large:
-                # dont use get_img_src() here due to modal .js reasons
-                if default_storage.exists(specimen_image.image_thumbnail_large.name):
-                    width = specimen_image.image_thumbnail_large_width or ''
-                    height = specimen_image.image_thumbnail_large_height or ''
-                    img_thumbnail_large = {
-                        'url': get_media_url(
-                            specimen_image.image_thumbnail_large, public=specimen_image.public_image),
-                        'width': width,
-                        'height': height
-                    }
-                else:
-                    img_thumbnail_large = {
-                        'url': '',
-                        'width': '',
-                        'height': ''
-                    }
         else:
-            image = get_img_src(False)
+            image = '<i class="bi bi-bug"></i>'
         archival = value.archival_identifier
         if archival and value.archival_stored:
             archival += ' | ' + value.archival_stored
@@ -392,7 +382,7 @@ class CollectionDatatablesSerializer(ModelSerializer):
             archival = value.archival_stored
         return {
             'image': image,
-            'img_thumbnail_large': img_thumbnail_large,
+            'img_thumbnail_large': None,  # depricate popup
             'taxonomy': {
                 'gbif_order': value.classification.gbif_order,
                 'gbif_family': value.classification.gbif_family,
