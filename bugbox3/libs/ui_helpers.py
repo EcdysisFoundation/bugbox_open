@@ -128,16 +128,13 @@ def get_img_src(img_field, resize_width=None, styles='', public=False):
         return '<i class="bi bi-bug"></i>'
 
 
-def get_img_captioned(img_field, caption, resize_width=None, public=False):
+def get_img_captioned(img_field, caption, public=False):
     """
     Get the image src with a caption.
     Styes should be a string of styes, exampe 'c-1 c-2'
     """
-    src = get_img_src(
-        img_field,
-        resize_width=resize_width,
-        styles='figure-img img-fluid rounded',
-        public=public)
+    img_path = get_media_url(img_field, public)
+    src = f'<img src="{img_path}" class="figure-img img-fluid rounded responsive-img-350">'
     return """
             <figure class="figure">
             {0}
