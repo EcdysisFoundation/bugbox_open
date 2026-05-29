@@ -43,7 +43,7 @@ LOCALE_PATHS = [str(BASE_DIR / "locale")]
 
 AI_INFERENCE_URL = env('AI_INFERENCE_URL', default='')
 SHIMSY_API_URL = env('SHIMSY_API_URL', default='')
-# Server-side stitcher API 
+# Server-side stitcher API
 STITCHER_API_URL = env('STITCHER_API_URL', default='')
 # Browser (webpack / stitcher UI)
 STITCHER_JS_URL = env('STITCHER_JS_URL', default='')
@@ -105,7 +105,8 @@ LOCAL_APPS = [
     "bugbox3.core",
     "bugbox3.samples",
     "bugbox3.taxonomy",
-    "bugbox3.grower_portal"
+    "bugbox3.grower_portal",
+    "bugbox3.microbiome"
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
