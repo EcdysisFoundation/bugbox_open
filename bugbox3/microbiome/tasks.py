@@ -7,22 +7,42 @@ from django.core.files.base import ContentFile
 # from celery.exceptions import SoftTimeLimitExceeded
 
 # from config import celery_app
+from bugbox3.grower_portal.models import SampleCode
 from .models import MicrobiomeTaxa, SiteMicrobiomeTaxa
 from . import constants
 
 
-def join_grower_site_code(site_taxa_id):
+def join_the_grower_site_code(microbiome_taxa_id):
     """
     Attempts to join the site_code from SampleCode
     """
-    None
+    site_microbiome_taxa_recs = SiteMicrobiomeTaxa.objects.filter(
+        parent_file=microbiome_taxa_id)
+    site_codes = site_microbiome_taxa_recs.values_list('site_code', flat=True).distinct()
+    sample_code_map = {
+        sc.code: sc for sc in SampleCode.objects.filter(code__in=site_codes) if sc.code
+    }
+    records_to_update = []
+    for rec in site_microbiome_taxa_recs:
+        if not rec.site_code:
+            continue
+
+        sample_code_rec = sample_code_map.get(rec.site_code)
+        if sample_code_rec:
+            rec.grower_site_code = sample_code_rec
+            records_to_update.append(rec)
+    if records_to_update:
+        SiteMicrobiomeTaxa.objects.bulk_update(records_to_update, ['grower_site_code'])
 
 
-def join_grower_site_codes(taxa_file_id):
+def join_grower_site_codes():
     """
     Run join_grower_site_code per site file.
     """
-    None
+    analytics_files = SiteMicrobiomeTaxa.objects.filter(
+        lab_analytics_source=constants.LAB_ECDYSIS_FOUNDATION)
+    for a in analytics_files:
+        join_the_grower_site_code(a.id)
 
 
 def sample_year_from_id(sample_name):
@@ -46,7 +66,6 @@ def parse_taxa_file(taxa_file_id):
             # ['#OTU ID', '2022_1_C6N03V', ...],
             # ['d__Bacteria;__;__;__;__;__', 555.5, ...],
             # [...]]
-
             rows = list(csv.reader(csv_data, delimiter='\t'))
 
             # check for conformation of file
