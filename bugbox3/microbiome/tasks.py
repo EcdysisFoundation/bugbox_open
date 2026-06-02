@@ -3,10 +3,7 @@ import tempfile
 from django.db import transaction
 from django.core.files.base import ContentFile
 
-# from celery import shared_task
-# from celery.exceptions import SoftTimeLimitExceeded
-
-# from config import celery_app
+from config import celery_app
 from bugbox3.grower_portal.models import SampleCode
 from .models import MicrobiomeTaxa, SiteMicrobiomeTaxa
 from . import constants
@@ -53,7 +50,7 @@ def sample_year_from_id(sample_name):
         return 0
 
 
-# use celery
+@celery_app.task(soft_time_limit=240)
 def parse_taxa_file(taxa_file_id):
     """
     Parse a file to a downloadable file and aggregated records per row.
