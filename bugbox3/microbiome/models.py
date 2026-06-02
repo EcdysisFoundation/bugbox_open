@@ -32,7 +32,6 @@ class MicrobiomeTaxa(Model):
         max_length=10,
         choices=constants.FILE_TYPE_CHOICES
     )
-    sample_year = PositiveIntegerField()
     target_region = CharField(
         max_length=10,
         choices=constants.TARGET_CHOICES)
@@ -43,6 +42,7 @@ class SiteMicrobiomeTaxa(Model):
     """
     Per site records of microbiome taxa from external files.
     """
+    analytics_sample_id = CharField(max_length=100)
     site_code = CharField(max_length=50, blank=True)
     grower_site_code = ForeignKey(
         SampleCode,
@@ -56,5 +56,8 @@ class SiteMicrobiomeTaxa(Model):
         MicrobiomeTaxa,
         on_delete=CASCADE
     )
-    lab_code = CharField(max_length=100)
+    sample_year = PositiveIntegerField()
+    # aggreagated fields
     num_taxa_found = PositiveIntegerField(null=True)
+    num_molecular_targets = PositiveIntegerField(null=True)
+
