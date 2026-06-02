@@ -34,6 +34,7 @@ from ..taxonomy.models import Morphospecies
 from ..taxonomy.utils import get_immature_morphospecies_ids, get_skip_morphospecies_ids
 from . import constants
 from .calculations import get_indices
+from .export_metrics import UNKNOWN_TAXON, compute_sample_morpho_counts, normalize_export_level
 
 User = get_user_model()
 
@@ -68,11 +69,9 @@ def export_csv(
 
     headers_arr = constants.EXP_HEADERS_ARR + indices
     morpho_headers = [dict.fromkeys(headers_arr, '') for _ in range(3)]
-    unknown_species = 'Not identified'
+    unknown_species = UNKNOWN_TAXON
     skip_morphospecies_ids = get_skip_morphospecies_ids()
     immature_morphospecies_ids = get_immature_morphospecies_ids()
-    skip_ids_for_indices = skip_morphospecies_ids
-    immature_ids_for_indices = immature_morphospecies_ids
 
     if include_immatures_skipped:
         skip_morphospecies_ids = []
@@ -84,8 +83,7 @@ def export_csv(
     all_species = {unknown_species}
 
     # Normalize level – if not "family", default to "morphospecies"
-    if level != "family":
-        level = "morphospecies"
+    level = normalize_export_level(level)
 
     rows = []
     for exp_id in all_exp:
@@ -106,10 +104,18 @@ def export_csv(
                 specimens = specimens.exclude(
                     classification_id__in=skip_morphospecies_ids + immature_morphospecies_ids)
 
-            if not specimens.count() and not sample.completed:
-                continue  # Skip incomplete/planned samples
+            metrics = compute_sample_morpho_counts(
+                sample,
+                export_type=export_type,
+                level=level,
+                include_immatures_skipped=include_immatures_skipped,
+                specimens=specimens,
+                compute_indices=bool(indices),
+                indices_keys=indices if indices else None,
+            )
+            if metrics is None:
+                continue
 
-            n = 0
             row = {
                 constants.EXP_HEAD_ARR_EXPERIMENT: this_experiment.name,
                 constants.EXP_HEAD_ARR_HABITAT: sample.site_visit.site.habitat_type,
@@ -119,69 +125,18 @@ def export_csv(
                 constants.EXP_HEAD_ARR_SAMPLE_TYPE: sample.sample_type,
                 constants.EXP_HEAD_ARR_SAMPLE_NAME: sample.name_no,
                 constants.EXP_HEAD_ARR_SAMPLE_COMPLETED: sample.completed,
-                unknown_species: 0  # Starting count
             }
-            excluded_names_in_row = set()
-            for specimen in specimens.all():
-                if export_type == constants.EXP_CSV_TYPE_AI:
-                    morphospecies_id = specimen.ai_classification_id
-                elif export_type == constants.EXP_CSV_TYPE_REVIEWED:
-                    morphospecies_id = (
-                        None
-                        if specimen.acceptance == constants.ACCEPTANCE_PENDING and specimen.ai_classification
-                        else specimen.classification_id
-                    )
-
-                else:
-                    morphospecies_id = (
-                        specimen.classification_id
-                        if specimen.classification_id
-                        else specimen.ai_classification_id
-                    )
-
-                morpho = None
-                if morphospecies_id:
-                    morpho = Morphospecies.objects.get(id=morphospecies_id)
-
-                    if level == "family":
-                        name = morpho.gbif_family if morpho.gbif_family else "Unspecified Family"
-                        morpho_headers[0][name] = morpho.gbif_order
-                        morpho_headers[1][name] = morpho.gbif_family
-                        morpho_headers[2][name] = ""
-                    else:
-                        name = morpho.name
-                        morpho_headers[0][name] = morpho.gbif_order
-                        morpho_headers[1][name] = morpho.gbif_family
-                        morpho_headers[2][name] = morpho.gbif_species if morpho.gbif_species else morpho.gbif_genus
-                else:
-                    name = unknown_species
-                    morpho_headers[0][name] = ''
-                    morpho_headers[1][name] = ''
-                    morpho_headers[2][name] = ''
-
+            for name, count in metrics['taxon_counts'].items():
+                row[name] = count
                 all_species.add(name)
-                total = 1 + specimen.partial_count
-                row[name] = row.get(name, 0) + total
-                n += total
-
-                if morphospecies_id in immature_ids_for_indices or morphospecies_id in skip_ids_for_indices:
-                    excluded_names_in_row.add(name)
-                if morpho and morpho.exclude_from_export:
-                    excluded_names_in_row.add(name)
+                header_fields = metrics['taxon_headers'][name]
+                morpho_headers[0][name] = header_fields['order']
+                morpho_headers[1][name] = header_fields['family']
+                morpho_headers[2][name] = header_fields['species']
 
             if indices:
-                excluded_names_for_indices = excluded_names_in_row.union({unknown_species})
-
-                row_for_indices = {
-                    k: v for k, v in row.items()
-                    if k not in excluded_names_for_indices and k not in constants.EXP_HEADERS_ARR + indices
-                }
-
-                n_for_indices = sum(row_for_indices.values())
-
-                indice_results = get_indices(n_for_indices, row_for_indices, headers_arr)
                 for i in indices:
-                    row[i] = indice_results.get(i, '')
+                    row[i] = metrics['indices'].get(i, '')
             rows.append(row)
 
     timestr = time.strftime("%Y%m%d-%H%M%S")

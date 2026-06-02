@@ -22,6 +22,11 @@ from ...forms.grower.forms import ResultsFilterForm
 from ...middleware import get_user_timezone
 from ...models import CSVImportFieldValue, CSVImportLog, CSVImportRow
 from ...services.bird_references import build_all_about_birds_overview_url
+from ...services.insect_results import (
+    build_insect_results_context,
+    get_insect_available_years,
+    grower_has_insect_data,
+)
 
 _RESULT_TYPE_DISPLAY = dict(RESULT_TYPE_CHOICES)
 _CATEGORY_DISPLAY = dict(CATEGORY_CHOICES)
@@ -506,7 +511,12 @@ def results(request):
     ) - {None}
     ignite_year_set = ignite_year_from_transect | ignite_year_from_sample_code
 
-    available_years = sorted(avalanche_year_set | ignite_year_set, reverse=True) or [date.today().year]
+    insect_year_set = set(get_insect_available_years(grower))
+
+    available_years = sorted(
+        avalanche_year_set | ignite_year_set | insect_year_set,
+        reverse=True,
+    ) or [date.today().year]
 
     years_to_project_types = {}
     for y in avalanche_year_set:
@@ -557,8 +567,21 @@ def results(request):
                     'result_type': rt_value,
                     'display': rt_display,
                     'is_birds': True,
+                    'is_insects': False,
                     'has_data': has_data,
                     'bird_data': bird_ctx,
+                    'depth_options': [],
+                })
+            elif rt_value == 'insects':
+                insect_ctx = build_insect_results_context(grower, year_int)
+                has_data = grower_has_insect_data(grower, year_int)
+                sections.append({
+                    'result_type': rt_value,
+                    'display': rt_display,
+                    'is_birds': False,
+                    'is_insects': True,
+                    'has_data': has_data,
+                    'insect_data': insect_ctx,
                     'depth_options': [],
                 })
             else:
@@ -573,6 +596,7 @@ def results(request):
                     'result_type': rt_value,
                     'display': rt_display,
                     'is_birds': False,
+                    'is_insects': False,
                     'has_data': bool(organized),
                     'organized_results': organized,
                     'depth_options': depth_options,

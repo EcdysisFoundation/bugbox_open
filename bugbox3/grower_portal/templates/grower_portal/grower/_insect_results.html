@@ -1,0 +1,190 @@
+{% load i18n %}
+
+{% with id=insect_data %}
+
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-header bird-card-header">
+    <h6 class="mb-0 fw-bold"><i class="fas fa-bug me-2"></i>Bug sampling</h6>
+  </div>
+  <div class="card-body">
+    <div class="row text-center g-2 mb-2">
+      <div class="col-4 col-lg-2">
+        <div class="bird-stat-box p-2 rounded">
+          <div class="fs-3 fw-bold text-primary">{{ id.summary_combined.site_count }}</div>
+          <div class="small text-muted">Sites sampled</div>
+        </div>
+      </div>
+      <div class="col-4 col-lg-5">
+        <div class="bird-stat-box p-2 rounded">
+          <div class="fs-3 fw-bold text-success">
+            {% if id.summary_combined.abundance_total is not None %}
+              {{ id.summary_combined.abundance_total|floatformat:"0" }}
+            {% else %}—{% endif %}
+          </div>
+          <div class="small text-muted">Total Abundance (individuals)</div>
+          <div class="small text-muted">Combined (all sites)</div>
+        </div>
+      </div>
+      <div class="col-4 col-lg-5">
+        <div class="bird-stat-box p-2 rounded">
+          <div class="fs-3 fw-bold text-success">
+            {% if id.summary_combined.species_richness is not None %}
+              {{ id.summary_combined.species_richness|floatformat:"0" }}
+            {% else %}—{% endif %}
+          </div>
+          <div class="small text-muted">Species richness</div>
+          <div class="small text-muted">Distinct morphospecies</div>
+          <div class="small text-muted">Combined (all sites)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-body p-0 border-top">
+    {% if id.summary_by_site %}
+      <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th class="ps-3">Site</th>
+              <th class="text-center">Abundance</th>
+              <th class="text-center" title="Distinct morphospecies (export rules)">Species richness</th>
+              <th class="pe-3">Sampling</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for site in id.summary_by_site %}
+            <tr>
+              <td class="ps-3 small text-muted">{{ site.site_code }}</td>
+              <td class="text-center small">
+                {% if site.abundance_total is not None %}{{ site.abundance_total|floatformat:"0" }}{% else %}—{% endif %}
+              </td>
+              <td class="text-center small">
+                {% if site.species_richness is not None %}{{ site.species_richness|floatformat:"0" }}{% else %}—{% endif %}
+              </td>
+              <td class="small text-muted pe-3">
+                {% if site.visit_dates_hint %}{{ site.visit_dates_hint }}
+                {% elif not site.has_bugbox_data %}<span class="text-muted">No BugBox data yet</span>
+                {% else %}—{% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="p-3 text-muted small">No site sampling records available.</div>
+    {% endif %}
+  </div>
+</div>
+
+{% if id.families_grouped_by_site %}
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-header bird-card-header">
+    <h6 class="mb-0 fw-bold"><i class="fas fa-layer-group me-2"></i>Families observed</h6>
+  </div>
+  <div class="card-body p-0">
+    {% for site_group in id.families_grouped_by_site %}
+    <div class="{% if not forloop.last %}border-bottom{% endif %}">
+      <div class="grower-site-section-bar d-flex align-items-center flex-wrap gap-2 px-3 py-2">
+        <span class="fw-bold">Site {{ site_group.site_code }}</span>
+        <span class="badge bg-secondary fw-normal">{{ site_group.family_count }} famil{{ site_group.family_count|pluralize:"y,ies" }}</span>
+      </div>
+      <div class="p-3 grower-bug-taxonomy">
+        <div class="accordion" id="bugs-class-acc-{{ forloop.counter }}">
+          {% for class_node in site_group.classes %}
+          <div class="accordion-item border rounded mb-2">
+            <h2 class="accordion-header" id="bugs-class-h-{{ forloop.parentloop.counter }}-{{ forloop.counter }}">
+              <button class="accordion-button grower-bug-taxonomy-class-btn {% if not forloop.first %}collapsed{% endif %} py-2 small fw-semibold"
+                      type="button"
+                      data-bs-toggle="collapse"
+                      data-bs-target="#bugs-class-c-{{ forloop.parentloop.counter }}-{{ forloop.counter }}"
+                      aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}">
+                {{ class_node.class_label }}
+                <span class="badge bg-white text-dark border ms-2 fw-normal">{{ class_node.total_count|floatformat:"0" }}</span>
+              </button>
+            </h2>
+            <div id="bugs-class-c-{{ forloop.parentloop.counter }}-{{ forloop.counter }}"
+                 class="accordion-collapse collapse {% if forloop.first %}show{% endif %}"
+                 data-bs-parent="#bugs-class-acc-{{ forloop.parentloop.counter }}">
+              <div class="accordion-body py-2 px-2">
+                <div class="accordion" id="bugs-group-acc-{{ forloop.parentloop.counter }}-{{ forloop.counter }}">
+                  {% for group_node in class_node.groups %}
+                  <div class="accordion-item border-0 border-bottom">
+                    <h3 class="accordion-header" id="bugs-group-h-{{ forloop.parentloop.parentloop.counter }}-{{ forloop.parentloop.counter }}-{{ forloop.counter }}">
+                      <button class="accordion-button grower-bug-taxonomy-group-btn {% if not forloop.first %}collapsed{% endif %} py-2 small fw-semibold"
+                              type="button"
+                              data-bs-toggle="collapse"
+                              data-bs-target="#bugs-group-c-{{ forloop.parentloop.parentloop.counter }}-{{ forloop.parentloop.counter }}-{{ forloop.counter }}"
+                              aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}">
+                        {{ group_node.group_label }}
+                        <span class="badge bg-white text-dark border ms-2 fw-normal">{{ group_node.total_count|floatformat:"0" }}</span>
+                      </button>
+                    </h3>
+                    <div id="bugs-group-c-{{ forloop.parentloop.parentloop.counter }}-{{ forloop.parentloop.counter }}-{{ forloop.counter }}"
+                         class="accordion-collapse collapse {% if forloop.first %}show{% endif %}"
+                         data-bs-parent="#bugs-group-acc-{{ forloop.parentloop.parentloop.counter }}-{{ forloop.parentloop.counter }}">
+                      <div class="accordion-body p-0 grower-bug-taxonomy-families">
+                        <table class="table table-sm table-hover mb-0 grower-bug-family-table">
+                          <tbody>
+                            {% for row in group_node.families %}
+                            <tr>
+                              <td class="ps-3 small">{{ row.family }}</td>
+                              <td class="text-end pe-3 small fw-semibold">{{ row.total_count|floatformat:"0" }}</td>
+                            </tr>
+                            {% endfor %}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{% if id.gallery_grouped_by_site %}
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-header bird-card-header">
+    <h6 class="mb-0 fw-bold"><i class="fas fa-camera me-2"></i>A selection of bugs we photographed from your site samples</h6>
+  </div>
+  <div class="card-body p-0">
+    {% for site_group in id.gallery_grouped_by_site %}
+    <div class="{% if not forloop.last %}border-bottom{% endif %}">
+      <div class="grower-site-section-bar px-3 py-2">
+        <span class="fw-bold">Site {{ site_group.site_code }}</span>
+      </div>
+      <div class="p-3">
+        <div class="row g-3">
+          {% for img in site_group.images %}
+          <div class="col-6 col-md-4 col-lg-3">
+            <div class="text-center">
+              {% if img.url %}
+                <img src="{{ img.url }}" alt="{{ img.family }}" class="img-fluid rounded border shadow-sm" loading="lazy">
+              {% else %}
+                <div class="bg-light rounded border d-flex align-items-center justify-content-center" style="min-height:120px;">
+                  <span class="text-muted small">No image</span>
+                </div>
+              {% endif %}
+              <div class="small fw-semibold mt-2">{{ img.family }}</div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{% endwith %}

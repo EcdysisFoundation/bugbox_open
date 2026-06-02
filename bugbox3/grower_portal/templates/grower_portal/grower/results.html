@@ -118,6 +118,10 @@
               {% if section.is_birds %}
                 {% include "grower_portal/grower/_bird_results.html" with bird_data=section.bird_data %}
 
+              {# Bugs: BugBox sample results #}
+              {% elif section.is_insects %}
+                {% include "grower_portal/grower/_insect_results.html" with insect_data=section.insect_data %}
+
               {# Basic: AJAX-refreshable partial #}
               {% elif section.result_type == "basic" %}
               <div id="basic-results-tables" data-depth="{{ depth }}">

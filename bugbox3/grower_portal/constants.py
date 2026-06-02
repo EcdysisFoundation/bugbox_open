@@ -214,6 +214,7 @@ RESULT_TYPE_CHOICES = [
     ('plfa', 'PLFA'),
     ('basic', 'Basic'),
     ('birds', 'Birds'),
+    ('insects', 'Bugs'),
     ('water', 'Water'),
     ('plants', 'Plants'),
 ]
@@ -224,6 +225,7 @@ CATEGORY_CHOICES = [
     ('water',  'Water'),
     ('plants', 'Plants'),
     ('birds',  'Birds'),
+    ('insects', 'Bugs'),
 ]
 
 CATEGORY_MAX_LENGTH = 20
@@ -234,6 +236,7 @@ CATEGORY_RESULT_TYPE_MAP = {
     'water':  ['water'],
     'plants': ['plants'],
     'birds':  ['birds'],
+    'insects': ['insects'],
 }
 
 # lookup: result_type → category
@@ -866,4 +869,55 @@ CATEGORY_DISPLAY_META = {
         'icon': 'fa-dove',
         'description': 'Bird point-count survey data including species richness and abundance.',
     },
+    'insects': {
+        'icon': 'fa-bug',
+        'description': 'Bug sampling from BugBox including abundance and species richness by family.',
+    },
 }
+
+INSECT_EXPORT_LEVEL = 'family'
+INSECT_MORPHO_EXPORT_LEVEL = 'morphospecies'
+INSECT_GALLERY_MIN_CONFIDENCE = 0.70  # related to images of bugs that are on Grower Portal bugs section only; applies to human-reviewed and AI IDentifications (used as an image quality check)
+INSECT_GALLERY_MAX_PER_SITE = 12  # round-robin across families
+
+GROWER_TAXONOMY_UNSPECIFIED_CLASS = 'Unspecified class'
+GROWER_TAXONOMY_UNSPECIFIED_ORDER = 'Unspecified order'
+GROWER_ACARI_SUBCLASS_KEY = 'Acari'
+GROWER_ACARI_MITE_MORPHO_NAME = 'Acari'
+GROWER_ACARI_MITE_GBIF_ORDERS = frozenset({
+    'Astigmata',
+    'Mesostigmata',
+    'Prostigmata',
+    'Sarcoptiformes',
+    'Trombidiformes',
+    'Oribatida',
+    'Ixodida',
+})
+
+# for Grower Portal Bugs results: morphospecies with blank gbif_family map to a display group below
+# in Export CSV those are counted towards "Unspecified Family" for those morphos
+GROWER_FAMILY_DISPLAY_GROUPS = (
+    ('Amphipods', ('Amphipoda 001',)),
+    ('Beetles', ('Bertidae 007',)),
+    ('Copepods', ('Copepoda 001', 'Copepoda 002')),
+    ('Mites', ('Acari',)),
+    ('Unidentified arachnids', ('Arachnida',)),
+    ('Caterpillars', ('Lepidoptera immatures',)),
+    ('Nematodes', ('Nematoda',)),
+    ('Pauropods', ('Pauropoda 001',)),
+    ('Proturans', ('Protura 001',)),
+    ('Shore flies', ('Ephdyridae 018',)),
+    ('Snails & slugs', ('Gastropoda',)),
+    ('Springtails', ('Collembola',)),
+    ('Thrips', ('Thysanoptera',)),
+    ('Earthworms', ('Annelida', 'Earthworms')),
+    ('Other arthropods', ('Arthropod eggs', 'incertae sedis')),
+)
+
+GROWER_MORPHO_FAMILY_DISPLAY = {
+    morpho_name: display_label
+    for display_label, morpho_names in GROWER_FAMILY_DISPLAY_GROUPS
+    for morpho_name in morpho_names
+}
+
+GROWER_FAMILY_DISPLAY_FALLBACK = 'Other'
