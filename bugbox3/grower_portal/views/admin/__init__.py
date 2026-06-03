@@ -45,7 +45,13 @@ from .label_management import (
     label_regenerate_quick_avalanche,
 )
 from .reports import report_detail, report_list
-from .sample_codes import sample_code_deactivate, sample_code_generate, sample_code_list, sample_code_reactivate
+from .sample_codes import (
+    grower_sample_code_link,
+    sample_code_deactivate,
+    sample_code_generate,
+    sample_code_list,
+    sample_code_reactivate,
+)
 
 __all__ = [
     'admin_dashboard',
@@ -75,6 +81,7 @@ __all__ = [
     'admin_application_create_step5',
     'admin_application_complete',
     'sample_code_list',
+    'grower_sample_code_link',
     'sample_code_generate',
     'sample_code_deactivate',
     'sample_code_reactivate',

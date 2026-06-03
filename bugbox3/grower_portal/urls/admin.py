@@ -48,6 +48,7 @@ from ..views.admin import (
     link_application_to_grower,
     report_detail,
     report_list,
+    grower_sample_code_link,
     sample_code_deactivate,
     sample_code_generate,
     sample_code_list,
@@ -163,6 +164,7 @@ urlpatterns = [
     ),
 
     path('sample-codes/', sample_code_list, name='admin_sample_code_list'),
+    path('sample-codes/link-grower/', grower_sample_code_link, name='admin_grower_sample_code_link'),
     path('sample-codes/generate/', sample_code_generate, name='admin_sample_code_generate'),
     path(
         'sample-codes/<int:code_id>/deactivate/',
