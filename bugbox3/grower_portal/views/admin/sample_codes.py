@@ -6,9 +6,14 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from bugbox3.core.permissions import IS_GROWERADMIN
 
-from ...forms.admin.forms import TransectCodeFilterForm, TransectCodeGenerationForm
+from ...forms.admin.forms import (
+    GrowerSampleCodeLinkForm,
+    TransectCodeFilterForm,
+    TransectCodeGenerationForm,
+)
 from ...middleware import get_user_timezone
 from ...models import SampleCode
+from ...services.grower_sample_code_mapping import assign_grower_sample_code_mapping
 
 
 @login_required
@@ -171,3 +176,54 @@ def sample_code_reactivate(request, code_id):
     }
 
     return render(request, 'grower_portal/admin/sample_code_reactivate.html', context)
+
+
+@login_required
+@permission_required(IS_GROWERADMIN, raise_exception=True)
+def grower_sample_code_link(request):
+    """Link a grower to a sample code for results access"""
+    if request.method == 'POST':
+        form = GrowerSampleCodeLinkForm(request.POST)
+        if form.is_valid():
+            try:
+                with transaction.atomic():
+                    result = assign_grower_sample_code_mapping(
+                        grower=form.cleaned_data['grower_user'],
+                        site_code=form.cleaned_data['site_code'],
+                        year_sampled=form.cleaned_data['year_sampled'],
+                        project_type=form.cleaned_data['project_type'],
+                        created_by=request.user,
+                    )
+            except ValueError as exc:
+                messages.error(request, str(exc))
+            else:
+                grower = form.cleaned_data['grower_user']
+                code = result.mapping.sample_code.code
+                parts = []
+                if result.mapping_created:
+                    parts.append(f'Linked {grower.email} to {code}')
+                else:
+                    parts.append(f'Updated existing link for {grower.email} → {code}')
+                if result.year_updated or result.mapping_created:
+                    parts.append(f'(year {result.mapping.year_sampled})')
+                if result.sample_code_created:
+                    parts.append('— new sample code record created')
+                if result.site_transects_created:
+                    parts.append(
+                        f'— created {result.site_transects_created} Ignite transect(s)'
+                    )
+                messages.success(request, ' '.join(parts))
+                return redirect(
+                    'grower_portal:admin_grower_detail',
+                    grower_id=grower.id,
+                )
+    else:
+        initial = {}
+        if request.GET.get('email'):
+            initial['grower_email'] = request.GET.get('email')
+        form = GrowerSampleCodeLinkForm(initial=initial)
+
+    return render(request, 'grower_portal/admin/grower_sample_code_link.html', {
+        'form': form,
+        'user_timezone': get_user_timezone(request),
+    })
