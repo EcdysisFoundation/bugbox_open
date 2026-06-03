@@ -260,14 +260,14 @@ class GrowerSampleCodeLinkForm(forms.Form):
     site_code = forms.CharField(
         max_length=20,
         label='Site / sample code',
-        help_text='Transect code (Avalanche) or site code (Ignite), e.g. 5001 or AVALANCHE-A-00001.',
+        help_text='Type in the site or sample code and specify the project type',
         widget=forms.TextInput(attrs={'placeholder': '5001'}),
     )
     year_sampled = forms.IntegerField(
         min_value=2000,
         max_value=2100,
         label='Year sampled',
-        help_text='Year used to scope CSV and bird results for this grower.',
+        help_text='Year used to scope results for this grower.',
     )
     project_type = forms.ChoiceField(
         choices=LABEL_PROJECT_CHOICES,
