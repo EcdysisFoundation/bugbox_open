@@ -26,7 +26,11 @@ from ...models import (
     SampleCode,
     TransectMeasurement,
 )
-from ...utils import get_grower_maps_json_context, get_grower_maps_json_context_interactive
+from ...utils import (
+    build_interactive_transect_data,
+    get_grower_maps_json_context,
+    get_grower_maps_json_context_interactive,
+)
 
 
 @login_required
@@ -417,23 +421,9 @@ def admin_application_create_step3(request, application_id):
     field_latitude = DEFAULT_FIELD_LATITUDE
     field_longitude = DEFAULT_FIELD_LONGITUDE
 
-    transect_data = []
-    for i, code in enumerate(application.transect_codes):
-        location = getattr(application, f'transect_{i + 1}_location', None)
-
-        if location:
-            latitude = float(location.y)
-            longitude = float(location.x)
-        else:
-            latitude = field_latitude
-            longitude = field_longitude
-
-        transect_data.append({
-            'index': i,
-            'code': code,
-            'latitude': latitude,
-            'longitude': longitude,
-        })
+    transect_data = build_interactive_transect_data(
+        application, field_latitude, field_longitude,
+    )
 
     return render(request, 'grower_portal/grower/application_step3.html', {
         'application': application,
