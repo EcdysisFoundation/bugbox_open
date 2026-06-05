@@ -85,6 +85,30 @@ def state_name_to_abbreviation(state_name):
     return state_name
 
 
+def build_interactive_transect_data(application, default_latitude, default_longitude):
+    """Build transect map payload"""
+    transect_data = []
+    for slot in range(1, 5):
+        code = getattr(application, f'transect_code_{slot}', None)
+        if not code:
+            continue
+        location = getattr(application, f'transect_{slot}_location', None)
+        if location:
+            latitude = float(location.y)
+            longitude = float(location.x)
+        else:
+            latitude = default_latitude
+            longitude = default_longitude
+        transect_data.append({
+            'index': slot - 1,
+            'slot': slot,
+            'code': code,
+            'latitude': latitude,
+            'longitude': longitude,
+        })
+    return transect_data
+
+
 def get_grower_maps_json_context(
     transect_data,
     *,

@@ -1,146 +1,301 @@
 {% extends "base.html" %}
+
 {% load render_bundle from webpack_loader %}
 
+
+
 {% load i18n %}
+
 {% load crispy_forms_tags %}
+
+
 
 {% block title %}Transect Codes & Locations - Step 3{% endblock %}
 
+
+
 {% block customheadtagcontent %}
+
 {{ json_context|safe }}
+
 {% render_bundle 'grower_application_step3' 'js' %}
+
 {% endblock %}
+
+
 
 {% block content %}
+
 <div class="container mt-4">
+
     {% if is_admin %}
+
     <div class="row mb-3">
+
         <div class="col-12">
+
             <div class="alert alert-primary">
+
                 <strong><i class="fas fa-user-shield"></i> Admin Mode:</strong> Creating application for <strong>{{ grower_display|default:application.grower_display_name }}</strong>
+
                 {% if not has_linked_account|default:application.has_linked_account %}
+
                     <span class="badge bg-warning text-dark ms-2">No Linked Account</span>
+
                 {% else %}
+
                     <span class="badge bg-success ms-2">Linked Account</span>
+
                 {% endif %}
+
             </div>
+
         </div>
+
     </div>
+
     {% endif %}
+
     
+
     <div class="row">
+
         <div class="col-12">
+
             <nav aria-label="breadcrumb">
+
                 <ol class="breadcrumb">
+
                     {% if is_admin %}
+
                     <li class="breadcrumb-item"><a href="{% url 'grower_portal:admin_application_list' %}">Applications</a></li>
+
                     <li class="breadcrumb-item"><a href="{% url 'grower_portal:admin_application_create_step1' application.id %}">{{ application.submission_code }}</a></li>
+
                     {% else %}
+
                     <li class="breadcrumb-item"><a href="{% url 'grower_portal:dashboard' %}">Dashboard</a></li>
+
                     <li class="breadcrumb-item"><a href="{% url 'grower_portal:application_step1' application.id %}">{{ application.submission_code }}</a></li>
+
                     {% endif %}
+
                     <li class="breadcrumb-item active">Step 3</li>
+
                 </ol>
+
             </nav>
+
         </div>
+
     </div>
+
     
+
     <div class="row">
+
         <div class="col-12">
+
             <div class="progress mb-4">
+
                 <div class="progress-bar progress-width-50" role="progressbar">Step 3 of {% if application.field.field_type == 'range' %}6{% else %}5{% endif %}</div>
+
             </div>
+
         </div>
+
     </div>
+
     
+
     <div class="row">
+
         <div class="col-lg-8">
+
             <form method="post" id="transect-form">
+
                 {% csrf_token %}
+
                 
+
                 <div class="d-flex justify-content-start mb-3">
+
                     {% if is_admin %}
+
                     <a href="{% url 'grower_portal:admin_application_create_step2' application.id %}" class="btn btn-secondary">
+
                         <i class="fas fa-arrow-left"></i> Previous
+
                     </a>
+
                     {% else %}
+
                     <a href="{% url 'grower_portal:application_step2' application.id %}" class="btn btn-secondary">
+
                         <i class="fas fa-arrow-left"></i> Previous
+
                     </a>
+
                     {% endif %}
+
                 </div>
+
                 
+
                 <div class="card mb-4">
+
                     <div class="card-header">
-                        <h3 class="mb-0">Step 3: Transect Codes</h3>
-                        <p class="text-muted mb-0">Enter your transect codes and see them appear on the map below</p>
+
+                        <h3 class="mb-0">Step 3: Transect Codes & Locations</h3>
+
+                        <p class="text-muted mb-0">Enter one or more transects (location 1 required; 2–4 if applicable)</p>
+
                     </div>
+
                     <div class="card-body">
+
                         {% crispy form %}
+
                     </div>
+
                 </div>
+
                 
+
                 <div class="card mb-4">
-                    <div class="card-header bg-info text-white">
-                        <h4 class="mb-0"><i class="fas fa-map-marked-alt"></i> Transect Locations</h4>
-                        <p class="mb-0 small">Map updates in real-time as you enter transect codes</p>
+
+                    <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+
+                        <div>
+
+                            <h4 class="mb-0"><i class="fas fa-map-marked-alt"></i> Map Preview</h4>
+
+                            <p class="mb-0 small">Markers appear automatically when you enter coordinates</p>
+
+                        </div>
+
+                        <span id="transect-map-badge" class="badge bg-light text-dark hidden-field">0 on map</span>
+
                     </div>
+
                     <div class="card-body">
+
                         <div class="position-relative">
+
                             <div id="map" class="map-container"></div>
+
                             <button id="locateMe" type="button" class="btn btn-primary locate-me-button">
+
                                 <i class="fas fa-crosshairs"></i> Locate Me
+
                             </button>
+
                         </div>
+
                         <div class="mt-3">
-                            <div id="locate-message" class="alert alert-warning" style="display: none;">
-                                <i class="fas fa-exclamation-triangle"></i>
-                                <strong>Action Required:</strong> Please click the "Locate Me" button above to enable GPS location. Transect markers will appear on the map once your location is detected.
-                            </div>
-                            <div class="alert alert-info">
-                                <i class="fas fa-info-circle"></i>
-                                <strong>Instructions:</strong> Enter transect codes, then click "Locate Me" to display markers on the map at your current location. You can drag markers to adjust their positions.
-                            </div>
-                            <div id="transect-status" class="alert alert-light hidden-field">
+
+                            <div id="transect-status" class="alert alert-light hidden-field mb-0">
+
                                 <i class="fas fa-map-marker-alt"></i>
+
                                 <span id="transect-count">0</span> transect(s) entered
+
                             </div>
+
+                            <p class="text-muted small mb-0 mt-2">
+
+                                <i class="fas fa-info-circle"></i>
+
+                                Review marker positions on the map before continuing. Drag markers to adjust their locations.
+
+                            </p>
+
                         </div>
+
                     </div>
+
                 </div>
+
+
+
+                <div class="transect-step-actions d-flex justify-content-end mb-4">
+
+                    <button type="submit" name="submit" class="btn btn-primary btn-lg">
+
+                        Next: Transect Measurements <i class="fas fa-arrow-right ms-1"></i>
+
+                    </button>
+
+                </div>
+
                 
+
             </form>
+
         </div>
+
         
+
         <div class="col-lg-4">
+
             <div class="card">
+
                 <div class="card-header">
+
                     <h5 class="mb-0">Progress</h5>
+
                 </div>
+
                 <div class="card-body">
+
                     <ul class="list-group">
+
                         <li class="list-group-item text-success">
+
                             <i class="fas fa-check-circle"></i> Step 1: Field Information
+
                         </li>
+
                         <li class="list-group-item text-success">
+
                             <i class="fas fa-check-circle"></i> Step 2: Management Practices
+
                         </li>
+
                         <li class="list-group-item active">
+
                             <i class="fas fa-circle"></i> Step 3: Transect Codes
+
                         </li>
+
                         <li class="list-group-item">Step 4: Transect Measurements</li>
+
                         {% if application.field.field_type == 'range' %}
+
                           <li class="list-group-item">Step 5: Grazing Events</li>
+
                           <li class="list-group-item">Step 6: Review & Submit</li>
+
                         {% else %}
+
                           <li class="list-group-item">Step 5: Review & Submit</li>
+
                         {% endif %}
+
                     </ul>
+
                 </div>
+
             </div>
+
         </div>
+
     </div>
+
 </div>
 
+
+
 {% endblock %}
+
 

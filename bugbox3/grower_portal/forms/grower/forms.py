@@ -4,6 +4,7 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Column, Div, Fieldset, Layout, Row, Submit
 from django import forms
 from django.contrib.auth import get_user_model
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.forms import inlineformset_factory
 
 from bugbox3.core.forms import Html5DateInput, ModelFormMixin
@@ -567,7 +568,9 @@ class ManagementPracticesForm(ModelFormMixin):
 
 
 class TransectCodesForm(forms.Form):
-    """Form for entering transect codes in Step 3"""
+    """Form for entering transect codes and GPS coordinates in Step 3"""
+
+    _COORDINATE_WIDGET_ATTRS = {'step': 'any', 'class': 'form-control'}
 
     def __init__(self, *args, **kwargs):
         self.field_type = kwargs.pop('field_type', None)
@@ -577,6 +580,7 @@ class TransectCodesForm(forms.Form):
         self.helper = FormHelper(self)
         self.helper.form_method = 'post'
         self.helper.form_action = '.'
+        self.helper.form_tag = False
         self.helper.layout = Layout(
             *self.get_primary_layout(),
         )
@@ -585,99 +589,186 @@ class TransectCodesForm(forms.Form):
     transect_code_1 = forms.CharField(
         max_length=20,
         required=False,
-        label='Transect Code 1',
-        help_text='Optional - at least one transect code is required',
+        label='Transect Code',
         widget=forms.TextInput(attrs={'placeholder': 'Enter transect code'})
     )
     transect_code_2 = forms.CharField(
         max_length=20,
         required=False,
-        label='Transect Code 2',
+        label='Transect Code',
         widget=forms.TextInput(attrs={'placeholder': 'Enter transect code'})
     )
     transect_code_3 = forms.CharField(
         max_length=20,
         required=False,
-        label='Transect Code 3',
+        label='Transect Code',
         widget=forms.TextInput(attrs={'placeholder': 'Enter transect code'})
     )
     transect_code_4 = forms.CharField(
         max_length=20,
         required=False,
-        label='Transect Code 4',
+        label='Transect Code',
         widget=forms.TextInput(attrs={'placeholder': 'Enter transect code'})
     )
 
-    # Hidden coordinate fields
-    transect_1_latitude = forms.DecimalField(required=False, widget=forms.HiddenInput())
-    transect_1_longitude = forms.DecimalField(required=False, widget=forms.HiddenInput())
-    transect_2_latitude = forms.DecimalField(required=False, widget=forms.HiddenInput())
-    transect_2_longitude = forms.DecimalField(required=False, widget=forms.HiddenInput())
-    transect_3_latitude = forms.DecimalField(required=False, widget=forms.HiddenInput())
-    transect_3_longitude = forms.DecimalField(required=False, widget=forms.HiddenInput())
-    transect_4_latitude = forms.DecimalField(required=False, widget=forms.HiddenInput())
-    transect_4_longitude = forms.DecimalField(required=False, widget=forms.HiddenInput())
+    transect_1_latitude = forms.FloatField(
+        required=False,
+        label='Latitude',
+        validators=[MinValueValidator(-90), MaxValueValidator(90)],
+        widget=forms.NumberInput(attrs={**_COORDINATE_WIDGET_ATTRS, 'placeholder': '44.660611'}),
+    )
+    transect_1_longitude = forms.FloatField(
+        required=False,
+        label='Longitude',
+        validators=[MinValueValidator(-180), MaxValueValidator(180)],
+        widget=forms.NumberInput(attrs={**_COORDINATE_WIDGET_ATTRS, 'placeholder': '-96.813411'}),
+    )
+    transect_2_latitude = forms.FloatField(
+        required=False,
+        label='Latitude',
+        validators=[MinValueValidator(-90), MaxValueValidator(90)],
+        widget=forms.NumberInput(attrs={**_COORDINATE_WIDGET_ATTRS, 'placeholder': '44.660611'}),
+    )
+    transect_2_longitude = forms.FloatField(
+        required=False,
+        label='Longitude',
+        validators=[MinValueValidator(-180), MaxValueValidator(180)],
+        widget=forms.NumberInput(attrs={**_COORDINATE_WIDGET_ATTRS, 'placeholder': '-96.813411'}),
+    )
+    transect_3_latitude = forms.FloatField(
+        required=False,
+        label='Latitude',
+        validators=[MinValueValidator(-90), MaxValueValidator(90)],
+        widget=forms.NumberInput(attrs={**_COORDINATE_WIDGET_ATTRS, 'placeholder': '44.660611'}),
+    )
+    transect_3_longitude = forms.FloatField(
+        required=False,
+        label='Longitude',
+        validators=[MinValueValidator(-180), MaxValueValidator(180)],
+        widget=forms.NumberInput(attrs={**_COORDINATE_WIDGET_ATTRS, 'placeholder': '-96.813411'}),
+    )
+    transect_4_latitude = forms.FloatField(
+        required=False,
+        label='Latitude',
+        validators=[MinValueValidator(-90), MaxValueValidator(90)],
+        widget=forms.NumberInput(attrs={**_COORDINATE_WIDGET_ATTRS, 'placeholder': '44.660611'}),
+    )
+    transect_4_longitude = forms.FloatField(
+        required=False,
+        label='Longitude',
+        validators=[MinValueValidator(-180), MaxValueValidator(180)],
+        widget=forms.NumberInput(attrs={**_COORDINATE_WIDGET_ATTRS, 'placeholder': '-96.813411'}),
+    )
+
+    def _transect_row_layout(self, slot):
+        applicable = ' <span class="text-muted fw-normal">(if applicable)</span>' if slot > 1 else ''
+        return [
+            HTML(f'<div class="transect-location-row transect-location-card" data-slot="{slot}">'),
+            HTML(
+                f'<div class="transect-location-card__header">'
+                f'<span class="transect-location-card__badge">{slot}</span>'
+                f'<span class="transect-location-card__title">Transect location {slot}{applicable}</span>'
+                f'</div>'
+            ),
+            Row(
+                Column(f'transect_code_{slot}', css_class='col-md-4'),
+                Column(f'transect_{slot}_latitude', css_class='col-md-4'),
+                Column(f'transect_{slot}_longitude', css_class='col-md-4'),
+            ),
+            HTML('</div>'),
+        ]
 
     def get_primary_layout(self):
-        button_text = 'Next: Transect Measurements'
+        rows = []
+        for slot in range(1, 5):
+            rows.extend(self._transect_row_layout(slot))
 
         return [
-            Fieldset(
-                'Transect Codes',
-                HTML('<p class="text-muted">Enter 1-4 transect codes. At least one code is required.</p>'),
-                Row(
-                    Column('transect_code_1', css_class='col-md-6'),
-                    Column('transect_code_2', css_class='col-md-6')
-                ),
-                Row(
-                    Column('transect_code_3', css_class='col-md-6'),
-                    Column('transect_code_4', css_class='col-md-6')
-                ),
-                'transect_1_latitude',
-                'transect_1_longitude',
-                'transect_2_latitude',
-                'transect_2_longitude',
-                'transect_3_latitude',
-                'transect_3_longitude',
-                'transect_4_latitude',
-                'transect_4_longitude',
-                Submit('submit', button_text, css_class='btn btn-primary')
-            )
+            HTML(
+                '<p class="text-muted mb-3">Enter one or more transects (up to 4). '
+                'Transect location 1 is required; provide Transects 2–4 if applicable. '
+                'For each location you use, enter the transect code, latitude, and longitude together. '
+                'Review the transect marker(s) on the map after entering coordinates.</p>'
+            ),
+            HTML('<div id="transect-location-fields" class="transect-location-fields">'),
+            *rows,
+            HTML('</div>'),
         ]
 
     def clean(self):
         cleaned_data = super().clean()
-        transect_codes = []
+        complete_transects = []
 
         for i in range(1, 5):
-            code = cleaned_data.get(f'transect_code_{i}', '').strip()
-            if code:
-                try:
-                    transect_obj = SampleCode.objects.get(code=code, is_active=True)
+            code = (cleaned_data.get(f'transect_code_{i}') or '').strip()
+            lat = cleaned_data.get(f'transect_{i}_latitude')
+            lng = cleaned_data.get(f'transect_{i}_longitude')
+            has_any = bool(code) or lat is not None or lng is not None
 
-                    if transect_obj.is_used:
-                        same_app = (
-                            self.for_application is not None
-                            and transect_obj.used_in_application_id == self.for_application.pk
+            if not has_any:
+                cleaned_data[f'transect_code_{i}'] = ''
+                cleaned_data[f'transect_{i}_latitude'] = None
+                cleaned_data[f'transect_{i}_longitude'] = None
+                continue
+
+            if not code:
+                self.add_error(
+                    f'transect_code_{i}',
+                    'Transect code is required when entering data for this location.',
+                )
+            if lat is None:
+                self.add_error(
+                    f'transect_{i}_latitude',
+                    'Latitude is required when entering data for this location.',
+                )
+            elif lat < -90 or lat > 90:
+                self.add_error(f'transect_{i}_latitude', 'Latitude must be between -90 and 90.')
+
+            if lng is None:
+                self.add_error(
+                    f'transect_{i}_longitude',
+                    'Longitude is required when entering data for this location.',
+                )
+            elif lng < -180 or lng > 180:
+                self.add_error(f'transect_{i}_longitude', 'Longitude must be between -180 and 180.')
+
+            if not code or lat is None or lng is None:
+                continue
+
+            cleaned_data[f'transect_{i}_latitude'] = round(float(lat), 6)
+            cleaned_data[f'transect_{i}_longitude'] = round(float(lng), 6)
+            lat = cleaned_data[f'transect_{i}_latitude']
+            lng = cleaned_data[f'transect_{i}_longitude']
+
+            try:
+                transect_obj = SampleCode.objects.get(code=code, is_active=True)
+
+                if transect_obj.is_used:
+                    same_app = (
+                        self.for_application is not None
+                        and transect_obj.used_in_application_id == self.for_application.pk
+                    )
+                    if not same_app:
+                        other = transect_obj.used_in_application
+                        submission = (
+                            other.submission_code if other else 'another application'
                         )
-                        if not same_app:
-                            other = transect_obj.used_in_application
-                            submission = (
-                                other.submission_code if other else 'another application'
-                            )
-                            self.add_error(
-                                f'transect_code_{i}',
-                                f'Transect code "{code}" has already been used in application {submission}.',
-                            )
-                except SampleCode.DoesNotExist:
-                    self.add_error(f'transect_code_{i}', f'Transect code "{code}" is not valid.')
+                        self.add_error(
+                            f'transect_code_{i}',
+                            f'Transect code "{code}" has already been used in application {submission}.',
+                        )
+            except SampleCode.DoesNotExist:
+                self.add_error(f'transect_code_{i}', f'Transect code "{code}" is not valid.')
 
-                if code in transect_codes:
-                    self.add_error(f'transect_code_{i}', f'Duplicate transect code "{code}".')
-                transect_codes.append(code)
+            if code in complete_transects:
+                self.add_error(f'transect_code_{i}', f'Duplicate transect code "{code}".')
+            else:
+                complete_transects.append(code)
 
-        if not transect_codes:
-            raise forms.ValidationError('At least one transect code is required.')
+        if not complete_transects:
+            raise forms.ValidationError(
+                'At least one complete transect (code, latitude, and longitude) is required.',
+            )
 
         return cleaned_data
 
