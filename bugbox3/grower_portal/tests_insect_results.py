@@ -109,10 +109,10 @@ class InsectResultsFixtureMixin:
         }
         if human:
             kwargs['classification'] = morpho
-            kwargs['confidence'] = confidence if confidence is not None else Decimal('0.50')
+            kwargs['confidence'] = confidence if confidence is not None else Decimal('50')
         else:
             kwargs['ai_classification'] = morpho
-            kwargs['confidence'] = confidence if confidence is not None else Decimal('0.80')
+            kwargs['confidence'] = confidence if confidence is not None else Decimal('80')
         return Specimen.objects.create(**kwargs)
 
     @classmethod
@@ -335,14 +335,14 @@ class GallerySelectionTests(InsectResultsFixtureMixin, TestCase):
             self.sample,
             self.morpho_carab,
             human=False,
-            confidence=Decimal('0.50'),
+            confidence=Decimal('50'),
         )
         self._create_specimen_image(specimen)
         eligible = self._create_specimen(
             self.sample,
             self.morpho_staph,
             human=False,
-            confidence=Decimal('0.85'),
+            confidence=Decimal('85'),
         )
         self._create_specimen_image(eligible)
         ctx = build_insect_results_context(self.grower, 2025)
@@ -362,7 +362,7 @@ class GallerySelectionTests(InsectResultsFixtureMixin, TestCase):
             self.sample,
             self.morpho_carab,
             human=True,
-            confidence=Decimal('0.85'),
+            confidence=Decimal('85'),
         )
         self._create_specimen_image(specimen)
         ctx = build_insect_results_context(self.grower, 2025)
@@ -376,14 +376,14 @@ class GallerySelectionTests(InsectResultsFixtureMixin, TestCase):
             self.sample,
             self.morpho_carab,
             human=False,
-            confidence=Decimal('0.95'),
+            confidence=Decimal('95'),
         )
         ai_image = self._create_specimen_image(ai_specimen)
         human_specimen = self._create_specimen(
             self.sample,
             self.morpho_carab,
             human=True,
-            confidence=Decimal('0.85'),
+            confidence=Decimal('85'),
         )
         human_image = self._create_specimen_image(human_specimen)
         ctx = build_insect_results_context(self.grower, 2025)
@@ -404,7 +404,7 @@ class GallerySelectionTests(InsectResultsFixtureMixin, TestCase):
             self.sample,
             self.morpho_staph,
             human=True,
-            confidence=Decimal('0.85'),
+            confidence=Decimal('85'),
         )
         self._create_specimen_image(specimen)
         ctx = build_insect_results_context(self.grower, 2025)
