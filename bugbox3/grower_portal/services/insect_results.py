@@ -9,8 +9,8 @@ from django.db.models import Prefetch
 
 from bugbox3.grower_portal.constants import (
     INSECT_EXPORT_LEVEL,
+    INSECT_GALLERY_AI_MIN_CONFIDENCE,
     INSECT_GALLERY_MAX_PER_SITE,
-    INSECT_GALLERY_MIN_CONFIDENCE,
     INSECT_MORPHO_EXPORT_LEVEL,
 )
 from bugbox3.grower_portal.models import GrowerSampleCodeMapping
@@ -142,11 +142,13 @@ def _family_from_specimen(specimen) -> str:
 
 def _gallery_specimen_eligible(specimen) -> bool:
     """
-    uses AI confidence as a proxy for whether the photo is clear enough to show to the grower
+    AI-only specimens must meet INSECT_GALLERY_AI_MIN_CONFIDENCE
     """
     if specimen.confidence is None:
         return False
-    return float(specimen.confidence) >= INSECT_GALLERY_MIN_CONFIDENCE
+    if specimen.classification_id:
+        return True
+    return float(specimen.confidence) >= INSECT_GALLERY_AI_MIN_CONFIDENCE
 
 
 def _merge_specimen_hierarchy_into_site(site_data: dict, specimen):
@@ -235,6 +237,7 @@ def build_gallery_images(
                         'visit_date': visit_date,
                         'primary_image': image.primary_image,
                         '_human_reviewed': bool(specimen.classification_id),
+                        '_confidence': float(specimen.confidence),
                         '_sort_date': visit_date,
                     })
 
@@ -245,6 +248,7 @@ def build_gallery_images(
             pools[family].sort(
                 key=lambda item: (
                     item['_human_reviewed'],
+                    item['_confidence'],
                     item['_sort_date'],
                     item['primary_image'],
                 ),
@@ -253,6 +257,7 @@ def build_gallery_images(
             for item in pools[family]:
                 item.pop('_sort_date', None)
                 item.pop('_human_reviewed', None)
+                item.pop('_confidence', None)
                 item.pop('primary_image', None)
 
         family_totals = site_family_totals.get(site_code, {})
