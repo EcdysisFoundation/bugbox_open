@@ -13,7 +13,8 @@ def join_the_grower_site_code(microbiome_taxa_id):
     """
     Attempts to join the site_code from SampleCode
     """
-    SiteMicrobiomeTaxa = apps.get_model(app_label='microbiome', model='SiteMicrobiomeTaxa')
+    SiteMicrobiomeTaxa = apps.get_model(
+        app_label='microbiome', model_name='SiteMicrobiomeTaxa')
     site_microbiome_taxa_recs = SiteMicrobiomeTaxa.objects.filter(
         parent_file=microbiome_taxa_id)
     site_codes = site_microbiome_taxa_recs.values_list('site_code', flat=True).distinct()
@@ -37,7 +38,8 @@ def join_grower_site_codes():
     """
     Run join_grower_site_code per site file.
     """
-    MicrobiomeTaxa = apps.get_model(app_label='microbiome', model='MicrobiomeTaxa')
+    MicrobiomeTaxa = apps.get_model(
+        app_label='microbiome', model_name='MicrobiomeTaxa')
     analytics_files = MicrobiomeTaxa.objects.filter(
         lab_analytics_source=constants.LAB_ECDYSIS_FOUNDATION)
     for a in analytics_files:
@@ -57,7 +59,10 @@ def parse_taxa_file(taxa_file_id):
     """
     Parse a file to a downloadable file and aggregated records per row.
     """
-    MicrobiomeTaxa = apps.get_model(app_label='microbiome', model='MicrobiomeTaxa')
+    MicrobiomeTaxa = apps.get_model(
+        app_label='microbiome', model_name='MicrobiomeTaxa')
+    SiteMicrobiomeTaxa = apps.get_model(
+        app_label='microbiome', model_name='SiteMicrobiomeTaxa')
     file_rec = MicrobiomeTaxa.objects.get(id=taxa_file_id)
     if file_rec.lab_analytics_source == constants.LAB_ECDYSIS_FOUNDATION:
         with file_rec.file.open('r') as csv_data:
@@ -137,6 +142,7 @@ def parse_taxa_file(taxa_file_id):
             except Exception as e:
                 print(f"Transaction failed and rolled back safely. Error: {e}")
                 raise e
+        join_grower_site_codes()
     else:
         print(
             f'file_rec.lab_analytics_source {file_rec.lab_analytics_source} \
