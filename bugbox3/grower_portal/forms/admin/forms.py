@@ -4,7 +4,7 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 
-from ...constants import FIELD_TYPE_CHOICES
+from ...constants import FIELD_TYPE_CHOICES, LABEL_PROJECT_CHOICES
 from ...models import Farm
 
 User = get_user_model()
@@ -247,3 +247,62 @@ class FieldFilterForm(forms.Form):
             ),
             Submit('filter', 'Apply Filters', css_class='btn btn-primary btn-sm')
         )
+
+
+class GrowerSampleCodeLinkForm(forms.Form):
+    """Link a grower account to a samplecode"""
+
+    grower_email = forms.EmailField(
+        label='Grower email',
+        help_text='Email of the grower account (must be in the is_grower group).',
+        widget=forms.EmailInput(attrs={'placeholder': 'grower@example.com'}),
+    )
+    site_code = forms.CharField(
+        max_length=20,
+        label='Site / sample code',
+        help_text='Type in the site or sample code and specify the project type',
+        widget=forms.TextInput(attrs={'placeholder': '5001'}),
+    )
+    year_sampled = forms.IntegerField(
+        min_value=2000,
+        max_value=2100,
+        label='Year sampled',
+        help_text='Year used to scope results for this grower.',
+    )
+    project_type = forms.ChoiceField(
+        choices=LABEL_PROJECT_CHOICES,
+        label='Project',
+        help_text='Must match how this code is used in lab data (Ignite vs Avalanche).',
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_method = 'post'
+        self.helper.layout = Layout(
+            Row(
+                Column('grower_email', css_class='form-group col-md-6 mb-3'),
+                Column('site_code', css_class='form-group col-md-6 mb-3'),
+                css_class='form-row',
+            ),
+            Row(
+                Column('year_sampled', css_class='form-group col-md-6 mb-3'),
+                Column('project_type', css_class='form-group col-md-6 mb-3'),
+                css_class='form-row',
+            ),
+            Submit('submit', 'Link grower to code', css_class='btn btn-primary'),
+        )
+
+    def clean_grower_email(self):
+        email = self.cleaned_data['grower_email'].strip().lower()
+        try:
+            user = User.objects.get(email__iexact=email)
+        except User.DoesNotExist:
+            raise ValidationError('No user account found with this email.')
+        if not user.groups.filter(name='is_grower').exists():
+            raise ValidationError('This user is not in the grower group (is_grower).')
+        self.cleaned_data['grower_user'] = user
+        return email
+
+    def clean_site_code(self):
+        return self.cleaned_data['site_code'].strip()

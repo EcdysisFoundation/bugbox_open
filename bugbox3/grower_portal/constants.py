@@ -877,7 +877,7 @@ CATEGORY_DISPLAY_META = {
 
 INSECT_EXPORT_LEVEL = 'family'
 INSECT_MORPHO_EXPORT_LEVEL = 'morphospecies'
-INSECT_GALLERY_MIN_CONFIDENCE = 0.70  # related to images of bugs that are on Grower Portal bugs section only; applies to human-reviewed and AI IDentifications (used as an image quality check)
+INSECT_GALLERY_AI_MIN_CONFIDENCE = 5  # AI-only specimens below this are excluded from the grower bug gallery
 INSECT_GALLERY_MAX_PER_SITE = 12  # round-robin across families
 
 GROWER_TAXONOMY_UNSPECIFIED_CLASS = 'Unspecified class'

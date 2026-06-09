@@ -109,10 +109,10 @@ class InsectResultsFixtureMixin:
         }
         if human:
             kwargs['classification'] = morpho
-            kwargs['confidence'] = confidence if confidence is not None else Decimal('0.50')
+            kwargs['confidence'] = confidence if confidence is not None else Decimal('50')
         else:
             kwargs['ai_classification'] = morpho
-            kwargs['confidence'] = confidence if confidence is not None else Decimal('0.80')
+            kwargs['confidence'] = confidence if confidence is not None else Decimal('80')
         return Specimen.objects.create(**kwargs)
 
     @classmethod
@@ -330,19 +330,19 @@ class GallerySelectionTests(InsectResultsFixtureMixin, TestCase):
         self.assertTrue(all(img['site_code'] == '9001' for img in site_a))
         self.assertTrue(all(img['site_code'] == '9002' for img in site_b))
 
-    def test_gallery_excludes_low_confidence_ai_only(self):
+    def test_gallery_excludes_ai_only_below_ai_floor(self):
         specimen = self._create_specimen(
             self.sample,
             self.morpho_carab,
             human=False,
-            confidence=Decimal('0.50'),
+            confidence=Decimal('4'),
         )
         self._create_specimen_image(specimen)
         eligible = self._create_specimen(
             self.sample,
             self.morpho_staph,
             human=False,
-            confidence=Decimal('0.85'),
+            confidence=Decimal('85'),
         )
         self._create_specimen_image(eligible)
         ctx = build_insect_results_context(self.grower, 2025)
@@ -350,19 +350,19 @@ class GallerySelectionTests(InsectResultsFixtureMixin, TestCase):
         self.assertIn('Staphylinidae', families_in_gallery)
         self.assertNotIn('Carabidae', families_in_gallery)
 
-    def test_human_reviewed_excluded_when_confidence_below_threshold(self):
+    def test_human_reviewed_included_below_ai_floor(self):
         specimen = self._create_specimen(self.sample, self.morpho_carab, human=True)
         self._create_specimen_image(specimen)
         ctx = build_insect_results_context(self.grower, 2025)
         families_in_gallery = {img['family'] for img in ctx['gallery_images']}
-        self.assertNotIn('Carabidae', families_in_gallery)
+        self.assertIn('Carabidae', families_in_gallery)
 
     def test_human_reviewed_included_when_confidence_meets_threshold(self):
         specimen = self._create_specimen(
             self.sample,
             self.morpho_carab,
             human=True,
-            confidence=Decimal('0.85'),
+            confidence=Decimal('85'),
         )
         self._create_specimen_image(specimen)
         ctx = build_insect_results_context(self.grower, 2025)
@@ -376,14 +376,14 @@ class GallerySelectionTests(InsectResultsFixtureMixin, TestCase):
             self.sample,
             self.morpho_carab,
             human=False,
-            confidence=Decimal('0.95'),
+            confidence=Decimal('95'),
         )
         ai_image = self._create_specimen_image(ai_specimen)
         human_specimen = self._create_specimen(
             self.sample,
             self.morpho_carab,
             human=True,
-            confidence=Decimal('0.85'),
+            confidence=Decimal('85'),
         )
         human_image = self._create_specimen_image(human_specimen)
         ctx = build_insect_results_context(self.grower, 2025)
@@ -393,6 +393,31 @@ class GallerySelectionTests(InsectResultsFixtureMixin, TestCase):
         self.assertGreaterEqual(len(carab_urls), 2)
         self.assertEqual(carab_urls[0], human_url)
         self.assertIn(ai_url, carab_urls[1:])
+
+    def test_gallery_prefers_higher_confidence_ai_within_family(self):
+        from bugbox3.libs.utilities import get_media_url
+
+        low_ai = self._create_specimen(
+            self.sample,
+            self.morpho_carab,
+            human=False,
+            confidence=Decimal('60'),
+        )
+        low_image = self._create_specimen_image(low_ai)
+        high_ai = self._create_specimen(
+            self.sample,
+            self.morpho_carab,
+            human=False,
+            confidence=Decimal('95'),
+        )
+        high_image = self._create_specimen_image(high_ai)
+        ctx = build_insect_results_context(self.grower, 2025)
+        carab_urls = [img['url'] for img in ctx['gallery_images'] if img['family'] == 'Carabidae']
+        high_url = get_media_url(high_image.image_thumbnail_medium, high_image.public_image)
+        low_url = get_media_url(low_image.image_thumbnail_medium, low_image.public_image)
+        self.assertGreaterEqual(len(carab_urls), 2)
+        self.assertEqual(carab_urls[0], high_url)
+        self.assertIn(low_url, carab_urls[1:])
 
     def test_families_without_images_not_in_gallery(self):
         ctx = build_insect_results_context(self.grower, 2025)
@@ -404,7 +429,7 @@ class GallerySelectionTests(InsectResultsFixtureMixin, TestCase):
             self.sample,
             self.morpho_staph,
             human=True,
-            confidence=Decimal('0.85'),
+            confidence=Decimal('85'),
         )
         self._create_specimen_image(specimen)
         ctx = build_insect_results_context(self.grower, 2025)
