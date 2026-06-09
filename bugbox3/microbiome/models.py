@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.db.models import (
     DateTimeField,
     Model,
@@ -8,8 +9,11 @@ from django.db.models import (
     CASCADE,
     PositiveIntegerField
 )
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 from bugbox3.grower_portal.models.sample_codes import SampleCode
+from .tasks import parse_taxa_file
 from . import constants
 
 
@@ -38,6 +42,12 @@ class MicrobiomeTaxa(Model):
     date_added = DateTimeField(auto_now_add=True)
 
 
+@receiver(post_save, sender=MicrobiomeTaxa)
+def uploaded_file_post_save(sender, instance, created, **kwargs):
+    if created:
+        transaction.on_commit(parse_taxa_file.s(instance.pk).delay)
+
+
 class SiteMicrobiomeTaxa(Model):
     """
     Per site records of microbiome taxa from external files.
@@ -60,4 +70,3 @@ class SiteMicrobiomeTaxa(Model):
     # aggreagated fields
     num_taxa_found = PositiveIntegerField(null=True)
     num_molecular_targets = PositiveIntegerField(null=True)
-
