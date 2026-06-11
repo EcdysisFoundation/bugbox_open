@@ -1,20 +1,21 @@
 from django.db import transaction
 from django.db.models import (
-    DateTimeField,
-    Model,
+    CASCADE,
+    SET_NULL,
     CharField,
+    DateTimeField,
     FileField,
     ForeignKey,
-    SET_NULL,
-    CASCADE,
-    PositiveIntegerField
+    Model,
+    PositiveIntegerField,
 )
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from bugbox3.grower_portal.models.sample_codes import SampleCode
-from .tasks import parse_taxa_file
+
 from . import constants
+from .tasks import parse_taxa_file
 
 
 class MicrobiomeTaxa(Model):

@@ -1,12 +1,13 @@
+from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db.models import F
 from django.views.generic import TemplateView
-from bugbox3.core.permissions import IS_GROWER_USER
-from django.contrib.auth.mixins import PermissionRequiredMixin
-from bugbox3.grower_portal.models import GrowerSampleCodeMapping
 
+from bugbox3.core.permissions import IS_GROWER_USER
+from bugbox3.grower_portal.models import GrowerSampleCodeMapping
 from bugbox3.libs.utilities import get_media_url
-from .models import SiteMicrobiomeTaxa
+
 from . import constants
+from .models import SiteMicrobiomeTaxa
 
 
 def get_site_microbiome_taxa_context(user_id):

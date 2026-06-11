@@ -1,11 +1,13 @@
 import csv
 import tempfile
-from django.apps import apps
-from django.db import transaction
-from django.core.files.base import ContentFile
 
-from config import celery_app
+from django.apps import apps
+from django.core.files.base import ContentFile
+from django.db import transaction
+
 from bugbox3.grower_portal.models import SampleCode
+from config import celery_app
+
 from . import constants
 
 
@@ -118,7 +120,8 @@ def parse_taxa_file(taxa_file_id):
                         sample_name = rows[1][col_idx]
                         sample_year = sample_year_from_id(sample_name)
                         # Write out the 2-column table for this specific sample
-                        with tempfile.NamedTemporaryFile(mode='w+', suffix='.tsv', encoding='utf-8', newline='') as temp_file:
+                        with tempfile.NamedTemporaryFile(
+                                mode='w+', suffix='.tsv', encoding='utf-8', newline='') as temp_file:
                             writer = csv.writer(temp_file, delimiter='\t')
 
                             data_rows = [[row[0], row[col_idx]] for row in rows]
