@@ -21,17 +21,17 @@ from .shimsy_api import create_rescan_request
 from .stitcher_api import (
     ERROR_MSG_KEY,
     cleanup_matching_retake_records,
-    get_stitcher_api_url,
-    get_stitcher_flower_url,
-    get_stitcher_js_url,
     delete_upload_file,
     get_list_upload_abridged,
     get_root_message,
+    get_stitcher_api_url,
+    get_stitcher_flower_url,
+    get_stitcher_js_url,
     get_stitcher_stats,
     get_upload_file,
     patch_upload_file,
 )
-from .stitcher_utils import save_remote_file, get_label_file_status
+from .stitcher_utils import get_label_file_status, save_remote_file
 
 
 class StitcherView(PermissionRequiredMixin, TemplateView):
