@@ -13,6 +13,10 @@ from bugbox3.grower_portal.constants import (
     INSECT_MORPHO_EXPORT_LEVEL,
 )
 from bugbox3.grower_portal.models import GrowerSampleCodeMapping
+from bugbox3.grower_portal.services.insect_common_names import (
+    enrich_hierarchy_display_labels,
+    format_family_display,
+)
 from bugbox3.grower_portal.services.insect_display import display_family_for_grower
 from bugbox3.grower_portal.services.insect_taxonomy import (
     accumulate_hierarchy_count,
@@ -246,6 +250,7 @@ def build_gallery_images(
                     pools_by_site[site_code][family].append({
                         'url': get_media_url(image.image_thumbnail_medium, image.public_image),
                         'family': family,
+                        'display_label': format_family_display(family),
                         'site_code': site_code,
                         'visit_date': visit_date,
                         'primary_image': image.primary_image,
@@ -374,9 +379,11 @@ def build_insect_results_context(grower, year_int: int) -> dict:
     families_grouped_by_site = []
     for site_code in sorted(site_groups.keys()):
         data = site_groups[site_code]
-        classes = build_families_hierarchy(
-            data['hierarchy_counts'],
-            group_ranks=data['group_ranks'],
+        classes = enrich_hierarchy_display_labels(
+            build_families_hierarchy(
+                data['hierarchy_counts'],
+                group_ranks=data['group_ranks'],
+            ),
         )
         if not classes:
             continue

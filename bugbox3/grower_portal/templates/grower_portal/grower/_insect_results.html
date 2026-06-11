@@ -100,7 +100,7 @@
                       data-bs-toggle="collapse"
                       data-bs-target="#bugs-class-c-{{ forloop.parentloop.counter }}-{{ forloop.counter }}"
                       aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}">
-                {{ class_node.class_label }}
+                {{ class_node.display_label|default:class_node.class_label }}
                 <span class="badge bg-white text-dark border ms-2 fw-normal">{{ class_node.total_count|floatformat:"0" }}</span>
               </button>
             </h2>
@@ -117,7 +117,7 @@
                               data-bs-toggle="collapse"
                               data-bs-target="#bugs-group-c-{{ forloop.parentloop.parentloop.counter }}-{{ forloop.parentloop.counter }}-{{ forloop.counter }}"
                               aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}">
-                        {{ group_node.group_label }}
+                        {{ group_node.display_label|default:group_node.group_label }}
                         <span class="badge bg-white text-dark border ms-2 fw-normal">{{ group_node.total_count|floatformat:"0" }}</span>
                       </button>
                     </h3>
@@ -129,7 +129,7 @@
                           <tbody>
                             {% for row in group_node.families %}
                             <tr>
-                              <td class="ps-3 small">{{ row.family }}</td>
+                              <td class="ps-3 small">{{ row.display_label|default:row.family }}</td>
                               <td class="text-end pe-3 small fw-semibold">{{ row.total_count|floatformat:"0" }}</td>
                             </tr>
                             {% endfor %}
@@ -169,13 +169,13 @@
           <div class="col-6 col-md-4 col-lg-3">
             <div class="text-center">
               {% if img.url %}
-                <img src="{{ img.url }}" alt="{{ img.family }}" class="img-fluid rounded border shadow-sm" loading="lazy">
+                <img src="{{ img.url }}" alt="{{ img.display_label|default:img.family }}" class="img-fluid rounded border shadow-sm" loading="lazy">
               {% else %}
                 <div class="bg-light rounded border d-flex align-items-center justify-content-center" style="min-height:120px;">
                   <span class="text-muted small">No image</span>
                 </div>
               {% endif %}
-              <div class="small fw-semibold mt-2">{{ img.family }}</div>
+              <div class="small fw-semibold mt-2">{{ img.display_label|default:img.family }}</div>
             </div>
           </div>
           {% endfor %}
