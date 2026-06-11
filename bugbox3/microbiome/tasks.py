@@ -122,7 +122,7 @@ def parse_taxa_file(taxa_file_id):
                             writer = csv.writer(temp_file, delimiter='\t')
 
                             data_rows = [[row[0], row[col_idx]] for row in rows]
-                            writer.writerow(data_rows)
+                            writer.writerows(data_rows)
 
                             # Reset the file pointer to the beginning before reading
                             temp_file.seek(0)

@@ -56,18 +56,25 @@ def get_media_url(file, public=False):
     """
     if not file:
         return ''
-    elif settings.MEDIA_URL == '/media/':
+
+    # Normalize the file name. If it has a .name attribute, use it.
+    # Otherwise, it's already a string path from .values().
+    file_name = file.name if hasattr(file, 'name') else str(file)
+
+    if settings.MEDIA_URL == '/media/':
         # assume local storage
-        return file.url
+        if hasattr(file, 'url'):
+            return file.url
+        return f'{settings.MEDIA_URL}{file_name}'
     elif public:
         # if for example SpecimenImage.public_image = True, pass it in
         # requires acl='public-read' on S3 object
-        return settings.MEDIA_URL + file.name
+        return f'{settings.MEDIA_URL}{file_name}'
     elif S3_CLIENT:
         return S3_CLIENT.generate_presigned_url(
             'get_object',
             Params={'Bucket': settings.AWS_STORAGE_BUCKET_NAME_MEDIA,
-                    'Key': file.name},
+                    'Key': file_name},
             HttpMethod="GET",
             ExpiresIn=3600)
     else:

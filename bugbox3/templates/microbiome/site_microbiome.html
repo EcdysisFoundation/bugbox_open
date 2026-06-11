@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Site Microbiome Taxa
+{% endblock title %}
+
+
+{% block content %}
+
+    <br/>
+
+    {% include "microbiome/_site_microbiome_table.html" with site_data=site_data %}
+
+{% endblock content %}

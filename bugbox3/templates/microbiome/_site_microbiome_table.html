@@ -1,0 +1,58 @@
+
+<div class="container">
+    {% if site_data %}
+    <div class="row">
+        <div class="col">
+            <h3>Amplicon sequencing results of soil samples</h3>
+            <table class="table table-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th>Category</th>
+                        <th>Year</th>
+                        <th>Site</th>
+                        <th>Taxa Found</th>
+                        <th>Downlad Results</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in site_data %}
+                    <tr>
+                        <td>
+                            {{ s.organism_description }}
+                        </td>
+                        <td>
+                            {{ s.sample_year }}
+                        </td>
+                        <td>
+                            {{ s.site_code }}
+                        </td>
+                        <td>
+                            {{ s.num_taxa_found }}
+                        </td>
+                        <td>
+                            <a href="{{ s.download_url }}">download</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <p>
+                We are using this data to learn more about regenerative agriculture as it relates the soil health microbiome. Amplicon sequencing can give us greater insight into the microbiome than standard soil testing. We are providing access to your raw results here.
+            </p>
+            <p>
+                <i>Amplicon sequencing is a targeted Next-Generation Sequencing (NGS) method used to identify genetic variations or profile microbial communities. It uses Polymerase Chain Reaction (PCR) to selectively amplify specific DNA or RNA regions of interest before sequencing.
+                </i>(<a href="https://www.illumina.com/techniques/sequencing/dna-sequencing/targeted-resequencing/amplicon-sequencing.html" target="_blank">reference</a>)
+            </p>
+        </div>
+    </div>
+
+    {% else %}
+        <p>No Amplicon sequencing results are available for your account</p>
+    {% endif %}
+
+</div>
