@@ -8,7 +8,6 @@ from datetime import date
 from django.db.models import Prefetch
 
 from bugbox3.grower_portal.constants import (
-    INSECT_EXPORT_LEVEL,
     INSECT_GALLERY_AI_MIN_CONFIDENCE,
     INSECT_GALLERY_MAX_PER_SITE,
     INSECT_MORPHO_EXPORT_LEVEL,
@@ -151,12 +150,20 @@ def _gallery_specimen_eligible(specimen) -> bool:
     return float(specimen.confidence) >= INSECT_GALLERY_AI_MIN_CONFIDENCE
 
 
+def _specimen_individual_count(specimen) -> float:
+    return 1 + (specimen.partial_count or 0)
+
+
+def _sample_total_abundance(sample) -> float:
+    return sum(_specimen_individual_count(sp) for sp in sample.specimen_set.all())
+
+
 def _merge_specimen_hierarchy_into_site(site_data: dict, specimen):
     morpho = _morpho_from_specimen(specimen)
     placement = resolve_grower_taxonomy(morpho)
     if placement is None:
         return
-    count = 1 + specimen.partial_count
+    count = _specimen_individual_count(specimen)
     accumulate_hierarchy_count(site_data['hierarchy_counts'], placement, count)
     ranks = site_data['group_ranks'].setdefault(placement.class_key, {})
     ranks[placement.group_key] = placement.group_rank
@@ -164,19 +171,25 @@ def _merge_specimen_hierarchy_into_site(site_data: dict, specimen):
 
 def _merge_sample_metrics_into_site(
     site_data: dict,
-    family_metrics: dict,
-    morpho_metrics: dict,
+    morpho_metrics: dict | None,
     sample,
 ):
-    """Family table from family-level counts; richness from morphospecies"""
-    site_data['abundance_total'] += family_metrics['abundance']
-    for family, count in family_metrics['taxon_counts'].items():
+    specimens = sample.specimen_set.all()
+    if not specimens.exists():
+        return
+
+    site_data['abundance_total'] += _sample_total_abundance(sample)
+
+    if morpho_metrics is not None:
+        site_data['morphos_present'].update(richness_taxon_names(morpho_metrics))
+
+    for specimen in specimens:
+        _merge_specimen_hierarchy_into_site(site_data, specimen)
+        family = _family_from_specimen(specimen)
         if family == UNKNOWN_TAXON:
             continue
+        count = _specimen_individual_count(specimen)
         site_data['family_counts'][family] = site_data['family_counts'].get(family, 0) + count
-    site_data['morphos_present'].update(richness_taxon_names(morpho_metrics))
-    for specimen in sample.specimen_set.all():
-        _merge_specimen_hierarchy_into_site(site_data, specimen)
 
 
 def select_gallery_images(
@@ -305,23 +318,15 @@ def build_insect_results_context(grower, year_int: int) -> dict:
         site_code = visit.site.site_name
         site_groups[site_code]['visit_dates'].append(visit.visit_date)
         for sample in visit.sample_set.all():
-            family_metrics = compute_sample_morpho_counts(
-                sample,
-                level=INSECT_EXPORT_LEVEL,
-                include_immatures_skipped=False,
-                family_name_fn=display_family_for_grower,
-            )
-            if family_metrics is None:
+            if not sample.specimen_set.exists():
                 continue
             morpho_metrics = compute_sample_morpho_counts(
                 sample,
                 level=INSECT_MORPHO_EXPORT_LEVEL,
                 include_immatures_skipped=False,
             )
-            if morpho_metrics is None:
-                continue
             _merge_sample_metrics_into_site(
-                site_groups[site_code], family_metrics, morpho_metrics, sample,
+                site_groups[site_code], morpho_metrics, sample,
             )
 
     summary_by_site = []

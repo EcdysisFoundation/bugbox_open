@@ -197,14 +197,38 @@ class InsectResultsScopingTests(InsectResultsFixtureMixin, TestCase):
 
 
 class InsectResultsMetricsTests(InsectResultsFixtureMixin, TestCase):
-    def test_metrics_match_compute_sample_morpho_counts(self):
-        family_metrics = compute_sample_morpho_counts(self.sample, level='family')
+    def test_abundance_counts_every_specimen_row(self):
+        raw_abundance = sum(
+            1 + (s.partial_count or 0) for s in self.sample.specimen_set.all()
+        )
+        ctx = build_insect_results_context(self.grower, 2025)
+        site_row = next(r for r in ctx['summary_by_site'] if r['site_code'] == '9001')
+        self.assertEqual(site_row['abundance_total'], raw_abundance)
+
+    def test_richness_uses_export_exclusions(self):
         morpho_metrics = compute_sample_morpho_counts(self.sample, level='morphospecies')
         ctx = build_insect_results_context(self.grower, 2025)
         site_row = next(r for r in ctx['summary_by_site'] if r['site_code'] == '9001')
-        self.assertEqual(site_row['abundance_total'], family_metrics['abundance'])
         self.assertEqual(site_row['species_richness'], len(richness_taxon_names(morpho_metrics)))
         self.assertEqual(site_row['species_richness'], morpho_metrics['species_richness'])
+
+    def test_human_skip_morpho_included_in_abundance_excluded_from_richness(self):
+        morpho_thrips = Morphospecies.objects.create(
+            name='ThysanopteraTest4291',
+            gbif_class='Insecta',
+            gbif_order='Thysanoptera',
+        )
+        self._create_specimen(self.sample, morpho_thrips, human=True)
+        export_metrics = compute_sample_morpho_counts(self.sample, level='morphospecies')
+        raw_abundance = sum(
+            1 + (s.partial_count or 0) for s in self.sample.specimen_set.all()
+        )
+        ctx = build_insect_results_context(self.grower, 2025)
+        site_row = next(r for r in ctx['summary_by_site'] if r['site_code'] == '9001')
+        self.assertEqual(site_row['abundance_total'], raw_abundance)
+        self.assertEqual(export_metrics['abundance'], raw_abundance - 1)
+        self.assertNotIn('ThysanopteraTest4291', richness_taxon_names(export_metrics))
+        self.assertEqual(site_row['species_richness'], len(richness_taxon_names(export_metrics)))
 
     def test_combined_species_richness_is_union_not_sum(self):
         ctx = build_insect_results_context(self.grower, 2025)
@@ -571,6 +595,7 @@ class InsectTaxonomyHierarchyTests(InsectResultsFixtureMixin, TestCase):
 
     def test_hierarchy_leaf_counts_match_flat_family_totals(self):
         ctx = build_insect_results_context(self.grower, 2025)
+        site_row = next(r for r in ctx['summary_by_site'] if r['site_code'] == '9001')
         flat_total = sum(r['total_count'] for r in ctx['families_by_site'] if r['site_code'] == '9001')
         grouped = ctx['families_grouped_by_site'][0]
         hierarchy_total = sum(
@@ -580,6 +605,7 @@ class InsectTaxonomyHierarchyTests(InsectResultsFixtureMixin, TestCase):
             for family_row in group_node['families']
         )
         self.assertEqual(hierarchy_total, flat_total)
+        self.assertEqual(hierarchy_total, site_row['abundance_total'])
 
     def test_acari_morpho_and_mite_family_share_subclass_group(self):
         morpho_acari, _ = Morphospecies.objects.get_or_create(
