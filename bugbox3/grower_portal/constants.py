@@ -214,7 +214,7 @@ RESULT_TYPE_CHOICES = [
     ('plfa', 'PLFA'),
     ('basic', 'Basic'),
     ('birds', 'Birds'),
-    ('insects', 'Bugs'),
+    ('insects', 'Insects'),
     ('water', 'Water'),
     ('plants', 'Plants'),
 ]
@@ -225,7 +225,7 @@ CATEGORY_CHOICES = [
     ('water',  'Water'),
     ('plants', 'Plants'),
     ('birds',  'Birds'),
-    ('insects', 'Bugs'),
+    ('insects', 'Insects'),
 ]
 
 CATEGORY_MAX_LENGTH = 20
@@ -871,7 +871,7 @@ CATEGORY_DISPLAY_META = {
     },
     'insects': {
         'icon': 'fa-bug',
-        'description': 'Bug sampling from BugBox including abundance and species richness by family.',
+        'description': 'Insect sampling from BugBox including abundance and species richness by family.',
     },
 }
 
