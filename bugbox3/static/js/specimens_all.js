@@ -227,25 +227,20 @@ $(function () {
 
 
     function getRow(data, type, row) {
+        let thumbnail_src = `<img src="${data}" width="50">`
         let cols = ''
         let view_edit = `<h5><a href="${row.view_link}" target="_blank"><i class="bi bi-eye"></i></a>
 <a href="${row.edit_link}" target="_blank"><i class="bi bi-pencil"></i></a></h5>`
         // img_thumbnail
         if (row.img_thumbnail_large) {
-            let width = row.img_thumbnail_large.width;
-            let height = row.img_thumbnail_large.height;
-
-            let widthAttr = width && !isNaN(width) ? `width='${width}'` : '';
-            let heightAttr = height && !isNaN(height) ? `height='${height}'` : '';
 
             cols += formatColDiv(`<button type="button" class="btn" data-bs-toggle="modal"
                 data-bs-target="#imageModal"
                 data-bs-whatever="
-                <img src='${row.img_thumbnail_large.url}' ${widthAttr} ${heightAttr}>
-                ">
-                ${data} </button>${view_edit}`);
+                <img src='${row.img_thumbnail_large.url}' class='figure-img img-fluid rounded responsive-img-650'>">
+                ${thumbnail_src} </button>${view_edit}`);
         } else {
-            cols += formatColDiv(`<div class="ms-4 mt-2">${data}</div>${view_edit}`);
+            cols += formatColDiv(`<div class="ms-4 mt-2">${thumbnail_src}</div>${view_edit}`);
         }
         // view and edit
         cols += formatColDiv(get_archival(row));
