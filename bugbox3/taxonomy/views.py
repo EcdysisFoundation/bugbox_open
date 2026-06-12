@@ -220,33 +220,30 @@ class MorphospeciesDetailView(MorphospeciesResearchOrReviewerMixin, FormView):
         image_count = SpecimenImage.objects.filter(
             specimen__classification=morphospecies,
             specimen__sample__site_visit__site__experiment__organization_id=samples_constants.
-            PRIMARY_ORGANIZATION_ID).aggregate(
-            reviewed=Count(
-                'pk', distinct=True, filter=~Q(
-                    specimen__acceptance=samples_constants.ACCEPTANCE_PENDING)), pending=Count(
-                        'pk', distinct=True, filter=Q(specimen__acceptance=samples_constants.ACCEPTANCE_PENDING)))
-        sum_image_count = image_count['reviewed'] + image_count['pending']
-        if sum_image_count:
+            PRIMARY_ORGANIZATION_ID).count()
+        if image_count:
             archive = 'specimen__' + samples_constants.FIELD_SPECIMEN_ARCHIVAL_IDENTIFIER
             s_images = SpecimenImage.objects.filter(
                 specimen__classification=morphospecies,
                 specimen__sample__site_visit__site__experiment__organization_id=samples_constants.
                 PRIMARY_ORGANIZATION_ID).order_by(
-                archive, samples_constants.SPECIMEN_IMAGE_PRIMARY)[:2]
-            max_width = samples_constants.SPECIMEN_IMAGE_THUMBSIZE_MEDIUM
+                archive, samples_constants.SPECIMEN_IMAGE_PRIMARY)[:5]
             for s in s_images:
                 if s.image_thumbnail_medium:
                     i = s.image_thumbnail_medium
-                elif s.image_thumbnail:
-                    i = s.image_thumbnail
                 else:
                     i = s.image
-                if default_storage.exists(i.name):
-                    image_set.append({
-                        'path': get_media_url(i, s.public_image),
-                        'width': i.width if i.width <= max_width else max_width,
-                        'height': i.height if i.width <= max_width else calc_image_height(max_width, i.height, i.width)
-                    })
+                specimen_link = reverse('samples:specimen', kwargs={'id': s.specimen_id})
+                local_info = [
+                    s.specimen.sample.site_visit.visit_date.strftime("%d-%b-%Y"),
+                    s.specimen.sample.site_visit.site.state_region,
+                    s.specimen.sample.site_visit.site.county_region
+                ]
+                image_set.append({
+                    'path': get_media_url(i, s.public_image),
+                    'local_info': ' | '.join([v for v in local_info if v]),
+                    'specimen_link': specimen_link
+                })
         img_thumbnail = None
         img = None
         if morphospecies.image_thumbnail:
@@ -358,17 +355,15 @@ class MorphospeciesDetailView(MorphospeciesResearchOrReviewerMixin, FormView):
             'image_count': image_count,
             'img_thumbnail': img_thumbnail,
             'img': img,
-            'specimen_count': Specimen.objects.filter(
+            'specimen_count_reviewed': Specimen.objects.filter(
                 classification=morphospecies,
                 sample__site_visit__site__experiment__organization_id=samples_constants.PRIMARY_ORGANIZATION_ID,
-            ).aggregate(
-                reviewed=Count(
-                    'pk', distinct=True,
-                    filter=~Q(acceptance=samples_constants.ACCEPTANCE_PENDING)),
-                pending=Count(
-                    'pk', distinct=True,
-                    filter=Q(acceptance=samples_constants.ACCEPTANCE_PENDING)),
-            ),
+            ).count(),
+            'specimen_count_pending_review': Specimen.objects.filter(
+                classification__isnull=True,
+                ai_classification__isnull=False,
+                sample__site_visit__site__experiment__organization_id=samples_constants.PRIMARY_ORGANIZATION_ID,
+            ).count(),
             'common_misidentifications': common_misidentifications,
             'json_context': get_json_context({
                 'ai_accuracy_over_time': ai_accuracy_over_time,
