@@ -302,35 +302,18 @@ class SpecimensAllDatatablesSerializer(ModelSerializer):
         img_thumbnail_large = None
         specimen_image = value.specimenimage_set.first()
         if specimen_image:
-            img_thumbnail = get_img_src(specimen_image.image_thumbnail, public=specimen_image.public_image)
+            img_thumbnail = get_media_url(specimen_image.image_thumbnail, public=specimen_image.public_image)
             modal_thumb_img = (
                 specimen_image.image_thumbnail_large
                 if specimen_image.image_thumbnail_large
                 else specimen_image.image
             )
-            # dont use get_img_src() here due to modal .js reasons
-            if default_storage.exists(modal_thumb_img.name):
-                if specimen_image.image_thumbnail_large:
-                    width = specimen_image.image_thumbnail_large_width or ''
-                    height = specimen_image.image_thumbnail_large_height or ''
-                else:
-                    width = specimen_image.image_width or ''
-                    height = specimen_image.image_height or ''
-
-                img_thumbnail_large = {
-                    'url': get_media_url(
-                        modal_thumb_img, public=specimen_image.public_image),
-                    'width': width,
-                    'height': height
-                }
-            else:
-                img_thumbnail_large = {
-                    'url': '',
-                    'width': '',
-                    'height': ''
-                }
+            img_thumbnail_large = {
+                'url': get_media_url(
+                    modal_thumb_img, public=specimen_image.public_image)
+            }
         else:
-            img_thumbnail = get_img_src(False)
+            img_thumbnail = '<i class="bi bi-bug"></i>'
         return {
             'archival_identifier': value.archival_identifier,
             'archival_stored': value.archival_stored,

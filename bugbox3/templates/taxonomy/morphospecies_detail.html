@@ -114,10 +114,10 @@
                                 <hr/>
                                     <li class="list-group-item"><b>specimens</b></li>
                                 <li class="list-group-item">
-                                    reviewed: {{specimen_count.reviewed}} (images: {{image_count.reviewed}})
+                                    reviewed: {{ specimen_count_reviewed }} (images: {{ image_count }})
                                 </li>
                                 <li class="list-group-item">
-                                    pending: {{ specimen_count.pending }}
+                                    pending: {{ specimen_count_pending_review }}
                                 </li>
                                 {% if ai_last_train %}
                                     <hr/>
@@ -142,7 +142,9 @@
                                 <ul class="list-group list-group-flush">
                                     {% for i in image_set %}
                                         <li class="list-group-item">
-                                            <img src="{{i.path}}" width="{{ i.width }}" height="{{ i.height }}">
+                                            <img src="{{i.path}}" class="figure-img img-fluid rounded responsive-img-350">
+                                            <br>
+                                            {{ i.local_info }} | <a href="{{ i.specimen_link }}" target="_blank"><i class="bi bi-box-arrow-up-right"></i></a>
                                         </li>
                                     {% endfor %}
                                 </ul>

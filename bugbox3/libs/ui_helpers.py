@@ -250,9 +250,12 @@ def get_specimen_context(specimen):
             'sample_id': specimen.sample.id}),
         get_sample_discription(specimen.sample)
     )
-    return '{0}<br/>{1}<br/>{2}'.format(
-        e, specimen.sample.site_visit.visit_date.strftime("%d-%b-%Y"), s
-    )
+    day = specimen.sample.site_visit.visit_date.strftime("%d-%b-%Y")
+    r_state = specimen.sample.site_visit.site.state_region
+    r_county = specimen.sample.site_visit.site.county_region
+    local = ' | '.join([r_state, r_county, day])
+    return f'{e}<br/>{local}<br/>{s}'
+
 
 
 def get_specimen_location(specimen):

@@ -899,14 +899,14 @@ def specimen_view_context(specimen):
         else:
             # use the one image
             i_public_image = s_images[0].public_image
+            full_image_path = get_media_url(s_images[0].image, i_public_image)
             if s_images[0].image_thumbnail_large:
-                i = s_images[0].image_thumbnail_large
+                i = get_media_url(s_images[0].image_thumbnail_large, i_public_image)
             else:
-                i = s_images[0].image
+                i = full_image_path
             single_image = {
-                'path': get_media_url(i, i_public_image),
-                'width': i.width,
-                'height': i.height,
+                'path': i,
+                'full_image_path': full_image_path
             }
             context.update({'single_image': single_image})
     return context
