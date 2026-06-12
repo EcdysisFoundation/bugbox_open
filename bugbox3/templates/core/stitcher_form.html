@@ -143,48 +143,87 @@
                         </form>
                         </div>
                     </li>
+            </ul>
 
-                    <li class="list-group-item">
-                        <p class="text-secondary">
-                            <h4>Label-Studio labels</h4>
-                            <i>To save to BugBox, and then crop out arthropods,
-                                the Sample ID must first be linked, there must be annotations and the image must be marked as Approved.
-                                Changes above will be ignored, unless first submitted.
-                            </i>
-                        </p>
-                        <form enctype="multipart/form-data" action="{{ form_action_url }}" method="POST">
-                        {% csrf_token %}
-                        <input type="hidden" name="form_ident" value="{{ form_iden_crop_save }}" >
 
-                            <input type="submit"
-                                value="Save to sample"
-                                id="sample_id-btn" class="btn btn-danger"
-                                {% if disable_crop_save %} disabled {% endif %}>
+            <div class="accordion" id="accordionCropping">
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingOne">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                        CVAT.ai Labels
+                    </button>
+                    </h2>
+                    <div id="collapseOne" class="accordion-collapse collapse {% if label_file_status %}show{% endif %}" aria-labelledby="headingOne" data-bs-parent="#accordionCropping">
+                    <div class="accordion-body">
 
-                        </form>
-                    </li>
+                            <p class="text-secondary">
+                                {% if not label_file_status %}
+                                    <div class="alert alert-warning" role="alert">
+                                        Warning: Changes on CVAT.ai to labels may not be present here. This means, images will be cropped based on AI Predictions, not reviewed labels.
+                                    </div>
+                                {% endif %}
+                                <i>To save to BugBox, and then crop out arthropods,
+                                    the Sample ID must first be linked, there must be labels and the image must be marked as Approved.
+                                    Changes above will be ignored, unless first submitted.
+                                </i>
+                            </p>
+                            <form enctype="multipart/form-data" action="{{ form_action_url }}" method="POST">
+                            {% csrf_token %}
+                            <input type="hidden" name="form_ident" value="{{ form_iden_crop_save_cvat }}" >
 
-                    <li class="list-group-item">
-                        <p class="text-secondary">
-                            <h4>CVAT.ai labels</h4>
-                            <i>To save to BugBox, and then crop out arthropods,
-                                the Sample ID must first be linked, there must be labels and the image must be marked as Approved.
-                                Changes above will be ignored, unless first submitted.
-                            </i>
-                        </p>
-                        <form enctype="multipart/form-data" action="{{ form_action_url }}" method="POST">
-                        {% csrf_token %}
-                        <input type="hidden" name="form_ident" value="{{ form_iden_crop_save_cvat }}" >
+                                <input type="submit"
+                                    value="Save to sample"
+                                    id="sample_id-btn" class="btn btn-danger"
+                                    {% if disable_crop_save_cvat %} disabled {% endif %}>
 
-                            <input type="submit"
-                                value="Save to sample"
-                                id="sample_id-btn" class="btn btn-danger"
-                                {% if disable_crop_save_cvat %} disabled {% endif %}>
+                            </form>
 
-                        </form>
-                    </li>
+                </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingTwo">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                        Label-Studio labels
+                    </button>
+                    </h2>
+                    <div id="collapseTwo" class="accordion-collapse collapse {% if not disable_crop_save %}show{% endif %}" aria-labelledby="headingTwo" data-bs-parent="#accordionCropping">
+                        <div class="accordion-body">
+
+                            <p class="text-secondary">
+
+                                    {% if disable_crop_save %}
+
+                                        <div class="alert alert-warning" role="alert">
+                                            Should this record have Label Studio annotations? See requirements below for more info.
+                                        </div>
+
+                                    {% endif %}
+
+                                    <i>To save to BugBox, and then crop out arthropods,
+                                        the Sample ID must first be linked, there must be annotations and the image must be marked as Approved.
+                                        Changes above will be ignored, unless first submitted.
+                                    </i>
+                                </p>
+                                <form enctype="multipart/form-data" action="{{ form_action_url }}" method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name="form_ident" value="{{ form_iden_crop_save }}" >
+
+                                    <input type="submit"
+                                        value="Save to sample"
+                                        id="sample_id-btn" class="btn btn-danger"
+                                        {% if disable_crop_save %} disabled {% endif %}>
+
+                                </form>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
 
                 {% else %}
+                <ul>
                     <li class="list-group-item">
                         <form enctype="multipart/form-data" action="{{ form_action_url }}" method="POST">
                             {% csrf_token %}
@@ -205,9 +244,9 @@
 
                         </form>
                     </li>
+                    </ul>
                 {% endif %}
 
-            </ul>
 
             <div class="delete-button mt-3"></div>
         </div>
