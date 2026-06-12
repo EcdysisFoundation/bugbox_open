@@ -272,11 +272,14 @@
                         </div>
 
                         <hr/>
+
                         {% for i in image_set_small %}
                             <img src="{{i.path}}" width="{{ i.width }}" height="{{ i.height }}" class="mb-2">
                         {% endfor %}
                         {% elif single_image %}
-                          <img src="{{single_image.path}}" width="{{ single_image.width }}" height="{{ single_image.height }}" class="mb-2">
+                        <a href="{{single_image.full_image_path}}" target="_blank">
+                          <img src="{{single_image.path}}" width="400px" class="mb-2">
+                        </a>
                         {% endif %}
 
                         <form enctype="multipart/form-data" action="{{ form_action_url }}" method="POST">
