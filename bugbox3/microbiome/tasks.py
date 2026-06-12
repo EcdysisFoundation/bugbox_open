@@ -1,28 +1,33 @@
 import csv
 import tempfile
+from celery import chord
+from celery.utils.log import get_task_logger
 
 from django.apps import apps
 from django.core.files.base import ContentFile
-from django.db import transaction
 
 from bugbox3.grower_portal.models import SampleCode
 from config import celery_app
-
 from . import constants
+
+# Celery-specific logger that plays nice with worker configurations
+logger = get_task_logger(__name__)
 
 
 def join_the_grower_site_code(microbiome_taxa_id):
     """
-    Attempts to join the site_code from SampleCode
+    Attempts to join the site_code from SampleCode for a single file.
     """
-    SiteMicrobiomeTaxa = apps.get_model(
-        app_label='microbiome', model_name='SiteMicrobiomeTaxa')
-    site_microbiome_taxa_recs = SiteMicrobiomeTaxa.objects.filter(
-        parent_file=microbiome_taxa_id)
+    logger.info(f"Starting site code join for microbiome_taxa_id: {microbiome_taxa_id}")
+    SiteMicrobiomeTaxa = apps.get_model(app_label='microbiome', model_name='SiteMicrobiomeTaxa')
+
+    site_microbiome_taxa_recs = SiteMicrobiomeTaxa.objects.filter(parent_file=microbiome_taxa_id)
     site_codes = site_microbiome_taxa_recs.values_list('site_code', flat=True).distinct()
+
     sample_code_map = {
         sc.code: sc for sc in SampleCode.objects.filter(code__in=site_codes) if sc.code
     }
+
     records_to_update = []
     for rec in site_microbiome_taxa_recs:
         if not rec.site_code:
@@ -32,121 +37,136 @@ def join_the_grower_site_code(microbiome_taxa_id):
         if sample_code_rec:
             rec.grower_site_code = sample_code_rec
             records_to_update.append(rec)
+
     if records_to_update:
         SiteMicrobiomeTaxa.objects.bulk_update(records_to_update, ['grower_site_code'])
-
-
-def join_grower_site_codes():
-    """
-    Run join_grower_site_code per site file.
-    """
-    MicrobiomeTaxa = apps.get_model(
-        app_label='microbiome', model_name='MicrobiomeTaxa')
-    analytics_files = MicrobiomeTaxa.objects.filter(
-        lab_analytics_source=constants.LAB_ECDYSIS_FOUNDATION)
-    for a in analytics_files:
-        join_the_grower_site_code(a.id)
+        logger.info(f"Successfully updated {len(records_to_update)} records with grower site codes.")
+    else:
+        logger.info("No records required site code updates.")
 
 
 def sample_year_from_id(sample_name):
-    # expected format like 2022_1_C6N03V
     try:
         return int(sample_name[:4])
     except Exception:
         return 0
 
 
-@celery_app.task(soft_time_limit=240)
-def parse_taxa_file(taxa_file_id):
+@celery_app.task(soft_time_limit=400)
+def parse_taxa_file(taxa_file_id, chunk_size=20):
     """
-    Parse a file to a downloadable file and aggregated records per row.
+    Master Task: Validates the file and orchestrates parallel chunk processing.
     """
-    MicrobiomeTaxa = apps.get_model(
-        app_label='microbiome', model_name='MicrobiomeTaxa')
-    SiteMicrobiomeTaxa = apps.get_model(
-        app_label='microbiome', model_name='SiteMicrobiomeTaxa')
+    logger.info(f"Orchestrating parse for taxa file ID: {taxa_file_id}")
+    MicrobiomeTaxa = apps.get_model(app_label='microbiome', model_name='MicrobiomeTaxa')
+
+    try:
+        file_rec = MicrobiomeTaxa.objects.get(id=taxa_file_id)
+    except MicrobiomeTaxa.DoesNotExist:
+        logger.error(f"MicrobiomeTaxa record {taxa_file_id} not found. Aborting.")
+        return
+
+    if file_rec.lab_analytics_source != constants.LAB_ECDYSIS_FOUNDATION:
+        logger.warning(f"Unsupported lab source '{file_rec.lab_analytics_source}' for file ID {taxa_file_id}")
+        return
+
+    # Open file briefly to check headers and establish column count
+    with file_rec.file.open('r') as csv_data:
+        reader = csv.reader(csv_data, delimiter='\t')
+        try:
+            # We fetch headers to plan chunks.
+            # Note: For massive files, reading headers only is better, but for 28MB list() is fine.
+            rows = list(reader)
+        except Exception as e:
+            logger.error(f"Failed to read file ID {taxa_file_id}. Error: {e}", exc_info=True)
+            raise e
+
+    if len(rows) <= 2:
+        logger.error(f"File ID {taxa_file_id} validation failed: Too few rows.")
+        raise ValueError('There were too few rows.')
+    if rows[0][0] != 'site_code' or rows[1][0] != '#OTU ID':
+        logger.error(f"File ID {taxa_file_id} validation failed: Invalid layout headers.")
+        raise ValueError('Unexpected file header structure.')
+
+    num_data_columns = len(rows[0]) - 1
+    logger.info(f"File ID {taxa_file_id} validated successfully. Columns to process: {num_data_columns}")
+
+    # Build chunks of column indices (e.g., [[1, 2, 3], [4, 5, 6]])
+    column_indices = list(range(1, num_data_columns + 1))
+    chunks = [column_indices[i:i + chunk_size] for i in range(0, len(column_indices), chunk_size)]
+
+    # Use a Celery Chord: Run chunks in parallel, then hit the cleanup callback
+    header_tasks = [process_taxa_columns_chunk.si(taxa_file_id, chunk) for chunk in chunks]
+    callback_task = after_parse_taxa_file.si(taxa_file_id)
+
+    logger.info(f"Dispatching {len(chunks)} parallel chunk tasks for file ID {taxa_file_id}")
+    chord(header_tasks)(callback_task)
+
+
+@celery_app.task(soft_time_limit=300)
+def process_taxa_columns_chunk(taxa_file_id, col_indices):
+    """
+    Worker Task: Processes a specific chunk of columns.
+    Opening the file once per chunk balances I/O download costs with CPU/DB scaling.
+    """
+    logger.info(f"Starting chunk processing for file ID {taxa_file_id}. Columns: {col_indices}")
+    MicrobiomeTaxa = apps.get_model(app_label='microbiome', model_name='MicrobiomeTaxa')
+    SiteMicrobiomeTaxa = apps.get_model(app_label='microbiome', model_name='SiteMicrobiomeTaxa')
+
     file_rec = MicrobiomeTaxa.objects.get(id=taxa_file_id)
-    if file_rec.lab_analytics_source == constants.LAB_ECDYSIS_FOUNDATION:
-        with file_rec.file.open('r') as csv_data:
-            # Expected file format is like
-            # ['site_code', '1234', ...],
-            # ['#OTU ID', '2022_1_C6N03V', ...],
-            # ['d__Bacteria;__;__;__;__;__', 555.5, ...],
-            # [...]]
-            rows = list(csv.reader(csv_data, delimiter='\t'))
 
-            # check for conformation of file
-            if not len(rows) > 2:
-                raise ValueError('There were too few rows.')
-            if rows[0][0] != 'site_code':
-                raise ValueError(
-                    'Expected first row to be the site_code row, '
-                    f'got {rows[0][0]} instead.')
-            if rows[1][0] != '#OTU ID':
-                raise ValueError(
-                    'Expected first row to be the sample_code #OTU ID row, '
-                    f'got {rows[1][0]} instead.')
+    with file_rec.file.open('r') as csv_data:
+        rows = list(csv.reader(csv_data, delimiter='\t'))
 
-            # Determine how many data columns exist (excluding the label column)
-            num_data_columns = len(rows[0]) - 1
+    for col_idx in col_indices:
+        try:
+            site_code = rows[0][col_idx]
+            sample_name = rows[1][col_idx]
+            sample_year = sample_year_from_id(sample_name)
 
-            def aggregate_values(data_rows):
-                """
-                Calculates aggregated values for each site file.
-                Where, each row in data rows is len 2
-                first two rows are headers
-                column 1 is the molecular target
-                column 2 is the abundance of that target
-                """
-                data = data_rows[2:]
-                text_list = [v[1] for v in data]
-                total = 0
-                for value_str in text_list:
-                    try:
-                        value_float = float(value_str)
-                        if value_float > 0.0:
-                            total += 1
-                    except ValueError:
-                        continue
-                return {
-                    'num_taxa_found': total,
-                    'num_molecular_targets': len(data)
-                }
-            try:
-                with transaction.atomic():
-                    # Loop through each data column index (1, 2, 3, etc.)
-                    for col_idx in range(1, num_data_columns + 1):
-                        site_code = rows[0][col_idx]
-                        sample_name = rows[1][col_idx]
-                        sample_year = sample_year_from_id(sample_name)
-                        # Write out the 2-column table for this specific sample
-                        with tempfile.NamedTemporaryFile(
-                                mode='w+', suffix='.tsv', encoding='utf-8', newline='') as temp_file:
-                            writer = csv.writer(temp_file, delimiter='\t')
+            data_rows = [[row[0], row[col_idx]] for row in rows]
+            data = data_rows[2:]
 
-                            data_rows = [[row[0], row[col_idx]] for row in rows]
-                            writer.writerows(data_rows)
+            # Optimized inline aggregation calculation
+            total = 0
+            for v in data:
+                try:
+                    if float(v[1]) > 0.0:
+                        total += 1
+                except ValueError:
+                    continue
 
-                            # Reset the file pointer to the beginning before reading
-                            temp_file.seek(0)
+            with tempfile.NamedTemporaryFile(mode='w+', suffix='.tsv', encoding='utf-8', newline='') as temp_file:
+                writer = csv.writer(temp_file, delimiter='\t')
+                writer.writerows(data_rows)
+                temp_file.seek(0)
 
-                            # Read the temporary content into a Django ContentFile
-                            django_file = ContentFile(temp_file.read().encode('utf-8'))
-                            filename = f"{sample_name}.tsv"
-                            av = aggregate_values(data_rows)
-                            instance = SiteMicrobiomeTaxa(
-                                site_code=site_code,
-                                analytics_sample_id=sample_name,
-                                parent_file=file_rec,
-                                sample_year=sample_year,
-                                num_taxa_found=av['num_taxa_found'],
-                                num_molecular_targets=av['num_molecular_targets'])
-                            instance.user_file.save(filename, django_file, save=True)
-            except Exception as e:
-                print(f"Transaction failed and rolled back safely. Error: {e}")
-                raise e
-        join_grower_site_codes()
-    else:
-        print(
-            f'file_rec.lab_analytics_source {file_rec.lab_analytics_source} \
-              is not currently supported')
+                django_file = ContentFile(temp_file.read().encode('utf-8'))
+                filename = f"{sample_name}.tsv"
+
+                # Single-row isolation ensures we don't hold global locks during file saves
+                instance = SiteMicrobiomeTaxa(
+                    site_code=site_code,
+                    analytics_sample_id=sample_name,
+                    parent_file=file_rec,
+                    sample_year=sample_year,
+                    num_taxa_found=total,
+                    num_molecular_targets=len(data)
+                )
+                instance.user_file.save(filename, django_file, save=True)
+
+            logger.info(f"Successfully processed column {col_idx} (Sample: {sample_name}) for file {taxa_file_id}")
+
+        except Exception as e:
+            logger.error(f"Critical error on column {col_idx} of file {taxa_file_id}: {e}", exc_info=True)
+            raise e
+
+
+@celery_app.task
+def after_parse_taxa_file(taxa_file_id):
+    """
+    Callback Task: Executes only when all chunks have successfully finished.
+    """
+    logger.info(f"All chunks completed for file ID {taxa_file_id}. Running target post-processing.")
+    join_the_grower_site_code(taxa_file_id)
+    logger.info(f"Asynchronous processing pipeline finished perfectly for file ID {taxa_file_id}.")
