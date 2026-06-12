@@ -361,7 +361,7 @@ class MorphospeciesDetailView(MorphospeciesResearchOrReviewerMixin, FormView):
             ).count(),
             'specimen_count_pending_review': Specimen.objects.filter(
                 classification__isnull=True,
-                ai_classification__isnull=False,
+                ai_classification=morphospecies,
                 sample__site_visit__site__experiment__organization_id=samples_constants.PRIMARY_ORGANIZATION_ID,
             ).count(),
             'common_misidentifications': common_misidentifications,
