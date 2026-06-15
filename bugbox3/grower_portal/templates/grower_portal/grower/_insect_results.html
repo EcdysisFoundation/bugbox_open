@@ -8,13 +8,13 @@
   </div>
   <div class="card-body">
     <div class="row text-center g-2 mb-2">
-      <div class="col-4 col-lg-2">
+      <div class="col-6 col-lg-3">
         <div class="bird-stat-box p-2 rounded">
           <div class="fs-3 fw-bold text-primary">{{ id.summary_combined.site_count }}</div>
           <div class="small text-muted">Sites sampled</div>
         </div>
       </div>
-      <div class="col-4 col-lg-5">
+      <div class="col-6 col-lg-3">
         <div class="bird-stat-box p-2 rounded">
           <div class="fs-3 fw-bold text-success">
             {% if id.summary_combined.abundance_total is not None %}
@@ -25,7 +25,7 @@
           <div class="small text-muted">Combined (all sites)</div>
         </div>
       </div>
-      <div class="col-4 col-lg-5">
+      <div class="col-6 col-lg-3">
         <div class="bird-stat-box p-2 rounded">
           <div class="fs-3 fw-bold text-success">
             {% if id.summary_combined.species_richness is not None %}
@@ -34,6 +34,18 @@
           </div>
           <div class="small text-muted">Species richness</div>
           <div class="small text-muted">Distinct morphospecies</div>
+          <div class="small text-muted">Combined (all sites)</div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="bird-stat-box p-2 rounded">
+          <div class="fs-3 fw-bold text-success">
+            {% if id.summary_combined.common_species is not None %}
+              {{ id.summary_combined.common_species|floatformat:"1" }}
+            {% else %}—{% endif %}
+          </div>
+          <div class="small text-muted">Common species</div>
+          <div class="small text-muted" title="Hill H₂ (inverse Simpson): effective number of abundant morphospecies">Hill H₂</div>
           <div class="small text-muted">Combined (all sites)</div>
         </div>
       </div>
@@ -49,6 +61,7 @@
               <th class="ps-3">Site</th>
               <th class="text-center">Abundance</th>
               <th class="text-center" title="Distinct morphospecies (export rules)">Species richness</th>
+              <th class="text-center" title="Hill H₂ (inverse Simpson): effective number of abundant morphospecies">Common species</th>
               <th class="pe-3">Sampling</th>
             </tr>
           </thead>
@@ -61,6 +74,9 @@
               </td>
               <td class="text-center small">
                 {% if site.species_richness is not None %}{{ site.species_richness|floatformat:"0" }}{% else %}—{% endif %}
+              </td>
+              <td class="text-center small">
+                {% if site.common_species is not None %}{{ site.common_species|floatformat:"1" }}{% else %}—{% endif %}
               </td>
               <td class="small text-muted pe-3">
                 {% if site.visit_dates_hint %}{{ site.visit_dates_hint }}
@@ -75,6 +91,20 @@
     {% else %}
       <div class="p-3 text-muted small">No site sampling records available.</div>
     {% endif %}
+  </div>
+  <div class="card-body border-top py-3">
+    <p class="small text-muted mb-2">
+      We summarize your insect sampling in three ways:
+      <strong>abundance</strong> (total insects counted),
+      <strong>species richness</strong> (distinct morphospecies identified), and
+      <strong>common species</strong> (Hill H<sub>2</sub>): a diversity index that reflects how evenly individuals are spread across those morphospecies.
+      Think of H<sub>2</sub> as an estimate of how many species are common in your field.
+    </p>
+    <p class="small text-muted mb-0">
+      Combined puts all insects from all your sites into one group and calculates a single value.
+      For common species (H<sub>2</sub>), that number is neither the total nor the average of the per-site values:
+      it reflects how common species are across your whole farm that year.
+    </p>
   </div>
 </div>
 
