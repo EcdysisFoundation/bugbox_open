@@ -157,3 +157,28 @@ def richness_taxon_names(metrics: dict, unknown: str = UNKNOWN_TAXON) -> set[str
         name for name, count in metrics['taxon_counts'].items()
         if count and name not in excluded
     }
+
+
+def compute_indices_from_pooled_taxon_counts(
+    taxon_counts: dict[str, float],
+    excluded_names: set[str],
+    *,
+    unknown: str = UNKNOWN_TAXON,
+) -> dict:
+    """Hill numbers and related indices from pooled morphospecies counts"""
+    non_species_keys = set(constants.EXP_HEADERS_ARR)
+    excluded_for_indices = excluded_names.union({unknown})
+    row_for_indices = {
+        k: v for k, v in taxon_counts.items()
+        if k not in excluded_for_indices and k not in non_species_keys
+    }
+    n = sum(row_for_indices.values())
+    return get_indices(n, row_for_indices, list(non_species_keys))
+
+
+def common_species_h2_display(indices: dict) -> float | None:
+    """Rounded Hill H2 for grower-facing display, or None when not applicable (insect results)"""
+    h2 = indices.get('hill_H2')
+    if h2 in ('N/A', None) or not indices.get('abundance'):
+        return None
+    return round(h2, 1)

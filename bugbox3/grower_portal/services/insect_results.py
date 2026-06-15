@@ -35,6 +35,8 @@ from bugbox3.libs.utilities import get_media_url
 from bugbox3.samples import constants as samples_constants
 from bugbox3.samples.export_metrics import (
     UNKNOWN_TAXON,
+    common_species_h2_display,
+    compute_indices_from_pooled_taxon_counts,
     compute_sample_morpho_counts,
     resolve_morphospecies_id,
     richness_taxon_names,
@@ -205,6 +207,9 @@ def _merge_sample_metrics_into_site(
 
     if morpho_metrics is not None:
         site_data['morphos_present'].update(richness_taxon_names(morpho_metrics))
+        for name, count in morpho_metrics['taxon_counts'].items():
+            site_data['taxon_counts'][name] += count
+        site_data['excluded_names'].update(morpho_metrics['excluded_names'])
 
     for specimen in specimens:
         _merge_specimen_hierarchy_into_site(site_data, specimen)
@@ -332,11 +337,13 @@ def build_insect_results_context(grower, year_int: int) -> dict:
 
     site_groups: dict[str, dict] = defaultdict(lambda: {
         'abundance_total': 0,
+        'excluded_names': set(),
         'family_counts': {},
         'functional_group_totals': empty_category_totals(),
         'hierarchy_counts': {},
         'group_ranks': {},
         'morphos_present': set(),
+        'taxon_counts': defaultdict(float),
         'unclassified_count': 0.0,
         'visit_dates': [],
     })
@@ -361,6 +368,8 @@ def build_insect_results_context(grower, year_int: int) -> dict:
     functional_groups_by_site = []
     combined_morphos: set[str] = set()
     combined_abundance = 0
+    combined_excluded_names: set[str] = set()
+    combined_taxon_counts: dict[str, float] = defaultdict(float)
     combined_functional_group_totals = empty_category_totals()
     combined_unclassified_count = 0.0
 
@@ -368,8 +377,16 @@ def build_insect_results_context(grower, year_int: int) -> dict:
         data = site_groups[site_code]
         abundance = data['abundance_total']
         species_richness = len(data['morphos_present'])
+        site_indices = compute_indices_from_pooled_taxon_counts(
+            data['taxon_counts'],
+            data['excluded_names'],
+        )
+        common_species = common_species_h2_display(site_indices)
         combined_abundance += abundance
         combined_morphos.update(data['morphos_present'])
+        combined_excluded_names.update(data['excluded_names'])
+        for name, count in data['taxon_counts'].items():
+            combined_taxon_counts[name] += count
         for key, value in data['functional_group_totals'].items():
             combined_functional_group_totals[key] += value
         combined_unclassified_count += data['unclassified_count']
@@ -387,6 +404,7 @@ def build_insect_results_context(grower, year_int: int) -> dict:
             'site_code': site_code,
             'abundance_total': round(abundance, 0) if abundance else None,
             'species_richness': species_richness if species_richness else None,
+            'common_species': common_species,
             'visit_dates_hint': _format_visit_dates_hint(data['visit_dates']),
             'has_bugbox_data': True,
         })
@@ -403,6 +421,7 @@ def build_insect_results_context(grower, year_int: int) -> dict:
             'site_code': site_code,
             'abundance_total': None,
             'species_richness': None,
+            'common_species': None,
             'visit_dates_hint': '',
             'has_bugbox_data': False,
         })
@@ -452,11 +471,17 @@ def build_insect_results_context(grower, year_int: int) -> dict:
         'functional_groups_by_site': functional_groups_by_site,
     })
 
+    combined_indices = compute_indices_from_pooled_taxon_counts(
+        combined_taxon_counts,
+        combined_excluded_names,
+    )
+
     return {
         'summary_combined': {
             'site_count': sites_with_data,
             'abundance_total': round(combined_abundance, 0) if combined_abundance else None,
             'species_richness': len(combined_morphos) if combined_morphos else None,
+            'common_species': common_species_h2_display(combined_indices),
         },
         'summary_by_site': summary_by_site,
         'families_by_site': families_by_site,
