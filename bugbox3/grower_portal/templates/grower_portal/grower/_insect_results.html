@@ -78,6 +78,53 @@
   </div>
 </div>
 
+{% if id.functional_groups_combined or id.functional_groups_by_site %}
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-header bird-card-header">
+    <h6 class="mb-0 fw-bold"><i class="fas fa-seedling me-2"></i>Ecological roles</h6>
+  </div>
+  <div class="card-body pb-2">
+    <p class="small text-muted mb-0">
+      Each insect contributes 1 total across roles.
+    </p>
+  </div>
+  <div class="card-body border-top pt-3 pb-3">
+    <div id="fg-chart-ecological-roles" class="functional-group-chart"></div>
+    {% if id.functional_group_chart %}
+    <div class="functional-group-breakdown">
+      {% for row in id.functional_group_chart.rows %}
+      <div class="functional-group-breakdown-row">
+        {% if id.functional_group_chart.rows|length > 1 %}
+        <div class="functional-group-breakdown-label">{{ row.label }}</div>
+        {% endif %}
+        <div class="functional-group-breakdown-items">
+          {% for cat in row.categories %}
+            {% if cat.percent %}
+            <span class="functional-group-breakdown-item">
+              <span class="fg-role-swatch{% if cat.key == 'pollinator' %} fg-role-swatch--pollinator{% endif %}"
+                    style="--fg-swatch-color: {{ cat.color }}"></span>
+              {{ cat.label }} {{ cat.count|floatformat:"1" }} ({{ cat.percent|floatformat:"1" }}%)
+            </span>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% if id.functional_groups_combined and id.functional_groups_combined.unclassified_count %}
+    <p class="functional-group-unclassified-note">
+      {{ id.functional_groups_combined.unclassified_count|floatformat:"0" }} individual{{ id.functional_groups_combined.unclassified_count|floatformat:"0"|pluralize }}
+      {% if id.functional_groups_combined.unclassified_percent is not None %}
+        ({{ id.functional_groups_combined.unclassified_percent|floatformat:"1" }}%)
+      {% endif %}
+      could not be assigned an ecological role.
+    </p>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
 {% if id.families_grouped_by_site %}
 <div class="card border-0 shadow-sm mb-4">
   <div class="card-header bird-card-header">

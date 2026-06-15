@@ -8,6 +8,7 @@ from datetime import date
 from django.db.models import Prefetch
 
 from bugbox3.grower_portal.constants import (
+    GROWER_FUNCTIONAL_GROUP_CATEGORIES,
     INSECT_GALLERY_AI_MIN_CONFIDENCE,
     INSECT_GALLERY_MAX_PER_SITE,
     INSECT_MORPHO_EXPORT_LEVEL,
@@ -16,6 +17,12 @@ from bugbox3.grower_portal.models import GrowerSampleCodeMapping
 from bugbox3.grower_portal.services.insect_common_names import (
     enrich_hierarchy_display_labels,
     format_family_display,
+)
+from bugbox3.grower_portal.services.insect_functional_groups import (
+    accumulate_specimen_functional_groups,
+    build_functional_group_chart_payload,
+    build_functional_group_summary,
+    empty_category_totals,
 )
 from bugbox3.grower_portal.services.insect_display import display_family_for_grower
 from bugbox3.grower_portal.services.insect_taxonomy import (
@@ -173,6 +180,18 @@ def _merge_specimen_hierarchy_into_site(site_data: dict, specimen):
     ranks[placement.group_key] = placement.group_rank
 
 
+def _merge_specimen_functional_groups_into_site(site_data: dict, specimen):
+    morpho = _morpho_from_specimen(specimen)
+    count = _specimen_individual_count(specimen)
+    site_data['unclassified_count'] = accumulate_specimen_functional_groups(
+        morphospecies_id=morpho.id if morpho else None,
+        morphospecies_name=morpho.name if morpho else None,
+        count=count,
+        category_totals=site_data['functional_group_totals'],
+        unclassified_count=site_data['unclassified_count'],
+    )
+
+
 def _merge_sample_metrics_into_site(
     site_data: dict,
     morpho_metrics: dict | None,
@@ -189,6 +208,7 @@ def _merge_sample_metrics_into_site(
 
     for specimen in specimens:
         _merge_specimen_hierarchy_into_site(site_data, specimen)
+        _merge_specimen_functional_groups_into_site(site_data, specimen)
         family = _family_from_specimen(specimen)
         if family == UNKNOWN_TAXON:
             continue
@@ -313,9 +333,11 @@ def build_insect_results_context(grower, year_int: int) -> dict:
     site_groups: dict[str, dict] = defaultdict(lambda: {
         'abundance_total': 0,
         'family_counts': {},
+        'functional_group_totals': empty_category_totals(),
         'hierarchy_counts': {},
         'group_ranks': {},
         'morphos_present': set(),
+        'unclassified_count': 0.0,
         'visit_dates': [],
     })
 
@@ -336,8 +358,11 @@ def build_insect_results_context(grower, year_int: int) -> dict:
 
     summary_by_site = []
     families_by_site = []
+    functional_groups_by_site = []
     combined_morphos: set[str] = set()
     combined_abundance = 0
+    combined_functional_group_totals = empty_category_totals()
+    combined_unclassified_count = 0.0
 
     for site_code in sorted(site_groups.keys()):
         data = site_groups[site_code]
@@ -345,6 +370,18 @@ def build_insect_results_context(grower, year_int: int) -> dict:
         species_richness = len(data['morphos_present'])
         combined_abundance += abundance
         combined_morphos.update(data['morphos_present'])
+        for key, value in data['functional_group_totals'].items():
+            combined_functional_group_totals[key] += value
+        combined_unclassified_count += data['unclassified_count']
+
+        functional_groups_by_site.append({
+            'site_code': site_code,
+            **build_functional_group_summary(
+                data['functional_group_totals'],
+                unclassified_count=data['unclassified_count'],
+                abundance_total=abundance,
+            ),
+        })
 
         summary_by_site.append({
             'site_code': site_code,
@@ -402,6 +439,19 @@ def build_insect_results_context(grower, year_int: int) -> dict:
 
     gallery_images = build_gallery_images(visits, site_family_totals)
 
+    functional_groups_combined = None
+    if combined_abundance:
+        functional_groups_combined = build_functional_group_summary(
+            combined_functional_group_totals,
+            unclassified_count=combined_unclassified_count,
+            abundance_total=combined_abundance,
+        )
+
+    functional_group_chart = build_functional_group_chart_payload({
+        'functional_groups_combined': functional_groups_combined,
+        'functional_groups_by_site': functional_groups_by_site,
+    })
+
     return {
         'summary_combined': {
             'site_count': sites_with_data,
@@ -411,6 +461,10 @@ def build_insect_results_context(grower, year_int: int) -> dict:
         'summary_by_site': summary_by_site,
         'families_by_site': families_by_site,
         'families_grouped_by_site': families_grouped_by_site,
+        'functional_groups_by_site': functional_groups_by_site,
+        'functional_groups_combined': functional_groups_combined,
+        'functional_group_chart': functional_group_chart,
+        'functional_group_category_meta': list(GROWER_FUNCTIONAL_GROUP_CATEGORIES),
         'gallery_images': gallery_images,
         'gallery_grouped_by_site': group_gallery_images_by_site(gallery_images),
     }
