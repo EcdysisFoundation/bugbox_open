@@ -613,6 +613,17 @@ def results(request):
 
     depth_options_basic = _get_depth_options(grower, year, project_type, 'basic')
 
+    insect_functional_group_chart = None
+    for cat in categories_data:
+        for section in cat.get('sections', []):
+            if section.get('is_insects') and section.get('insect_data'):
+                insect_functional_group_chart = section['insect_data'].get(
+                    'functional_group_chart',
+                )
+                break
+        if insect_functional_group_chart is not None:
+            break
+
     return render(request, 'grower_portal/grower/results.html', {
         'form': form,
         'categories_data': categories_data,
@@ -629,6 +640,7 @@ def results(request):
             'project_type': project_type,
             'years_to_project_types': years_to_project_types,
             'project_type_labels': dict(LABEL_PROJECT_CHOICES),
+            'insect_functional_group_chart': insect_functional_group_chart,
         }),
     })
 

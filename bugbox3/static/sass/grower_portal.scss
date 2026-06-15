@@ -287,6 +287,62 @@
   }
 }
 
+// Ecological roles (insect results)
+
+.functional-group-chart {
+  min-height: 160px;
+}
+
+.functional-group-breakdown {
+  margin-top: 1rem;
+
+  .functional-group-breakdown-row:not(:last-child) {
+    margin-bottom: 1rem;
+  }
+
+  .functional-group-breakdown-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    color: #212529;
+  }
+
+  .functional-group-breakdown-items {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 1rem;
+    row-gap: 0.25rem;
+    font-size: 0.875rem;
+    color: #212529;
+  }
+
+  .functional-group-breakdown-item {
+    display: inline-flex;
+    align-items: center;
+  }
+}
+
+.fg-role-swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-right: 0.25rem;
+  background-color: var(--fg-swatch-color);
+  display: inline-block;
+
+  &.fg-role-swatch--pollinator {
+    border: 1px solid #bdbdbd;
+  }
+}
+
+.functional-group-unclassified-note {
+  font-size: 0.875rem;
+  color: #212529;
+  margin-bottom: 0;
+  margin-top: 1rem;
+}
+
 // Bird species table (single scrollable table + filter)
 
 .bird-species-table-wrap {
