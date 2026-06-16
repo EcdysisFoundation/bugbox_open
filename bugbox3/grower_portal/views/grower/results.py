@@ -22,6 +22,7 @@ from ...forms.grower.forms import ResultsFilterForm
 from ...middleware import get_user_timezone
 from ...models import CSVImportFieldValue, CSVImportLog, CSVImportRow
 from ...services.bird_references import build_all_about_birds_overview_url
+from ...services.fact_sheet_links import get_category_fact_sheets
 from ...services.insect_results import (
     build_insect_results_context,
     get_insect_available_years,
@@ -609,6 +610,7 @@ def results(request):
             'icon': CATEGORY_DISPLAY_META.get(cat_value, {}).get('icon', 'fa-folder'),
             'sections': sections,
             'has_data': has_any,
+            'fact_sheets': get_category_fact_sheets(cat_value),
         })
 
     depth_options_basic = _get_depth_options(grower, year, project_type, 'basic')

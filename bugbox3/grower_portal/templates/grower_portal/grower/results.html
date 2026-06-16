@@ -80,6 +80,8 @@
          role="tabpanel"
          aria-labelledby="tab-{{ cat.value }}">
 
+      {% include "grower_portal/grower/_fact_sheet_links.html" with fact_sheets=cat.fact_sheets %}
+
       {# Accordion by result_type within each category #}
       <div class="accordion" id="accordion-{{ cat.value }}">
         {% for section in cat.sections %}

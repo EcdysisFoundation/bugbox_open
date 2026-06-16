@@ -246,6 +246,21 @@ RESULT_TYPE_CATEGORY_MAP = {
     for rt in rts
 }
 
+# PublicSiteContent sheet PDFs (grower results page)
+CATEGORY_FACT_SHEETS = {
+    'insects': [
+        {'slug': 'factsheet-insects', 'label': 'Insects'},
+    ],
+    'birds': [
+        {'slug': 'factsheet-birds', 'label': 'Bird Counts on Farms'},
+    ],
+    'soils': [
+        {'slug': 'factsheet-soil-physical', 'label': 'Soil (Physical)'},
+        {'slug': 'factsheet-soil-nutrition', 'label': 'Soil Nutritional & Chemical Properties'},
+        {'slug': 'factsheet-soil-organic-matter', 'label': 'Soil Organic Matter and Carbon'},
+    ],
+}
+
 # S3/storage root prefix for all grower portal ingestion files
 GROWER_DATA_S3_PREFIX = 'grower_portal_data'
 
