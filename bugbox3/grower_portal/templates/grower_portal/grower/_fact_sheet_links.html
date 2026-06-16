@@ -1,0 +1,19 @@
+{% load i18n %}
+
+{% if fact_sheets %}
+<div class="grower-fact-sheet-links mb-3">
+  <div class="grower-fact-sheet-links__heading">
+    <i class="bi bi-journal-text me-1" aria-hidden="true"></i>{% translate "Fact sheets" %}
+  </div>
+  <div class="grower-fact-sheet-links__list">
+    {% for sheet in fact_sheets %}
+    <a class="btn btn-sm grower-fact-sheet-links__btn"
+       href="{{ sheet.url }}"
+       target="_blank"
+       rel="noopener noreferrer">
+      <i class="bi bi-file-earmark-pdf me-1" aria-hidden="true"></i>{{ sheet.label }}
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
