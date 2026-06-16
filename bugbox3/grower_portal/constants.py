@@ -339,8 +339,14 @@ IGNITE_OUTER_SAMPLE_TYPES = [
     'soil_core_0_15cm',
     'soil_archive',
     'plant_dna',
-    'bulk_density'
+    'bulk_density',
+    'crop_type_variety',
 ]
+
+# Ignite outer-only types
+IGNITE_OUTER_ONLY_SAMPLE_TYPE_LABELS = {
+    'crop_type_variety': 'Type / Variety / Breed',
+}
 LABEL_FILE_MAX_LENGTH = 255
 LABEL_DESCRIPTION_MAX_LENGTH = 500
 LABEL_TEMPLATE_SLUG = 'avalanche-inner-labels'
