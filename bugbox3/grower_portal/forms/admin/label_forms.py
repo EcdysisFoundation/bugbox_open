@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 from ...constants import (
     CLUSTER_NUMBER_MAX_LENGTH,
     IGNITE_INNER_SAMPLE_TYPES,
+    IGNITE_OUTER_ONLY_SAMPLE_TYPE_LABELS,
     IGNITE_OUTER_SAMPLE_TYPES,
     LABEL_CATEGORY_CHOICES,
     LABEL_COUNT_MAX,
@@ -220,7 +221,13 @@ class QuickLabelGenerationForm(forms.Form):
         else:
             available_types = [code for code, _ in SAMPLE_TYPES]
 
-        type_choices = [(code, dict(SAMPLE_TYPES).get(code, code)) for code in available_types]
+        type_choices = [
+            (
+                code,
+                IGNITE_OUTER_ONLY_SAMPLE_TYPE_LABELS.get(code, dict(SAMPLE_TYPES).get(code, code)),
+            )
+            for code in available_types
+        ]
         self.fields['excluded_sample_types'].choices = type_choices
 
     def clean(self):

@@ -1677,6 +1677,15 @@ class LabelGenerator:
         """Format: Cluster XX – YYYY / Sample Type / Site: XXXX"""
         return f"Cluster {self.cluster_number} – {self.year}\n{sample_type}\nSite: {site_code}"
 
+    def create_ignite_crop_type_variety_outer_label(self, site_code):
+        """Format: Cluster XX – YYYY / Type / Variety-Breed blanks / Site: XXXX"""
+        return (
+            f"Cluster {self.cluster_number} – {self.year}\n"
+            "Type ________\n"
+            "Variety/Breed ________\n"
+            f"Site: {site_code}"
+        )
+
     def generate_outer_labels_ignite(self, site_codes):
         """Generate outer labels for Ignite – one sample type per page."""
         doc = self._load_template()
@@ -1685,10 +1694,13 @@ class LabelGenerator:
         # One group per sample type; each type gets its own page(s).
         groups_of_label_specs = []
         for sample_type_code in self.sample_types:
-            sample_type_display = self.get_sample_type_display(sample_type_code)
             group = []
             for site_code in site_codes:
-                label_text = self.create_ignite_outer_label(sample_type_display, site_code)
+                if sample_type_code == 'crop_type_variety':
+                    label_text = self.create_ignite_crop_type_variety_outer_label(site_code)
+                else:
+                    sample_type_display = self.get_sample_type_display(sample_type_code)
+                    label_text = self.create_ignite_outer_label(sample_type_display, site_code)
                 group.append({
                     'text': label_text,
                     'font_size': 12,
