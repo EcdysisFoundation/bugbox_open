@@ -1441,17 +1441,20 @@ class LabelGenerator:
             sample_type_display = self.get_sample_type_display(sample_type_code)
             group = []
             for site_code in site_codes:
+                copies = self._ignite_inner_labels_per_transect(sample_type_code)
                 for t_num in range(1, 5):
                     label_text = self.create_ignite_inner_label(
                         sample_type_display, site_code, t_num
                     )
-                    group.append({
+                    spec = {
                         'text': label_text,
                         'font_size': 12,
                         'bold_all': False,
                         'bold_first_line': False,
-                    })
-                    total_labels += 1
+                    }
+                    for _ in range(copies):
+                        group.append(dict(spec))
+                        total_labels += 1
             groups_of_label_specs.append(group)
 
         if doc.tables:
@@ -1502,17 +1505,20 @@ class LabelGenerator:
             sample_type_display = self.get_sample_type_display(sample_type_code)
             group = []
             for site_code in codes:
+                copies = self._ignite_inner_labels_per_transect(sample_type_code)
                 for t_num in range(1, 5):
                     label_text = self.create_ignite_inner_label(
                         sample_type_display, site_code, t_num
                     )
-                    group.append({
+                    spec = {
                         'text': label_text,
                         'font_size': 12,
                         'bold_all': False,
                         'bold_first_line': False,
-                    })
-                    total_labels += 1
+                    }
+                    for _ in range(copies):
+                        group.append(dict(spec))
+                        total_labels += 1
             groups_of_label_specs.append(group)
 
         if doc.tables:
@@ -1673,6 +1679,12 @@ class LabelGenerator:
         return [c for c in seq if c != 'plant_dna'] + (['plant_dna'] if 'plant_dna' in seq else [])
 
     @staticmethod
+    def _ignite_inner_labels_per_transect(sample_type_code):
+        if sample_type_code == 'forage':
+            return 2
+        return 1
+
+    @staticmethod
     def _avalanche_inner_labels_per_transect(sample_type_code):
         if sample_type_code == 'plant_dna':
             return 2
@@ -1689,10 +1701,10 @@ class LabelGenerator:
     def create_ignite_crop_type_variety_outer_label(self, site_code):
         """Format: Cluster XX – YYYY / Type / Variety-Breed blanks / Site: XXXX"""
         return (
-            f"Cluster {self.cluster_number} – {self.year}\n"
+            f"Cluster __ – {self.year}\n"
             "Type _______________\n"
             "Variety/Breed __________\n"
-            f"Site: {site_code}"
+            f"Site: _______"
         )
 
     def generate_outer_labels_ignite(self, site_codes):

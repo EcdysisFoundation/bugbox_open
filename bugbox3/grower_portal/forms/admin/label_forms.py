@@ -173,7 +173,7 @@ class QuickLabelGenerationForm(forms.Form):
         required=False,
         initial=False,
         label='Include Forage labels',
-        help_text='Adds Forage inner labels (T1-T4 per site). Shown for Ignite inner quick generate only.',
+        help_text='Adds Forage inner labels (T1-T4 per site, duplicated: 8 labels per site)',
         widget=forms.CheckboxInput(attrs={'class': 'form-check-input', 'id': 'id_include_forage_labels'}),
     )
 
