@@ -1690,8 +1690,8 @@ class LabelGenerator:
         """Format: Cluster XX – YYYY / Type / Variety-Breed blanks / Site: XXXX"""
         return (
             f"Cluster {self.cluster_number} – {self.year}\n"
-            "Type ________\n"
-            "Variety/Breed ________\n"
+            "Type _______________\n"
+            "Variety/Breed __________\n"
             f"Site: {site_code}"
         )
 
