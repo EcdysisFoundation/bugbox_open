@@ -17,6 +17,7 @@ from bugbox3.core.models import PrivateSiteContent
 from ..constants import (
     AVALANCHE_REFRIGERATED_SAMPLES,
     AVALANCHE_ROOM_TEMP_SAMPLES,
+    IGNITE_OUTER_CROP_TYPE_VARIETY_CODE,
     LABEL_IGNITE_TEMPLATE_SLUG,
     LABEL_OUTER_TEMPLATE_SLUG,
     LABEL_TEMPLATE_SLUG,
@@ -62,7 +63,8 @@ class LabelGenerator:
             sample_types,
             labels_per_type,
             created_by,
-            label_category='inner'):
+            label_category='inner',
+            crop_type_variety_label_count=0):
         self.project_type = project_type
         self.cluster_number = cluster_number
         self.year = year
@@ -70,6 +72,7 @@ class LabelGenerator:
         self.labels_per_type = labels_per_type
         self.created_by = created_by
         self.label_category = label_category
+        self.crop_type_variety_label_count = int(crop_type_variety_label_count or 0)
         self.generated_codes = []
 
     def get_sample_type_display(self, sample_type_code):
@@ -1441,17 +1444,20 @@ class LabelGenerator:
             sample_type_display = self.get_sample_type_display(sample_type_code)
             group = []
             for site_code in site_codes:
+                copies = self._ignite_inner_labels_per_transect(sample_type_code)
                 for t_num in range(1, 5):
                     label_text = self.create_ignite_inner_label(
                         sample_type_display, site_code, t_num
                     )
-                    group.append({
+                    spec = {
                         'text': label_text,
                         'font_size': 12,
                         'bold_all': False,
                         'bold_first_line': False,
-                    })
-                    total_labels += 1
+                    }
+                    for _ in range(copies):
+                        group.append(dict(spec))
+                        total_labels += 1
             groups_of_label_specs.append(group)
 
         if doc.tables:
@@ -1502,17 +1508,20 @@ class LabelGenerator:
             sample_type_display = self.get_sample_type_display(sample_type_code)
             group = []
             for site_code in codes:
+                copies = self._ignite_inner_labels_per_transect(sample_type_code)
                 for t_num in range(1, 5):
                     label_text = self.create_ignite_inner_label(
                         sample_type_display, site_code, t_num
                     )
-                    group.append({
+                    spec = {
                         'text': label_text,
                         'font_size': 12,
                         'bold_all': False,
                         'bold_first_line': False,
-                    })
-                    total_labels += 1
+                    }
+                    for _ in range(copies):
+                        group.append(dict(spec))
+                        total_labels += 1
             groups_of_label_specs.append(group)
 
         if doc.tables:
@@ -1673,6 +1682,12 @@ class LabelGenerator:
         return [c for c in seq if c != 'plant_dna'] + (['plant_dna'] if 'plant_dna' in seq else [])
 
     @staticmethod
+    def _ignite_inner_labels_per_transect(sample_type_code):
+        if sample_type_code == 'forage':
+            return 2
+        return 1
+
+    @staticmethod
     def _avalanche_inner_labels_per_transect(sample_type_code):
         if sample_type_code == 'plant_dna':
             return 2
@@ -1686,13 +1701,13 @@ class LabelGenerator:
         """Format: Cluster XX – YYYY / Sample Type / Site: XXXX"""
         return f"Cluster {self.cluster_number} – {self.year}\n{sample_type}\nSite: {site_code}"
 
-    def create_ignite_crop_type_variety_outer_label(self, site_code):
-        """Format: Cluster XX – YYYY / Type / Variety-Breed blanks / Site: XXXX"""
+    def create_ignite_crop_type_variety_outer_label(self):
+        """Blank yield label — year only; cluster and site filled in the field."""
         return (
-            f"Cluster {self.cluster_number} – {self.year}\n"
-            "Type _______________\n"
-            "Variety/Breed __________\n"
-            f"Site: {site_code}"
+            f"Cluster ____ – {self.year}\n"
+            "Type __________________\n"
+            "Variety/Breed ___________\n"
+            "Site: __________"
         )
 
     def generate_outer_labels_ignite(self, site_codes):
@@ -1700,22 +1715,29 @@ class LabelGenerator:
         doc = self._load_template()
         total_labels = 0
 
-        # One group per sample type; each type gets its own page(s).
+        crop_spec = {
+            'text': self.create_ignite_crop_type_variety_outer_label(),
+            'font_size': 9,
+            'alignment': 'left',
+            'bold_all': False,
+            'bold_first_line': False,
+        }
+
         groups_of_label_specs = []
         for sample_type_code in self.sample_types:
             group = []
-            for site_code in site_codes:
-                if sample_type_code == 'crop_type_variety':
-                    label_text = self.create_ignite_crop_type_variety_outer_label(site_code)
-                    group.append({
-                        'text': label_text,
-                        'font_size': 9,
-                        'alignment': 'left',
-                        'bold_all': False,
-                        'bold_first_line': False,
-                    })
-                else:
-                    sample_type_display = self.get_sample_type_display(sample_type_code)
+            if sample_type_code == IGNITE_OUTER_CROP_TYPE_VARIETY_CODE:
+                count = self.crop_type_variety_label_count
+                if count < 1:
+                    raise ValueError(
+                        'Crop Type / Variety (yield) labels are included but no label count was provided.'
+                    )
+                for _ in range(count):
+                    group.append(dict(crop_spec))
+                    total_labels += 1
+            else:
+                sample_type_display = self.get_sample_type_display(sample_type_code)
+                for site_code in site_codes:
                     label_text = self.create_ignite_outer_label(sample_type_display, site_code)
                     group.append({
                         'text': label_text,
@@ -1723,7 +1745,7 @@ class LabelGenerator:
                         'bold_all': False,
                         'bold_first_line': False,
                     })
-                total_labels += 1
+                    total_labels += 1
             groups_of_label_specs.append(group)
 
         if doc.tables:

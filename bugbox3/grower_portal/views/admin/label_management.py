@@ -8,7 +8,12 @@ from django.views.decorators.http import require_http_methods, require_POST
 
 from bugbox3.core.permissions import IS_GROWERADMIN
 
-from ...constants import IGNITE_INNER_SAMPLE_TYPES, IGNITE_OUTER_SAMPLE_TYPES, SAMPLE_TYPES
+from ...constants import (
+    IGNITE_INNER_SAMPLE_TYPES,
+    IGNITE_OUTER_CROP_TYPE_VARIETY_CODE,
+    IGNITE_OUTER_SAMPLE_TYPES,
+    SAMPLE_TYPES,
+)
 from ...forms.admin.label_forms import QuickLabelGenerationForm
 from ...middleware import get_user_timezone
 from ...models import LabelGeneration, SampleCode
@@ -73,6 +78,12 @@ def label_management(request):
                                     request, 'All sample types are excluded. Please include at least one sample type.')
                                 return redirect('grower_portal:label_management')
 
+                            crop_type_variety_label_count = 0
+                            if IGNITE_OUTER_CROP_TYPE_VARIETY_CODE in sample_types:
+                                crop_type_variety_label_count = quick_form.cleaned_data[
+                                    'crop_type_variety_label_count'
+                                ]
+
                             label_generation = LabelGeneration.objects.create(
                                 project_type=project_type,
                                 label_category='outer',
@@ -87,6 +98,7 @@ def label_management(request):
                                     'sample_types': sample_types,
                                     'labels_per_type': 1,
                                     'site_codes': site_codes,
+                                    'crop_type_variety_label_count': crop_type_variety_label_count,
                                 },
                             )
                             _enqueue_label_generation_task(label_generation)

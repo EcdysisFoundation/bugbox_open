@@ -345,8 +345,10 @@ IGNITE_OUTER_SAMPLE_TYPES = [
 
 # Ignite outer-only types
 IGNITE_OUTER_ONLY_SAMPLE_TYPE_LABELS = {
-    'crop_type_variety': 'Type / Variety / Breed',
+    'crop_type_variety': 'Crop Type / Variety (yield)',
 }
+
+IGNITE_OUTER_CROP_TYPE_VARIETY_CODE = 'crop_type_variety'
 LABEL_FILE_MAX_LENGTH = 255
 LABEL_DESCRIPTION_MAX_LENGTH = 500
 LABEL_TEMPLATE_SLUG = 'avalanche-inner-labels'

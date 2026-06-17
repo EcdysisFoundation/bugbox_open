@@ -9,10 +9,45 @@ document.addEventListener('DOMContentLoaded', function() {
     const quickLabelForm = document.getElementById('quick-label-form');
     const igniteInnerForageRow = document.getElementById('ignite-inner-forage-row');
     const includeForageInput = document.getElementById('id_include_forage_labels');
-    
-    // Get the inner label generations URL from the form's data attribute
-    const innerLabelGenerationsUrl = quickLabelForm ? quickLabelForm.getAttribute('data-inner-label-generations-url') : null;
-    
+    const igniteOuterCropTypeRow = document.getElementById('ignite-outer-crop-type-variety-row');
+    const cropTypeVarietyCountInput = document.getElementById('id_crop_type_variety_label_count');
+    const CROP_TYPE_VARIETY_VALUE = 'crop_type_variety';
+
+    const innerLabelGenerationsUrl = quickLabelForm
+        ? quickLabelForm.getAttribute('data-inner-label-generations-url')
+        : null;
+
+    function getCropTypeVarietyExcludeCheckbox() {
+        if (!outerLabelsSection) {
+            return null;
+        }
+        return outerLabelsSection.querySelector(
+            'input[name="excluded_sample_types"][value="' + CROP_TYPE_VARIETY_VALUE + '"]'
+        );
+    }
+
+    function isCropTypeVarietyIncluded() {
+        const excludeCheckbox = getCropTypeVarietyExcludeCheckbox();
+        return !excludeCheckbox || !excludeCheckbox.checked;
+    }
+
+    function updateCropTypeVarietyCountField() {
+        const labelCategory = labelCategorySelect ? labelCategorySelect.value : 'inner';
+        const projectType = projectTypeSelect ? projectTypeSelect.value : '';
+        const show = projectType === 'ignite' && labelCategory === 'outer' && isCropTypeVarietyIncluded();
+
+        if (igniteOuterCropTypeRow) {
+            igniteOuterCropTypeRow.style.display = show ? 'block' : 'none';
+        }
+        if (cropTypeVarietyCountInput) {
+            cropTypeVarietyCountInput.required = show;
+            cropTypeVarietyCountInput.disabled = !show;
+            if (!show) {
+                cropTypeVarietyCountInput.value = '';
+            }
+        }
+    }
+
     function updateIgniteForageRowVisibility() {
         const labelCategory = labelCategorySelect ? labelCategorySelect.value : 'inner';
         const projectType = projectTypeSelect ? projectTypeSelect.value : '';
@@ -27,10 +62,10 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     }
-    
+
     function updateFormVisibility() {
         const labelCategory = labelCategorySelect ? labelCategorySelect.value : 'inner';
-        
+
         if (labelCategory === 'outer') {
             if (numberOfTransectsSection) numberOfTransectsSection.style.display = 'none';
             if (outerLabelsSection) outerLabelsSection.style.display = 'flex';
@@ -40,28 +75,29 @@ document.addEventListener('DOMContentLoaded', function() {
             if (outerLabelsSection) outerLabelsSection.style.display = 'none';
         }
         updateIgniteForageRowVisibility();
+        updateCropTypeVarietyCountField();
     }
-    
+
     function loadInnerLabelGenerations() {
         if (!innerLabelGenerationSelect || !clusterNumberInput || !yearInput || !projectTypeSelect || !innerLabelGenerationsUrl) {
             return;
         }
-        
+
         const clusterNumber = clusterNumberInput.value.trim();
         const year = yearInput.value.trim();
         const projectType = projectTypeSelect.value.trim();
-        
+
         if (!clusterNumber || !year || !projectType) {
             innerLabelGenerationSelect.innerHTML = '<option value="">-- Enter cluster, year, and project type first --</option>';
             return;
         }
-        
+
         const url = innerLabelGenerationsUrl + '?cluster=' + encodeURIComponent(clusterNumber) + '&year=' + encodeURIComponent(year) + '&project_type=' + encodeURIComponent(projectType);
         fetch(url)
             .then(response => response.json())
             .then(data => {
                 innerLabelGenerationSelect.innerHTML = '<option value="">-- Select inner label generation --</option>';
-                
+
                 if (data.generations && data.generations.length > 0) {
                     data.generations.forEach(gen => {
                         const option = document.createElement('option');
@@ -82,12 +118,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 innerLabelGenerationSelect.innerHTML = '<option value="">Error loading generations</option>';
             });
     }
-    
+
     if (labelCategorySelect) {
         labelCategorySelect.addEventListener('change', updateFormVisibility);
         updateFormVisibility();
     }
-    
+
     if (clusterNumberInput && yearInput && projectTypeSelect) {
         clusterNumberInput.addEventListener('blur', function() {
             if (labelCategorySelect && labelCategorySelect.value === 'outer') {
@@ -101,9 +137,15 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         projectTypeSelect.addEventListener('change', function() {
             updateIgniteForageRowVisibility();
+            updateCropTypeVarietyCountField();
             if (labelCategorySelect && labelCategorySelect.value === 'outer') {
                 loadInnerLabelGenerations();
             }
         });
+    }
+
+    const cropTypeExcludeCheckbox = getCropTypeVarietyExcludeCheckbox();
+    if (cropTypeExcludeCheckbox) {
+        cropTypeExcludeCheckbox.addEventListener('change', updateCropTypeVarietyCountField);
     }
 });

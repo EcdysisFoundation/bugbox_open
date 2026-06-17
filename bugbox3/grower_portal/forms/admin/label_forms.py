@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 from ...constants import (
     CLUSTER_NUMBER_MAX_LENGTH,
     IGNITE_INNER_SAMPLE_TYPES,
+    IGNITE_OUTER_CROP_TYPE_VARIETY_CODE,
     IGNITE_OUTER_ONLY_SAMPLE_TYPE_LABELS,
     IGNITE_OUTER_SAMPLE_TYPES,
     LABEL_CATEGORY_CHOICES,
@@ -173,8 +174,24 @@ class QuickLabelGenerationForm(forms.Form):
         required=False,
         initial=False,
         label='Include Forage labels',
-        help_text='Adds Forage inner labels (T1-T4 per site). Shown for Ignite inner quick generate only.',
+        help_text='Adds Forage inner labels (T1-T4 per site, duplicated: 8 labels per site)',
         widget=forms.CheckboxInput(attrs={'class': 'form-check-input', 'id': 'id_include_forage_labels'}),
+    )
+
+    crop_type_variety_label_count = forms.IntegerField(
+        required=False,
+        min_value=LABEL_COUNT_MIN,
+        max_value=LABEL_COUNT_MAX,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'e.g., 10',
+            'id': 'id_crop_type_variety_label_count',
+        }),
+        label='Number of Type-Variety/Breed (yield) labels',
+        help_text=(
+            'Ignite outer only. How many blank yield labels to print (not tied to site codes). '
+            'Exclude that sample type above to omit them.'
+        ),
     )
 
     def __init__(self, *args, **kwargs):
@@ -235,10 +252,24 @@ class QuickLabelGenerationForm(forms.Form):
         label_category = cleaned_data.get('label_category')
         number_of_transects = cleaned_data.get('number_of_transects')
         inner_label_generation = cleaned_data.get('inner_label_generation')
+        project_type = cleaned_data.get('project_type')
+        excluded_types = cleaned_data.get('excluded_sample_types') or []
 
         if label_category == 'outer':
             if not inner_label_generation:
                 raise ValidationError('Please select an inner label generation for outer labels.')
+            if (
+                project_type == 'ignite'
+                and IGNITE_OUTER_CROP_TYPE_VARIETY_CODE not in excluded_types
+            ):
+                count = cleaned_data.get('crop_type_variety_label_count')
+                if count is None:
+                    raise ValidationError({
+                        'crop_type_variety_label_count': (
+                            'Enter how many Crop Type / Variety (yield) labels to print, '
+                            'or exclude that sample type.'
+                        ),
+                    })
         elif label_category == 'inner':
             if not number_of_transects:
                 raise ValidationError('Number of transects is required for inner labels.')
