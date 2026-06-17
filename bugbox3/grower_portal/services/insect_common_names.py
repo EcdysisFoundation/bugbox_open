@@ -58,7 +58,7 @@ def format_group_display(group_label: str, group_rank: str) -> str:
     if group_label == GROWER_TAXONOMY_UNSPECIFIED_ORDER:
         return group_label
     if group_rank == 'subclass' and group_label == GROWER_ACARI_SUBCLASS_KEY:
-        common = get_common_name('class', 'Arachnida')
+        common = get_common_name('subclass', group_label) or get_common_name('class', 'Arachnida')
         if common:
             return f'{common} ({group_label})'
         return group_label
