@@ -1075,10 +1075,16 @@ class LabelGenerator:
                 font_size = (spec or {}).get('font_size')
                 bold_all = bool((spec or {}).get('bold_all', False))
                 bold_first_line = bool((spec or {}).get('bold_first_line', False))
+                alignment = (spec or {}).get('alignment', 'center')
 
                 cell.text = ""
                 paragraph = cell.paragraphs[0] if cell.paragraphs else cell.add_paragraph()
-                paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                if alignment == 'left':
+                    paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
+                elif alignment == 'right':
+                    paragraph.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+                else:
+                    paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
                 lines = str(text).splitlines() if text is not None else [""]
                 for i, line in enumerate(lines):
@@ -1204,10 +1210,13 @@ class LabelGenerator:
                 specs_slice = group_specs[label_idx:label_idx + chunk]
 
                 is_last_table_for_group = (label_idx + chunk) >= len(group_specs)
+                skip_address_fill = (
+                    self.project_type == 'ignite' and self.label_category == 'outer'
+                )
                 _addr_fs = 12 if self.project_type == 'ignite' else 16
                 fill_remaining_spec = (
                     {'text': ADDRESS_BLOCK, 'font_size': _addr_fs, 'bold_all': True, 'bold_first_line': False}
-                    if is_last_table_for_group
+                    if is_last_table_for_group and not skip_address_fill
                     else None
                 )
 
@@ -1698,15 +1707,22 @@ class LabelGenerator:
             for site_code in site_codes:
                 if sample_type_code == 'crop_type_variety':
                     label_text = self.create_ignite_crop_type_variety_outer_label(site_code)
+                    group.append({
+                        'text': label_text,
+                        'font_size': 9,
+                        'alignment': 'left',
+                        'bold_all': False,
+                        'bold_first_line': False,
+                    })
                 else:
                     sample_type_display = self.get_sample_type_display(sample_type_code)
                     label_text = self.create_ignite_outer_label(sample_type_display, site_code)
-                group.append({
-                    'text': label_text,
-                    'font_size': 12,
-                    'bold_all': False,
-                    'bold_first_line': False,
-                })
+                    group.append({
+                        'text': label_text,
+                        'font_size': 12,
+                        'bold_all': False,
+                        'bold_first_line': False,
+                    })
                 total_labels += 1
             groups_of_label_specs.append(group)
 
