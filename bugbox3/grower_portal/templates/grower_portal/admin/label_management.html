@@ -115,6 +115,14 @@
                                     <div class="text-danger">{{ quick_form.inner_label_generation.errors }}</div>
                                 {% endif %}
                             </div>
+                            <div class="col-md-6 mb-3" id="ignite-outer-crop-type-variety-row" style="display: none;">
+                                {{ quick_form.crop_type_variety_label_count.label_tag }}
+                                {{ quick_form.crop_type_variety_label_count }}
+                                <small class="form-text text-muted">{{ quick_form.crop_type_variety_label_count.help_text }}</small>
+                                {% if quick_form.crop_type_variety_label_count.errors %}
+                                    <div class="text-danger">{{ quick_form.crop_type_variety_label_count.errors }}</div>
+                                {% endif %}
+                            </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">{{ quick_form.excluded_sample_types.label }}</label>
                                 <small class="form-text text-muted d-block mb-2">{{ quick_form.excluded_sample_types.help_text }}</small>

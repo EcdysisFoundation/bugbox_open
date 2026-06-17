@@ -38,6 +38,7 @@ def generate_labels_async(label_generation_id: int):
             labels_per_type=params.get('labels_per_type', gen.labels_per_type or 0),
             created_by=gen.generated_by,
             label_category=label_category,
+            crop_type_variety_label_count=params.get('crop_type_variety_label_count', 0),
         )
 
         reuse = bool(params.get('reuse_transect_codes'))
