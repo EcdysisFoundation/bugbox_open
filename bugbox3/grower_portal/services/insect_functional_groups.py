@@ -2,53 +2,23 @@
 
 from __future__ import annotations
 
-from bugbox3.grower_portal.constants import (
-    GROWER_FUNCTIONAL_GROUP_CATEGORIES,
-    MORPHOSPECIES_FUNCTIONAL_GROUPS_BY_ID,
-    MORPHOSPECIES_FUNCTIONAL_GROUPS_BY_NAME,
-)
+from bugbox3.grower_portal.constants import GROWER_FUNCTIONAL_GROUP_CATEGORIES
 
 FUNCTIONAL_GROUP_KEYS = tuple(cat['key'] for cat in GROWER_FUNCTIONAL_GROUP_CATEGORIES)
-
-
-def normalize_weights(raw: dict[str, float]) -> dict[str, float] | None:
-    """Return active category weights scaled to sum to 1, or None if unclassified."""
-    active = {key: value for key, value in raw.items() if value > 0}
-    if not active:
-        return None
-    total = sum(active.values())
-    if total <= 0:
-        return None
-    return {key: value / total for key, value in active.items()}
-
-
-def get_morphospecies_functional_weights(
-    *,
-    morphospecies_id: int | None,
-    morphospecies_name: str | None,
-) -> dict[str, float] | None:
-    if morphospecies_id is not None:
-        weights = MORPHOSPECIES_FUNCTIONAL_GROUPS_BY_ID.get(int(morphospecies_id))
-        if weights is not None:
-            return weights
-    if morphospecies_name:
-        return MORPHOSPECIES_FUNCTIONAL_GROUPS_BY_NAME.get(morphospecies_name)
-    return None
 
 
 def accumulate_specimen_functional_groups(
     *,
     morphospecies_id: int | None,
-    morphospecies_name: str | None,
     count: float,
     category_totals: dict[str, float],
     unclassified_count: float,
+    grower_weights_by_morpho_id: dict[int, dict[str, float]],
 ) -> float:
     """Add one specimen's weighted contribution; returns updated unclassified_count."""
-    weights = get_morphospecies_functional_weights(
-        morphospecies_id=morphospecies_id,
-        morphospecies_name=morphospecies_name,
-    )
+    if morphospecies_id is None:
+        return unclassified_count + count
+    weights = grower_weights_by_morpho_id.get(int(morphospecies_id))
     if weights is None:
         return unclassified_count + count
     for key, weight in weights.items():

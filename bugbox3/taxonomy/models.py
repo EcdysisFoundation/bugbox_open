@@ -39,6 +39,20 @@ class FunctionalGroup(Model):
         return self.display_name
 
 
+class MorphospeciesFunctionalGroup(Model):
+    """Weighted functional-group for a morphospecies"""
+    morphospecies = ForeignKey('Morphospecies', on_delete=CASCADE)
+    functional_group = ForeignKey(FunctionalGroup, on_delete=CASCADE)
+    weight = FloatField()
+
+    class Meta:
+        app_label = 'taxonomy'
+        unique_together = ('morphospecies', 'functional_group')
+
+    def __str__(self):
+        return f'{self.morphospecies_id}:{self.functional_group.code}={self.weight}'
+
+
 class Morphospecies(Model):
     name = CharField(max_length=64, unique=True)
     defunt_user = ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=SET_NULL)
@@ -64,7 +78,11 @@ class Morphospecies(Model):
     update_thumbs = BooleanField(null=True)
     exclude_from_export = BooleanField(default=False)
     tags = ArrayField(CharField(max_length=1000, blank=True), default=list)
-    functional_groups = ManyToManyField(FunctionalGroup, blank=True)
+    functional_groups = ManyToManyField(
+        FunctionalGroup,
+        through='MorphospeciesFunctionalGroup',
+        blank=True,
+    )
     taxonomy_reviewed = BooleanField(
         default=False,
         verbose_name='Reviewed',

@@ -18,6 +18,7 @@ from bugbox3.grower_portal.services.insect_common_names import (
     enrich_hierarchy_display_labels,
     format_family_display,
 )
+from bugbox3.grower_portal.services.ecological_rollup import build_grower_weights_cache
 from bugbox3.grower_portal.services.insect_functional_groups import (
     accumulate_specimen_functional_groups,
     build_functional_group_chart_payload,
@@ -42,6 +43,7 @@ from bugbox3.samples.export_metrics import (
     richness_taxon_names,
 )
 from bugbox3.samples.models import SiteVisit, Specimen, SpecimenImage
+from bugbox3.taxonomy.functional_groups import get_trait_weights_for_morphospecies_ids
 
 
 def get_grower_site_codes(grower) -> set[str]:
@@ -182,15 +184,20 @@ def _merge_specimen_hierarchy_into_site(site_data: dict, specimen):
     ranks[placement.group_key] = placement.group_rank
 
 
-def _merge_specimen_functional_groups_into_site(site_data: dict, specimen):
+def _merge_specimen_functional_groups_into_site(
+    site_data: dict,
+    specimen,
+    *,
+    grower_weights_by_morpho_id: dict[int, dict[str, float]],
+):
     morpho = _morpho_from_specimen(specimen)
     count = _specimen_individual_count(specimen)
     site_data['unclassified_count'] = accumulate_specimen_functional_groups(
         morphospecies_id=morpho.id if morpho else None,
-        morphospecies_name=morpho.name if morpho else None,
         count=count,
         category_totals=site_data['functional_group_totals'],
         unclassified_count=site_data['unclassified_count'],
+        grower_weights_by_morpho_id=grower_weights_by_morpho_id,
     )
 
 
@@ -198,6 +205,8 @@ def _merge_sample_metrics_into_site(
     site_data: dict,
     morpho_metrics: dict | None,
     sample,
+    *,
+    grower_weights_by_morpho_id: dict[int, dict[str, float]],
 ):
     specimens = sample.specimen_set.all()
     if not specimens.exists():
@@ -213,7 +222,11 @@ def _merge_sample_metrics_into_site(
 
     for specimen in specimens:
         _merge_specimen_hierarchy_into_site(site_data, specimen)
-        _merge_specimen_functional_groups_into_site(site_data, specimen)
+        _merge_specimen_functional_groups_into_site(
+            site_data,
+            specimen,
+            grower_weights_by_morpho_id=grower_weights_by_morpho_id,
+        )
         family = _family_from_specimen(specimen)
         if family == UNKNOWN_TAXON:
             continue
@@ -325,9 +338,23 @@ def group_gallery_images_by_site(gallery_images: list[dict]) -> list[dict]:
     return [{'site_code': code, 'images': buckets[code]} for code in site_order]
 
 
+def _collect_morphospecies_ids_from_visits(visits) -> set[int]:
+    morpho_ids: set[int] = set()
+    for visit in visits:
+        for sample in visit.sample_set.all():
+            for specimen in sample.specimen_set.all():
+                morpho = _morpho_from_specimen(specimen)
+                if morpho is not None:
+                    morpho_ids.add(morpho.id)
+    return morpho_ids
+
+
 def build_insect_results_context(grower, year_int: int) -> dict:
     codes = get_grower_site_codes(grower)
     visits = list(get_site_visits_for_grower_year(grower, year_int))
+    morpho_ids = _collect_morphospecies_ids_from_visits(visits)
+    trait_weights_by_morpho_id = get_trait_weights_for_morphospecies_ids(morpho_ids)
+    grower_weights_by_morpho_id = build_grower_weights_cache(trait_weights_by_morpho_id)
 
     codes_with_any_visit = set(
         SiteVisit.objects.filter(site__site_name__in=codes)
@@ -360,7 +387,10 @@ def build_insect_results_context(grower, year_int: int) -> dict:
                 include_immatures_skipped=False,
             )
             _merge_sample_metrics_into_site(
-                site_groups[site_code], morpho_metrics, sample,
+                site_groups[site_code],
+                morpho_metrics,
+                sample,
+                grower_weights_by_morpho_id=grower_weights_by_morpho_id,
             )
 
     summary_by_site = []
