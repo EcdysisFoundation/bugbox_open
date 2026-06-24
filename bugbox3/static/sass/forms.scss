@@ -23,3 +23,26 @@
     width: 4rem; 
     max-width: 4rem  
 }
+
+// morphospecies-update functional-group editor
+.functional-group-weights {
+    .fg-section .card-header {
+        background-color: rgba(var(--bs-secondary-rgb), 0.08);
+    }
+
+    .fg-subtypes-dimmed {
+        opacity: 0.75;
+    }
+
+    .fg-trait-description {
+        min-height: 2.5rem;
+        font-size: 0.8rem;
+    }
+
+    .fg-other-check {
+        padding: 0.5rem 0.75rem;
+        border: 1px solid var(--bs-border-color);
+        border-radius: var(--bs-border-radius);
+        height: 100%;
+    }
+}

@@ -34,20 +34,13 @@ from ..samples import constants as samples_constants
 from ..samples.models import Sample, Specimen, SpecimenImage
 from . import constants
 from .constants import (
-    CAT_LIFE_STAGE_ADULT,
-    CAT_LIFE_STAGE_YOUNG,
-    CAT_OTHER,
-    CAT_PHYTOPHAGOUS,
-    CAT_ZOOPHAGOUS,
     EXPORT_TITLE_TRAINING_SELECTIONS,
     FIELD_MORPHO_TAXONOMY_REVIEWED,
-    OTHER_ORDER,
-    PHYTOPHAGOUS_ORDER,
-    ZOOPHAGOUS_ORDER,
 )
+from .functional_groups import build_grouped_trait_display, get_trait_weights_for_morphospecies
 from .forms import MorphospeciesCombineForm, MorphospeciesForm, MorphospeciesUpdateForm
 from .mixins import MorphospeciesResearchOrReviewerMixin
-from .models import AiTraining, FunctionalGroup, Morphospecies
+from .models import AiTraining, Morphospecies
 from .serializers import MorphospeciesDatatablesSerializer, MorphospeciesPickerSerializer
 from .tasks import id_image
 from .utils import morphospecies_taxonomy_fields_changed
@@ -344,12 +337,14 @@ class MorphospeciesDetailView(MorphospeciesResearchOrReviewerMixin, FormView):
         )
 
         user = self.request.user
+        trait_weights = get_trait_weights_for_morphospecies(morphospecies)
         context.update({
             'can_edit_taxonomy': user.has_perm(CHANGE_MORPHOSPECIES),
             'show_taxonomy_reviewer_reviewed': user_in_taxonomy_reviewer_group(user),
             'can_combine': user.has_perms(IS_RESEARCH) and user.has_perm(CHANGE_MORPHOSPECIES),
             'display_name': display_name,
             'morphospecies': morphospecies,
+            'functional_group_sections': build_grouped_trait_display(trait_weights),
             'ai_last_train': ai_accuracy_over_time['total'][-1] if ai_accuracy_over_time['total'] else 0,
             'image_set': image_set,
             'image_count': image_count,
@@ -453,21 +448,6 @@ class MorphospeciesUpdateView(MorphospeciesResearchOrReviewerMixin, UpdateView):
         org_user = OrganizationUser.objects.filter(user=self.request.user).first()
         if org_user:
             kwargs['org_id'] = org_user.organization_id
-        fg_queryset = FunctionalGroup.objects.exclude(
-            category__in=[CAT_LIFE_STAGE_YOUNG, CAT_LIFE_STAGE_ADULT]
-        )
-        phyto = list(fg_queryset.filter(category=CAT_PHYTOPHAGOUS))
-        kwargs['functional_groups_phytophagous'] = sorted(
-            phyto, key=lambda x: PHYTOPHAGOUS_ORDER.index(x.code) if x.code in PHYTOPHAGOUS_ORDER else 999
-        )
-        zoo = list(fg_queryset.filter(category=CAT_ZOOPHAGOUS))
-        kwargs['functional_groups_zoophagous'] = sorted(
-            zoo, key=lambda x: ZOOPHAGOUS_ORDER.index(x.code) if x.code in ZOOPHAGOUS_ORDER else 999
-        )
-        other = list(fg_queryset.filter(category=CAT_OTHER))
-        kwargs['functional_groups_other'] = sorted(
-            other, key=lambda x: OTHER_ORDER.index(x.code) if x.code in OTHER_ORDER else 999
-        )
         kwargs['taxonomy_reviewer_user'] = user_in_taxonomy_reviewer_group(self.request.user)
         return kwargs
 

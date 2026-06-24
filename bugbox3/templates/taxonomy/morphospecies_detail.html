@@ -95,8 +95,22 @@
                                 <li class="list-group-item d-flex justify-content-between align-items-start"><b>Genus:</b> {{ morphospecies.gbif_genus }}</li>
                                 <li class="list-group-item d-flex justify-content-between align-items-start"><b>Species:</b> <i>{{ morphospecies.gbif_species }}</i></li>
                                 <li class="list-group-item d-flex justify-content-between align-items-start"><b>Exclude:</b> <i>{% if morphospecies.exclude_from_export %}Yes{% else %}No{% endif %}</i></li>
-                                {% if morphospecies.functional_groups.exists %}
-                                <li class="list-group-item d-flex align-items-start"><b>Functional groups:</b> {{ morphospecies.functional_groups.all|join:", " }}</li>
+                                {% if functional_group_sections %}
+                                <li class="list-group-item d-flex align-items-start">
+                                    <div>
+                                        <b>Functional groups</b>
+                                        {% for section in functional_group_sections %}
+                                        <div class="mt-2">
+                                            <div class="fw-semibold">{{ section.title }}</div>
+                                            <ul class="mb-0 ps-3">
+                                                {% for trait in section.traits %}
+                                                <li>{{ trait.display_name }} ({{ trait.weight }})</li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </li>
                                 {% endif %}
                                 {% if show_taxonomy_reviewer_reviewed %}
                                 <li class="list-group-item">
