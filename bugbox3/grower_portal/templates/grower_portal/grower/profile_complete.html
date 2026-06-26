@@ -2,8 +2,14 @@
 
 {% load i18n %}
 {% load crispy_forms_tags %}
+{% load render_bundle from webpack_loader %}
 
 {% block title %}Complete Your Grower Profile{% endblock %}
+
+{% block customheadtagcontent %}
+{{ block.super }}
+{% render_bundle 'grower_international_phone' 'css' %}
+{% endblock customheadtagcontent %}
 
 {% block content %}
 <div class="container mt-5">
@@ -34,4 +40,9 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block inline_javascript %}
+{% render_bundle 'grower_international_phone' 'js' %}
+{% render_bundle 'grower_profile_race_fields' 'js' %}
 {% endblock %}

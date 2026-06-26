@@ -2,6 +2,7 @@
 {% load i18n %}
 {% load crispy_forms_tags %}
 {% load timezone_filters %}
+{% load phone_filters %}
 
 {% block title %}Link Application to Grower{% endblock %}
 
@@ -28,8 +29,8 @@
                     <p><strong>Submission Code:</strong> {{ application.submission_code }}</p>
                     <p><strong>Grower Name:</strong> {{ application.grower_display_name|default:"Not provided" }}</p>
                     <p><strong>Grower Email:</strong> {{ application.grower_display_email|default:"Not provided" }}</p>
-                    {% if application.grower_phone %}
-                        <p><strong>Grower Phone:</strong> {{ application.grower_phone }}</p>
+                    {% if application.grower_phone|has_phone %}
+                        <p><strong>Grower Phone:</strong> {{ application.grower_phone|format_phone }}</p>
                     {% endif %}
                     <p><strong>Field:</strong> {{ application.field.field_name }}</p>
                     <p><strong>Field Type:</strong> {{ application.field.get_field_type_display }}</p>

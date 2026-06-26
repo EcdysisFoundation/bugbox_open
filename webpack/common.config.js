@@ -39,6 +39,8 @@ module.exports = {
     grower_results: path.resolve(__dirname, '../bugbox3/static/js/grower_portal/results'),
     grower_data_ingestion: path.resolve(__dirname, '../bugbox3/static/js/grower_portal/data_ingestion'),
     grower_bird_recording_upload: path.resolve(__dirname, '../bugbox3/static/js/grower_portal/bird_recording_upload'),
+    grower_international_phone: path.resolve(__dirname, '../bugbox3/static/js/grower_portal/international_phone_bundle'),
+    grower_profile_race_fields: path.resolve(__dirname, '../bugbox3/static/js/grower_portal/profile_race_fields_bundle'),
   },
   output: {
     path: path.resolve(
