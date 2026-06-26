@@ -1,8 +1,14 @@
 {% extends "base.html" %}
 {% load i18n %}
 {% load crispy_forms_tags %}
+{% load render_bundle from webpack_loader %}
 
 {% block title %}Create Application - Grower Portal Admin{% endblock %}
+
+{% block customheadtagcontent %}
+{{ block.super }}
+{% render_bundle 'grower_international_phone' 'css' %}
+{% endblock customheadtagcontent %}
 
 {% block content %}
 <div class="container mt-4">
@@ -231,4 +237,8 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block inline_javascript %}
+{% render_bundle 'grower_international_phone' 'js' %}
 {% endblock %}

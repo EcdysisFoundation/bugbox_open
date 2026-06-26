@@ -9,6 +9,7 @@ from django.forms import inlineformset_factory
 
 from bugbox3.core.forms import Html5DateInput, ModelFormMixin
 
+from ...forms.fields import InternationalPhoneField
 from ...constants import (
     ACRES_SAMPLED_MAX,
     ACRES_SAMPLED_MIN,
@@ -32,6 +33,7 @@ from ...constants import (
     PADDOCK_SIZE_MAX_LENGTH,
     PHONE_MAX_LENGTH,
     RACE_CHOICES,
+    RACE_OTHER_MAX_LENGTH,
     RESULT_TYPE_CHOICES,
     ROOTSTOCK_SPECIES_MAX_LENGTH,
     TILLAGE_METHODS_MAX_LENGTH,
@@ -39,6 +41,8 @@ from ...constants import (
     YEARS_UNDER_MANAGEMENT_MAX,
     YEARS_UNDER_MANAGEMENT_MIN,
 )
+from ...country_choices import COUNTRY_CHOICES
+from ...race import RACE_ANOTHER_BACKGROUND, RACE_INDIGENOUS
 from ...models import (
     DropPlateReading,
     GrazingEvent,
@@ -62,10 +66,9 @@ class GrowerProfileCompletionForm(forms.ModelForm):
     """
     Form for completing grower profile information during initial signup.
     """
-    phone = forms.CharField(
-        max_length=PHONE_MAX_LENGTH,
-        required=False,
-        label='Phone Number'
+    phone = InternationalPhoneField(
+        label='Phone Number',
+        help_text='Select your country and enter your phone number.',
     )
     gender = forms.ChoiceField(
         choices=[('', 'Select Gender')] + GENDER_CHOICES,
@@ -80,19 +83,57 @@ class GrowerProfileCompletionForm(forms.ModelForm):
         max_value=AGE_MAX
     )
     race = forms.ChoiceField(
-        choices=[('', 'Select Race')] + RACE_CHOICES,
+        choices=[('', 'Select racial or ethnic background')] + RACE_CHOICES,
         required=False,
-        label='Race'
+        label='Racial or ethnic background',
+        widget=forms.Select(attrs={'class': 'form-select'}),
+    )
+    race_indigenous_country = forms.ChoiceField(
+        choices=COUNTRY_CHOICES,
+        required=False,
+        label='Indigenous country',
+        help_text='Select the country associated with your Indigenous / First Nations / Native identity.',
+        widget=forms.Select(attrs={'class': 'form-select'}),
+    )
+    race_other = forms.CharField(
+        required=False,
+        max_length=RACE_OTHER_MAX_LENGTH,
+        label='Describe your background',
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Optional'}),
     )
 
     class Meta:
         model = GrowerProfile
-        fields = ['phone', 'gender', 'age', 'race']
+        fields = ['phone', 'gender', 'age', 'race', 'race_indigenous_country', 'race_other']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        for field in self.fields.values():
-            field.widget.attrs.update({'class': 'form-control'})
+        for name, field in self.fields.items():
+            if name in ('phone', 'race', 'race_indigenous_country'):
+                continue
+            css_class = 'form-select' if isinstance(field.widget, forms.Select) else 'form-control'
+            field.widget.attrs.update({'class': css_class})
+
+    def clean(self):
+        cleaned_data = super().clean()
+        race = cleaned_data.get('race')
+        indigenous_country = cleaned_data.get('race_indigenous_country')
+        race_other = (cleaned_data.get('race_other') or '').strip()
+
+        if race != RACE_INDIGENOUS:
+            cleaned_data['race_indigenous_country'] = ''
+        elif not indigenous_country:
+            self.add_error(
+                'race_indigenous_country',
+                'Please select the country associated with your Indigenous / First Nations / Native identity.',
+            )
+
+        if race != RACE_ANOTHER_BACKGROUND:
+            cleaned_data['race_other'] = ''
+        else:
+            cleaned_data['race_other'] = race_other
+
+        return cleaned_data
 
 
 class ResultsFilterForm(forms.Form):

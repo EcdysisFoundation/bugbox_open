@@ -3,6 +3,7 @@
 {% load i18n %}
 {% load crispy_forms_tags %}
 {% load timezone_filters %}
+{% load phone_filters %}
 
 {% block title %}Growers List{% endblock %}
 
@@ -54,7 +55,7 @@
                                     <tr>
                                         <td>{{ grower_profile.user.name }}</td>
                                         <td>{{ grower_profile.user.email }}</td>
-                                        <td>{% if grower_profile.phone and grower_profile.phone != "nan" %}{{ grower_profile.phone }}{% else %}N/A{% endif %}</td>
+                                        <td>{% if grower_profile.phone|has_phone %}{{ grower_profile.phone|format_phone }}{% else %}N/A{% endif %}</td>
                                         <td>
                                             {% if grower_profile.profile_completed %}
                                                 <span class="badge bg-success">Yes</span>

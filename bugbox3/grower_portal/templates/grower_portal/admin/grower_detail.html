@@ -2,6 +2,7 @@
 
 {% load i18n %}
 {% load timezone_filters %}
+{% load phone_filters %}
 
 {% block title %}Grower Details{% endblock %}
 
@@ -29,10 +30,10 @@
                     <p><strong>Email:</strong> {{ grower.email }}</p>
                     <p><strong>Username:</strong> {{ grower.username }}</p>
                     {% if grower_profile %}
-                        <p><strong>Phone:</strong> {% if grower_profile.phone and grower_profile.phone != "nan" %}{{ grower_profile.phone }}{% else %}Not provided{% endif %}</p>
+                        <p><strong>Phone:</strong> {% if grower_profile.phone|has_phone %}{{ grower_profile.phone|format_phone }}{% else %}Not provided{% endif %}</p>
                         <p><strong>Gender:</strong> {{ grower_profile.get_gender_display|default:"Not provided" }}</p>
                         <p><strong>Age:</strong> {{ grower_profile.age|default:"Not provided" }}</p>
-                        <p><strong>Race:</strong> {{ grower_profile.get_race_display|default:"Not provided" }}</p>
+                        <p><strong>Racial or ethnic background:</strong> {{ grower_profile.get_race_display_full|default:"Not provided" }}</p>
                         <p><strong>Profile Completed:</strong> 
                             {% if grower_profile.profile_completed %}
                                 <span class="badge bg-success">Yes</span>
