@@ -125,7 +125,6 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
         if not orgs:
             raise Http404
         disable_stitching = True
-        disable_crop_save = True
         disable_crop_save_cvat = True
         disable_delete = False
         potential_samples = []
@@ -140,11 +139,6 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
                 disable_delete = True if self.data[constants.STITCHER_APPROVED] else False
                 potential_samples = self.get_potential_samples(self.data)
             first_potential_sample = potential_samples[0][0] if potential_samples else None
-            if ((self.data[constants.STITCHER_ANNOTATIONS_SEGMENT]
-                    or self.data[constants.STITCHER_ANNOTATIONS_UPDATED_AT_SEGMENT])
-                    and self.data[constants.STITCHER_APPROVED]
-                    and self.data[constants.STITCHER_BUGBOX_SAMPLE_ID]):
-                disable_crop_save = False
             if (self.data[constants.STITCHER_APPROVED]
                     and self.data[constants.STITCHER_BUGBOX_SAMPLE_ID]
                     and self.data[constants.STITCHER_LABEL_FILE]):
@@ -167,7 +161,6 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
             'form_iden_crop_save_cvat': constants.STITCHER_FORM_CROPSAVE_CVAT,
             'form_iden_default': constants.STITCHER_FORM_DEFAULT,
             'form_iden_post_cropped': constants.STITCHER_FORM_POST_CROPPED,
-            'disable_crop_save': disable_crop_save,
             'disable_crop_save_cvat': disable_crop_save_cvat,
             'json_context': get_json_context({
                 constants.STITCHER_GUID: self.guid,

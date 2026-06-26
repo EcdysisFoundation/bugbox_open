@@ -92,12 +92,6 @@
                             {% endif %}
                     {% endif %}
                 </li>
-                <li class="list-group-item">
-                    <b>Annotations (label-studio):</b> {% if data.annotations_updated_at_segment %}
-                        {{ data.annotations_segment|length }}
-                        <br/> Updated at: {{ data.annotations_updated_at_segment }}
-                    {% endif %}
-                </li>
                 {% if data.bugbox_rejected %}
                     <li class="list-group-item list-group-item-warning">
                         <b>Marked rejected on BugBox:</b> {{ data.bugbox_rejected }}
@@ -202,44 +196,6 @@
                             </form>
 
                 </div>
-                    </div>
-                </div>
-                <div class="accordion-item">
-                    <h2 class="accordion-header" id="headingTwo">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                        Label-Studio labels
-                    </button>
-                    </h2>
-                    <div id="collapseTwo" class="accordion-collapse collapse {% if not disable_crop_save %}show{% endif %}" aria-labelledby="headingTwo" data-bs-parent="#accordionCropping">
-                        <div class="accordion-body">
-
-                            <p class="text-secondary">
-
-                                    {% if disable_crop_save %}
-
-                                        <div class="alert alert-warning" role="alert">
-                                            Should this record have Label Studio annotations? See requirements below for more info.
-                                        </div>
-
-                                    {% endif %}
-
-                                    <i>To save to BugBox, and then crop out arthropods,
-                                        the Sample ID must first be linked, there must be annotations and the image must be marked as Approved.
-                                        Changes above will be ignored, unless first submitted.
-                                    </i>
-                                </p>
-                                <form enctype="multipart/form-data" action="{{ form_action_url }}" method="POST">
-                                {% csrf_token %}
-                                <input type="hidden" name="form_ident" value="{{ form_iden_crop_save }}" >
-
-                                    <input type="submit"
-                                        value="Save to sample"
-                                        id="sample_id-btn" class="btn btn-danger"
-                                        {% if disable_crop_save %} disabled {% endif %}>
-
-                                </form>
-
-                        </div>
                     </div>
                 </div>
             </div>
