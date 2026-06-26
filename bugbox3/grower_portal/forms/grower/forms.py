@@ -32,7 +32,9 @@ from ...constants import (
     ORGANIC_AMENDMENT_CHOICES,
     PADDOCK_SIZE_MAX_LENGTH,
     PHONE_MAX_LENGTH,
+    RACE_ANOTHER_BACKGROUND,
     RACE_CHOICES,
+    RACE_INDIGENOUS,
     RACE_OTHER_MAX_LENGTH,
     RESULT_TYPE_CHOICES,
     ROOTSTOCK_SPECIES_MAX_LENGTH,
@@ -42,7 +44,6 @@ from ...constants import (
     YEARS_UNDER_MANAGEMENT_MIN,
 )
 from ...country_choices import COUNTRY_CHOICES
-from ...race import RACE_ANOTHER_BACKGROUND, RACE_INDIGENOUS
 from ...models import (
     DropPlateReading,
     GrazingEvent,
