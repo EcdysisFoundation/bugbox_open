@@ -12,7 +12,7 @@ from organizations.models import OrganizationUser
 from bugbox3.libs.utilities import cast_utc_time, get_json_context
 from bugbox3.samples.constants import STITCHER_SAMPLE_TYPES
 from bugbox3.samples.models import MultiSpecimenImage, Sample
-from bugbox3.samples.tasks import crop_panorama_segmentation, crop_panorama_segmentation_yolo
+from bugbox3.samples.tasks import crop_panorama_segmentation_yolo
 
 from . import constants
 from .forms import StitcherDeleteForm, StitcherForm
@@ -157,7 +157,6 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
             'first_potential_sample': first_potential_sample,
             'form_action_url': reverse(
                 'core:stitcher-form', kwargs={'guid': str(self.guid)}),
-            'form_iden_crop_save': constants.STITCHER_FORM_CROPSAVE,
             'form_iden_crop_save_cvat': constants.STITCHER_FORM_CROPSAVE_CVAT,
             'form_iden_default': constants.STITCHER_FORM_DEFAULT,
             'form_iden_post_cropped': constants.STITCHER_FORM_POST_CROPPED,
@@ -278,67 +277,6 @@ class StitcherUpdateView(PermissionRequiredMixin, FormView):
             messages.success(
                 self.request, f'Successfully updated {self.guid}'
             )
-        elif formdata[constants.STITCHER_FORM_IDENT] == constants.STITCHER_FORM_CROPSAVE:
-            # TO BE DEPRICATED: TO BE REMOVED AFTER ALL LABEL STUDIO ANNOTATIONS FINALIZED ON BUGBOX
-            try:
-                this_sample = Sample.objects.user_access(self.request.user).get(
-                    id=self.data[constants.STITCHER_BUGBOX_SAMPLE_ID])
-            except Exception:
-                raise Http404
-            try:
-                auat = self.data[constants.STITCHER_ANNOTATIONS_UPDATED_AT_SEGMENT]
-                instance = MultiSpecimenImage(
-                    sample=this_sample,
-                    panorama_filename=self.panorama_name,
-                    annotations_segment=self.data[constants.STITCHER_ANNOTATIONS_SEGMENT],
-                    annotations_updated_at_segment=auat if auat else '',
-                    upload_dir_name=self.data[constants.STITCHER_UPLOAD_DIR_NAME],
-                    uuid=self.data[constants.STITCHER_GUID],
-                    uploaded_by_user=self.request.user)
-
-                img_url = f'{self.stitcher_url}{self.img_src}'
-                save_remote_file(instance.image, img_url, f'{self.data[constants.STITCHER_UPLOAD_DIR_NAME]}.jpg')
-
-                if self.thumbnail_src:
-                    thumbnail_url = f'{self.stitcher_url}{self.thumbnail_src}'
-                    thumb_name = f'{self.data[constants.STITCHER_UPLOAD_DIR_NAME]}_thumbnail.jpg'
-                    try:
-                        save_remote_file(instance.image_thumbnail, thumbnail_url, thumb_name)
-                    except Exception as e:
-                        messages.warning(
-                            self.request,
-                            f'Warning: Thumbnail {self.thumbnail_src} did not save due to {e}.'
-                        )
-
-                label_url = f'{self.stitcher_url}{self.label_thumb_src}'
-                label_img_name = f'{self.data[constants.STITCHER_UPLOAD_DIR_NAME]}_label.jpg'
-                try:
-                    save_remote_file(instance.label_image, label_url, label_img_name)
-                except Exception as e:
-                    messages.warning(
-                            self.request,
-                            f'Warning: Label image {self.label_thumb_src} did not save due to {e}.'
-                        )
-                # complete instance save
-                instance.save()
-
-                if not this_sample.image and instance.label_image:
-                    # copy the label to sample if appilicable
-                    this_sample.image.save(label_img_name, instance.label_image.file, save=True)
-
-                user_id = self.request.user.id
-                transaction.on_commit(
-                    lambda: crop_panorama_segmentation.delay((instance.id,), this_sample.id, user_id)
-                )
-                messages.success(
-                    self.request, f'Successfully initiated "Save to sample and crop" for {self.guid}')
-                self.data[constants.STITCHER_BUGBOX_CROPED_SAVED] = str(instance.id)
-                self.data[constants.STITCHER_BUGBOX_REJECTED] = None
-                patch_upload_file(self.guid, self.data)
-            except IntegrityError as e:
-                messages.error(self.request, f'Error, possible duplicate image for this record, {e}')
-            except Exception as e:
-                messages.error(self.request, f'There was an error in "Save to sample". {e}')
 
         elif formdata[constants.STITCHER_FORM_IDENT] == constants.STITCHER_FORM_CROPSAVE_CVAT:
             try:
