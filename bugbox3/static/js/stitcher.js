@@ -164,7 +164,6 @@ $(function () {
         approved: false,
         disapproved: false,
         label_updated: false,
-        annotations: false,
         not_completed: false,
         completed: false,
         rejected: false,
@@ -237,9 +236,6 @@ $(function () {
             },{
                 data: '',
                 render: getLabelFileStatus
-            },{
-                data: 'annotations_updated_at_segment',
-                render: concatTen
             },{
                 data: '',
                 render: getSent
@@ -332,18 +328,6 @@ $(function () {
     $('.label-updated-check').append($labelUpdatedCheck)
     $labelUpdatedCheck.on('change', () => {
         data_filters.label_updated = $labelUpdatedCheck.prop("checked");
-        new_datatables_url = getUrl(json_context.STITCHER_URL, data_filters);
-        stitcher_table.ajax.url( new_datatables_url ).load();
-    })
-
-    let annotations_check = '';
-    if (data_filters.annotations) {
-        annotations_check = 'checked';
-    };
-    let $annotationsCheck = $(`<input class="form-check-input" type="checkbox" value="" id="annotationsCheck" ${annotations_check}>`)
-    $('.annotations-check').append($annotationsCheck)
-    $annotationsCheck.on('change', () => {
-        data_filters.annotations = $annotationsCheck.prop("checked");
         new_datatables_url = getUrl(json_context.STITCHER_URL, data_filters);
         stitcher_table.ajax.url( new_datatables_url ).load();
     })
