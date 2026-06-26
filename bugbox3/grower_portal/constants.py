@@ -18,6 +18,9 @@ RACE_CHOICES = [
     ('prefer_not_to_say', 'Prefer not to say'),
 ]
 
+RACE_INDIGENOUS = 'indigenous_first_nations_native'
+RACE_ANOTHER_BACKGROUND = 'another_background'
+
 FIELD_TYPE_CHOICES = [
     ('crop', 'Crop field'),
     ('orchard', 'Orchard/vineyard/woody crop'),

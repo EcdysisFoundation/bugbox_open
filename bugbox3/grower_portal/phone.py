@@ -42,24 +42,6 @@ def normalize_phone_number(value, default_region=DEFAULT_PHONE_REGION):
     return e164
 
 
-def try_normalize_phone_number(value, default_region=DEFAULT_PHONE_REGION):
-    if is_empty_phone(value):
-        return '', None
-
-    try:
-        number = _parse_phone(value, default_region)
-    except NumberParseException as exc:
-        return None, str(exc)
-
-    if not phonenumbers.is_valid_number(number):
-        return None, 'invalid number'
-
-    e164 = phonenumbers.format_number(number, PhoneNumberFormat.E164)
-    if len(e164) > PHONE_MAX_LENGTH:
-        return None, 'number too long'
-    return e164, None
-
-
 def format_phone_for_display(value, default_region=DEFAULT_PHONE_REGION):
     if is_empty_phone(value):
         return ''
