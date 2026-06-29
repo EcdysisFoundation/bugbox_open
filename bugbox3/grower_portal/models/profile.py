@@ -4,10 +4,12 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from ..constants import (
+    ADDRESS_LINE_MAX_LENGTH,
     AGE_MAX,
     AGE_MIN,
     GENDER_CHOICES,
     PHONE_MAX_LENGTH,
+    POSTAL_CODE_MAX_LENGTH,
     RACE_ANOTHER_BACKGROUND,
     RACE_CHOICES,
     RACE_INDIGENOUS,
@@ -59,25 +61,40 @@ class GrowerProfile(models.Model):
         max_length=RACE_OTHER_MAX_LENGTH,
         blank=True,
     )
-    state = models.CharField(
-        max_length=100,
+    address_line = models.CharField(
+        max_length=ADDRESS_LINE_MAX_LENGTH,
         blank=True,
-        help_text='State or province'
+        help_text='Street address',
+    )
+    address_line_2 = models.CharField(
+        max_length=ADDRESS_LINE_MAX_LENGTH,
+        blank=True,
+        help_text='Apartment, unit or suite (optional)',
     )
     city = models.CharField(
         max_length=200,
         blank=True,
-        help_text='City'
+        help_text='City',
+    )
+    state = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text='State or province',
     )
     county = models.CharField(
         max_length=200,
         blank=True,
-        help_text='County'
+        help_text='County',
+    )
+    postal_code = models.CharField(
+        max_length=POSTAL_CODE_MAX_LENGTH,
+        blank=True,
+        help_text='Postal or ZIP code',
     )
     country = models.CharField(
         max_length=100,
         blank=True,
-        help_text='Country'
+        help_text='Country',
     )
     profile_completed = models.BooleanField(
         default=False,
@@ -107,3 +124,34 @@ class GrowerProfile(models.Model):
         if self.race == RACE_ANOTHER_BACKGROUND and self.race_other:
             label = f'{label}: {self.race_other}'
         return label
+
+    def get_country_display_name(self):
+        if not self.country:
+            return ''
+        return COUNTRY_CODE_TO_NAME.get(self.country, self.country)
+
+    def get_address_display(self):
+        parts = []
+        if self.address_line:
+            parts.append(self.address_line)
+        if self.address_line_2:
+            parts.append(self.address_line_2)
+
+        city_state = []
+        if self.city:
+            city_state.append(self.city)
+        if self.state:
+            city_state.append(self.state)
+        if city_state:
+            parts.append(', '.join(city_state))
+
+        if self.county:
+            parts.append(self.county)
+        if self.postal_code:
+            parts.append(self.postal_code)
+
+        country_name = self.get_country_display_name()
+        if country_name:
+            parts.append(country_name)
+
+        return ', '.join(parts)

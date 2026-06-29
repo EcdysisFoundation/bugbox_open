@@ -11,6 +11,7 @@ from bugbox3.core.forms import Html5DateInput, ModelFormMixin
 
 from ...forms.fields import InternationalPhoneField
 from ...constants import (
+    ADDRESS_LINE_MAX_LENGTH,
     ACRES_SAMPLED_MAX,
     ACRES_SAMPLED_MIN,
     AGE_MAX,
@@ -32,6 +33,7 @@ from ...constants import (
     ORGANIC_AMENDMENT_CHOICES,
     PADDOCK_SIZE_MAX_LENGTH,
     PHONE_MAX_LENGTH,
+    POSTAL_CODE_MAX_LENGTH,
     RACE_ANOTHER_BACKGROUND,
     RACE_CHOICES,
     RACE_INDIGENOUS,
@@ -44,6 +46,7 @@ from ...constants import (
     YEARS_UNDER_MANAGEMENT_MIN,
 )
 from ...country_choices import COUNTRY_CHOICES
+from ...address import validate_grower_address
 from ...models import (
     DropPlateReading,
     GrazingEvent,
@@ -102,15 +105,71 @@ class GrowerProfileCompletionForm(forms.ModelForm):
         label='Describe your background',
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Optional'}),
     )
+    address_line = forms.CharField(
+        required=False,
+        max_length=ADDRESS_LINE_MAX_LENGTH,
+        label='Street address',
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+    )
+    address_line_2 = forms.CharField(
+        required=False,
+        max_length=ADDRESS_LINE_MAX_LENGTH,
+        label='Apartment, unit or suite (optional)',
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+    )
+    city = forms.CharField(
+        required=False,
+        max_length=200,
+        label='City or town',
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+    )
+    state = forms.CharField(
+        required=False,
+        max_length=100,
+        label='State / province',
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+    )
+    county = forms.CharField(
+        required=False,
+        max_length=200,
+        label='County',
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+    )
+    postal_code = forms.CharField(
+        required=False,
+        max_length=POSTAL_CODE_MAX_LENGTH,
+        label='Postal / ZIP code',
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+    )
+    country = forms.ChoiceField(
+        choices=COUNTRY_CHOICES,
+        required=False,
+        label='Country',
+        widget=forms.Select(attrs={'class': 'form-select'}),
+    )
 
     class Meta:
         model = GrowerProfile
-        fields = ['phone', 'gender', 'age', 'race', 'race_indigenous_country', 'race_other']
+        fields = [
+            'phone',
+            'gender',
+            'age',
+            'race',
+            'race_indigenous_country',
+            'race_other',
+            'address_line',
+            'address_line_2',
+            'city',
+            'state',
+            'county',
+            'postal_code',
+            'country',
+        ]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for name, field in self.fields.items():
-            if name in ('phone', 'race', 'race_indigenous_country'):
+            if name in ('phone', 'race', 'race_indigenous_country', 'country'):
                 continue
             css_class = 'form-select' if isinstance(field.widget, forms.Select) else 'form-control'
             field.widget.attrs.update({'class': css_class})
@@ -133,6 +192,9 @@ class GrowerProfileCompletionForm(forms.ModelForm):
             cleaned_data['race_other'] = ''
         else:
             cleaned_data['race_other'] = race_other
+
+        for field, message in validate_grower_address(cleaned_data).items():
+            self.add_error(field, message)
 
         return cleaned_data
 

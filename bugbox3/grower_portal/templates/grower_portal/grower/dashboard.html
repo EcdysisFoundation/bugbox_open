@@ -124,6 +124,7 @@
                             <p><strong>Gender:</strong> {{ grower_profile.get_gender_display }}</p>
                             <p><strong>Age:</strong> {{ grower_profile.age|default:"Not provided" }}</p>
                             <p><strong>Racial or ethnic background:</strong> {{ grower_profile.get_race_display_full|default:"Not provided" }}</p>
+                            <p><strong>Address:</strong> {{ grower_profile.get_address_display|default:"Not provided" }}</p>
                         </div>
                     </div>
                 </div>

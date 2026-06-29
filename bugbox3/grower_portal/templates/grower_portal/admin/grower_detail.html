@@ -56,10 +56,15 @@
                 </div>
                 <div class="card-body">
                     {% if grower_profile %}
-                        <p><strong>State/Province:</strong> {{ grower_profile.state|default:"Not provided" }}</p>
+                        <p><strong>Street address:</strong> {{ grower_profile.address_line|default:"Not provided" }}</p>
+                        {% if grower_profile.address_line_2 %}
+                        <p><strong>Apartment, unit, suite:</strong> {{ grower_profile.address_line_2 }}</p>
+                        {% endif %}
                         <p><strong>City:</strong> {{ grower_profile.city|default:"Not provided" }}</p>
+                        <p><strong>State/Province:</strong> {{ grower_profile.state|default:"Not provided" }}</p>
                         <p><strong>County:</strong> {{ grower_profile.county|default:"Not provided" }}</p>
-                        <p><strong>Country:</strong> {{ grower_profile.country|default:"Not provided" }}</p>
+                        <p><strong>Postal / ZIP:</strong> {{ grower_profile.postal_code|default:"Not provided" }}</p>
+                        <p><strong>Country:</strong> {{ grower_profile.get_country_display_name|default:"Not provided" }}</p>
                     {% else %}
                         <p class="text-muted">No location information available</p>
                     {% endif %}
