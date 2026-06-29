@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 
+from ..fields import InternationalPhoneField
 from ..grower.forms import ApplicationCreationForm
 
 User = get_user_model()
@@ -28,12 +29,9 @@ class GrowerSelectionForm(forms.Form):
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'John Doe'})
     )
 
-    grower_phone = forms.CharField(
-        required=False,
-        max_length=20,
+    grower_phone = InternationalPhoneField(
         label='Grower Phone (Optional)',
-        help_text='Contact phone number',
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': '(555) 123-4567'})
+        help_text='Select country and enter contact phone number.',
     )
 
     grower_email_manual = forms.EmailField(

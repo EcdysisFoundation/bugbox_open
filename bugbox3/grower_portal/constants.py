@@ -5,14 +5,21 @@ GENDER_CHOICES = [
 ]
 
 RACE_CHOICES = [
-    ('american_indian_alaska_native', 'American Indian or Alaska Native'),
-    ('asian', 'Asian'),
-    ('black_african_american', 'Black or African American'),
-    ('native_hawaiian_pacific_islander', 'Native Hawaiian or Other Pacific Islander'),
-    ('white', 'White'),
-    ('two_or_more_races', 'Two or More Races'),
+    ('white_european', 'White / European'),
+    ('black_african_diaspora', 'Black / African / African diaspora'),
+    ('indigenous_first_nations_native', 'Indigenous / First Nations / Native'),
+    ('east_southeast_asian', 'East or Southeast Asian'),
+    ('south_asian', 'South Asian'),
+    ('middle_eastern_north_african', 'Middle Eastern / North African'),
+    ('latin_american_hispanic_latinx', 'Latin American / Hispanic / Latinx'),
+    ('pacific_islander', 'Pacific Islander'),
+    ('multiple_backgrounds', 'Multiple backgrounds'),
+    ('another_background', 'Another background'),
     ('prefer_not_to_say', 'Prefer not to say'),
 ]
+
+RACE_INDIGENOUS = 'indigenous_first_nations_native'
+RACE_ANOTHER_BACKGROUND = 'another_background'
 
 FIELD_TYPE_CHOICES = [
     ('crop', 'Crop field'),
@@ -100,6 +107,8 @@ SUBMISSION_CODE_MAX_LENGTH = 50
 CLASS_OF_ANIMAL_MAX_LENGTH = 100
 CSV_FILENAME_MAX_LENGTH = 255
 STATUS_MAX_LENGTH = 50
+RACE_OTHER_MAX_LENGTH = 200
+RACE_INDIGENOUS_COUNTRY_MAX_LENGTH = 2
 FILE_PATH_MAX_LENGTH = 255
 
 # Submission Code Generation Constants
