@@ -23,9 +23,11 @@ class Command(BaseCommand):
             return
 
         recent_missing_images = self.PrivateSiteContent.objects.filter(
-            title='missing_images.csv',
-            file__icontains='missing_images.csv').last()
+            title='missing_images_csv',
+            file__icontains='missing_images').last()
 
+        if not recent_missing_images:
+            raise ValueError('No matching file found in the db')
 
         local_location = getattr(
             settings,
