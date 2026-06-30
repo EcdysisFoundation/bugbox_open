@@ -1,9 +1,10 @@
-
-<div class="container">
+{% if not embedded %}<div class="container">{% endif %}
     {% if site_data %}
     <div class="row">
         <div class="col">
+            {% if not embedded %}
             <h3>Amplicon sequencing results of soil samples</h3>
+            {% endif %}
             <table class="table table-sm text-center">
                 <thead class="table-light">
                     <tr>
@@ -11,7 +12,7 @@
                         <th>Year</th>
                         <th>Site</th>
                         <th>Taxa Found</th>
-                        <th>Downlad Results</th>
+                        <th>Download Results</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -55,4 +56,4 @@
         <p>No Amplicon sequencing results are available for your account</p>
     {% endif %}
 
-</div>
+{% if not embedded %}</div>{% endif %}

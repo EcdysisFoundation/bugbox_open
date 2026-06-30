@@ -14,35 +14,50 @@ from . import constants
 logger = get_task_logger(__name__)
 
 
-def join_the_grower_site_code(microbiome_taxa_id):
+def join_microbiome_for_site_codes(site_codes):
     """
-    Attempts to join the site_code from SampleCode for a single file.
+    link SiteMicrobiomeTaxa rows to SampleCode where site_code strings match
     """
-    logger.info(f"Starting site code join for microbiome_taxa_id: {microbiome_taxa_id}")
     SiteMicrobiomeTaxa = apps.get_model(app_label='microbiome', model_name='SiteMicrobiomeTaxa')
 
-    site_microbiome_taxa_recs = SiteMicrobiomeTaxa.objects.filter(parent_file=microbiome_taxa_id)
-    site_codes = site_microbiome_taxa_recs.values_list('site_code', flat=True).distinct()
+    normalized = {str(code).strip() for code in site_codes if code is not None and str(code).strip()}
+    if not normalized:
+        return 0
+
+    logger.info(f"Joining microbiome records for site codes: {sorted(normalized)}")
 
     sample_code_map = {
-        sc.code: sc for sc in SampleCode.objects.filter(code__in=site_codes) if sc.code
+        sc.code: sc for sc in SampleCode.objects.filter(code__in=normalized) if sc.code
     }
+    if not sample_code_map:
+        logger.info("No SampleCode records match the requested site codes")
+        return 0
 
     records_to_update = []
-    for rec in site_microbiome_taxa_recs:
-        if not rec.site_code:
-            continue
-
+    for rec in SiteMicrobiomeTaxa.objects.filter(site_code__in=sample_code_map.keys()):
         sample_code_rec = sample_code_map.get(rec.site_code)
-        if sample_code_rec:
+        if sample_code_rec and rec.grower_site_code_id != sample_code_rec.pk:
             rec.grower_site_code = sample_code_rec
             records_to_update.append(rec)
 
     if records_to_update:
         SiteMicrobiomeTaxa.objects.bulk_update(records_to_update, ['grower_site_code'])
-        logger.info(f"Successfully updated {len(records_to_update)} records with grower site codes.")
+        logger.info(f"Successfully updated {len(records_to_update)} SiteMicrobiomeTaxa records.")
     else:
-        logger.info("No records required site code updates.")
+        logger.info("No SiteMicrobiomeTaxa records required site code updates.")
+    return len(records_to_update)
+
+
+def join_the_grower_site_code(microbiome_taxa_id):
+    logger.info(f"site code join task for microbiome_taxa_id: {microbiome_taxa_id}")
+    SiteMicrobiomeTaxa = apps.get_model(app_label='microbiome', model_name='SiteMicrobiomeTaxa')
+
+    site_codes = (
+        SiteMicrobiomeTaxa.objects.filter(parent_file=microbiome_taxa_id)
+        .values_list('site_code', flat=True)
+        .distinct()
+    )
+    return join_microbiome_for_site_codes(site_codes)
 
 
 def sample_year_from_id(sample_name):

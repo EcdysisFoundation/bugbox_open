@@ -106,7 +106,7 @@ LOCAL_APPS = [
     "bugbox3.samples",
     "bugbox3.taxonomy",
     "bugbox3.grower_portal",
-    "bugbox3.microbiome"
+    "bugbox3.microbiome.apps.MicrobiomeConfig",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS

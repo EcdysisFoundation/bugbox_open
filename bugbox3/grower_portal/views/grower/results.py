@@ -9,6 +9,11 @@ from django.urls import reverse
 
 from bugbox3.core.permissions import IS_GROWER_USER
 from bugbox3.libs.utilities import get_json_context
+from bugbox3.microbiome.views import (
+    get_microbiome_available_years,
+    get_site_microbiome_taxa_context,
+    grower_has_microbiome_data,
+)
 
 from ...constants import (
     CATEGORY_CHOICES,
@@ -514,8 +519,10 @@ def results(request):
 
     insect_year_set = set(get_insect_available_years(grower))
 
+    microbiome_year_set = set(get_microbiome_available_years(grower))
+
     available_years = sorted(
-        avalanche_year_set | ignite_year_set | insect_year_set,
+        avalanche_year_set | ignite_year_set | insect_year_set | microbiome_year_set,
         reverse=True,
     ) or [date.today().year]
 
@@ -528,6 +535,7 @@ def results(request):
     default_year = available_years[0]
     year_str = request.GET.get('year', '')
     depth = request.GET.get('depth', '')
+    result_type_filter = request.GET.get('result_type', '')
 
     try:
         year = int(year_str) if year_str else default_year
@@ -543,6 +551,7 @@ def results(request):
         if form.is_valid():
             year = form.cleaned_data.get('year') or year
             project_type = form.cleaned_data.get('project_type') or project_type
+            result_type_filter = form.cleaned_data.get('result_type') or ''
     else:
         form = ResultsFilterForm(
             initial={'year': year, 'project_type': project_type},
@@ -581,8 +590,23 @@ def results(request):
                     'display': rt_display,
                     'is_birds': False,
                     'is_insects': True,
+                    'is_microbiome': False,
                     'has_data': has_data,
                     'insect_data': insect_ctx,
+                    'depth_options': [],
+                })
+            elif rt_value == 'microbiome':
+                microbiome_ctx = get_site_microbiome_taxa_context(grower.id, year=year_int)
+                site_data = (microbiome_ctx or {}).get('site_data', [])
+                has_data = grower_has_microbiome_data(grower, year_int)
+                sections.append({
+                    'result_type': rt_value,
+                    'display': rt_display,
+                    'is_birds': False,
+                    'is_insects': False,
+                    'is_microbiome': True,
+                    'has_data': has_data,
+                    'microbiome_data': site_data,
                     'depth_options': [],
                 })
             else:
@@ -642,6 +666,7 @@ def results(request):
             'project_type': project_type,
             'years_to_project_types': years_to_project_types,
             'project_type_labels': dict(LABEL_PROJECT_CHOICES),
+            'result_type_filter': result_type_filter,
             'insect_functional_group_chart': insect_functional_group_chart,
         }),
     })

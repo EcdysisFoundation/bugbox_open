@@ -9,6 +9,12 @@
 
     <br/>
 
+    <div class="container mb-3">
+        <a href="{{ grower_results_url }}?{% if microbiome_results_year %}year={{ microbiome_results_year }}&{% endif %}result_type=microbiome" class="btn btn-outline-primary btn-sm">
+            View in My Results
+        </a>
+    </div>
+
     {% include "microbiome/_site_microbiome_table.html" with site_data=site_data %}
 
 {% endblock content %}

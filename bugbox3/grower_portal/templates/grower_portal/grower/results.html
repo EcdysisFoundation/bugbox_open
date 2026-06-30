@@ -123,6 +123,10 @@
               {% elif section.is_insects %}
                 {% include "grower_portal/grower/_insect_results.html" with insect_data=section.insect_data %}
 
+              {# Microbiome: amplicon sequencing downloads #}
+              {% elif section.is_microbiome %}
+                {% include "microbiome/_site_microbiome_table.html" with site_data=section.microbiome_data embedded=True %}
+
               {# Basic: AJAX-refreshable partial #}
               {% elif section.result_type == "basic" %}
               <div id="basic-results-tables" data-depth="{{ depth }}">
