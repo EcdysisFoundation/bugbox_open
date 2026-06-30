@@ -7,11 +7,9 @@ from django.core.files import File
 from bugbox3.samples.constants import ACCEPTANCE_PENDING
 
 
-def build_training_csv_file(org_id) -> File:
+def build_training_csv_file(org_id, min_imgs, max_imgs) -> File:
     SpecimenImage = apps.get_model(app_label='samples', model_name='SpecimenImage')
     Morphospecies = apps.get_model(app_label='taxonomy', model_name='Morphospecies')
-    minimum_images = 20
-    maximum_images = 500
     # delete=False so Celery / Django can reopen the file by path.
     tmp = tempfile.NamedTemporaryFile(mode='w+', newline='', suffix='.csv', delete=False)
     writer = csv.writer(tmp)
@@ -28,9 +26,9 @@ def build_training_csv_file(org_id) -> File:
             specimen__sample__site_visit__site__experiment__organization_id=org_id,
         ).exclude(
             specimen__acceptance=ACCEPTANCE_PENDING
-        ).order_by('-id').values('specimen_id', 'image')[:maximum_images]
+        ).order_by('-id').values('specimen_id', 'image')[:max_imgs]
 
-        if len(specimen_images) < minimum_images:
+        if len(specimen_images) < min_imgs:
             continue
 
         for img in specimen_images:

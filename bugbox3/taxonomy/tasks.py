@@ -147,9 +147,9 @@ def obj_det_image(specimenimage_id):
     specimenimage.save()
 
 
-@shared_task
-def export_training_selections():
-    export_file = build_training_csv_file(PRIMARY_ORGANIZATION_ID)
+@shared_task(soft_time_limit=400)
+def export_training_selections(min_imgs, max_imgs):
+    export_file = build_training_csv_file(PRIMARY_ORGANIZATION_ID, min_imgs, max_imgs)
     description = f'Export Selections for organization id: {PRIMARY_ORGANIZATION_ID}'
     export = Exports(
             organization_id=PRIMARY_ORGANIZATION_ID,
