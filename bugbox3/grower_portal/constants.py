@@ -226,6 +226,7 @@ RESULT_TYPE_CHOICES = [
     ('basic', 'Basic'),
     ('birds', 'Birds'),
     ('insects', 'Insects'),
+    ('microbiome', 'Amplicon Sequencing'),
     ('water', 'Water'),
     ('plants', 'Plants'),
 ]
@@ -237,6 +238,7 @@ CATEGORY_CHOICES = [
     ('plants', 'Plants'),
     ('birds',  'Birds'),
     ('insects', 'Insects'),
+    ('microbiome', 'Microbiome'),
 ]
 
 CATEGORY_MAX_LENGTH = 20
@@ -248,6 +250,7 @@ CATEGORY_RESULT_TYPE_MAP = {
     'plants': ['plants'],
     'birds':  ['birds'],
     'insects': ['insects'],
+    'microbiome': ['microbiome'],
 }
 
 # lookup: result_type → category
@@ -906,6 +909,10 @@ CATEGORY_DISPLAY_META = {
     'insects': {
         'icon': 'fa-bug',
         'description': 'Insect sampling from BugBox including abundance and species richness by family.',
+    },
+    'microbiome': {
+        'icon': 'fa-dna',
+        'description': 'Amplicon sequencing results of soil samples (16S bacterial / ITS fungal).',
     },
 }
 
