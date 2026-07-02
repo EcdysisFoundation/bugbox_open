@@ -37,7 +37,7 @@ from .constants import (
     EXPORT_TITLE_TRAINING_SELECTIONS,
     FIELD_MORPHO_TAXONOMY_REVIEWED,
 )
-from .functional_groups import build_grouped_trait_display, get_trait_weights_for_morphospecies
+from .functional_groups import build_grouped_trait_display, get_active_traits_for_morphospecies
 from .forms import MorphospeciesCombineForm, MorphospeciesForm, MorphospeciesUpdateForm
 from .mixins import MorphospeciesResearchOrReviewerMixin
 from .models import AiTraining, Morphospecies
@@ -337,14 +337,14 @@ class MorphospeciesDetailView(MorphospeciesResearchOrReviewerMixin, FormView):
         )
 
         user = self.request.user
-        trait_weights = get_trait_weights_for_morphospecies(morphospecies)
+        active_traits = get_active_traits_for_morphospecies(morphospecies)
         context.update({
             'can_edit_taxonomy': user.has_perm(CHANGE_MORPHOSPECIES),
             'show_taxonomy_reviewer_reviewed': user_in_taxonomy_reviewer_group(user),
             'can_combine': user.has_perms(IS_RESEARCH) and user.has_perm(CHANGE_MORPHOSPECIES),
             'display_name': display_name,
             'morphospecies': morphospecies,
-            'functional_group_sections': build_grouped_trait_display(trait_weights),
+            'functional_group_sections': build_grouped_trait_display(active_traits),
             'ai_last_train': ai_accuracy_over_time['total'][-1] if ai_accuracy_over_time['total'] else 0,
             'image_set': image_set,
             'image_count': image_count,
