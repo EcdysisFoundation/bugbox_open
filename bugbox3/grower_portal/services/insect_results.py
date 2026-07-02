@@ -43,7 +43,7 @@ from bugbox3.samples.export_metrics import (
     richness_taxon_names,
 )
 from bugbox3.samples.models import SiteVisit, Specimen, SpecimenImage
-from bugbox3.taxonomy.functional_groups import get_trait_weights_for_morphospecies_ids
+from bugbox3.taxonomy.functional_groups import get_active_traits_for_morphospecies_ids
 
 
 def get_grower_site_codes(grower) -> set[str]:
@@ -353,8 +353,8 @@ def build_insect_results_context(grower, year_int: int) -> dict:
     codes = get_grower_site_codes(grower)
     visits = list(get_site_visits_for_grower_year(grower, year_int))
     morpho_ids = _collect_morphospecies_ids_from_visits(visits)
-    trait_weights_by_morpho_id = get_trait_weights_for_morphospecies_ids(morpho_ids)
-    grower_weights_by_morpho_id = build_grower_weights_cache(trait_weights_by_morpho_id)
+    traits_by_morpho_id = get_active_traits_for_morphospecies_ids(morpho_ids)
+    grower_weights_by_morpho_id = build_grower_weights_cache(traits_by_morpho_id)
 
     codes_with_any_visit = set(
         SiteVisit.objects.filter(site__site_name__in=codes)

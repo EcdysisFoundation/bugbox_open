@@ -40,17 +40,17 @@ class FunctionalGroup(Model):
 
 
 class MorphospeciesFunctionalGroup(Model):
-    """Weighted functional-group for a morphospecies"""
+    """functional group traits for a morphospecies"""
     morphospecies = ForeignKey('Morphospecies', on_delete=CASCADE)
     functional_group = ForeignKey(FunctionalGroup, on_delete=CASCADE)
-    weight = FloatField()
+    active = BooleanField(default=True)
 
     class Meta:
         app_label = 'taxonomy'
         unique_together = ('morphospecies', 'functional_group')
 
     def __str__(self):
-        return f'{self.morphospecies_id}:{self.functional_group.code}={self.weight}'
+        return f'{self.morphospecies_id}:{self.functional_group.code}={self.active}'
 
 
 class Morphospecies(Model):

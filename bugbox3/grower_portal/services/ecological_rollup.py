@@ -10,30 +10,24 @@ GROWER_BUCKET_TRAITS: dict[str, tuple[str, ...]] = {
 }
 
 
-def normalize_weights(raw: dict[str, float]) -> dict[str, float] | None:
-    active = {key: value for key, value in raw.items() if value > 0}
-    if not active:
+def scientific_traits_to_grower_weights(traits: dict[str, bool]) -> dict[str, float] | None:
+    """even split across grower buckets that have any active mapped trait"""
+    active_buckets = [
+        bucket
+        for bucket, codes in GROWER_BUCKET_TRAITS.items()
+        if any(traits.get(code) for code in codes)
+    ]
+    if not active_buckets:
         return None
-    total = sum(active.values())
-    if total <= 0:
-        return None
-    return {key: value / total for key, value in active.items()}
-
-
-def scientific_traits_to_grower_weights(trait_weights: dict[str, float]) -> dict[str, float] | None:
-    raw: dict[str, float] = {}
-    for bucket, codes in GROWER_BUCKET_TRAITS.items():
-        total = sum(trait_weights.get(code, 0) or 0 for code in codes)
-        if total > 0:
-            raw[bucket] = total
-    return normalize_weights(raw)
+    share = 1.0 / len(active_buckets)
+    return {bucket: share for bucket in active_buckets}
 
 
 def build_grower_weights_cache(
-    trait_weights_by_morpho_id: dict[int, dict[str, float]],
+    traits_by_morpho_id: dict[int, dict[str, bool]],
 ) -> dict[int, dict[str, float]]:
     return {
         morpho_id: weights
-        for morpho_id, traits in trait_weights_by_morpho_id.items()
+        for morpho_id, traits in traits_by_morpho_id.items()
         if (weights := scientific_traits_to_grower_weights(traits)) is not None
     }

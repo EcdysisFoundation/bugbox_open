@@ -10,8 +10,6 @@ from django.forms import (
 
     ChoiceField,
 
-    DecimalField,
-
     Form,
 
     IntegerField,
@@ -41,33 +39,32 @@ from .constants import ADULT_HABITAT_CHOICES, YOUNG_HABITAT_CHOICES
 from .functional_group_config import (
     FUNCTIONAL_GROUP_FORM_INTRO,
     FUNCTIONAL_GROUP_UI_SECTIONS,
-    FUNCTIONAL_GROUP_WEIGHT_GUIDE,
+    GROWER_ECOLOGICAL_ROLE_HELP,
+    GROWER_ECOLOGICAL_ROLE_MAPPING,
     LIFE_STAGE_FORM_HELP,
     OTHER_SECTION_HELP,
     PARENT_SUBTYPE_SECTION_HELP,
 )
 
-from .functional_group_validation import (
-    infer_missing_parent_weights,
-    parse_weight_field,
-    validate_functional_group_weights,
-)
+from .functional_group_form import traits_from_checkboxes
 
-from .functional_groups import get_trait_weights_for_morphospecies, set_trait_weights_for_morphospecies
+from .functional_group_validation import validate_functional_group_traits
+
+from .functional_groups import get_active_traits_for_morphospecies, set_active_traits_for_morphospecies
 
 from .models import FunctionalGroup, Morphospecies
 
 
 
-FG_WEIGHT_FIELD_PREFIX = 'fg_weight_'
+FG_TRAIT_FIELD_PREFIX = 'fg_trait_'
 
 
 
 
 
-def functional_group_weight_field_name(code: str) -> str:
+def functional_group_trait_field_name(code: str) -> str:
 
-    return f'{FG_WEIGHT_FIELD_PREFIX}{code}'
+    return f'{FG_TRAIT_FIELD_PREFIX}{code}'
 
 
 
@@ -249,25 +246,25 @@ class MorphospeciesUpdateForm(MorphospeciesFormMixin):
 
 
 
-        existing_weights = {}
+        existing_traits = {}
 
         if self.instance and self.instance.pk:
 
-            existing_weights = get_trait_weights_for_morphospecies(self.instance)
+            existing_traits = get_active_traits_for_morphospecies(self.instance)
 
-            if existing_weights.get('young_terrestrial'):
+            if existing_traits.get('young_terrestrial'):
 
                 self.fields['young_habitat'].initial = 'young_terrestrial'
 
-            elif existing_weights.get('young_aquatic'):
+            elif existing_traits.get('young_aquatic'):
 
                 self.fields['young_habitat'].initial = 'young_aquatic'
 
-            if existing_weights.get('adult_terrestrial'):
+            if existing_traits.get('adult_terrestrial'):
 
                 self.fields['adult_habitat'].initial = 'adult_terrestrial'
 
-            elif existing_weights.get('adult_aquatic'):
+            elif existing_traits.get('adult_aquatic'):
 
                 self.fields['adult_habitat'].initial = 'adult_aquatic'
 
@@ -289,21 +286,13 @@ class MorphospeciesUpdateForm(MorphospeciesFormMixin):
 
             for code in codes:
 
-                field_name = functional_group_weight_field_name(code)
+                field_name = functional_group_trait_field_name(code)
 
                 fg = self._functional_groups_by_code.get(code)
 
                 label = fg.display_name if fg else code
 
-                self.fields[field_name] = DecimalField(
-
-                    min_value=0,
-
-                    max_value=1,
-
-                    max_digits=4,
-
-                    decimal_places=3,
+                self.fields[field_name] = BooleanField(
 
                     required=False,
 
@@ -311,9 +300,9 @@ class MorphospeciesUpdateForm(MorphospeciesFormMixin):
 
                 )
 
-                if code in existing_weights:
+                if existing_traits.get(code):
 
-                    self.fields[field_name].initial = existing_weights[code]
+                    self.fields[field_name].initial = True
 
         self.helper.layout = get_submit_layout(
             Layout(*self.get_primary_layout()),
@@ -386,7 +375,9 @@ class MorphospeciesUpdateForm(MorphospeciesFormMixin):
 
             HTML('<h5 class="mb-2">Functional groups</h5>'),
 
-            HTML(self._build_functional_groups_guide_html()),
+            HTML(f'<p class="text-muted small mb-2">{escape(FUNCTIONAL_GROUP_FORM_INTRO)}</p>'),
+
+            HTML(self._build_grower_ecological_roles_html()),
 
             HTML('<h6 class="mb-2">Life stage</h6>'),
 
@@ -406,58 +397,54 @@ class MorphospeciesUpdateForm(MorphospeciesFormMixin):
 
 
 
-    def _build_functional_groups_guide_html(self) -> str:
-        sections = []
-        for title, paragraphs in FUNCTIONAL_GROUP_WEIGHT_GUIDE:
-            body = ''.join(
-                f'<p class="mb-2">{paragraph}</p>' for paragraph in paragraphs
-            )
-            sections.append(
-                f'<div class="mb-3">'
-                f'<div class="fw-semibold mb-1">{title}</div>'
-                f'{body}'
-                f'</div>'
-            )
+    def _build_grower_ecological_roles_html(self) -> str:
+        rows = ''.join(
+            f'<li><span class="fw-semibold">{escape(role)}</span> = {escape(traits)}</li>'
+            for role, traits in GROWER_ECOLOGICAL_ROLE_MAPPING
+        )
         return (
-            f'<p class="text-muted small mb-2">{escape(FUNCTIONAL_GROUP_FORM_INTRO)}</p>'
-            '<div class="accordion mb-3" id="fg-form-guide">'
-            '<div class="accordion-item">'
-            '<h2 class="accordion-header">'
-            '<button class="accordion-button collapsed py-2" type="button" '
-            'data-bs-toggle="collapse" data-bs-target="#fg-form-guide-body" '
-            'aria-expanded="false" aria-controls="fg-form-guide-body">'
-            'What do weights mean?'
-            '</button></h2>'
-            '<div id="fg-form-guide-body" class="accordion-collapse collapse" '
-            'data-bs-parent="#fg-form-guide">'
-            f'<div class="accordion-body small">{"".join(sections)}</div>'
-            '</div></div></div>'
+            f'<div class="alert alert-light border small mb-3">'
+            f'<div class="fw-semibold mb-1">Grower ecological roles</div>'
+            f'<p class="text-muted mb-2">{escape(GROWER_ECOLOGICAL_ROLE_HELP)}</p>'
+            f'<ul class="mb-0 ps-3">{rows}</ul>'
+            f'</div>'
         )
 
-    def _fg_weight_input_html(
+    def _fg_checkbox_html(
         self,
         *,
         field_name: str,
         code: str,
-        value,
-        parent_code: str | None,
+        is_checked: bool,
         extra_class: str = '',
+        col_class: str = 'col-md-6 col-lg-4',
     ) -> str:
         fg = self._functional_groups_by_code.get(code)
         description = escape(fg.description) if fg else ''
         label = escape(fg.display_name if fg else code)
-        value_str = escape(str(value) if value not in (None, '') else '')
-        parent_attr = escape(parent_code or '')
+        checked = ' checked' if is_checked else ''
         return (
-            f'<div class="col-md-4 col-lg-3 fg-trait-field" data-fg-code="{escape(code)}">'
-            f'<label class="form-label" for="id_{field_name}">{label}</label>'
-            f'<input type="number" step="0.001" min="0" max="1" '
-            f'class="form-control fg-weight-input {extra_class}" name="{field_name}" '
-            f'id="id_{field_name}" value="{value_str}" '
-            f'data-fg-parent="{parent_attr}" data-fg-code="{escape(code)}">'
-            f'<div class="form-text fg-trait-description">{description}</div>'
+            f'<div class="{col_class} fg-trait-field" data-fg-code="{escape(code)}">'
+            f'<div class="fg-trait-card h-100">'
+            f'<div class="form-check mb-0">'
+            f'<input type="checkbox" class="form-check-input fg-trait-checkbox {extra_class}" '
+            f'name="{field_name}" id="id_{field_name}" value="on"{checked}>'
+            f'<label class="form-check-label fw-semibold" for="id_{field_name}">{label}</label>'
+            f'</div>'
+            f'<p class="fg-trait-description small text-muted mb-0">{description}</p>'
+            f'</div>'
             f'</div>'
         )
+
+    def _is_trait_checked(self, field_name: str) -> bool:
+        if field_name not in self.fields:
+            return False
+        value = self[field_name].value()
+        if value in (True, 'on', 'true', '1', 1):
+            return True
+        if value in (False, None, '', 'off', 'false', '0', 0):
+            return False
+        return bool(value)
 
     def _build_parent_subtype_section_html(self, section: dict) -> str:
         parent_code = section['parent_code']
@@ -465,87 +452,45 @@ class MorphospeciesUpdateForm(MorphospeciesFormMixin):
         section_key = section['key']
         title = escape(section['title'])
         help_text = escape(PARENT_SUBTYPE_SECTION_HELP.get(section_key, ''))
-        parent_field = functional_group_weight_field_name(parent_code)
-        parent_fg = self._functional_groups_by_code.get(parent_code)
-        parent_label = escape(parent_fg.display_name if parent_fg else parent_code)
-        parent_value = self[parent_field].value() if parent_field in self.fields else ''
-        if parent_value is None:
-            parent_value = ''
-
-        picker_options = ['<option value="">Select one feeding type</option>']
-        for code in subtype_codes:
-            fg = self._functional_groups_by_code.get(code)
-            picker_options.append(
-                f'<option value="{escape(code)}">{escape(fg.display_name if fg else code)}</option>'
-            )
+        parent_field = functional_group_trait_field_name(parent_code)
 
         parts = [
             f'<div class="card mb-3 fg-section fg-section-parent" '
             f'data-fg-section="{escape(section_key)}" data-parent-code="{escape(parent_code)}">',
             '<div class="card-header d-flex justify-content-between align-items-center py-2">',
             f'<span class="fw-semibold">{title}</span>',
-            '<span class="fg-section-status badge bg-secondary">Not set</span>',
+            '<button type="button" class="btn btn-outline-secondary btn-sm fg-clear-section">'
+            'Clear</button>',
             '</div>',
             '<div class="card-body">',
             f'<p class="small text-muted mb-3">{help_text}</p>',
-            '<div class="row align-items-end g-2 mb-3 fg-parent-block">',
-            '<div class="col-md-4 col-lg-3">',
-            f'<label class="form-label" for="id_{parent_field}">{parent_label} (overall)</label>',
-            f'<input type="number" step="0.001" min="0" max="1" '
-            f'class="form-control fg-weight-input fg-parent-weight" name="{parent_field}" '
-            f'id="id_{parent_field}" value="{escape(str(parent_value) if parent_value != "" else "")}" '
-            f'data-fg-parent="{escape(parent_code)}" data-fg-code="{escape(parent_code)}">',
+            '<div class="fg-parent-row mb-3">',
+            self._fg_checkbox_html(
+                field_name=parent_field,
+                code=parent_code,
+                is_checked=self._is_trait_checked(parent_field),
+                extra_class='fg-parent-checkbox',
+                col_class='col-12',
+            ),
             '</div>',
-            '<div class="col-md-8 col-lg-9">',
-            '<div class="btn-group btn-group-sm flex-wrap" role="group">',
-            '<button type="button" class="btn btn-outline-secondary fg-preset" data-value="0.5">½ mixed</button>',
-            '<button type="button" class="btn btn-outline-secondary fg-preset" data-value="1">1 pure</button>',
-            '<button type="button" class="btn btn-outline-secondary fg-clear-section">Clear section</button>',
-            '</div>',
-            '</div>',
-            '</div>',
-            '<div class="mb-3 fg-quick-single">',
-            '<label class="form-label small">Single feeding type (sets parent to 1)</label>',
-            f'<select class="form-select form-select-sm fg-single-subtype-picker" '
-            f'data-parent-code="{escape(parent_code)}">',
-            ''.join(picker_options),
-            '</select>',
-            '</div>',
-            '<div class="fg-subtypes-block">',
-            '<div class="d-flex justify-content-between align-items-center mb-1">',
-            '<label class="form-label small mb-0">Subtype detail</label>',
-            '<span class="fg-subtype-sum-label small text-muted"></span>',
-            '</div>',
-            '<div class="progress mb-2 fg-subtype-sum" style="height: 8px;">',
-            '<div class="progress-bar" role="progressbar" style="width: 0%"></div>',
-            '</div>',
-            '<div class="row g-2 fg-subtype-grid">',
+            '<div class="small text-muted mb-2">Feeding modes</div>',
+            '<div class="row g-3 fg-trait-grid">',
         ]
 
         for code in subtype_codes:
-            field_name = functional_group_weight_field_name(code)
+            field_name = functional_group_trait_field_name(code)
             if field_name not in self.fields:
                 continue
-            value = self[field_name].value()
-            if value is None:
-                value = ''
             parts.append(
-                self._fg_weight_input_html(
+                self._fg_checkbox_html(
                     field_name=field_name,
                     code=code,
-                    value=value,
-                    parent_code=parent_code,
-                    extra_class='fg-subtype-weight',
+                    is_checked=self._is_trait_checked(field_name),
+                    extra_class='fg-subtype-checkbox',
                 )
             )
 
-        parts.extend([
-            '</div>',
-            '<div class="fg-subtype-hint small mt-1"></div>',
-            '</div>',
-            '</div>',
-            '</div>',
-        ])
+        parts.extend(['</div>', '</div>', '</div>'])
         return ''.join(parts)
 
     def _build_other_section_html(self, section: dict) -> str:
@@ -558,34 +503,18 @@ class MorphospeciesUpdateForm(MorphospeciesFormMixin):
             '</div>',
             '<div class="card-body">',
             f'<p class="small text-muted mb-3">{help_text}</p>',
-            '<div class="row g-2">',
+            '<div class="row g-3">',
         ]
         for code in section['subtype_codes']:
-            field_name = functional_group_weight_field_name(code)
+            field_name = functional_group_trait_field_name(code)
             if field_name not in self.fields:
                 continue
-            fg = self._functional_groups_by_code.get(code)
-            value = self[field_name].value()
-            if value is None:
-                value = ''
-            is_checked = bool(value and float(value) > 0)
-            checked = ' checked' if is_checked else ''
-            value_str = escape(str(value) if value not in (None, '') else '')
-            label = escape(fg.display_name if fg else code)
-            description = escape(fg.description) if fg else ''
             parts.append(
-                f'<div class="col-md-6 col-lg-4">'
-                f'<div class="form-check fg-other-check">'
-                f'<input type="checkbox" class="form-check-input fg-other-toggle" '
-                f'id="toggle_{field_name}" data-target="{field_name}"{checked}>'
-                f'<label class="form-check-label" for="toggle_{field_name}">{label}</label>'
-                f'<div class="form-text">{description}</div>'
-                f'</div>'
-                f'<input type="number" step="0.001" min="0" max="1" '
-                f'class="form-control fg-weight-input fg-other-weight d-none" name="{field_name}" '
-                f'id="id_{field_name}" value="{value_str}" '
-                f'data-fg-parent="" data-fg-code="{escape(code)}">'
-                f'</div>'
+                self._fg_checkbox_html(
+                    field_name=field_name,
+                    code=code,
+                    is_checked=self._is_trait_checked(field_name),
+                )
             )
         parts.extend(['</div>', '</div>', '</div>'])
         return ''.join(parts)
@@ -614,25 +543,27 @@ class MorphospeciesUpdateForm(MorphospeciesFormMixin):
 
 
 
-    def _collect_trait_weights(self) -> dict[str, float]:
+    def _collect_checked_traits(self) -> dict[str, bool]:
 
-        weights: dict[str, float] = {}
+        checked: dict[str, bool] = {}
 
         for name, value in self.cleaned_data.items():
 
-            if not name.startswith(FG_WEIGHT_FIELD_PREFIX):
+            if not name.startswith(FG_TRAIT_FIELD_PREFIX):
 
                 continue
 
-            code = name[len(FG_WEIGHT_FIELD_PREFIX):]
+            code = name[len(FG_TRAIT_FIELD_PREFIX):]
 
-            weight = parse_weight_field(value)
+            checked[code] = bool(value)
 
-            if weight > 0:
-
-                weights[code] = weight
+        return checked
 
 
+
+    def _active_traits_from_form(self) -> dict[str, bool]:
+
+        traits = traits_from_checkboxes(self._collect_checked_traits())
 
         young = self.cleaned_data.get('young_habitat')
 
@@ -640,13 +571,13 @@ class MorphospeciesUpdateForm(MorphospeciesFormMixin):
 
         if young:
 
-            weights[young] = 1.0
+            traits[young] = True
 
         if adult:
 
-            weights[adult] = 1.0
+            traits[adult] = True
 
-        return weights
+        return traits
 
 
 
@@ -654,33 +585,19 @@ class MorphospeciesUpdateForm(MorphospeciesFormMixin):
 
         cleaned_data = super().clean()
 
-        weights = {}
-
-        errors = {}
+        checked = {}
 
         for name, value in cleaned_data.items():
 
-            if not name.startswith(FG_WEIGHT_FIELD_PREFIX):
+            if not name.startswith(FG_TRAIT_FIELD_PREFIX):
 
                 continue
 
-            try:
+            code = name[len(FG_TRAIT_FIELD_PREFIX):]
 
-                weight = parse_weight_field(value)
+            checked[code] = bool(value)
 
-            except ValidationError as exc:
-
-                errors[name] = exc.messages
-
-                continue
-
-            code = name[len(FG_WEIGHT_FIELD_PREFIX):]
-
-            if weight > 0:
-
-                weights[code] = weight
-
-
+        traits = traits_from_checkboxes(checked)
 
         young = cleaned_data.get('young_habitat')
 
@@ -688,31 +605,21 @@ class MorphospeciesUpdateForm(MorphospeciesFormMixin):
 
         if young:
 
-            weights[young] = 1.0
+            traits[young] = True
 
         if adult:
 
-            weights[adult] = 1.0
-
-
-
-        if errors:
-
-            raise ValidationError(errors)
-
-        weights = infer_missing_parent_weights(weights)
+            traits[adult] = True
 
         try:
 
-            validate_functional_group_weights(weights)
+            validate_functional_group_traits(traits)
 
         except ValidationError as exc:
 
             raise ValidationError(exc.messages) from exc
 
-
-
-        cleaned_data['_trait_weights'] = weights
+        cleaned_data['_active_traits'] = traits
 
         return cleaned_data
 
@@ -726,9 +633,9 @@ class MorphospeciesUpdateForm(MorphospeciesFormMixin):
 
             return instance
 
-        weights = self.cleaned_data.get('_trait_weights', self._collect_trait_weights())
+        traits = self.cleaned_data.get('_active_traits', self._active_traits_from_form())
 
-        set_trait_weights_for_morphospecies(instance, weights, validate=False)
+        set_active_traits_for_morphospecies(instance, traits, validate=False)
 
         return instance
 
@@ -743,5 +650,4 @@ class MorphospeciesCombineForm(Form):
     combine_to_id = IntegerField(
 
         required=False)
-
 

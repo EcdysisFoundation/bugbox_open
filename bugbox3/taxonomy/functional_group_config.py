@@ -28,56 +28,41 @@ PHYTOPHAGOUS_SUBTYPE_CODES = tuple(
 OTHER_TRAIT_CODES = tuple(OTHER_ORDER)
 
 FUNCTIONAL_GROUP_FORM_INTRO = (
-    'Parent = how much the species fits that feeding group (Zoophagous or Phytophagous). '
-    'Subtype = how it feeds. Weights are 0 to 1.'
+    'Check all feeding roles that apply to this morphospecies.'
 )
 
-# (title, body paragraphs as plain strings; HTML allowed only as &lt; for <)
-FUNCTIONAL_GROUP_WEIGHT_GUIDE: tuple[tuple[str, tuple[str, ...]], ...] = (
+GROWER_ECOLOGICAL_ROLE_HELP = (
+    'Grower portal charts use the ecological roles below. '
+    'When multiple roles apply to a morphospecies, the chart splits evenly across those roles.'
+)
+
+GROWER_ECOLOGICAL_ROLE_MAPPING: tuple[tuple[str, str], ...] = (
+    ('Herbivore', 'phytophagous'),
+    ('Natural enemy', 'predator and/or parasitoid'),
     (
-        'Parent = 1, subtype = 1',
-        (
-            'Fully in that group. Example: zoophagous = 1 and predator = 1 = pure predator. '
-            'Use the single feeding type dropdown. You must set the parent if you set a subtype.',
-        ),
+        'Detritivore',
+        'detritophagous and/or mycetophagous and/or coprophagous and/or necrophagous',
     ),
-    (
-        'Parent = 1, fractional subtypes',
-        (
-            'Fully in that group, but more than one feeding mode. '
-            'Example: phytophagous = 1, phyllophagous = 0.5, stem-feeding = 0.5 (leaves + stems). '
-            'Fractions must sum to 1.',
-        ),
-    ),
-    (
-        'Parent &lt; 1 (e.g. 0.5)',
-        (
-            'Only partly in that group, often a mixed diet. '
-            'Example: phytophagous = 0.5, zoophagous = 0.5, predator = 1 = herbivore and predator. '
-            'Subtype = 1 means the feeding mode, not half a predator.',
-        ),
-    ),
+    ('Pollinator', 'pollinator'),
 )
 
 PARENT_SUBTYPE_SECTION_HELP: dict[str, str] = {
     'zoophagous': (
-        'Set Zoophagous (overall) for how animal-focused this species is. '
-        'Set a subtype (predator, parasitoid, …) for how it feeds on animals. '
-        'Predator = 1 alone is invalid; zoophagous must also be set (usually 1 for a pure predator).'
+        'Check Zoophagous for general animal feeding, and/or specific modes below '
+        '(predator, parasitoid, etc.).'
     ),
     'phytophagous': (
-        'Set Phytophagous (overall) for how plant-focused this species is. '
-        'Set a subtype (leaves, sap, roots, …) for feeding mode. '
-        'A subtype alone without phytophagous is invalid.'
+        'Check Phytophagous for general plant feeding, and/or specific modes below '
+        '(leaves, sap, roots, etc.).'
     ),
 }
 
 OTHER_SECTION_HELP = (
-    'Check any additional roles. Each applies at weight 1 (detritivore, pollinator, fungivore, etc.).'
+    'Check any additional roles (detritivore, pollinator, fungivore, etc.).'
 )
 
 LIFE_STAGE_FORM_HELP = (
-    'Each selection is saved as weight 1 (habitat metadata). '
+    'Habitat metadata for young and adult life stages. '
     'Life stage does not affect grower ecological roles (herbivore, natural enemy, etc.).'
 )
 
