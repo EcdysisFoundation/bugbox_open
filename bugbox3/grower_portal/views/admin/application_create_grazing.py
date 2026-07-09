@@ -84,11 +84,11 @@ def _admin_grazing_step(request, application, *, mode):
 
                 class_of_animal = request.POST.get(f'{prefix}-{idx}-class_of_animal', '').strip()
                 number_of_animals = request.POST.get(f'{prefix}-{idx}-number_of_animals', '').strip()
-                average_weight_lbs = request.POST.get(f'{prefix}-{idx}-average_weight_lbs', '').strip()
+                average_weight = request.POST.get(f'{prefix}-{idx}-average_weight', '').strip()
                 duration_days = request.POST.get(f'{prefix}-{idx}-duration_days', '').strip()
                 rest_period_days = request.POST.get(f'{prefix}-{idx}-rest_period_days', '').strip()
 
-                if any([class_of_animal, number_of_animals, average_weight_lbs, duration_days, rest_period_days]):
+                if any([class_of_animal, number_of_animals, average_weight, duration_days, rest_period_days]):
                     has_any_data = True
                     break
 

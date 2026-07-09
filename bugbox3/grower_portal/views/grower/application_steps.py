@@ -32,6 +32,7 @@ from ...forms.grower.forms import (
     VegetationFormSet,
 )
 from ...middleware import get_user_timezone
+from ...measurement_capture import assign_field_measurements, field_measurement_initial
 from ...models import (
     DropPlateReading,
     Farm,
@@ -80,7 +81,7 @@ def application_step1(request, application_id):
                     field.farm = farm
                     field.field_name = form.cleaned_data['field_name']
                     field.field_type = form.cleaned_data['field_type']
-                    field.acres_sampled = form.cleaned_data.get('acres_sampled')
+                    assign_field_measurements(field, form.cleaned_data)
                     field.years_under_management = form.cleaned_data.get('years_under_management')
                     field.supports_dairy = form.cleaned_data.get('supports_dairy', False)
                     field.is_confined_dairy = form.cleaned_data.get('is_confined_dairy', False)
@@ -97,8 +98,6 @@ def application_step1(request, application_id):
                     field.orchard_crop_specify = form.cleaned_data.get('orchard_crop_specify', '')
 
                     field.forage_varieties = form.cleaned_data.get('forage_varieties', '')
-                    field.paddock_size = form.cleaned_data.get('paddock_size', '')
-                    field.pasture_size = form.cleaned_data.get('pasture_size', '')
 
                     field.rootstock_species = form.cleaned_data.get('rootstock_species', '')
                     field.crop_varieties = form.cleaned_data.get('crop_varieties', '')
@@ -115,12 +114,13 @@ def application_step1(request, application_id):
             except IntegrityError as e:
                 messages.error(request, f'Error updating application: {str(e)}')
     else:
+        measurement_initial = field_measurement_initial(application.field)
         form = ApplicationCreationForm(initial={
             'farm_name': application.field.farm.name,
             'field_name': application.field.field_name,
             'field_type': application.field.field_type,
             'date_sampled': application.date_sampled,
-            'acres_sampled': application.field.acres_sampled,
+            **measurement_initial,
             'years_under_management': application.field.years_under_management,
             'supports_dairy': application.field.supports_dairy,
             'is_confined_dairy': application.field.is_confined_dairy,
@@ -132,8 +132,6 @@ def application_step1(request, application_id):
             'small_grain_type': application.field.small_grain_type,
             'tillage_methods': application.field.tillage_methods,
             'forage_varieties': application.field.forage_varieties,
-            'paddock_size': application.field.paddock_size,
-            'pasture_size': application.field.pasture_size,
             'rootstock_species': application.field.rootstock_species,
             'crop_varieties': application.field.crop_varieties,
             'transitional_status': application.field.transitional_status,
@@ -567,11 +565,11 @@ def application_step5(request, application_id):
 
                 class_of_animal = request.POST.get(f'{prefix}-{i}-class_of_animal', '').strip()
                 number_of_animals = request.POST.get(f'{prefix}-{i}-number_of_animals', '').strip()
-                average_weight_lbs = request.POST.get(f'{prefix}-{i}-average_weight_lbs', '').strip()
+                average_weight = request.POST.get(f'{prefix}-{i}-average_weight', '').strip()
                 duration_days = request.POST.get(f'{prefix}-{i}-duration_days', '').strip()
                 rest_period_days = request.POST.get(f'{prefix}-{i}-rest_period_days', '').strip()
 
-                if any([class_of_animal, number_of_animals, average_weight_lbs, duration_days, rest_period_days]):
+                if any([class_of_animal, number_of_animals, average_weight, duration_days, rest_period_days]):
                     has_any_data = True
                     break
 
