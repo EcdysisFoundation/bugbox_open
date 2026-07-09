@@ -3,6 +3,7 @@
 
 {% load i18n %}
 {% load timezone_filters %}
+{% load measurement_tags %}
 
 {% block title %}Review & Submit - Step {% if application.field.field_type == 'range' %}6{% else %}5{% endif %}{% endblock %}
 
@@ -135,16 +136,16 @@
                                     <td>{{ application.field.forage_varieties }}</td>
                                 </tr>
                                 {% endif %}
-                                {% if application.field.paddock_size %}
+                                {% if application.field.paddock_size_entered is not None or application.field.paddock_size_ha %}
                                 <tr>
-                                    <th>{% if application.field.field_type == 'range' %}Paddock Size (acres):{% else %}Paddock Size:{% endif %}</th>
-                                    <td>{{ application.field.paddock_size }}</td>
-                                </tr>
-                                {% endif %}
-                                {% if application.field.pasture_size %}
-                                <tr>
-                                    <th>Pasture Size (acres):</th>
-                                    <td>{{ application.field.pasture_size }}</td>
+                                    <th>Paddock size:</th>
+                                    <td>
+                                        {% if application.field.paddock_size_entered is not None %}
+                                            {{ application.field.paddock_size_entered|format_entered_area:application.field.paddock_size_unit }}
+                                        {% else %}
+                                            {{ application.field.paddock_size_ha|format_stored_paddock_size }}
+                                        {% endif %}
+                                    </td>
                                 </tr>
                                 {% endif %}
                                 {% if application.field.rootstock_species %}
@@ -188,10 +189,16 @@
                                         <th class="table-col-40">Tillage:</th>
                                         <td>{{ management_practices.uses_tillage|yesno:"Yes,No" }}</td>
                                     </tr>
-                                    {% if management_practices.uses_tillage and management_practices.tillage_depth %}
+                                    {% if management_practices.uses_tillage and management_practices.tillage_depth_cm %}
                                     <tr>
                                         <th>Tillage Depth:</th>
-                                        <td>{{ management_practices.tillage_depth }}</td>
+                                        <td>
+                                            {% if management_practices.tillage_depth_entered is not None %}
+                                                {{ management_practices.tillage_depth_entered|format_entered_depth:management_practices.tillage_depth_unit }}
+                                            {% else %}
+                                                {{ management_practices.tillage_depth_cm|format_stored_depth }}
+                                            {% endif %}
+                                        </td>
                                     </tr>
                                     {% endif %}
                                     <tr>
@@ -320,8 +327,14 @@
                         <div class="card-body">
                             <table class="table table-sm">
                                 <tr>
-                                    <th class="table-col-40">{% if application.field.field_type == 'range' %}Acres in paddock sampled:{% else %}Acres Sampled:{% endif %}</th>
-                                    <td>{{ application.field.acres_sampled|default:"Not specified" }}</td>
+                                    <th class="table-col-40">{% if application.field.field_type == 'range' %}Area in paddock sampled:{% else %}Area sampled:{% endif %}</th>
+                                    <td>
+                                        {% if application.field.area_sampled_entered is not None %}
+                                            {{ application.field.area_sampled_entered|format_entered_area:application.field.area_sampled_unit }}
+                                        {% else %}
+                                            {{ application.field.area_sampled_ha|format_stored_area|default:"Not specified" }}
+                                        {% endif %}
+                                    </td>
                                 </tr>
                                 <tr>
                                     <th>Years Under Management:</th>
@@ -539,9 +552,9 @@
                                                 <tr>
                                                     <th>Class of Animal</th>
                                                     <th>Number</th>
-                                                    <th>Avg Weight (lbs)</th>
-                                                    <th>Grazing days</th>
-                                                    <th>Rest Period (days)</th>
+                                                    <th>Avg weight</th>
+                                                    <th>Grazing duration</th>
+                                                    <th>Rest period</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -549,9 +562,27 @@
                                                     <tr>
                                                         <td>{{ animal.class_of_animal }}</td>
                                                         <td>{{ animal.number_of_animals }}</td>
-                                                        <td>{{ animal.average_weight_lbs }}</td>
-                                                        <td>{{ animal.duration_days }}</td>
-                                                        <td>{{ animal.rest_period_days }}</td>
+                                                        <td>
+                                                            {% if animal.average_weight_entered is not None %}
+                                                                {{ animal.average_weight_entered|format_entered_weight:animal.average_weight_unit }}
+                                                            {% else %}
+                                                                {{ animal.average_weight_kg|format_stored_weight:animal.average_weight_unit }}
+                                                            {% endif %}
+                                                        </td>
+                                                        <td>
+                                                            {% if animal.duration_entered is not None %}
+                                                                {{ animal.duration_entered|format_entered_duration:animal.duration_unit }}
+                                                            {% else %}
+                                                                {{ animal.duration_days|format_stored_duration:animal.duration_unit }}
+                                                            {% endif %}
+                                                        </td>
+                                                        <td>
+                                                            {% if animal.rest_period_entered is not None %}
+                                                                {{ animal.rest_period_entered|format_entered_duration:animal.rest_period_unit }}
+                                                            {% else %}
+                                                                {{ animal.rest_period_days|format_stored_duration:animal.rest_period_unit }}
+                                                            {% endif %}
+                                                        </td>
                                                     </tr>
                                                 {% endfor %}
                                             </tbody>

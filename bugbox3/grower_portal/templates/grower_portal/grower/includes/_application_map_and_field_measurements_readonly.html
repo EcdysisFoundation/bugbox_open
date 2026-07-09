@@ -1,5 +1,6 @@
 {% load i18n %}
 {% load timezone_filters %}
+{% load measurement_tags %}
 {# Transect map + Field Measurements summary; requires application.field #}
 {% if application.field %}
             <div class="card mb-3">
@@ -24,8 +25,14 @@
                 <div class="card-body">
                     <table class="table table-sm">
                         <tr>
-                            <th class="table-col-40">Acres Sampled:</th>
-                            <td>{{ application.field.acres_sampled|default:"Not specified" }}</td>
+                            <th class="table-col-40">Area sampled:</th>
+                            <td>
+                                {% if application.field.area_sampled_entered is not None %}
+                                    {{ application.field.area_sampled_entered|format_entered_area:application.field.area_sampled_unit }}
+                                {% else %}
+                                    {{ application.field.area_sampled_ha|format_stored_area|default:"Not specified" }}
+                                {% endif %}
+                            </td>
                         </tr>
                         <tr>
                             <th>Years Under Management:</th>

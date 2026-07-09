@@ -163,10 +163,20 @@
                                                             {% endif %}
                                                         </div>
                                                         <div class="col-md-6 mb-3">
-                                                            <label class="form-label">{{ form.average_weight_lbs.label }}</label>
-                                                            {{ form.average_weight_lbs }}
-                                                            {% if form.average_weight_lbs.errors %}
-                                                                <div class="text-danger">{{ form.average_weight_lbs.errors }}</div>
+                                                            <label class="form-label">{{ form.average_weight.label }}</label>
+                                                            <div class="row g-2 measurement-with-unit-row">
+                                                                <div class="col-7">
+                                                                    {{ form.average_weight }}
+                                                                </div>
+                                                                <div class="col-5">
+                                                                    {{ form.average_weight_unit }}
+                                                                </div>
+                                                            </div>
+                                                            {% if form.average_weight.errors %}
+                                                                <div class="text-danger">{{ form.average_weight.errors }}</div>
+                                                            {% endif %}
+                                                            {% if form.average_weight_unit.errors %}
+                                                                <div class="text-danger">{{ form.average_weight_unit.errors }}</div>
                                                             {% endif %}
                                                         </div>
                                                     </div>
@@ -174,14 +184,28 @@
                                                     <div class="row">
                                                         <div class="col-md-6 mb-3">
                                                             <label class="form-label">{{ form.duration_days.label }}</label>
-                                                            {{ form.duration_days }}
+                                                            <div class="row g-2 measurement-with-unit-row">
+                                                                <div class="col-7">
+                                                                    {{ form.duration_days }}
+                                                                </div>
+                                                                <div class="col-5">
+                                                                    {{ form.duration_unit }}
+                                                                </div>
+                                                            </div>
                                                             {% if form.duration_days.errors %}
                                                                 <div class="text-danger">{{ form.duration_days.errors }}</div>
                                                             {% endif %}
                                                         </div>
                                                         <div class="col-md-6 mb-3">
                                                             <label class="form-label">{{ form.rest_period_days.label }}</label>
-                                                            {{ form.rest_period_days }}
+                                                            <div class="row g-2 measurement-with-unit-row">
+                                                                <div class="col-7">
+                                                                    {{ form.rest_period_days }}
+                                                                </div>
+                                                                <div class="col-5">
+                                                                    {{ form.rest_period_unit }}
+                                                                </div>
+                                                            </div>
                                                             {% if form.rest_period_days.errors %}
                                                                 <div class="text-danger">{{ form.rest_period_days.errors }}</div>
                                                             {% endif %}
