@@ -10,7 +10,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     const newCard = lastCard.cloneNode(true);
                     
                     newCard.querySelectorAll('input, select, textarea').forEach(input => {
-                        if (input.type !== 'hidden') {
+                        if (input.type === 'hidden') {
+                            return;
+                        }
+                        if (input.tagName === 'SELECT') {
+                            input.selectedIndex = 0;
+                        } else {
                             input.value = '';
                         }
                     });

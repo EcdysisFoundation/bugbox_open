@@ -102,6 +102,75 @@
   display: none;
 }
 
+.transect-location-card--active {
+  border-color: var(--bs-primary, #0d6efd);
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+}
+
+.transect-location-card--placed {
+  animation: transect-placed-pulse 1.2s ease-out;
+}
+
+@keyframes transect-placed-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(25, 135, 84, 0.45);
+  }
+  70% {
+    box-shadow: 0 0 0 0.5rem rgba(25, 135, 84, 0);
+  }
+  100% {
+    box-shadow: none;
+  }
+}
+
+.transect-map-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.transect-map-toolbar__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.transect-map-toolbar__hint {
+  flex: 1 1 100%;
+}
+
+.transect-slot-selector .btn.active {
+  font-weight: 700;
+}
+
+.transect-slot-selector .btn.hidden-field,
+#active-transect-slot option.hidden-field {
+  display: none;
+}
+
+.transect-slot-select {
+  max-width: 14rem;
+}
+
+.measurement-with-unit-row .measurement-unit-select,
+.measurement-input-group .measurement-unit-select {
+  width: 100%;
+  min-width: 5.5rem;
+  max-width: 100%;
+  flex: 1 1 auto;
+}
+
+.measurement-input-group .form-control {
+  min-width: 0;
+}
+
+.map-container--placing {
+  cursor: crosshair;
+}
+
 .transect-step-actions {
   padding-top: 0.5rem;
   border-top: 1px solid var(--bs-border-color, #dee2e6);
