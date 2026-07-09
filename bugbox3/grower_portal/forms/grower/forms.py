@@ -12,14 +12,24 @@ from bugbox3.core.forms import Html5DateInput, ModelFormMixin
 from ...forms.fields import InternationalPhoneField
 from ...constants import (
     ADDRESS_LINE_MAX_LENGTH,
-    ACRES_SAMPLED_MAX,
-    ACRES_SAMPLED_MIN,
     AGE_MAX,
     AGE_MIN,
+    AREA_SAMPLED_HA_MAX,
+    AREA_SAMPLED_HA_MIN,
+    AREA_UNIT_ACRES,
+    AVERAGE_WEIGHT_KG_MAX,
+    AVERAGE_WEIGHT_KG_MIN,
     COVER_CROP_TERMINATION_CHOICES,
     CROP_SUBTYPE_CHOICES,
     CROP_TYPE_CHOICES,
     CROP_VARIETIES_MAX_LENGTH,
+    DEFAULT_AREA_UNIT,
+    DEFAULT_DEPTH_UNIT,
+    DEFAULT_TIME_UNIT,
+    DEFAULT_WEIGHT_UNIT,
+    DEPTH_UNIT_INCHES,
+    DURATION_DAYS_MAX,
+    DURATION_DAYS_MIN,
     FARM_NAME_MAX_LENGTH,
     FIELD_NAME_MAX_LENGTH,
     FIELD_TYPE_CHOICES,
@@ -38,13 +48,28 @@ from ...constants import (
     RACE_CHOICES,
     RACE_INDIGENOUS,
     RACE_OTHER_MAX_LENGTH,
+    REST_PERIOD_DAYS_MAX,
+    REST_PERIOD_DAYS_MIN,
     RESULT_TYPE_CHOICES,
     ROOTSTOCK_SPECIES_MAX_LENGTH,
+    TILLAGE_DEPTH_MAX_LENGTH,
     TILLAGE_METHODS_MAX_LENGTH,
+    TIME_UNIT_DAYS,
     TRANSITIONAL_STATUS_CHOICES,
+    WEIGHT_UNIT_LBS,
     YEARS_UNDER_MANAGEMENT_MAX,
     YEARS_UNDER_MANAGEMENT_MIN,
 )
+from ...measurement_capture import (
+    area_form_initial,
+    capture_area_measurement,
+    capture_depth_measurement,
+    capture_duration_measurement,
+    capture_weight_measurement,
+    depth_form_initial,
+    grazing_form_initial,
+)
+from ..measurement_fields import area_unit_field, depth_unit_field, time_unit_field, value_with_unit_row, weight_unit_field
 from ...country_choices import COUNTRY_CHOICES
 from ...address import validate_grower_address
 from ...models import (
@@ -282,18 +307,15 @@ class ApplicationCreationForm(ModelFormMixin):
         label='Forage Varieties',
         help_text='For rangeland'
     )
-    paddock_size = forms.CharField(
-        max_length=PADDOCK_SIZE_MAX_LENGTH,
+    paddock_size = forms.DecimalField(
+        max_digits=12,
+        decimal_places=2,
         required=False,
-        label='Paddock size (acres)',
-        help_text='For rangeland'
+        label='Paddock size',
+        help_text='For rangeland',
+        widget=forms.NumberInput(attrs={'step': 'any', 'class': 'form-control'}),
     )
-    pasture_size = forms.CharField(
-        max_length=PADDOCK_SIZE_MAX_LENGTH,
-        required=False,
-        label='Pasture size (acres)',
-        help_text='Total pasture size in acres'
-    )
+    paddock_size_unit = area_unit_field()
     rootstock_species = forms.CharField(
         max_length=ROOTSTOCK_SPECIES_MAX_LENGTH,
         required=False,
@@ -336,15 +358,15 @@ class ApplicationCreationForm(ModelFormMixin):
     )
 
     # Field measurement fields
-    acres_sampled = forms.DecimalField(
-        max_digits=8,
+    area_sampled = forms.DecimalField(
+        max_digits=12,
         decimal_places=2,
         required=True,
-        min_value=ACRES_SAMPLED_MIN,
-        max_value=ACRES_SAMPLED_MAX,
-        label='Number of acres in field sampled',
-        help_text='Total acres sampled for this field'
+        label='Area in field sampled',
+        help_text='Total area sampled for this field',
+        widget=forms.NumberInput(attrs={'step': 'any', 'class': 'form-control'}),
     )
+    area_sampled_unit = area_unit_field()
     years_under_management = forms.IntegerField(
         required=True,
         min_value=YEARS_UNDER_MANAGEMENT_MIN,
@@ -378,14 +400,32 @@ class ApplicationCreationForm(ModelFormMixin):
         'field_name',
         'field_type',
         'date_sampled',
-        'acres_sampled',
+        'area_sampled',
         'years_under_management']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         if self.initial.get('field_type') == 'range':
-            self.fields['acres_sampled'].label = 'Acres in paddock sampled'
+            self.fields['area_sampled'].label = 'Area in paddock sampled'
+
+        area_value, area_unit = area_form_initial(
+            self.initial.get('area_sampled'),
+            self.initial.get('area_sampled_entered'),
+            self.initial.get('area_sampled_unit'),
+        )
+        if area_value is not None:
+            self.fields['area_sampled'].initial = area_value
+            self.fields['area_sampled_unit'].initial = area_unit
+
+        paddock_value, paddock_unit = area_form_initial(
+            self.initial.get('paddock_size'),
+            self.initial.get('paddock_size_entered'),
+            self.initial.get('paddock_size_unit'),
+        )
+        if paddock_value is not None:
+            self.fields['paddock_size'].initial = paddock_value
+            self.fields['paddock_size_unit'].initial = paddock_unit
 
     def get_primary_layout(self):
         return [Fieldset('Farm Information',
@@ -415,10 +455,7 @@ class ApplicationCreationForm(ModelFormMixin):
                              style='display:none;'),
                          Div(HTML('<h6>Rangeland Information</h6>'),
                              Row(Column('forage_varieties')),
-                             Row(Column('paddock_size',
-                                        css_class='col-md-6'),
-                                 Column('pasture_size',
-                                 css_class='col-md-6')),
+                             value_with_unit_row('paddock_size', 'paddock_size_unit'),
                              css_id='rangeland_fields',
                              css_class='field-specific',
                              style='display:none;'),
@@ -440,10 +477,16 @@ class ApplicationCreationForm(ModelFormMixin):
                              'for this field. These values will apply to all '
                              'transects.</p>'
                          ),
-                         Row(Column('acres_sampled',
-                                    css_class='col-md-6'),
-                             Column('years_under_management',
-                                    css_class='col-md-6')),
+                         Row(
+                             Div(
+                                 Row(
+                                     Column('area_sampled', css_class='col-md-8'),
+                                     Column('area_sampled_unit', css_class='col-md-4'),
+                                 ),
+                                 css_class='col-md-6 measurement-with-unit-row',
+                             ),
+                             Column('years_under_management', css_class='col-md-6'),
+                         ),
                          Div(Row(Column('supports_dairy',
                                         css_class='col-md-6')),
                              Div(Row(Column('is_confined_dairy',
@@ -462,6 +505,36 @@ class ApplicationCreationForm(ModelFormMixin):
 
         field_type = cleaned_data.get('field_type')
 
+        capture_area_measurement(
+            cleaned_data,
+            value_key='area_sampled',
+            unit_key='area_sampled_unit',
+            entered_key='area_sampled_entered',
+            canonical_key='area_sampled_ha',
+        )
+        area_sampled_ha = cleaned_data.get('area_sampled_ha')
+        if area_sampled_ha is not None:
+            if area_sampled_ha < AREA_SAMPLED_HA_MIN or area_sampled_ha > AREA_SAMPLED_HA_MAX:
+                self.add_error(
+                    'area_sampled',
+                    f'Area must be between {AREA_SAMPLED_HA_MIN} and {AREA_SAMPLED_HA_MAX} hectares after conversion.',
+                )
+
+        capture_area_measurement(
+            cleaned_data,
+            value_key='paddock_size',
+            unit_key='paddock_size_unit',
+            entered_key='paddock_size_entered',
+            canonical_key='paddock_size_ha',
+        )
+        paddock_size_ha = cleaned_data.get('paddock_size_ha')
+        if paddock_size_ha is not None:
+            if paddock_size_ha < AREA_SAMPLED_HA_MIN or paddock_size_ha > AREA_SAMPLED_HA_MAX:
+                self.add_error(
+                    'paddock_size',
+                    f'Paddock size must be between {AREA_SAMPLED_HA_MIN} and {AREA_SAMPLED_HA_MAX} hectares after conversion.',
+                )
+
         if field_type == 'crop':
             crop_type = cleaned_data.get('crop_type', '').strip()
             if not crop_type:
@@ -479,6 +552,15 @@ class ApplicationCreationForm(ModelFormMixin):
 
 
 class ManagementPracticesForm(ModelFormMixin):
+    tillage_depth = forms.DecimalField(
+        required=False,
+        min_value=0,
+        max_value=500,
+        decimal_places=2,
+        label='Tillage depth',
+        widget=forms.NumberInput(attrs={'step': 'any', 'class': 'form-control'}),
+    )
+    tillage_depth_unit = depth_unit_field()
     cover_crop_termination = forms.ChoiceField(
         choices=[('', 'Select Method')] + COVER_CROP_TERMINATION_CHOICES,
         required=False,
@@ -537,7 +619,7 @@ class ManagementPracticesForm(ModelFormMixin):
     class Meta:
         model = ManagementPractices
         fields = [
-            'uses_tillage', 'tillage_depth',
+            'uses_tillage', 'tillage_depth_entered', 'tillage_depth_unit',
             'uses_cover_crop', 'cover_crop_termination', 'cover_crop_termination_other',
             'uses_synthetic_fertilizers', 'uses_synthetic_insecticides',
             'uses_synthetic_herbicides', 'uses_synthetic_fungicides',
@@ -550,6 +632,27 @@ class ManagementPracticesForm(ModelFormMixin):
 
     required_fields = []
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            entered, unit = depth_form_initial(
+                self.instance.tillage_depth_cm,
+                self.instance.tillage_depth_entered,
+                self.instance.tillage_depth_unit,
+            )
+            if entered is not None:
+                self.fields['tillage_depth'].initial = entered
+                self.fields['tillage_depth_unit'].initial = unit
+        else:
+            entered, unit = depth_form_initial(
+                self.initial.get('tillage_depth_cm'),
+                self.initial.get('tillage_depth_entered'),
+                self.initial.get('tillage_depth_unit'),
+            )
+            if entered is not None:
+                self.fields['tillage_depth'].initial = entered
+                self.fields['tillage_depth_unit'].initial = unit
+
     def get_primary_layout(self):
         return [
             Div(
@@ -557,7 +660,7 @@ class ManagementPracticesForm(ModelFormMixin):
                     'Tillage Practices',
                     Row(Column('uses_tillage')),
                     Div(
-                        Row(Column('tillage_depth')),
+                        value_with_unit_row('tillage_depth', 'tillage_depth_unit'),
                         css_id='tillage_depth_field',
                         style='display:none;'
                     )
@@ -669,6 +772,24 @@ class ManagementPracticesForm(ModelFormMixin):
             ),
             Submit('submit', 'Next: Transect Codes', css_class='btn btn-primary')
         ]
+
+    def clean(self):
+        cleaned_data = super().clean()
+        capture_depth_measurement(
+            cleaned_data,
+            value_key='tillage_depth',
+            unit_key='tillage_depth_unit',
+            entered_key='tillage_depth_entered',
+            canonical_key='tillage_depth_cm',
+        )
+        return cleaned_data
+
+    def save(self, commit=True):
+        practices = super().save(commit=False)
+        practices.tillage_depth_cm = self.cleaned_data.get('tillage_depth_cm')
+        if commit:
+            practices.save()
+        return practices
 
 
 class TransectCodesForm(forms.Form):
@@ -790,13 +911,17 @@ class TransectCodesForm(forms.Form):
         return [
             HTML(
                 '<p class="text-muted mb-3">Enter one or more transects (up to 4). '
-                'Transect location 1 is required; provide Transects 2–4 if applicable. '
-                'For each location you use, enter the transect code, latitude, and longitude together. '
-                'Review the transect marker(s) on the map after entering coordinates.</p>'
+                'Transect location 1 is required. Add additional locations only if you have more '
+                'transect codes. For each location, enter the transect code, latitude, and longitude '
+                'together, then review the marker(s) on the map.</p>'
             ),
             HTML('<div id="transect-location-fields" class="transect-location-fields">'),
             *rows,
             HTML('</div>'),
+            HTML(
+                '<button type="button" id="add-transect-location" class="btn btn-outline-secondary btn-sm mt-2">'
+                '<i class="fas fa-plus"></i> Add another transect</button>'
+            ),
         ]
 
     def clean(self):
@@ -900,33 +1025,168 @@ class GrazingEventForm(ModelFormMixin):
 class GrazingEventAnimalForm(forms.ModelForm):
     """Form for individual animal entries within a grazing event"""
 
+    average_weight = forms.DecimalField(
+        required=False,
+        min_value=0.1,
+        decimal_places=2,
+        widget=forms.NumberInput(attrs={'step': 'any'}),
+    )
+    duration_days = forms.DecimalField(
+        required=False,
+        min_value=0.1,
+        decimal_places=2,
+        widget=forms.NumberInput(attrs={'step': 'any'}),
+    )
+    rest_period_days = forms.DecimalField(
+        required=False,
+        min_value=0,
+        decimal_places=2,
+        widget=forms.NumberInput(attrs={'step': 'any'}),
+    )
+    average_weight_unit = weight_unit_field()
+    duration_unit = time_unit_field()
+    rest_period_unit = time_unit_field()
+
     class Meta:
         model = GrazingEventAnimal
-        fields = ['class_of_animal', 'number_of_animals', 'average_weight_lbs',
-                  'duration_days', 'rest_period_days']
+        fields = [
+            'class_of_animal',
+            'number_of_animals',
+            'average_weight_entered',
+            'average_weight_unit',
+            'duration_days',
+            'duration_entered',
+            'duration_unit',
+            'rest_period_days',
+            'rest_period_entered',
+            'rest_period_unit',
+        ]
+
+    def save(self, commit=True):
+        animal = super().save(commit=False)
+        animal.average_weight_kg = self.cleaned_data.get('average_weight_kg')
+        if commit:
+            animal.save()
+        return animal
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['duration_days'].label = 'Grazing days'
+        self.fields['average_weight'].label = 'Average weight'
+        self.fields['duration_days'].label = 'Grazing duration'
+        self.fields['rest_period_days'].label = 'Rest period'
         for field in self.fields.values():
             field.required = False
-            field.widget.attrs.update({'class': 'form-control form-control-sm'})
+            if not isinstance(field.widget, forms.Select):
+                field.widget.attrs.update({'class': 'form-control form-control-sm'})
+
+        for unit_field in ('average_weight_unit', 'duration_unit', 'rest_period_unit'):
+            self.fields[unit_field].required = True
+            self.fields[unit_field].widget.attrs.update({
+                'class': 'form-select form-select-sm measurement-unit-select',
+            })
+
+        if self.instance and self.instance.pk and not self.is_bound:
+            weight_value, weight_unit = grazing_form_initial(
+                self.instance.average_weight_kg,
+                self.instance.average_weight_entered,
+                self.instance.average_weight_unit,
+                from_canonical='weight',
+            )
+            if weight_value is not None:
+                self.fields['average_weight'].initial = weight_value
+            self.fields['average_weight_unit'].initial = weight_unit
+
+            duration_value, duration_unit = grazing_form_initial(
+                self.instance.duration_days,
+                self.instance.duration_entered,
+                self.instance.duration_unit,
+                from_canonical='duration',
+            )
+            if duration_value is not None:
+                self.fields['duration_days'].initial = duration_value
+            self.fields['duration_unit'].initial = duration_unit
+
+            rest_value, rest_unit = grazing_form_initial(
+                self.instance.rest_period_days,
+                self.instance.rest_period_entered,
+                self.instance.rest_period_unit,
+                from_canonical='duration',
+            )
+            if rest_value is not None:
+                self.fields['rest_period_days'].initial = rest_value
+            self.fields['rest_period_unit'].initial = rest_unit
+        elif not self.is_bound:
+            self.fields['average_weight_unit'].initial = DEFAULT_WEIGHT_UNIT
+            self.fields['duration_unit'].initial = DEFAULT_TIME_UNIT
+            self.fields['rest_period_unit'].initial = DEFAULT_TIME_UNIT
 
     def clean(self):
         """Validate that if any field is filled, all required fields must be filled"""
         cleaned_data = super().clean()
 
+        weight_unit = cleaned_data.get('average_weight_unit') or DEFAULT_WEIGHT_UNIT
+        duration_unit = cleaned_data.get('duration_unit') or DEFAULT_TIME_UNIT
+        rest_unit = cleaned_data.get('rest_period_unit') or DEFAULT_TIME_UNIT
+        cleaned_data['average_weight_unit'] = weight_unit
+        cleaned_data['duration_unit'] = duration_unit
+        cleaned_data['rest_period_unit'] = rest_unit
+
+        capture_weight_measurement(
+            cleaned_data,
+            value_key='average_weight',
+            unit_key='average_weight_unit',
+            entered_key='average_weight_entered',
+            canonical_key='average_weight_kg',
+        )
+        if cleaned_data.get('average_weight_kg') not in (None, ''):
+            converted_weight = cleaned_data['average_weight_kg']
+            if converted_weight < AVERAGE_WEIGHT_KG_MIN or converted_weight > AVERAGE_WEIGHT_KG_MAX:
+                self.add_error(
+                    'average_weight',
+                    f'Average weight must be between {AVERAGE_WEIGHT_KG_MIN} and {AVERAGE_WEIGHT_KG_MAX} kg after conversion.',
+                )
+
+        capture_duration_measurement(
+            cleaned_data,
+            value_key='duration_days',
+            unit_key='duration_unit',
+            entered_key='duration_entered',
+            canonical_key='duration_days',
+        )
+        if cleaned_data.get('duration_days') not in (None, ''):
+            converted_duration = cleaned_data['duration_days']
+            if converted_duration < DURATION_DAYS_MIN or converted_duration > DURATION_DAYS_MAX:
+                self.add_error(
+                    'duration_days',
+                    f'Grazing duration must be between {DURATION_DAYS_MIN} and {DURATION_DAYS_MAX} days after conversion.',
+                )
+
+        capture_duration_measurement(
+            cleaned_data,
+            value_key='rest_period_days',
+            unit_key='rest_period_unit',
+            entered_key='rest_period_entered',
+            canonical_key='rest_period_days',
+        )
+        if cleaned_data.get('rest_period_days') not in (None, ''):
+            converted_rest = cleaned_data['rest_period_days']
+            if converted_rest < REST_PERIOD_DAYS_MIN or converted_rest > REST_PERIOD_DAYS_MAX:
+                self.add_error(
+                    'rest_period_days',
+                    f'Rest period must be between {REST_PERIOD_DAYS_MIN} and {REST_PERIOD_DAYS_MAX} days after conversion.',
+                )
+
         class_of_animal = cleaned_data.get('class_of_animal',
                                            '').strip() if cleaned_data.get('class_of_animal') else ''
         number_of_animals = cleaned_data.get('number_of_animals')
-        average_weight_lbs = cleaned_data.get('average_weight_lbs')
+        average_weight = cleaned_data.get('average_weight_kg')
         duration_days = cleaned_data.get('duration_days')
         rest_period_days = cleaned_data.get('rest_period_days')
 
         has_any_value = any([
             class_of_animal,
             number_of_animals not in (None, ''),
-            average_weight_lbs not in (None, ''),
+            average_weight not in (None, ''),
             duration_days not in (None, ''),
             rest_period_days not in (None, '')
         ])
@@ -934,7 +1194,7 @@ class GrazingEventAnimalForm(forms.ModelForm):
         if not has_any_value:
             return cleaned_data
 
-        required_fields = ['class_of_animal', 'number_of_animals', 'average_weight_lbs',
+        required_fields = ['class_of_animal', 'number_of_animals', 'average_weight',
                            'duration_days', 'rest_period_days']
         missing_fields = []
         for field_name in required_fields:

@@ -148,7 +148,7 @@
 
                         <h3 class="mb-0">Step 3: Transect Codes & Locations</h3>
 
-                        <p class="text-muted mb-0">Enter one or more transects (location 1 required; 2–4 if applicable)</p>
+                        <p class="text-muted mb-0">Enter one or more transects (at least one is required)</p>
 
                     </div>
 
@@ -170,7 +170,7 @@
 
                             <h4 class="mb-0"><i class="fas fa-map-marked-alt"></i> Map Preview</h4>
 
-                            <p class="mb-0 small">Markers appear automatically when you enter coordinates</p>
+                            <p class="mb-0 small">Type coordinates or click the map to place transect locations</p>
 
                         </div>
 
@@ -179,6 +179,28 @@
                     </div>
 
                     <div class="card-body">
+
+                        <div class="transect-map-toolbar mb-3" id="transect-map-toolbar">
+                            <div class="transect-map-toolbar__label">
+                                <i class="fas fa-map-pin"></i>
+                                <span>Placing transect:</span>
+                            </div>
+                            <div class="btn-group transect-slot-selector d-none d-md-inline-flex" role="group" aria-label="Select transect to place on map">
+                                <button type="button" class="btn btn-sm btn-outline-primary active" data-active-transect-slot="1" aria-pressed="true">1</button>
+                                <button type="button" class="btn btn-sm btn-outline-primary" data-active-transect-slot="2" aria-pressed="false">2</button>
+                                <button type="button" class="btn btn-sm btn-outline-primary" data-active-transect-slot="3" aria-pressed="false">3</button>
+                                <button type="button" class="btn btn-sm btn-outline-primary" data-active-transect-slot="4" aria-pressed="false">4</button>
+                            </div>
+                            <select id="active-transect-slot" class="form-select form-select-sm transect-slot-select d-md-none" aria-label="Select transect to place on map">
+                                <option value="1">Transect location 1</option>
+                                <option value="2">Transect location 2</option>
+                                <option value="3">Transect location 3</option>
+                                <option value="4">Transect location 4</option>
+                            </select>
+                            <p class="transect-map-toolbar__hint text-muted small mb-0">
+                                Select a transect, then click the map to set its coordinates. You can also type coordinates or drag markers to adjust.
+                            </p>
+                        </div>
 
                         <div class="position-relative">
 
@@ -206,7 +228,7 @@
 
                                 <i class="fas fa-info-circle"></i>
 
-                                Review marker positions on the map before continuing. Drag markers to adjust their locations.
+                                Review marker positions on the map before continuing. Drag markers to fine-tune their locations.
 
                             </p>
 

@@ -6,6 +6,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from bugbox3.core.permissions import IS_GROWER
 
 from ...forms.grower.forms import ApplicationCreationForm
+from ...measurement_capture import assign_field_measurements
 from ...middleware import get_user_timezone
 from ...models import Farm, Field, GrazingEvent, GrowerApplication, ManagementPractices, TransectMeasurement
 from ...utils import get_grower_maps_json_context
@@ -51,15 +52,14 @@ def application_create(request):
                             small_grain_type=form.cleaned_data.get('small_grain_type', ''),
                             tillage_methods=form.cleaned_data.get('tillage_methods', ''),
                             forage_varieties=form.cleaned_data.get('forage_varieties', ''),
-                            paddock_size=form.cleaned_data.get('paddock_size', ''),
                             rootstock_species=form.cleaned_data.get('rootstock_species', ''),
                             transitional_status=form.cleaned_data.get('transitional_status', ''),
-                            acres_sampled=form.cleaned_data.get('acres_sampled'),
                             years_under_management=form.cleaned_data.get('years_under_management'),
                             supports_dairy=form.cleaned_data.get('supports_dairy', False),
                             is_confined_dairy=form.cleaned_data.get('is_confined_dairy', False),
                             measurement_comments=form.cleaned_data.get('measurement_comments', '')
                         )
+                        assign_field_measurements(field, form.cleaned_data)
                         if form.cleaned_data.get('orchard_crop_type'):
                             field.crop_type = form.cleaned_data.get('orchard_crop_type', '')
                         field.orchard_crop_specify = form.cleaned_data.get('orchard_crop_specify', '')

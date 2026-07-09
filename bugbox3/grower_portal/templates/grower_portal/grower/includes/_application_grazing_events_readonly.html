@@ -1,3 +1,4 @@
+{% load measurement_tags %}
 {% if application.field and application.field.field_type == 'range' %}
             <div class="card mb-3">
                 <div class="card-header">
@@ -16,9 +17,9 @@
                                         <tr>
                                             <th>Class of Animal</th>
                                             <th>Number</th>
-                                            <th>Avg Weight (lbs)</th>
-                                            <th>Grazing days</th>
-                                            <th>Rest Period (days)</th>
+                                            <th>Avg weight</th>
+                                            <th>Grazing duration</th>
+                                            <th>Rest period</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -26,9 +27,27 @@
                                             <tr>
                                                 <td>{{ animal.class_of_animal }}</td>
                                                 <td>{{ animal.number_of_animals }}</td>
-                                                <td>{{ animal.average_weight_lbs }}</td>
-                                                <td>{{ animal.duration_days }}</td>
-                                                <td>{{ animal.rest_period_days }}</td>
+                                                <td>
+                                                    {% if animal.average_weight_entered is not None %}
+                                                        {{ animal.average_weight_entered|format_entered_weight:animal.average_weight_unit }}
+                                                    {% else %}
+                                                        {{ animal.average_weight_kg|format_stored_weight:animal.average_weight_unit }}
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% if animal.duration_entered is not None %}
+                                                        {{ animal.duration_entered|format_entered_duration:animal.duration_unit }}
+                                                    {% else %}
+                                                        {{ animal.duration_days|format_stored_duration:animal.duration_unit }}
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% if animal.rest_period_entered is not None %}
+                                                        {{ animal.rest_period_entered|format_entered_duration:animal.rest_period_unit }}
+                                                    {% else %}
+                                                        {{ animal.rest_period_days|format_stored_duration:animal.rest_period_unit }}
+                                                    {% endif %}
+                                                </td>
                                             </tr>
                                         {% endfor %}
                                     </tbody>

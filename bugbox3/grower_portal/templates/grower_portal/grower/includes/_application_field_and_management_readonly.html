@@ -1,6 +1,7 @@
 {% load i18n %}
 {% load timezone_filters %}
 {# Shared read-only: Application Overview (field) + Management Practices #}
+{% load measurement_tags %}
 {% if application.field %}
             <div class="card mb-3">
                 <div class="card-header">
@@ -78,16 +79,16 @@
                             <td>{{ application.field.forage_varieties }}</td>
                         </tr>
                         {% endif %}
-                        {% if application.field.paddock_size %}
+                        {% if application.field.paddock_size_entered is not None or application.field.paddock_size_ha %}
                         <tr>
-                            <th>Paddock Size:</th>
-                            <td>{{ application.field.paddock_size }}</td>
-                        </tr>
-                        {% endif %}
-                        {% if application.field.pasture_size %}
-                        <tr>
-                            <th>Pasture Size (acres):</th>
-                            <td>{{ application.field.pasture_size }}</td>
+                            <th>Paddock size:</th>
+                            <td>
+                                {% if application.field.paddock_size_entered is not None %}
+                                    {{ application.field.paddock_size_entered|format_entered_area:application.field.paddock_size_unit }}
+                                {% else %}
+                                    {{ application.field.paddock_size_ha|format_stored_paddock_size }}
+                                {% endif %}
+                            </td>
                         </tr>
                         {% endif %}
                         {% if application.field.rootstock_species %}
@@ -142,10 +143,16 @@
                                 <th class="table-col-40">Tillage:</th>
                                 <td>{{ management_practices.uses_tillage|yesno:"Yes,No" }}</td>
                             </tr>
-                            {% if management_practices.uses_tillage and management_practices.tillage_depth %}
+                            {% if management_practices.uses_tillage and management_practices.tillage_depth_cm %}
                             <tr>
                                 <th>Tillage Depth:</th>
-                                <td>{{ management_practices.tillage_depth }}</td>
+                                <td>
+                                    {% if management_practices.tillage_depth_entered is not None %}
+                                        {{ management_practices.tillage_depth_entered|format_entered_depth:management_practices.tillage_depth_unit }}
+                                    {% else %}
+                                        {{ management_practices.tillage_depth_cm|format_stored_depth }}
+                                    {% endif %}
+                                </td>
                             </tr>
                             {% endif %}
                             <tr>

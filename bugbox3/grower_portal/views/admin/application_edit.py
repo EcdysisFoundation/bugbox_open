@@ -9,6 +9,7 @@ from bugbox3.core.permissions import IS_GROWERADMIN
 
 from ...constants import DEFAULT_FIELD_LATITUDE, DEFAULT_FIELD_LONGITUDE
 from ...forms.grower.forms import ApplicationCreationForm, ManagementPracticesForm, TransectCodesForm
+from ...measurement_capture import assign_field_measurements, field_measurement_initial
 from ...middleware import get_user_timezone
 from ...models import (
     Farm,
@@ -74,7 +75,6 @@ def admin_application_edit_basic(request, application_id):
                             farm=farm,
                             field_name=cd['field_name'],
                             field_type=cd['field_type'],
-                            acres_sampled=cd.get('acres_sampled'),
                             years_under_management=cd.get('years_under_management'),
                             supports_dairy=cd.get('supports_dairy', False),
                             is_confined_dairy=cd.get('is_confined_dairy', False),
@@ -86,14 +86,13 @@ def admin_application_edit_basic(request, application_id):
                             tillage_methods=cd.get('tillage_methods', ''),
                             orchard_crop_specify=cd.get('orchard_crop_specify', ''),
                             forage_varieties=cd.get('forage_varieties', ''),
-                            paddock_size=cd.get('paddock_size', ''),
-                            pasture_size=cd.get('pasture_size', ''),
                             rootstock_species=cd.get('rootstock_species', ''),
                             crop_varieties=cd.get('crop_varieties', ''),
                             transitional_status=cd.get('transitional_status', ''),
                         )
                         if cd.get('orchard_crop_type'):
                             field.crop_type = cd.get('orchard_crop_type', '')
+                        assign_field_measurements(field, cd)
                         field.save()
                         application.field = field
                     else:
@@ -101,7 +100,7 @@ def admin_application_edit_basic(request, application_id):
                         field.farm = farm
                         field.field_name = cd['field_name']
                         field.field_type = cd['field_type']
-                        field.acres_sampled = cd.get('acres_sampled')
+                        assign_field_measurements(field, cd)
                         field.years_under_management = cd.get('years_under_management')
                         field.supports_dairy = cd.get('supports_dairy', False)
                         field.is_confined_dairy = cd.get('is_confined_dairy', False)
@@ -118,8 +117,6 @@ def admin_application_edit_basic(request, application_id):
                         field.orchard_crop_specify = cd.get('orchard_crop_specify', '')
 
                         field.forage_varieties = cd.get('forage_varieties', '')
-                        field.paddock_size = cd.get('paddock_size', '')
-                        field.pasture_size = cd.get('pasture_size', '')
 
                         field.rootstock_species = cd.get('rootstock_species', '')
                         field.crop_varieties = cd.get('crop_varieties', '')
@@ -145,7 +142,7 @@ def admin_application_edit_basic(request, application_id):
                 'field_name': f.field_name,
                 'field_type': f.field_type,
                 'date_sampled': application.date_sampled,
-                'acres_sampled': f.acres_sampled,
+                **field_measurement_initial(f),
                 'years_under_management': f.years_under_management,
                 'supports_dairy': f.supports_dairy,
                 'is_confined_dairy': f.is_confined_dairy,
@@ -156,8 +153,6 @@ def admin_application_edit_basic(request, application_id):
                 'small_grain_type': f.small_grain_type,
                 'tillage_methods': f.tillage_methods,
                 'forage_varieties': f.forage_varieties,
-                'paddock_size': f.paddock_size,
-                'pasture_size': f.pasture_size,
                 'rootstock_species': f.rootstock_species,
                 'crop_varieties': f.crop_varieties,
                 'transitional_status': f.transitional_status,
@@ -170,7 +165,12 @@ def admin_application_edit_basic(request, application_id):
                 'field_name': '',
                 'field_type': '',
                 'date_sampled': application.date_sampled,
-                'acres_sampled': None,
+                'area_sampled': None,
+                'area_sampled_entered': None,
+                'area_sampled_unit': None,
+                'paddock_size': None,
+                'paddock_size_entered': None,
+                'paddock_size_unit': None,
                 'years_under_management': None,
                 'supports_dairy': False,
                 'is_confined_dairy': False,
@@ -181,8 +181,6 @@ def admin_application_edit_basic(request, application_id):
                 'small_grain_type': '',
                 'tillage_methods': '',
                 'forage_varieties': '',
-                'paddock_size': '',
-                'pasture_size': '',
                 'rootstock_species': '',
                 'crop_varieties': '',
                 'transitional_status': '',

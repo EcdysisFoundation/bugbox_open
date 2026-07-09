@@ -1,11 +1,17 @@
 import { bootstrapGoogleMapsFromContext } from './google_maps_api_loader';
 
 const MAX_TRANSECT_SLOTS = 4;
+const MARKER_COLORS = ['#FF5252', '#2196F3', '#FFC107', '#9C27B0'];
 
 let map;
 let markers = [];
 let loadingCircle = null;
 let loadingOverlay = null;
+let activeTransectSlot = 1;
+let mapClickListener = null;
+let visibleTransectSlotCount = 1;
+const expandedEmptySlots = new Set();
+let addTransectButtonInitialized = false;
 
 function getTransectSlot(transect) {
     return transect.slot || (transect.index + 1);
@@ -27,9 +33,126 @@ function setRowVisible(slot, visible) {
     row.classList.toggle('transect-location-row--hidden', !visible);
 }
 
-function updateTransectRowVisibility() {
+function slotHasAnyData(slot) {
+    const codeEl = document.getElementById(`id_transect_code_${slot}`);
+    const latField = document.getElementById(`id_transect_${slot}_latitude`);
+    const lngField = document.getElementById(`id_transect_${slot}_longitude`);
+    const hasCode = Boolean(codeEl && codeEl.value.trim());
+    const hasLat = latField && parseCoordinate(latField.value) !== null;
+    const hasLng = lngField && parseCoordinate(lngField.value) !== null;
+    return hasCode || hasLat || hasLng;
+}
+
+function getLastActiveTransectSlot() {
+    let lastSlot = 0;
     for (let slot = 1; slot <= MAX_TRANSECT_SLOTS; slot++) {
-        setRowVisible(slot, true);
+        if (slotHasAnyData(slot)) {
+            lastSlot = slot;
+        }
+    }
+    return lastSlot || 1;
+}
+
+function recalculateVisibleTransectSlots() {
+    const lastActive = getLastActiveTransectSlot();
+    let visible = Math.max(1, lastActive);
+
+    expandedEmptySlots.forEach((slot) => {
+        visible = Math.max(visible, slot);
+    });
+
+    visibleTransectSlotCount = Math.min(MAX_TRANSECT_SLOTS, visible);
+
+    expandedEmptySlots.forEach((slot) => {
+        if (slot > visibleTransectSlotCount) {
+            expandedEmptySlots.delete(slot);
+        }
+    });
+}
+
+function syncExpandedEmptySlots() {
+    for (let slot = 1; slot <= MAX_TRANSECT_SLOTS; slot++) {
+        if (slotHasAnyData(slot)) {
+            expandedEmptySlots.delete(slot);
+        }
+    }
+}
+
+function updateTransectRowVisibility() {
+    syncExpandedEmptySlots();
+    recalculateVisibleTransectSlots();
+    applyTransectRowVisibility();
+}
+
+function updateAddTransectButton() {
+    const button = document.getElementById('add-transect-location');
+    if (!button) {
+        return;
+    }
+
+    const canAddMore = visibleTransectSlotCount < MAX_TRANSECT_SLOTS;
+    button.classList.toggle('hidden-field', !canAddMore);
+}
+
+function updateMapSlotSelectorVisibility() {
+    for (let slot = 1; slot <= MAX_TRANSECT_SLOTS; slot++) {
+        const isVisible = slot <= visibleTransectSlotCount;
+        const selectorButton = document.querySelector(
+            `[data-active-transect-slot="${slot}"]`,
+        );
+        if (selectorButton) {
+            selectorButton.classList.toggle('hidden-field', !isVisible);
+        }
+
+        const selectOption = document.querySelector(
+            `#active-transect-slot option[value="${slot}"]`,
+        );
+        if (selectOption) {
+            selectOption.hidden = !isVisible;
+            selectOption.disabled = !isVisible;
+        }
+    }
+}
+
+function setupAddTransectButton() {
+    if (addTransectButtonInitialized) {
+        return;
+    }
+
+    const button = document.getElementById('add-transect-location');
+    if (!button) {
+        return;
+    }
+
+    addTransectButtonInitialized = true;
+    button.addEventListener('click', () => {
+        if (visibleTransectSlotCount >= MAX_TRANSECT_SLOTS) {
+            return;
+        }
+
+        const nextSlot = visibleTransectSlotCount + 1;
+        expandedEmptySlots.add(nextSlot);
+        visibleTransectSlotCount = nextSlot;
+        applyTransectRowVisibility();
+        setActiveTransectSlot(nextSlot);
+
+        const codeField = document.getElementById(`id_transect_code_${nextSlot}`);
+        if (codeField) {
+            codeField.focus();
+        }
+    });
+}
+
+function applyTransectRowVisibility() {
+    for (let slot = 1; slot <= MAX_TRANSECT_SLOTS; slot++) {
+        setRowVisible(slot, slot <= visibleTransectSlotCount);
+    }
+
+    updateAddTransectButton();
+    updateMapSlotSelectorVisibility();
+
+    if (activeTransectSlot > visibleTransectSlotCount) {
+        setActiveTransectSlot(visibleTransectSlotCount);
     }
 }
 
@@ -94,8 +217,128 @@ window.initMap = function() {
         }
     });
 
-    setupTransectCodeMonitoring();
+    visibleTransectSlotCount = getLastActiveTransectSlot();
+    setupTransectPlacementControls();
+    updateTransectRowVisibility();
+    updateTransectMarkers({ fitBounds: true });
 };
+
+function setupTransectFormControls() {
+    visibleTransectSlotCount = getLastActiveTransectSlot();
+    setupAddTransectButton();
+    setupTransectCodeMonitoring();
+}
+
+function setActiveTransectSlot(slot) {
+    const parsedSlot = parseInt(slot, 10);
+    if (!Number.isFinite(parsedSlot) || parsedSlot < 1 || parsedSlot > MAX_TRANSECT_SLOTS) {
+        return;
+    }
+
+    activeTransectSlot = parsedSlot;
+
+    document.querySelectorAll('[data-active-transect-slot]').forEach((button) => {
+        const buttonSlot = parseInt(button.dataset.activeTransectSlot, 10);
+        const isActive = buttonSlot === activeTransectSlot;
+        button.classList.toggle('active', isActive);
+        button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    });
+
+    const select = document.getElementById('active-transect-slot');
+    if (select) {
+        select.value = String(activeTransectSlot);
+    }
+
+    document.querySelectorAll('.transect-location-row[data-slot]').forEach((row) => {
+        const rowSlot = parseInt(row.dataset.slot, 10);
+        row.classList.toggle('transect-location-card--active', rowSlot === activeTransectSlot);
+    });
+
+    const mapEl = document.getElementById('map');
+    if (mapEl) {
+        mapEl.classList.add('map-container--placing');
+    }
+}
+
+function setupTransectPlacementControls() {
+    document.querySelectorAll('[data-active-transect-slot]').forEach((button) => {
+        button.addEventListener('click', () => {
+            setActiveTransectSlot(button.dataset.activeTransectSlot);
+        });
+    });
+
+    const select = document.getElementById('active-transect-slot');
+    if (select) {
+        select.addEventListener('change', () => {
+            setActiveTransectSlot(select.value);
+        });
+    }
+
+    for (let slot = 1; slot <= MAX_TRANSECT_SLOTS; slot++) {
+        const row = document.querySelector(`.transect-location-row[data-slot="${slot}"]`);
+        if (!row) {
+            continue;
+        }
+
+        row.addEventListener('click', (event) => {
+            if (event.target.closest('input, select, textarea, button, a, label')) {
+                return;
+            }
+            setActiveTransectSlot(slot);
+        });
+
+        const fieldIds = [
+            `id_transect_code_${slot}`,
+            `id_transect_${slot}_latitude`,
+            `id_transect_${slot}_longitude`,
+        ];
+        fieldIds.forEach((inputId) => {
+            const element = document.getElementById(inputId);
+            if (element) {
+                element.addEventListener('focus', () => setActiveTransectSlot(slot));
+            }
+        });
+    }
+
+    if (mapClickListener) {
+        google.maps.event.removeListener(mapClickListener);
+    }
+    mapClickListener = map.addListener('click', handleMapClickPlaceTransect);
+
+    setActiveTransectSlot(activeTransectSlot);
+}
+
+function handleMapClickPlaceTransect(event) {
+    const lat = event.latLng.lat();
+    const lng = event.latLng.lng();
+    const latField = document.getElementById(`id_transect_${activeTransectSlot}_latitude`);
+    const lngField = document.getElementById(`id_transect_${activeTransectSlot}_longitude`);
+
+    if (!latField || !lngField) {
+        return;
+    }
+
+    latField.value = lat.toFixed(6);
+    lngField.value = lng.toFixed(6);
+    latField.dispatchEvent(new Event('input', { bubbles: true }));
+    lngField.dispatchEvent(new Event('change', { bubbles: true }));
+
+    updateTransectRowVisibility();
+    updateTransectMarkers({ fitBounds: false });
+    highlightPlacedTransect(activeTransectSlot);
+}
+
+function highlightPlacedTransect(slot) {
+    const row = document.querySelector(`.transect-location-row[data-slot="${slot}"]`);
+    if (!row) {
+        return;
+    }
+
+    row.classList.add('transect-location-card--placed');
+    window.setTimeout(() => {
+        row.classList.remove('transect-location-card--placed');
+    }, 1200);
+}
 
 function handleLocateMe() {
     if (!navigator.geolocation) {
@@ -258,6 +501,8 @@ function handleCoordinatePaste(event, slot) {
 }
 
 function setupTransectCodeMonitoring() {
+    visibleTransectSlotCount = getLastActiveTransectSlot();
+
     for (let slot = 1; slot <= MAX_TRANSECT_SLOTS; slot++) {
         const fieldIds = [
             `id_transect_code_${slot}`,
@@ -287,7 +532,7 @@ function setupTransectCodeMonitoring() {
 
 function handleTransectFieldChange() {
     updateTransectRowVisibility();
-    updateTransectMarkers();
+    updateTransectMarkers({ fitBounds: true });
 }
 
 function getTransectsForMap() {
@@ -324,7 +569,9 @@ function countEnteredTransectCodes() {
     return count;
 }
 
-function updateTransectMarkers() {
+function updateTransectMarkers(options = {}) {
+    const fitBounds = options.fitBounds !== false;
+
     if (!map) {
         return;
     }
@@ -337,7 +584,6 @@ function updateTransectMarkers() {
     });
     markers = [];
 
-    const markerColors = ['#FF5252', '#2196F3', '#FFC107', '#9C27B0'];
     const markerLabels = ['1', '2', '3', '4'];
     const bounds = new google.maps.LatLngBounds();
     const transects = getTransectsForMap();
@@ -349,7 +595,7 @@ function updateTransectMarkers() {
         const lat = parseCoordinate(latField.value);
         const lng = parseCoordinate(lngField.value);
         const position = { lat, lng };
-        const colorIndex = (slot - 1) % markerColors.length;
+        const colorIndex = (slot - 1) % MARKER_COLORS.length;
 
         const marker = new google.maps.Marker({
             position: position,
@@ -359,7 +605,7 @@ function updateTransectMarkers() {
             icon: {
                 path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
                 scale: 6,
-                fillColor: markerColors[colorIndex],
+                fillColor: MARKER_COLORS[colorIndex],
                 fillOpacity: 1,
                 strokeColor: '#000000',
                 strokeWeight: 2,
@@ -376,7 +622,7 @@ function updateTransectMarkers() {
         overlay.onAdd = function() {
             const div = document.createElement('div');
             div.style.position = 'absolute';
-            div.style.backgroundColor = markerColors[colorIndex];
+            div.style.backgroundColor = MARKER_COLORS[colorIndex];
             div.style.color = 'white';
             div.style.padding = '4px 8px';
             div.style.borderRadius = '4px';
@@ -428,6 +674,7 @@ function updateTransectMarkers() {
         });
 
         marker.addListener('click', function() {
+            setActiveTransectSlot(slot);
             infoWindow.open(map, marker);
         });
 
@@ -443,7 +690,7 @@ function updateTransectMarkers() {
         bounds.extend(position);
     });
 
-    if (markers.length > 0) {
+    if (fitBounds && markers.length > 0) {
         map.fitBounds(bounds);
         if (markers.length === 1) {
             map.setZoom(18);
@@ -478,11 +725,11 @@ function updateTransectStatus(codeCount) {
         if (markers.length > 0) {
             statusDiv.className = 'alert alert-success mb-0';
             statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> '
-                + markers.length + ' marker(s) visible on the map — review positions before continuing';
+                + markers.length + ' marker(s) visible on the map, review positions before continuing';
         } else if (codeCount > 0) {
             statusDiv.className = 'alert alert-warning mb-0';
             statusDiv.innerHTML = '<i class="fas fa-info-circle"></i> '
-                + codeCount + ' transect code(s) entered — add latitude and longitude to see markers';
+                + codeCount + ' transect code(s) entered, add latitude and longitude to see markers';
         }
     } else {
         statusDiv.style.display = 'none';
@@ -490,9 +737,7 @@ function updateTransectStatus(codeCount) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    if (map) {
-        setupTransectCodeMonitoring();
-    }
+    setupTransectFormControls();
 });
 
 bootstrapGoogleMapsFromContext();

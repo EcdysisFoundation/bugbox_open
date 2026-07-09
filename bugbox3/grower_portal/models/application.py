@@ -10,8 +10,8 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from ..constants import (
-    AVERAGE_WEIGHT_MAX,
-    AVERAGE_WEIGHT_MIN,
+    AVERAGE_WEIGHT_KG_MAX,
+    AVERAGE_WEIGHT_KG_MIN,
     CLASS_OF_ANIMAL_MAX_LENGTH,
     COVER_CROP_TERMINATION_CHOICES,
     COVER_CROP_TERMINATION_MAX_LENGTH,
@@ -35,11 +35,17 @@ from ..constants import (
     PHONE_MAX_LENGTH,
     REST_PERIOD_DAYS_MAX,
     REST_PERIOD_DAYS_MIN,
+    DEFAULT_DEPTH_UNIT,
+    DEFAULT_TIME_UNIT,
+    DEFAULT_WEIGHT_UNIT,
+    DEPTH_UNIT_CHOICES,
     SUBMISSION_CODE_MAX_LENGTH,
     SUBMISSION_CODE_PREFIX,
     TILLAGE_DEPTH_MAX_LENGTH,
+    TIME_UNIT_CHOICES,
     TRANSECT_CODE_MAX_LENGTH,
     UUID_SUFFIX_LENGTH,
+    WEIGHT_UNIT_CHOICES,
 )
 from .farm import Field
 from .sample_codes import GrowerSampleCodeMapping, SampleCode
@@ -330,7 +336,27 @@ class ManagementPractices(models.Model):
     )
 
     uses_tillage = models.BooleanField(default=False)
-    tillage_depth = models.CharField(max_length=TILLAGE_DEPTH_MAX_LENGTH, blank=True)
+    tillage_depth_cm = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text='Canonical tillage depth in centimeters for reporting',
+    )
+    tillage_depth_entered = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text='Tillage depth as entered by the grower',
+    )
+    tillage_depth_unit = models.CharField(
+        max_length=10,
+        choices=DEPTH_UNIT_CHOICES,
+        default=DEFAULT_DEPTH_UNIT,
+        blank=True,
+        help_text='Unit used when entering tillage depth',
+    )
 
     uses_cover_crop = models.BooleanField(default=False)
     cover_crop_termination = models.CharField(
@@ -481,18 +507,61 @@ class GrazingEventAnimal(models.Model):
         validators=[MinValueValidator(NUMBER_OF_ANIMALS_MIN), MaxValueValidator(NUMBER_OF_ANIMALS_MAX)],
         help_text='Number of animals in this class'
     )
-    average_weight_lbs = models.IntegerField(
-        validators=[MinValueValidator(AVERAGE_WEIGHT_MIN), MaxValueValidator(AVERAGE_WEIGHT_MAX)],
-        help_text='Average weight per animal in lbs'
+    average_weight_kg = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(AVERAGE_WEIGHT_KG_MIN), MaxValueValidator(AVERAGE_WEIGHT_KG_MAX)],
+        help_text='Average weight per animal in kg',
+    )
+    average_weight_entered = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text='Average weight as entered by the grower',
+    )
+    average_weight_unit = models.CharField(
+        max_length=10,
+        choices=WEIGHT_UNIT_CHOICES,
+        default=DEFAULT_WEIGHT_UNIT,
+        help_text='Unit used when entering average weight',
     )
     duration_days = models.IntegerField(
         validators=[MinValueValidator(DURATION_DAYS_MIN), MaxValueValidator(DURATION_DAYS_MAX)],
         verbose_name='Grazing days',
-        help_text='Grazing days'
+        help_text='Grazing days',
+    )
+    duration_entered = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text='Grazing duration as entered by the grower',
+    )
+    duration_unit = models.CharField(
+        max_length=10,
+        choices=TIME_UNIT_CHOICES,
+        default=DEFAULT_TIME_UNIT,
+        help_text='Unit used when entering grazing duration',
     )
     rest_period_days = models.IntegerField(
         validators=[MinValueValidator(REST_PERIOD_DAYS_MIN), MaxValueValidator(REST_PERIOD_DAYS_MAX)],
-        help_text='Rest period after grazing in days'
+        help_text='Rest period after grazing in days',
+    )
+    rest_period_entered = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text='Rest period as entered by the grower',
+    )
+    rest_period_unit = models.CharField(
+        max_length=10,
+        choices=TIME_UNIT_CHOICES,
+        default=DEFAULT_TIME_UNIT,
+        help_text='Unit used when entering rest period',
     )
 
     created_at = models.DateTimeField(auto_now_add=True)

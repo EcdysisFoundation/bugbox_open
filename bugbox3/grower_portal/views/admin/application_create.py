@@ -26,6 +26,7 @@ from ...models import (
     SampleCode,
     TransectMeasurement,
 )
+from ...measurement_capture import assign_field_measurements, field_measurement_initial
 from ...utils import (
     build_interactive_transect_data,
     get_grower_maps_json_context,
@@ -126,7 +127,7 @@ def admin_application_create_step1(request, application_id):
                         )
 
                     application.field = field
-                    field.acres_sampled = form.cleaned_data.get('acres_sampled')
+                    assign_field_measurements(field, form.cleaned_data)
                     field.years_under_management = form.cleaned_data.get('years_under_management')
                     field.supports_dairy = form.cleaned_data.get('supports_dairy', False)
                     field.is_confined_dairy = form.cleaned_data.get('is_confined_dairy', False)
@@ -143,8 +144,6 @@ def admin_application_create_step1(request, application_id):
                     field.orchard_crop_specify = form.cleaned_data.get('orchard_crop_specify', '')
 
                     field.forage_varieties = form.cleaned_data.get('forage_varieties', '')
-                    field.paddock_size = form.cleaned_data.get('paddock_size', '')
-                    field.pasture_size = form.cleaned_data.get('pasture_size', '')
 
                     field.rootstock_species = form.cleaned_data.get('rootstock_species', '')
                     field.crop_varieties = form.cleaned_data.get('crop_varieties', '')
@@ -171,7 +170,14 @@ def admin_application_create_step1(request, application_id):
             'field_name': application.field.field_name if application.field else '',
             'field_type': application.field.field_type if application.field else 'crop',
             'date_sampled': application.date_sampled,
-            'acres_sampled': application.field.acres_sampled if application.field else None,
+            **(field_measurement_initial(application.field) if application.field else {
+                'area_sampled': None,
+                'area_sampled_entered': None,
+                'area_sampled_unit': None,
+                'paddock_size': None,
+                'paddock_size_entered': None,
+                'paddock_size_unit': None,
+            }),
             'years_under_management': application.field.years_under_management if application.field else None,
             'supports_dairy': application.field.supports_dairy if application.field else False,
             'is_confined_dairy': application.field.is_confined_dairy if application.field else False,
@@ -204,16 +210,6 @@ def admin_application_create_step1(request, application_id):
             'forage_varieties': (
                 application.field.forage_varieties
                 if application.field and application.field.forage_varieties
-                else ''
-            ),
-            'paddock_size': (
-                application.field.paddock_size
-                if application.field and application.field.paddock_size
-                else ''
-            ),
-            'pasture_size': (
-                application.field.pasture_size
-                if application.field and application.field.pasture_size
                 else ''
             ),
             'rootstock_species': (

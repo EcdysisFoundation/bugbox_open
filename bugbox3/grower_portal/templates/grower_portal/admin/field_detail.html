@@ -2,6 +2,7 @@
 
 {% load i18n %}
 {% load timezone_filters %}
+{% load measurement_tags %}
 
 {% block title %}Field Details{% endblock %}
 
@@ -35,13 +36,25 @@
                         {% endif %}
                     </p>
                     <p><strong>Field Type:</strong> {{ field.get_field_type_display }}</p>
-                    <p><strong>Acres Sampled:</strong> {{ field.acres_sampled|default:"N/A" }}</p>
+                    <p><strong>Acres Sampled:</strong>
+                        {% if field.area_sampled_entered is not None %}
+                            {{ field.area_sampled_entered|format_entered_area:field.area_sampled_unit }}
+                        {% else %}
+                            {{ field.area_sampled_ha|format_stored_area|default:"N/A" }}
+                        {% endif %}
+                    </p>
                     <p><strong>Years Under Management:</strong> {{ field.years_under_management|default:"N/A" }}</p>
                     {% if field.field_type == 'crop' %}
                         <p><strong>Crop Type:</strong> {{ field.get_crop_type_display|default:"N/A" }}</p>
                     {% elif field.field_type == 'range' %}
                         <p><strong>Forage Varieties:</strong> {{ field.forage_varieties|default:"N/A" }}</p>
-                        <p><strong>Paddock Size:</strong> {{ field.paddock_size|default:"N/A" }}</p>
+                        <p><strong>Paddock Size:</strong>
+                            {% if field.paddock_size_entered is not None %}
+                                {{ field.paddock_size_entered|format_entered_area:field.paddock_size_unit }}
+                            {% else %}
+                                {{ field.paddock_size_ha|format_stored_paddock_size|default:"N/A" }}
+                            {% endif %}
+                        </p>
                     {% elif field.field_type == 'orchard' %}
                         <p><strong>Crop Varieties:</strong> {{ field.crop_varieties|default:"N/A" }}</p>
                         <p><strong>Rootstock Species:</strong> {{ field.rootstock_species|default:"N/A" }}</p>
